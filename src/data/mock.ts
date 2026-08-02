@@ -1,0 +1,129 @@
+// ─────────────────────────────────────────────────────────────
+// Direct Refer — types, constants & helpers
+// All data now lives in Supabase. This file only exports
+// TypeScript types, shared constants (GRADIENTS, ROLE_META),
+// and small utility functions.
+// ─────────────────────────────────────────────────────────────
+
+export type Role = 'student' | 'professional' | 'recruiter' | 'admin'
+
+export const ROLE_META: Record<Role, { label: string; singular: string }> = {
+  student: { label: 'Job Seeker', singular: 'Student' },
+  professional: { label: 'Professional', singular: 'Professional' },
+  recruiter: { label: 'Recruiter', singular: 'Recruiter' },
+  admin: { label: 'Admin', singular: 'Admin' },
+}
+
+export interface Professional {
+  id: string
+  name: string
+  designation: string
+  company: string
+  industry: string
+  location: string
+  yearsExp: number
+  skills: string[]
+  responseRate: number
+  avgReplyHours: number
+  referralsCompleted: number
+  rating: number
+  reviews: number
+  verified: boolean
+  openForReferrals: boolean
+  maxPerMonth: number
+  usedThisMonth: number
+  successRate: number
+  followers: number
+  joinedDaysAgo: number
+  activityScore: number
+  referralPolicy: string
+  openPositions: string[]
+  bio: string
+  badges: string[]
+  gradient: string
+  phone: string
+  whatsapp: string
+  email: string
+  hiringTimeline: { stage: string; duration: string }[]
+  referralDuration: string
+  linkedinUrl: string
+  githubUrl: string
+}
+
+export const GRADIENTS = [
+  'from-[#3B5FE5] to-[#8B8FD4]',
+  'from-sky-500 to-cyan-400',
+  'from-emerald-500 to-teal-400',
+  'from-rose-500 to-pink-400',
+  'from-amber-500 to-orange-400',
+  'from-[#5B6FE5] to-purple-400',
+  'from-sky-500 to-cyan-400',
+  'from-[#3B5FE5] to-[#8B8FD4]',
+  'from-orange-500 to-rose-400',
+  'from-cyan-600 to-sky-400',
+  'from-pink-500 to-rose-400',
+]
+
+export type ReferralStatus = 'pending' | 'accepted' | 'rejected' | 'offered'
+
+export type PipelineStage = 'request_sent' | 'under_review' | 'accepted' | 'submitted'
+
+export const PIPELINE_STAGES: { key: PipelineStage; label: string; description: string }[] = [
+  { key: 'request_sent', label: 'Request Sent', description: 'Your referral request has been sent' },
+  { key: 'under_review', label: 'Under Review', description: 'The professional is reviewing your profile' },
+  { key: 'accepted', label: 'Accepted', description: 'Your request has been accepted' },
+  { key: 'submitted', label: 'Submitted', description: 'Your profile has been submitted internally' },
+]
+
+export interface ReferralRequest {
+  id: string
+  student: string
+  studentEmail?: string
+  studentResumeUrl?: string
+  professionalId: string
+  role: string
+  status: ReferralStatus
+  pipelineStage: PipelineStage
+  date: string
+  note: string
+  progress: number
+}
+
+export interface Job {
+  id: string
+  title: string
+  department: string
+  location: string
+  type: string
+  salary: string
+  applicants: number
+  referrals: number
+  stage: 'Active' | 'Paused' | 'Draft'
+  postedDaysAgo: number
+  pipeline: { stage: string; count: number }[]
+  recruiterId?: string
+}
+
+export interface Message { id: string; from: 'me' | 'them'; text: string; time: string; read: boolean; kind?: 'text' | 'file' }
+export interface Conversation {
+  id: string; name: string; subtitle: string; lastMessage: string; time: string
+  unread: number; pinned: boolean; online: boolean; gradient: string; messages: Message[]
+}
+
+export type NotificationType = 'accepted' | 'rejected' | 'message' | 'view' | 'reminder' | 'system'
+
+export interface AppNotification {
+  id: string; type: NotificationType; title: string; description: string; time: string; read: boolean
+}
+
+// ─── helpers ────────────────────────────────────────────────
+
+export function initials(name: string) {
+  return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+}
+
+export function timeAgo(days: number) {
+  if (days < 30) return `${days}d ago`
+  if (days < 365) return `${Math.round(days / 30)}mo ago`
+  return `${Math.round(days / 365)}y ago`
+}

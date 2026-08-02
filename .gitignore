@@ -1,0 +1,9 @@
+node_modules/
+app/
+dist/
+.env
+.env.*
+.vercel
+*.log
+supabase/
+AGENT_CONTEXT.md
