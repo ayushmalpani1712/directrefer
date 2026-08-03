@@ -1198,3 +1198,381 @@ export async function updateNotificationPreferences(prefs: Partial<NotificationP
     return false
   }
 }
+
+// ── Admin: Platform Settings ──────────────────────────────────
+
+export async function fetchPlatformSettings(): Promise<Record<string, unknown>> {
+  try {
+    const { data, error } = await supabase
+      .from('platform_settings')
+      .select('key, value')
+    if (error || !data) return {}
+    const settings: Record<string, unknown> = {}
+    data.forEach((s) => { settings[s.key] = s.value })
+    return settings
+  } catch {
+    return {}
+  }
+}
+
+export async function updatePlatformSetting(key: string, value: unknown): Promise<boolean> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase
+      .from('platform_settings')
+      .upsert({
+        key,
+        value: JSON.parse(JSON.stringify(value)),
+        updated_by: user?.id || null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'key' })
+    return !error
+  } catch {
+    return false
+  }
+}
+
+// ── Admin: Announcements ──────────────────────────────────────
+
+export interface Announcement {
+  id: string
+  title: string
+  body: string
+  type: string
+  active: boolean
+  created_by: string | null
+  created_at: string
+  expires_at: string | null
+}
+
+export async function fetchAnnouncements(): Promise<Announcement[]> {
+  try {
+    const { data, error } = await supabase
+      .from('announcements')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error || !data) return []
+    return data as Announcement[]
+  } catch {
+    return []
+  }
+}
+
+export async function createAnnouncement(title: string, body: string, type: string, expiresAt?: string): Promise<boolean> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase
+      .from('announcements')
+      .insert({
+        title,
+        body,
+        type,
+        created_by: user?.id || null,
+        expires_at: expiresAt || null,
+      })
+    return !error
+  } catch {
+    return false
+  }
+}
+
+export async function deleteAnnouncement(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('announcements')
+      .delete()
+      .eq('id', id)
+    return !error
+  } catch {
+    return false
+  }
+}
+
+export async function toggleAnnouncement(id: string, active: boolean): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('announcements')
+      .update({ active })
+      .eq('id', id)
+    return !error
+  } catch {
+    return false
+  }
+}
+
+// ── Admin: Referrals Management ───────────────────────────────
+
+export interface AdminReferral {
+  id: string
+  requester_name: string
+  requester_email: string
+  professional_name: string
+  professional_email: string
+  job_title: string
+  status: string
+  note: string | null
+  created_at: string
+}
+
+export async function fetchAllReferrals(): Promise<AdminReferral[]> {
+  try {
+    const { data: refs, error } = await supabase
+      .from('referrals')
+      .select('id, job_title, status, note, created_at, requester_id, professional_id')
+      .order('created_at', { ascending: false })
+    if (error || !refs || refs.length === 0) return []
+
+    const userIds = [...new Set([...refs.map((r) => r.requester_id), ...refs.map((r) => r.professional_id)])]
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, full_name, email')
+      .in('id', userIds)
+
+    const userMap = new Map<string, { full_name: string; email: string }>()
+    ;(users || []).forEach((u) => userMap.set(u.id, { full_name: u.full_name, email: u.email }))
+
+    return refs.map((r) => ({
+      id: r.id,
+      requester_name: userMap.get(r.requester_id)?.full_name || 'Unknown',
+      requester_email: userMap.get(r.requester_id)?.email || '',
+      professional_name: userMap.get(r.professional_id)?.full_name || 'Unknown',
+      professional_email: userMap.get(r.professional_id)?.email || '',
+      job_title: r.job_title,
+      status: r.status,
+      note: r.note,
+      created_at: r.created_at,
+    }))
+  } catch {
+    return []
+  }
+}
+
+// ── Admin: Reports with User Names ────────────────────────────
+
+export interface ReportWithUsers extends Report {
+  target_name: string
+  target_email: string
+  target_role: string
+  reporter_name: string
+}
+
+export async function fetchReportsWithUsers(): Promise<ReportWithUsers[]> {
+  try {
+    const { data: reports, error } = await supabase
+      .from('reports')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error || !reports) return []
+
+    const userIds = [...new Set([...reports.map((r) => r.target_id), ...reports.map((r) => r.reporter_id)])]
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, full_name, email, role')
+      .in('id', userIds)
+
+    const userMap = new Map<string, { full_name: string; email: string; role: string }>()
+    ;(users || []).forEach((u) => userMap.set(u.id, { full_name: u.full_name, email: u.email, role: u.role }))
+
+    return reports.map((r) => ({
+      ...r,
+      target_name: userMap.get(r.target_id)?.full_name || 'Unknown User',
+      target_email: userMap.get(r.target_id)?.email || '',
+      target_role: userMap.get(r.target_id)?.role || 'unknown',
+      reporter_name: userMap.get(r.reporter_id)?.full_name || 'Unknown',
+    }))
+  } catch {
+    return []
+  }
+}
+
+// ── Admin: Users with Profiles ────────────────────────────────
+
+export interface AdminUserFull extends AdminUser {
+  company_name: string | null
+  job_title: string | null
+  status: string
+}
+
+export async function fetchAllUsersFull(): Promise<AdminUserFull[]> {
+  try {
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('id, full_name, email, role, created_at, city, state, status')
+      .order('created_at', { ascending: false })
+    if (error || !users) return []
+
+    const userIds = users.map((u) => u.id)
+
+    const [proRes, recRes] = await Promise.all([
+      supabase.from('profiles_professional').select('user_id, company_name, job_title').in('user_id', userIds),
+      supabase.from('profiles_recruiter').select('user_id, company_name, job_title').in('user_id', userIds),
+    ])
+
+    const profileMap = new Map<string, { company_name: string; job_title: string }>()
+    ;(proRes.data || []).forEach((p) => profileMap.set(p.user_id, { company_name: p.company_name, job_title: p.job_title }))
+    ;(recRes.data || []).forEach((p) => profileMap.set(p.user_id, { company_name: p.company_name, job_title: p.job_title }))
+
+    return users.map((u, i) => {
+      const profile = profileMap.get(u.id)
+      const lastLogin = u.created_at || new Date().toISOString()
+      const daysInactive = Math.floor((Date.now() - new Date(lastLogin).getTime()) / 86_400_000)
+      const roleMap: Record<string, string> = {
+        job_seeker: 'student',
+        professional: 'professional',
+        recruiter: 'recruiter',
+        admin: 'admin',
+      }
+      return {
+        id: u.id,
+        name: u.full_name || 'Unknown',
+        email: u.email || '',
+        role: roleMap[u.role] || u.role,
+        company: profile?.company_name || null,
+        lastActive: lastLogin,
+        daysInactive,
+        lastActivity: daysInactive < 1 ? 'Today' : `${daysInactive}d ago`,
+        gradient: GRADIENTS[i % GRADIENTS.length],
+        banned: u.status === 'suspended',
+        company_name: profile?.company_name || null,
+        job_title: profile?.job_title || null,
+        status: u.status || 'active',
+      }
+    })
+  } catch {
+    return []
+  }
+}
+
+// ── Admin: Audit Log ──────────────────────────────────────────
+
+export interface AuditLogEntry {
+  id: string
+  admin_id: string
+  admin_name: string
+  action: string
+  target_id: string | null
+  target_name: string
+  details: Record<string, unknown> | null
+  created_at: string
+}
+
+export async function logAdminAction(action: string, targetId?: string, details?: Record<string, unknown>): Promise<boolean> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
+    const { error } = await supabase
+      .from('admin_logs')
+      .insert({
+        admin_id: user.id,
+        action,
+        target_id: targetId || null,
+        details: details ? JSON.parse(JSON.stringify(details)) : null,
+      })
+    return !error
+  } catch {
+    return false
+  }
+}
+
+export async function fetchAuditLogs(limit = 50): Promise<AuditLogEntry[]> {
+  try {
+    const { data: logs, error } = await supabase
+      .from('admin_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    if (error || !logs) return []
+
+    const adminIds = [...new Set(logs.map((l) => l.admin_id))]
+    const { data: admins } = await supabase
+      .from('users')
+      .select('id, full_name')
+      .in('id', adminIds)
+
+    const adminMap = new Map<string, string>()
+    ;(admins || []).forEach((a) => adminMap.set(a.id, a.full_name || 'Admin'))
+
+    const targetIds = [...new Set(logs.filter((l) => l.target_id).map((l) => l.target_id!))]
+    let targetMap = new Map<string, string>()
+    if (targetIds.length > 0) {
+      const { data: targets } = await supabase
+        .from('users')
+        .select('id, full_name')
+        .in('id', targetIds)
+      ;(targets || []).forEach((t) => targetMap.set(t.id, t.full_name || 'Unknown'))
+    }
+
+    return logs.map((l) => ({
+      id: l.id,
+      admin_id: l.admin_id,
+      admin_name: adminMap.get(l.admin_id) || 'Admin',
+      action: l.action,
+      target_id: l.target_id,
+      target_name: l.target_id ? (targetMap.get(l.target_id) || 'Unknown') : '',
+      details: l.details,
+      created_at: l.created_at,
+    }))
+  } catch {
+    return []
+  }
+}
+
+// ── Admin: Unban User ─────────────────────────────────────────
+
+export async function unbanUser(userId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('users')
+      .update({ status: 'active' })
+      .eq('id', userId)
+    return !error
+  } catch {
+    return false
+  }
+}
+
+// ── Admin: Delete User ────────────────────────────────────────
+
+export async function deleteUser(userId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', userId)
+    return !error
+  } catch {
+    return false
+  }
+}
+
+// ── Admin: System Health ──────────────────────────────────────
+
+export interface SystemHealth {
+  dbSize: string
+  activeConnections: number
+  uptime: string
+  lastDeployment: string
+  apiResponseTime: number
+}
+
+export async function fetchSystemHealth(): Promise<SystemHealth> {
+  const fallback: SystemHealth = {
+    dbSize: '—',
+    activeConnections: 0,
+    uptime: '—',
+    lastDeployment: new Date().toLocaleDateString(),
+    apiResponseTime: 0,
+  }
+  try {
+    const start = Date.now()
+    const { error } = await supabase.from('users').select('id', { count: 'exact', head: true })
+    const responseTime = Date.now() - start
+    if (error) return fallback
+    return {
+      ...fallback,
+      apiResponseTime: responseTime,
+    }
+  } catch {
+    return fallback
+  }
+}
