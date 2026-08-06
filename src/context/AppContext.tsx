@@ -447,7 +447,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, {
         id,
-        name: patch.name ?? '',
+        name: patch.name ?? user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? '',
         designation: patch.designation ?? '',
         company: patch.company ?? '',
         industry: patch.industry ?? '',

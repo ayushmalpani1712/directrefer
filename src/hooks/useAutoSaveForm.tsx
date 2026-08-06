@@ -66,22 +66,24 @@ export function useAutoSaveForm({
   const initialValuesRef = useRef<Record<string, unknown> | null>(null)
   const latestValuesRef = useRef(values)
   const restoredRef = useRef(false)
+  const capturedRef = useRef(false)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const syncTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const lastSyncedAtRef = useRef<Record<string, unknown> | null>(null)
 
   latestValuesRef.current = values
 
-  // Store initial values on first render (when DB data loads)
-  if (initialValuesRef.current === null && enabled) {
-    initialValuesRef.current = { ...values }
-  }
+  // Capture initial values via useEffect (defers to after sync effects run)
+  useEffect(() => {
+    if (initialValuesRef.current === null && enabled && !capturedRef.current) {
+      initialValuesRef.current = { ...values }
+      capturedRef.current = true
+    }
+  }, [enabled, values])
 
   // Compute hasUnsavedChanges
   useEffect(() => {
     if (!enabled || !initialValuesRef.current) return
-    // Skip recomputation after a successful save — onFormSaved already handled it
-    if (status === 'saved') return
     const changed = !shallowEqual(initialValuesRef.current, values)
     setHasUnsavedChanges(changed)
   }, [values, enabled, status])
