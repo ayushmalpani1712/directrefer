@@ -112,9 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setSession(s)
       setUser(s?.user ?? null)
-      if (s?.user) {
+
+      // Only run full auth state sync on sign-in/sign-out events, not on token refresh
+      if (s?.user && event !== 'TOKEN_REFRESHED') {
         await syncAuthState(s.user)
-      } else {
+      } else if (!s?.user) {
         setEmailVerified(true)
         setProfessionalVerified(false)
         setRecruiterVerified(false)

@@ -858,7 +858,7 @@ export default function Admin() {
                       <div className="text-sm font-medium">{demoMode ? 'Demo Mode is ON' : 'Demo Mode is OFF'}</div>
                       <div className="text-xs text-muted-foreground">{demoMode ? 'Demo accounts are visible and usable.' : 'Demo accounts are hidden from login and search.'}</div>
                     </div>
-                    <Switch checked={demoMode} onCheckedChange={(v) => { toggleDemoMode(); handleSaveSetting('demo_mode', v) }} />
+                    <Switch checked={demoMode} onCheckedChange={async (v) => { await handleSaveSetting('demo_mode', v); if (v !== demoMode) toggleDemoMode() }} />
                   </div>
                 </CardContent>
               </Card>
@@ -897,7 +897,7 @@ export default function Admin() {
                       <div className="text-sm font-medium">Enable auto-deletion</div>
                       <div className="text-xs text-muted-foreground">Automatically delete inactive accounts</div>
                     </div>
-                    <Switch checked={cleanupEnabled} onCheckedChange={(v) => { setCleanupEnabled(v); handleSaveSetting('auto_deletion_enabled', v) }} />
+                    <Switch checked={cleanupEnabled} onCheckedChange={async (v) => { await handleSaveSetting('auto_deletion_enabled', v); setCleanupEnabled(v) }} />
                   </div>
                   <div className="flex items-center justify-between rounded-xl border border-border p-4">
                     <div>

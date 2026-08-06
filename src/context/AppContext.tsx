@@ -744,6 +744,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.error('Failed to create referral:', err)
         // Roll back optimistic update
         setRequests((prev) => prev.filter((req) => req.id !== r.id))
+        // Roll back rate limiter timestamp
+        setRequestTimestamps((prev) => prev.slice(0, -1))
         toast.error('Failed to save referral — please try again')
       })
     }
@@ -847,12 +849,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       read: true,
       kind: 'text',
     }
+    // Capture previous lastMessage for rollback
+    let prevLastMessage = ''
     setConversations((prev) =>
-      prev.map((c) =>
-        c.id === conversationId
-          ? { ...c, messages: [...c.messages, newMsg], lastMessage: text, time: 'Just now' }
-          : c
-      )
+      prev.map((c) => {
+        if (c.id === conversationId) {
+          prevLastMessage = c.lastMessage
+          return { ...c, messages: [...c.messages, newMsg], lastMessage: text, time: 'Just now' }
+        }
+        return c
+      })
     )
     // Persist to Supabase
     if (user) {
@@ -860,11 +866,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Message sent successfully
       }).catch((err) => {
         console.error('Failed to send message:', err)
-        // Rollback: remove phantom message
+        // Rollback: remove phantom message and restore previous lastMessage
         setConversations((prev) =>
           prev.map((c) =>
             c.id === conversationId
-              ? { ...c, messages: c.messages.filter((m) => m.id !== newMsg.id), lastMessage: c.messages.length > 1 ? c.messages[c.messages.length - 2].text : '' }
+              ? { ...c, messages: c.messages.filter((m) => m.id !== newMsg.id), lastMessage: prevLastMessage }
               : c
           )
         )

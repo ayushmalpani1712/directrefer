@@ -53,13 +53,17 @@ export default function Availability() {
 
   useEffect(() => {
     if (!dbLoadedRef.current) return
-    // Only sync open_for_referrals when vacation mode actually changes from its initial DB value
     if (initialVacationRef.current === vacation) return
     if (user && role === 'professional') {
+      const prevVacation = initialVacationRef.current ?? vacation
       supabase.from('profiles_professional').update({
         open_for_referrals: !vacation
-      }).eq('user_id', user.id).then(() => {}, (err) => {
+      }).eq('user_id', user.id).then(() => {
+        initialVacationRef.current = vacation
+      }, (err) => {
         console.error('Failed to update vacation mode:', err)
+        setVacation(prevVacation)
+        initialVacationRef.current = prevVacation
         toast.error('Failed to update vacation mode')
       })
     }

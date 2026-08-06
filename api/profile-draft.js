@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
     try {
       const supabase = getServiceClient();
-      const { data, dbError } = await supabase
+      const { data, error: dbError } = await supabase
         .from('profile_drafts')
         .select('form_id, values, updated_at')
         .eq('user_id', auth.user.id)

@@ -976,7 +976,7 @@ export async function deleteResume(
       if (storageError) console.error('Resume storage delete error:', storageError)
     }
 
-    await supabase
+    const { error: dbError } = await supabase
       .from('profiles_job_seeker')
       .update({
         resume_url: null,
@@ -985,6 +985,11 @@ export async function deleteResume(
         resume_uploaded_at: null,
       })
       .eq('user_id', userId)
+
+    if (dbError) {
+      console.error('Resume DB delete error:', dbError)
+      return false
+    }
 
     return true
   } catch {

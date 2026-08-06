@@ -1,12 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { handleCors } from './lib/cors.js';
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (handleCors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
@@ -27,18 +24,18 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     const normalizedEmail = email.toLowerCase().trim();
 
-    const { data: users, error: userError } = await supabase.auth.admin.listUsers({
-      filter: `email eq '${normalizedEmail}'`
-    });
+    // Use listUsers without filter (safe from injection), then match in code
+    const { data: users, error: userError } = await supabase.auth.admin.listUsers();
+    const matchedUser = users?.users?.find((u) => u.email === normalizedEmail);
 
-    if (userError || !users?.users?.length) {
+    if (userError || !matchedUser) {
       return res.status(200).json({
         success: true,
         message: 'If an account exists with that email, a reset link has been sent.'
       });
     }
 
-    const user = users.users[0];
+    const user = matchedUser;
 
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
