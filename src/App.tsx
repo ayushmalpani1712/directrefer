@@ -61,9 +61,9 @@ function DashboardRedirect() {
 }
 
 function Profile() {
-  const { role } = useApp()
-  if (role === 'professional' || role === 'admin') return <ProfessionalProfile />
-  if (role === 'recruiter') return <RecruiterProfile />
+  const { pathname } = useLocation()
+  if (pathname.startsWith('/professional')) return <ProfessionalProfile />
+  if (pathname.startsWith('/recruiter')) return <RecruiterProfile />
   return <StudentProfile />
 }
 
