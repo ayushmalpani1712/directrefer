@@ -12,6 +12,7 @@ const ONBOARDING_DISMISSED_KEY = 'onboarding_dismissed'
 
 function getSteps(role: Role) {
   const base = ROLE_ROUTE[role]
+  const findProfessionalsPath = role === 'recruiter' ? `${base}/talent` : `${base}/professionals`
   return [
     {
       icon: CheckCircle,
@@ -31,10 +32,12 @@ function getSteps(role: Role) {
     },
     {
       icon: Search,
-      title: 'Find professionals',
-      description: 'Browse verified professionals from top companies and request referrals that advance your career.',
-      action: 'Find Professionals',
-      to: `${base}/professionals`,
+      title: role === 'recruiter' ? 'Find talent' : 'Find professionals',
+      description: role === 'recruiter'
+        ? 'Search referral-warmed talent and build your hiring pipeline.'
+        : 'Browse verified professionals from top companies and request referrals that advance your career.',
+      action: role === 'recruiter' ? 'Find Talent' : 'Find Professionals',
+      to: findProfessionalsPath,
       gradient: 'from-emerald-500 to-teal-400',
     },
   ]
@@ -46,7 +49,7 @@ export function OnboardingOverlay() {
   const [show, setShow] = useState(false)
   const [step, setStep] = useState(0)
 
-  const role: Role = (user?.user_metadata?.role as Role) || 'job_seeker'
+  const role: Role = (user?.user_metadata?.role as Role) || 'student'
   const steps = getSteps(role)
 
   useEffect(() => {

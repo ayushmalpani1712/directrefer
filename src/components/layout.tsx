@@ -393,7 +393,7 @@ function CommandPalette() {
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup>
-          <CommandItem onSelect={() => go('/job-seeker/professionals')}><Plus className="mr-2 h-4 w-4" /> Request a referral</CommandItem>
+          <CommandItem onSelect={() => go('/dashboard')}><Plus className="mr-2 h-4 w-4" /> Request a referral</CommandItem>
           <CommandItem onSelect={() => go('/settings')}><Sun className="mr-2 h-4 w-4" /> Change theme</CommandItem>
           <CommandItem onSelect={() => go('/help')}><CircleHelp className="mr-2 h-4 w-4" /> Get help</CommandItem>
         </CommandGroup>

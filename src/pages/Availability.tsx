@@ -26,6 +26,7 @@ export default function Availability() {
   const [vacation, setVacation] = useState(false)
   const [saving, setSaving] = useState(false)
   const [dbId, setDbId] = useState<string | null>(null)
+  const [dbLoading, setDbLoading] = useState(true)
 
   const dbLoadedRef = useRef(false)
   const initialVacationRef = useRef<boolean | null>(null)
@@ -47,6 +48,7 @@ export default function Availability() {
         initialVacationRef.current = false
       }
       dbLoadedRef.current = true
+      setDbLoading(false)
     }
     loadAvailability()
   }, [user])
@@ -69,7 +71,7 @@ export default function Availability() {
     }
   }, [vacation, user, role])
 
-  if (loading) {
+  if (loading || dbLoading) {
     return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
   }
 

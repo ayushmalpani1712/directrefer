@@ -158,6 +158,8 @@ export function useAutoSaveForm({
             'Authorization': `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({ formId, values: currentValues }),
+        }).then((res) => {
+          if (!res.ok) throw new Error(`Server returned ${res.status}`)
         })
 
         lastSyncedAtRef.current = currentValues

@@ -44,6 +44,7 @@ export default function RecruiterDashboard() {
     responseRate: 0, verified: false,
   })
   const profileLoadedRef = useRef(false)
+  const [profileLoading, setProfileLoading] = useState(true)
 
   useEffect(() => {
     const loadCompany = async () => {
@@ -75,6 +76,7 @@ export default function RecruiterDashboard() {
         console.error('Failed to load company profile:', err)
         toast.error('Could not load company profile')
       }
+      setProfileLoading(false)
     }
     loadCompany()
   }, [user])
@@ -144,7 +146,7 @@ export default function RecruiterDashboard() {
 
   useEffect(() => { fetchFunnel() }, [fetchFunnel])
 
-  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+  if (loading || profileLoading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
 
   const totalApplicants = jobs.reduce((a, j) => a + j.applicants, 0)
   const inReview = jobs.reduce((a, j) => a + (j.pipeline.find((s) => s.stage === 'Review')?.count ?? 0), 0)

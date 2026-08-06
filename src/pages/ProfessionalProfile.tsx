@@ -86,6 +86,7 @@ export default function ProfessionalProfile() {
   const [editingPosition, setEditingPosition] = useState<string | null>(null)
   const [editingPositionValue, setEditingPositionValue] = useState('')
   const capacityRef = useRef(ME.maxPerMonth)
+  const draftRestoredRef = useRef(false)
 
   // ── Auto-Save Draft ──
   const draftSnapshot = {
@@ -118,12 +119,18 @@ export default function ProfessionalProfile() {
       if (v.bio !== undefined) setBio(v.bio)
       if (v.referralPolicy !== undefined) setReferralPolicy(v.referralPolicy)
       restoreDraft(v)
+      draftRestoredRef.current = true
     } catch { /* corrupted draft — ignore */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftStatus])
 
   // Sync local state when ME changes (DB data loads)
   useEffect(() => {
+    // Skip first DB sync if draft was just restored to avoid overwriting draft values
+    if (draftRestoredRef.current) {
+      draftRestoredRef.current = false
+      return
+    }
     setOpen(ME.openForReferrals)
     setIsOpenToWork(ME.isOpenToWork)
     setCapacity(ME.maxPerMonth)

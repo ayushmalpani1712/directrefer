@@ -2,8 +2,14 @@ import { Link } from 'react-router'
 import { motion } from 'framer-motion'
 import { Compass, Home, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/context/AuthContext'
+import { ROLE_ROUTE, type Role } from '@/data/mock'
 
 export default function NotFound() {
+  const { user } = useAuth()
+  const role: Role = (user?.user_metadata?.role as Role) || 'student'
+  const base = ROLE_ROUTE[role]
+
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
@@ -19,7 +25,7 @@ export default function NotFound() {
             <Link to="/dashboard"><Home className="mr-1.5 h-4 w-4" /> Back to dashboard</Link>
           </Button>
           <Button variant="outline" className="rounded-full" asChild>
-            <Link to="/job-seeker/professionals"><Search className="mr-1.5 h-4 w-4" /> Find professionals</Link>
+            <Link to={role === 'recruiter' ? `${base}/talent` : `${base}/professionals`}><Search className="mr-1.5 h-4 w-4" /> {role === 'recruiter' ? 'Find talent' : 'Find professionals'}</Link>
           </Button>
         </div>
         <div className="mt-8 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">

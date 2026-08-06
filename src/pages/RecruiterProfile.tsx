@@ -25,6 +25,7 @@ export default function RecruiterProfile() {
   const c = recruiterCompany
   const navigate = useNavigate()
   const profileLoadedRef = useRef(false)
+  const draftRestoredRef = useRef(false)
 
   useEffect(() => {
     const loadCompany = async () => {
@@ -84,6 +85,8 @@ export default function RecruiterProfile() {
   const [editBenefits, setEditBenefits] = useState('')
   const [locations, setLocations] = useState<string[]>([])
   const [editLocations, setEditLocations] = useState('')
+  const [savingHeader, setSavingHeader] = useState(false)
+  const [savingAbout, setSavingAbout] = useState(false)
 
   // ── Auto-Save Draft ──
   const draftSnapshot = {
@@ -116,12 +119,18 @@ export default function RecruiterProfile() {
       if (v.editHighlights !== undefined) setEditHighlights(v.editHighlights)
       if (v.mission !== undefined) setMission(v.mission)
       restoreDraft(v)
+      draftRestoredRef.current = true
     } catch { /* corrupted draft — ignore */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftStatus])
 
   // Sync local state when DB data loads
   useEffect(() => {
+    // Skip first DB sync if draft was just restored to avoid overwriting draft values
+    if (draftRestoredRef.current) {
+      draftRestoredRef.current = false
+      return
+    }
     setEditName(c.name)
     setEditIndustry(c.industry)
     setEditSize(c.size)
@@ -244,28 +253,33 @@ export default function RecruiterProfile() {
                       setEditing(false)
                       clearDraft()
                     }}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
-                    <Button className="rounded-full bg-primary shadow-glow" onClick={() => {
-                      setRecruiterCompany((prev) => ({
-                        ...prev,
-                        name: editName,
-                        industry: editIndustry,
-                        size: editSize,
-                        website: editWebsite,
-                        linkedin: editLinkedin,
-                        description,
-                      }))
-                      updateRecruiter({
-                        company_name: editName,
-                        hiring_department: editIndustry,
-                        company_size: editSize,
-                        company_website: editWebsite,
-                        company_description: description,
-                        company_linkedin: editLinkedin,
-                      })
-                      setEditing(false)
-                      toast.success('Profile saved')
-                      onFormSaved()
-                    }}><Check className="mr-1.5 h-4 w-4" /> Save</Button>
+                    <Button className="rounded-full bg-primary shadow-glow" disabled={savingHeader} onClick={async () => {
+                      setSavingHeader(true)
+                      try {
+                        setRecruiterCompany((prev) => ({
+                          ...prev,
+                          name: editName,
+                          industry: editIndustry,
+                          size: editSize,
+                          website: editWebsite,
+                          linkedin: editLinkedin,
+                          description,
+                        }))
+                        updateRecruiter({
+                          company_name: editName,
+                          hiring_department: editIndustry,
+                          company_size: editSize,
+                          company_website: editWebsite,
+                          company_description: description,
+                          company_linkedin: editLinkedin,
+                        })
+                        setEditing(false)
+                        toast.success('Profile saved')
+                        onFormSaved()
+                      } finally {
+                        setSavingHeader(false)
+                      }
+                    }}><Check className="mr-1.5 h-4 w-4" /> {savingHeader ? 'Saving...' : 'Save'}</Button>
                   </>
                 ) : (
                   <Button className="rounded-full bg-primary shadow-glow" onClick={() => {
@@ -327,16 +341,21 @@ export default function RecruiterProfile() {
                   </div>
                   <div className="flex gap-2 pt-1">
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => setEditingCard(null)}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
-                    <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={() => {
-                      const parsedHighlights = editHighlights.split(',').map((h) => h.trim()).filter(Boolean)
-                      setMission(editMission)
-                      setHighlights(parsedHighlights)
-                      setRecruiterCompany((prev) => ({ ...prev, description, mission: editMission, highlights: parsedHighlights }))
-                      updateRecruiter({ company_description: description, company_mission: editMission, company_highlights: parsedHighlights })
-                      setEditingCard(null)
-                      toast.success('About section saved')
-                      onFormSaved()
-                    }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
+                    <Button size="sm" className="rounded-full bg-primary shadow-glow" disabled={savingAbout} onClick={async () => {
+                      setSavingAbout(true)
+                      try {
+                        const parsedHighlights = editHighlights.split(',').map((h) => h.trim()).filter(Boolean)
+                        setMission(editMission)
+                        setHighlights(parsedHighlights)
+                        setRecruiterCompany((prev) => ({ ...prev, description, mission: editMission, highlights: parsedHighlights }))
+                        updateRecruiter({ company_description: description, company_mission: editMission, company_highlights: parsedHighlights })
+                        setEditingCard(null)
+                        toast.success('About section saved')
+                        onFormSaved()
+                      } finally {
+                        setSavingAbout(false)
+                      }
+                    }}><Check className="mr-1 h-3.5 w-3.5" /> {savingAbout ? 'Saving...' : 'Save'}</Button>
                   </div>
                 </div>
               ) : (
@@ -397,11 +416,12 @@ export default function RecruiterProfile() {
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => setEditingCard(null)}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
                     <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={async () => {
                       const newBenefits = editBenefits.split(',').map((b) => b.trim()).filter(Boolean)
+                      const prevBenefits = [...benefits]
                       setBenefits(newBenefits)
                       setEditingCard(null)
                       if (user) {
                         const { error } = await supabase.from('profiles_recruiter').update({ benefits: newBenefits }).eq('user_id', user.id)
-                        if (error) { toast.error('Failed to save benefits'); return }
+                        if (error) { setBenefits(prevBenefits); toast.error('Failed to save benefits'); return }
                       }
                       toast.success('Benefits saved')
                     }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
@@ -438,11 +458,12 @@ export default function RecruiterProfile() {
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => setEditingCard(null)}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
                     <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={async () => {
                       const newLocations = editLocations.split(',').map((l) => l.trim()).filter(Boolean)
+                      const prevLocations = [...locations]
                       setLocations(newLocations)
                       setEditingCard(null)
                       if (user) {
                         const { error } = await supabase.from('profiles_recruiter').update({ office_locations: newLocations }).eq('user_id', user.id)
-                        if (error) { toast.error('Failed to save locations'); return }
+                        if (error) { setLocations(prevLocations); toast.error('Failed to save locations'); return }
                       }
                       toast.success('Office locations saved')
                     }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>

@@ -61,6 +61,24 @@ export default function StudentProfile() {
     setOpenToWork(s.openToWork)
   }, [s.openToWork])
 
+  // Sync header edit fields when DB data loads
+  useEffect(() => {
+    setEditName(s.name)
+    setEditHeadline(s.headline)
+    setEditLocation(s.location)
+    setEditLinkedin(s.links.linkedin)
+    setEditGithub(s.links.github)
+  }, [s.name, s.headline, s.location, s.links.linkedin, s.links.github])
+
+  // Sync career preference edit fields when DB data loads
+  useEffect(() => {
+    setEditPreferredRoles(s.preferredRoles.join(', '))
+    setEditPreferredCompanies(s.preferredCompanies.join(', '))
+    setEditCareerInterests(s.careerInterests.join(', '))
+    setEditExpectedSalary(s.expectedSalary)
+    setEditLanguages(s.languages.join(', '))
+  }, [s.preferredRoles, s.preferredCompanies, s.careerInterests, s.expectedSalary, s.languages])
+
   const myRequests = requests.filter((r) => r.requesterId === user?.id)
 
   const [editing, setEditing] = useState(false)
@@ -446,11 +464,20 @@ export default function StudentProfile() {
     toast.success('Resume downloaded')
   }
 
-  function handleDeleteResume() {
-    if (user) deleteResume(user.id).catch(() => {})
-    removeStudentResume()
-    setShowResumeConfirm(false)
-    toast.success('Resume removed')
+  async function handleDeleteResume() {
+    if (!user) return
+    try {
+      const result = await deleteResume(user.id)
+      if (result) {
+        removeStudentResume()
+        setShowResumeConfirm(false)
+        toast.success('Resume removed')
+      } else {
+        toast.error('Failed to delete resume. Please try again.')
+      }
+    } catch {
+      toast.error('Failed to delete resume. Please try again.')
+    }
   }
 
   return (

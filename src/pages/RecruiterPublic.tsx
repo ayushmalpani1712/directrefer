@@ -147,7 +147,7 @@ export default function RecruiterPublic() {
                     <div className="text-sm font-semibold">{j.title}</div>
                     <div className="mt-0.5 text-xs text-muted-foreground">{j.location} &middot; {j.type} &middot; {j.salary}</div>
                   </div>
-                  <Link to="/request-referral">
+                  <Link to="/job-seeker/request-referral">
                     <Button size="sm" variant="outline" className="rounded-full text-xs">
                       <Send className="mr-1 h-3 w-3" /> Get Referral
                     </Button>

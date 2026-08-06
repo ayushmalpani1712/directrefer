@@ -58,6 +58,7 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmNew, setConfirmNew] = useState('')
   const [passwordLoading, setPasswordLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [notifPrefs, setNotifPrefs] = useState({
     referral_updates: true, new_messages: true, profile_views: true,
     completion_reminders: true, product_announcements: false, weekly_digest: false, email_opt_out: false,
@@ -258,9 +259,10 @@ export default function Settings() {
             <CardHeader><CardTitle className="flex items-center gap-2 text-base text-rose-500"><Trash2 className="h-4 w-4" /> Danger zone</CardTitle></CardHeader>
             <CardContent className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
               <p className="text-sm text-muted-foreground">Permanently delete your account and all referral history. This cannot be undone.</p>
-              <Button variant="outline" className="border-rose-500/40 text-rose-500 hover:bg-rose-500/10" onClick={async () => {
+              <Button variant="outline" className="border-rose-500/40 text-rose-500 hover:bg-rose-500/10" disabled={deleting} onClick={async () => {
                 if (role === 'admin') { toast.error('Admin accounts cannot be self-deleted. Contact another admin.'); return }
                 if (!confirm('Are you absolutely sure? This will permanently delete your account and all data. This action cannot be undone.')) return
+                setDeleting(true)
                 try {
                   const userId = (await supabase.auth.getUser()).data.user?.id
                   if (!userId) { toast.error('Not authenticated'); return }
@@ -286,8 +288,10 @@ export default function Settings() {
                   navigate('/')
                 } catch {
                   toast.error('Failed to delete account. Please contact support.')
+                } finally {
+                  setDeleting(false)
                 }
-              }}>Delete account</Button>
+              }}>{deleting ? 'Deleting...' : 'Delete account'}</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -351,7 +355,15 @@ export default function Settings() {
               {sessions.map((s) => (
                 <div key={s.id} className="flex items-center justify-between rounded-lg border border-border px-3.5 py-2.5 text-sm">
                   <span className="flex items-center gap-2"><Laptop className="h-4 w-4 text-muted-foreground" /> {s.device}</span>
-                  {s.isCurrent ? <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10">This device</Badge> : <Button variant="ghost" size="sm" className="h-7 text-xs text-rose-500" onClick={() => { setSessions((prev) => prev.filter((sess) => sess.id !== s.id)); toast.success('Session revoked') }}>Revoke</Button>}
+                  {s.isCurrent ? <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10">This device</Badge> : <Button variant="ghost" size="sm" className="h-7 text-xs text-rose-500" onClick={async () => {
+                    try {
+                      await supabase.auth.signOut()
+                      setSessions((prev) => prev.filter((sess) => sess.id !== s.id))
+                      toast.success('Signed out from other session')
+                    } catch {
+                      toast.error('Failed to revoke session. Try changing your password instead.')
+                    }
+                  }}>Revoke</Button>}
                 </div>
               ))}
             </CardContent>

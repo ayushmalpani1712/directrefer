@@ -297,7 +297,7 @@ export default function Landing() {
               <p className="mt-3 max-w-xl text-muted-foreground">Verified professionals from the companies you actually want to work at.</p>
             </div>
             <Button variant="outline" className="rounded-full" asChild>
-              <Link to={user ? '/job-seeker/professionals' : '/login'}>Browse all professionals <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
+              <Link to={user ? '/dashboard' : '/login'}>Browse all professionals <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
             </Button>
           </motion.div>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
