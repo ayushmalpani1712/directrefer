@@ -80,9 +80,11 @@ export function useAutoSaveForm({
   // Compute hasUnsavedChanges
   useEffect(() => {
     if (!enabled || !initialValuesRef.current) return
+    // Skip recomputation after a successful save — onFormSaved already handled it
+    if (status === 'saved') return
     const changed = !shallowEqual(initialValuesRef.current, values)
     setHasUnsavedChanges(changed)
-  }, [values, enabled])
+  }, [values, enabled, status])
 
   // ── Debounced localStorage save ──────────────────────────
   useEffect(() => {
@@ -234,9 +236,12 @@ export function useAutoSaveForm({
   }, [userId, formId])
 
   const onFormSaved = useCallback(() => {
+    // Capture current values at call time before clearDraft runs
+    // (latestValuesRef may be stale due to React batching)
+    const currentValues = latestValuesRef.current
     clearDraft()
     // Reset initial values to current (post-save) state
-    initialValuesRef.current = { ...latestValuesRef.current }
+    initialValuesRef.current = { ...currentValues }
   }, [clearDraft])
 
   // ── Cleanup ──────────────────────────────────────────────

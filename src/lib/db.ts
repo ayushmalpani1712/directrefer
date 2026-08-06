@@ -790,12 +790,26 @@ export async function updateJobSeekerProfile(
   }
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { data: existing } = await supabase
       .from('profiles_job_seeker')
-      .update(updates)
+      .select('user_id')
       .eq('user_id', userId)
+      .maybeSingle()
 
-    return !error
+    if (existing) {
+      const { error } = await supabase
+        .from('profiles_job_seeker')
+        .update(updates)
+        .eq('user_id', userId)
+      if (error) console.error('Update job seeker profile error:', error)
+      return !error
+    } else {
+      const { error } = await supabase
+        .from('profiles_job_seeker')
+        .insert({ user_id: userId, ...updates })
+      if (error) console.error('Insert job seeker profile error:', error)
+      return !error
+    }
   } catch {
     return false
   }

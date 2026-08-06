@@ -48,7 +48,6 @@ export default function StudentProfile() {
     removeStudentExperience,
     removeStudentEducation,
     removeStudentResume, removeStudentSkill,
-    refreshCandidates,
   } = useApp()
   const { user } = useAuth()
   const loading = usePageLoading(450)
@@ -56,27 +55,27 @@ export default function StudentProfile() {
 
   const [openToWork, setOpenToWork] = useState(s.openToWork)
 
-  // Sync openToWork when DB data loads
+  // Sync openToWork when DB data loads (only if value actually changed)
   useEffect(() => {
-    setOpenToWork(s.openToWork)
+    setOpenToWork((prev) => (prev === s.openToWork ? prev : s.openToWork))
   }, [s.openToWork])
 
-  // Sync header edit fields when DB data loads
+  // Sync header edit fields when DB data loads (only if values actually changed)
   useEffect(() => {
-    setEditName(s.name)
-    setEditHeadline(s.headline)
-    setEditLocation(s.location)
-    setEditLinkedin(s.links.linkedin)
-    setEditGithub(s.links.github)
+    setEditName((prev) => (prev === s.name ? prev : s.name))
+    setEditHeadline((prev) => (prev === s.headline ? prev : s.headline))
+    setEditLocation((prev) => (prev === s.location ? prev : s.location))
+    setEditLinkedin((prev) => (prev === s.links.linkedin ? prev : s.links.linkedin))
+    setEditGithub((prev) => (prev === s.links.github ? prev : s.links.github))
   }, [s.name, s.headline, s.location, s.links.linkedin, s.links.github])
 
-  // Sync career preference edit fields when DB data loads
+  // Sync career preference edit fields when DB data loads (only if values actually changed)
   useEffect(() => {
-    setEditPreferredRoles(s.preferredRoles.join(', '))
-    setEditPreferredCompanies(s.preferredCompanies.join(', '))
-    setEditCareerInterests(s.careerInterests.join(', '))
-    setEditExpectedSalary(s.expectedSalary)
-    setEditLanguages(s.languages.join(', '))
+    setEditPreferredRoles((prev) => (prev === s.preferredRoles.join(', ') ? prev : s.preferredRoles.join(', ')))
+    setEditPreferredCompanies((prev) => (prev === s.preferredCompanies.join(', ') ? prev : s.preferredCompanies.join(', ')))
+    setEditCareerInterests((prev) => (prev === s.careerInterests.join(', ') ? prev : s.careerInterests.join(', ')))
+    setEditExpectedSalary((prev) => (prev === s.expectedSalary ? prev : s.expectedSalary))
+    setEditLanguages((prev) => (prev === s.languages.join(', ') ? prev : s.languages.join(', ')))
   }, [s.preferredRoles, s.preferredCompanies, s.careerInterests, s.expectedSalary, s.languages])
 
   const myRequests = requests.filter((r) => r.requesterId === user?.id)
@@ -571,7 +570,6 @@ export default function StudentProfile() {
                   onCheckedChange={(v) => {
                     setOpenToWork(v)
                     updateStudent({ openToWork: v })
-                    refreshCandidates()
                     toast.success(v ? 'You are now visible to recruiters' : 'Profile hidden from recruiters')
                   }}
                 />
