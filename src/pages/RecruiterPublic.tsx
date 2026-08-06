@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft, BadgeCheck, Briefcase, Building2, Globe, Send, Users,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+
 import { Chip, CompanyChip, ReportDialog, Stars } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
@@ -21,10 +20,13 @@ interface RecruiterData {
   company_size: string
   company_website: string
   company_description: string
+  benefits: string[]
+  office_locations: string[]
 }
 
 export default function RecruiterPublic() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const loading = usePageLoading(400)
   const { jobs } = useApp()
   const [recruiter, setRecruiter] = useState<RecruiterData | null>(null)
@@ -34,28 +36,34 @@ export default function RecruiterPublic() {
     if (!id) return
     const load = async () => {
       setLoadingData(true)
-      const { data: profile } = await supabase
-        .from('profiles_recruiter')
-        .select('*')
-        .eq('user_id', id)
-        .single()
-      if (!profile) {
-        setLoadingData(false)
-        return
+      try {
+        const { data: profile } = await supabase
+          .from('profiles_recruiter')
+          .select('*')
+          .eq('user_id', id)
+          .single()
+        if (!profile) {
+          setLoadingData(false)
+          return
+        }
+        const { data: userData } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', id)
+          .single()
+        setRecruiter({
+          user: userData as RecruiterData['user'],
+          company_name: profile.company_name ?? 'Company',
+          hiring_department: profile.hiring_department ?? 'Technology',
+          company_size: profile.company_size ?? '50-100',
+          company_website: profile.company_website ?? '',
+          company_description: profile.company_description ?? '',
+          benefits: Array.isArray(profile.benefits) ? profile.benefits : [],
+          office_locations: Array.isArray(profile.office_locations) ? profile.office_locations : [],
+        })
+      } catch (err) {
+        console.error('Failed to load recruiter profile:', err)
       }
-      const { data: userData } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', id)
-        .single()
-      setRecruiter({
-        user: userData as RecruiterData['user'],
-        company_name: profile.company_name ?? 'Company',
-        hiring_department: profile.hiring_department ?? 'Technology',
-        company_size: profile.company_size ?? '50-100',
-        company_website: profile.company_website ?? '',
-        company_description: profile.company_description ?? '',
-      })
       setLoadingData(false)
     }
     load()
@@ -63,19 +71,7 @@ export default function RecruiterPublic() {
 
   if (loading || loadingData) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-48 w-full rounded-2xl" />
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="h-40 rounded-xl" />
-            <Skeleton className="h-32 rounded-xl" />
-          </div>
-          <div className="space-y-4">
-            <Skeleton className="h-32 rounded-xl" />
-            <Skeleton className="h-28 rounded-xl" />
-          </div>
-        </div>
-      </div>
+      <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
     )
   }
 
@@ -86,7 +82,7 @@ export default function RecruiterPublic() {
 
   return (
     <div className="space-y-6">
-      <Link to="/jobs" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+      <Link to="/recruiter/jobs" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" /> Back to jobs
       </Link>
 
@@ -119,7 +115,7 @@ export default function RecruiterPublic() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" className="rounded-full" onClick={() => toast.info('Contact request sent!')}>
+                <Button variant="outline" className="rounded-full" onClick={() => navigate('/messages')}>
                   <Send className="mr-1.5 h-4 w-4" /> Contact Recruiter
                 </Button>
                 <ReportDialog targetUserId={id ?? ''} targetUserName={c.company_name} />
@@ -165,9 +161,11 @@ export default function RecruiterPublic() {
             <CardHeader className=""><CardTitle className="text-base">Benefits & perks</CardTitle></CardHeader>
             <CardContent className="pt-0">
               <div className="flex flex-wrap gap-2">
-                {['Health insurance', '401k matching', 'Stock options', 'Remote friendly', 'Unlimited PTO'].map((b) => (
+                {recruiter.benefits.length > 0 ? recruiter.benefits.map((b) => (
                   <Chip key={b} tone="primary">{b}</Chip>
-                ))}
+                )) : (
+                  <p className="text-sm text-muted-foreground">No benefits listed yet</p>
+                )}
               </div>
             </CardContent>
           </Card>

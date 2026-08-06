@@ -2,6 +2,23 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { ROLE_ROUTE, type Role } from '@/data/mock'
+
+async function getRoleRoute(): Promise<string> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return '/job-seeker'
+    const { data: userRow } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    const dbRole = (userRow?.role as Role) || 'student'
+    return ROLE_ROUTE[dbRole] || '/job-seeker'
+  } catch {
+    return '/job-seeker'
+  }
+}
 
 export default function AuthCallback() {
   const navigate = useNavigate()
@@ -10,10 +27,11 @@ export default function AuthCallback() {
   const navigated = useRef(false)
   const codeExchanged = useRef(false)
 
-  const goToDashboard = useCallback(() => {
+  const goToDashboard = useCallback(async () => {
     if (navigated.current) return
     navigated.current = true
-    navigate('/dashboard', { replace: true })
+    const route = await getRoleRoute()
+    navigate(route, { replace: true })
   }, [navigate])
 
   useEffect(() => {
@@ -45,9 +63,9 @@ export default function AuthCallback() {
             return
           }
         }
-        // If we still don't have a session after retries, try navigating anyway
+        // If we still don't have a session after retries, show error
         clearTimeout(timeout)
-        goToDashboard()
+        setError('Login failed. Please try again.')
         return
       }
 
@@ -76,7 +94,7 @@ export default function AuthCallback() {
   useEffect(() => {
     if (!loading && user && !navigated.current) {
       navigated.current = true
-      navigate('/dashboard', { replace: true })
+      getRoleRoute().then((route) => navigate(route, { replace: true }))
     }
   }, [user, loading, navigate])
 

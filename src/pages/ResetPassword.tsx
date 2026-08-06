@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { motion } from 'framer-motion'
-import { CheckCircle2, Eye, EyeOff, KeyRound, Loader2, AlertCircle, ArrowLeft, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, Eye, EyeOff, KeyRound, Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Logo } from '@/components/layout'
-import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
 function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
@@ -16,7 +15,6 @@ function getPasswordStrength(pw: string): { score: number; label: string; color:
   if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++
   if (/\d/.test(pw)) score++
   if (/[^a-zA-Z0-9]/.test(pw)) score++
-
   if (score <= 1) return { score, label: 'Weak', color: 'bg-rose-500' }
   if (score <= 2) return { score, label: 'Fair', color: 'bg-amber-500' }
   if (score <= 3) return { score, label: 'Good', color: 'bg-blue-500' }
@@ -32,48 +30,33 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
-  const [validToken, setValidToken] = useState(false)
-  const [otpEmail, setOtpEmail] = useState('')
-  const [otpToken, setOtpToken] = useState('')
+  const [verifying, setVerifying] = useState(true)
+  const [resetToken, setResetToken] = useState('')
+  const tokenValid = useRef(false)
 
   useEffect(() => {
-    const email = searchParams.get('email')
-    const token = searchParams.get('token')
-    if (email && token) {
-      setOtpEmail(email)
-      setOtpToken(token)
-      setValidToken(true)
-      return
-    }
-
-    // Legacy hash fragment flow (Supabase magic link)
-    const hash = window.location.hash
-    if (hash && hash.includes('type=recovery')) {
-      const tokenStr = hash.substring(1)
-      const params = new URLSearchParams(tokenStr)
-      const accessToken = params.get('access_token')
-      const refreshToken = params.get('refresh_token')
-      const type = params.get('type')
-
-      if (type !== 'recovery' || !accessToken || !refreshToken) {
-        setError('Invalid or expired reset link. Please request a new one.')
+    const handleRecovery = async () => {
+      const code = searchParams.get('code')
+      if (code) {
+        setResetToken(code)
+        tokenValid.current = true
+        setVerifying(false)
+        window.history.replaceState({}, '', '/reset-password')
         return
       }
 
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      }).then(({ error: sessionError }) => {
-        if (sessionError) {
-          setError('Invalid or expired reset link. Please request a new one.')
-        } else {
-          setValidToken(true)
-        }
-      })
-      return
+      const hash = window.location.hash
+      if (hash && hash.includes('type=recovery')) {
+        setError('This type of reset link is no longer supported. Please request a new one.')
+        setVerifying(false)
+        return
+      }
+
+      setError('No reset token found. Please request a new link from the login page.')
+      setVerifying(false)
     }
 
-    setError('No reset token found. Please request a new link from the login page.')
+    handleRecovery()
   }, [searchParams])
 
   const strength = getPasswordStrength(password)
@@ -95,30 +78,19 @@ export default function ResetPassword() {
     }
     setLoading(true)
     try {
-      if (otpEmail && otpToken) {
-        // OTP flow: call serverless function
-        const res = await fetch('/api/reset-password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: otpEmail, token: otpToken, newPassword: password }),
-        })
-        const data = await res.json()
-        if (!data.ok) {
-          toast.error(data.error || 'Failed to update password')
-          return
-        }
-      } else {
-        // Legacy flow: use Supabase session
-        const { error } = await supabase.auth.updateUser({ password })
-        if (error) {
-          toast.error(error.message)
-          return
-        }
+      const res = await fetch('/api/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetToken, password })
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        toast.error(data.error || 'Failed to update password. Please try again.')
+        return
       }
 
       setSuccess(true)
       toast.success('Password updated!')
-      setTimeout(() => navigate('/login', { replace: true }), 3000)
     } catch {
       toast.error('Failed to update password. Please try again.')
     } finally {
@@ -139,9 +111,9 @@ export default function ResetPassword() {
           <div className="mt-6 flex flex-col gap-2">
             <Link
               to="/forgot-password"
-              className="inline-flex items-center justify-center rounded-lg bg-[#4F7CFF] px-6 py-2.5 text-sm font-semibold text-white"
+              className="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-white"
             >
-              Request a new code
+              Request a new link
             </Link>
             <Link
               to="/login"
@@ -160,25 +132,22 @@ export default function ResetPassword() {
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md rounded-2xl border border-border bg-card p-10 text-center shadow-lg">
           <div className="mb-6 flex justify-center"><Logo /></div>
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-            <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
+            <CheckCircle2 className="h-8 w-8 text-emerald-500" />
           </div>
           <h2 className="mt-6 text-xl font-bold text-foreground">Password updated!</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Redirecting to sign in in 3 seconds…
+            Your password has been changed. Redirecting to sign in…
           </p>
-          <Link
-            to="/login"
-            className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-          >
-            <ArrowLeft className="h-4 w-4" /> Go to sign in now
-          </Link>
+          <Button onClick={() => navigate('/login', { replace: true })} className="mt-6 h-10 w-full rounded-lg bg-primary font-semibold text-white">
+            Sign in with new password
+          </Button>
         </motion.div>
       </div>
     )
   }
 
-  if (!validToken) {
+  if (verifying) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md rounded-2xl border border-border bg-card p-10 text-center shadow-lg">
@@ -209,7 +178,7 @@ export default function ResetPassword() {
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••••"
+                placeholder="Min. 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-10 pr-10 bg-background text-foreground"
@@ -248,7 +217,7 @@ export default function ResetPassword() {
               <Input
                 id="confirm"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••••"
+                placeholder="Re-enter password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="h-10 pr-10 bg-background text-foreground"
@@ -271,12 +240,12 @@ export default function ResetPassword() {
           <Button
             type="submit"
             disabled={loading || !password || !confirmPassword || !passwordsMatch}
-            className="h-10 w-full rounded-lg bg-[#4F7CFF] font-semibold text-white hover:bg-[#4F7CFF]/90"
+            className="h-10 w-full rounded-lg bg-primary font-semibold text-white"
           >
             {loading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <ShieldCheck className="mr-2 h-4 w-4" />
+              <KeyRound className="mr-2 h-4 w-4" />
             )}
             {loading ? 'Updating…' : 'Update password'}
           </Button>

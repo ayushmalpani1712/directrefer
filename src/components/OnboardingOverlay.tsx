@@ -5,35 +5,40 @@ import { ArrowRight, CheckCircle, Search, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/context/AuthContext'
+import { ROLE_ROUTE } from '@/data/mock'
+import type { Role } from '@/data/mock'
 
 const ONBOARDING_DISMISSED_KEY = 'onboarding_dismissed'
 
-const STEPS = [
-  {
-    icon: CheckCircle,
-    title: 'Complete your profile',
-    description: 'Add your headline, bio, skills, and experience so professionals know who you are.',
-    action: 'Go to Profile',
-    to: '/profile',
-    gradient: 'from-[#3B5FE5] to-[#8B8FD4]',
-  },
-  {
-    icon: Upload,
-    title: 'Upload your resume',
-    description: 'Attach your resume so professionals can review your background before accepting referral requests.',
-    action: 'Upload Resume',
-    to: '/profile',
-    gradient: 'from-sky-500 to-cyan-400',
-  },
-  {
-    icon: Search,
-    title: 'Find professionals',
-    description: 'Browse verified professionals from top companies and request referrals that advance your career.',
-    action: 'Find Professionals',
-    to: '/professionals',
-    gradient: 'from-emerald-500 to-teal-400',
-  },
-]
+function getSteps(role: Role) {
+  const base = ROLE_ROUTE[role]
+  return [
+    {
+      icon: CheckCircle,
+      title: 'Complete your profile',
+      description: 'Add your headline, bio, skills, and experience so professionals know who you are.',
+      action: 'Go to Profile',
+      to: `${base}/profile`,
+      gradient: 'from-[#3B5FE5] to-[#8B8FD4]',
+    },
+    {
+      icon: Upload,
+      title: 'Upload your resume',
+      description: 'Attach your resume so professionals can review your background before accepting referral requests.',
+      action: 'Upload Resume',
+      to: `${base}/profile`,
+      gradient: 'from-sky-500 to-cyan-400',
+    },
+    {
+      icon: Search,
+      title: 'Find professionals',
+      description: 'Browse verified professionals from top companies and request referrals that advance your career.',
+      action: 'Find Professionals',
+      to: `${base}/professionals`,
+      gradient: 'from-emerald-500 to-teal-400',
+    },
+  ]
+}
 
 export function OnboardingOverlay() {
   const { user } = useAuth()
@@ -41,11 +46,14 @@ export function OnboardingOverlay() {
   const [show, setShow] = useState(false)
   const [step, setStep] = useState(0)
 
+  const role: Role = (user?.user_metadata?.role as Role) || 'job_seeker'
+  const steps = getSteps(role)
+
   useEffect(() => {
     if (!user) return
     if (localStorage.getItem(ONBOARDING_DISMISSED_KEY)) return
 
-    const profile = (user as any).user_metadata
+    const profile = user.user_metadata
     const needsOnboarding =
       profile?.openToWork === false || !profile?.headline || profile.headline === ''
     if (needsOnboarding) setShow(true)
@@ -57,7 +65,7 @@ export function OnboardingOverlay() {
   }
 
   const handleNext = () => {
-    if (step < STEPS.length - 1) {
+    if (step < steps.length - 1) {
       setStep(step + 1)
     } else {
       handleDismiss()
@@ -71,7 +79,7 @@ export function OnboardingOverlay() {
 
   if (!show) return null
 
-  const current = STEPS[step]
+  const current = steps[step]
 
   return (
     <AnimatePresence>
@@ -95,7 +103,7 @@ export function OnboardingOverlay() {
               <CardContent className="p-8">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-medium text-muted-foreground">
-                    Step {step + 1} of {STEPS.length}
+                    Step {step + 1} of {steps.length}
                   </div>
                   <button onClick={handleDismiss} className="text-muted-foreground hover:text-foreground" aria-label="Dismiss onboarding">
                     <X className="h-4 w-4" />
@@ -112,7 +120,7 @@ export function OnboardingOverlay() {
 
                 <div className="mt-8 flex items-center justify-between">
                   <div className="flex gap-1.5">
-                    {STEPS.map((_, i) => (
+                    {steps.map((_, i) => (
                       <div key={i} className={`h-1.5 rounded-full transition-all ${i === step ? 'w-6 bg-primary' : i < step ? 'w-1.5 bg-primary/40' : 'w-1.5 bg-border'}`} />
                     ))}
                   </div>
@@ -120,7 +128,7 @@ export function OnboardingOverlay() {
                     <Button variant="ghost" size="sm" onClick={handleDismiss}>
                       Skip
                     </Button>
-                    {step < STEPS.length - 1 ? (
+                    {step < steps.length - 1 ? (
                       <Button size="sm" onClick={handleNext} className="rounded-full bg-primary">
                         Next <ArrowRight className="ml-1 h-3.5 w-3.5" />
                       </Button>

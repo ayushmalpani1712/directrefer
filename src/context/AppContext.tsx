@@ -12,8 +12,7 @@ import {
   type Job,
   PIPELINE_STAGES,
 } from '@/data/mock'
-import { maybeRunPipeline } from '@/lib/lifecycle'
-import { supabase, setPresence, advanceReferralPipeline as dbAdvancePipeline } from '@/lib/supabase'
+import { supabase, advanceReferralPipeline as dbAdvancePipeline } from '@/lib/supabase'
 import { sendReferralStatusEmail, sendReminderEmail } from '@/lib/email'
 import { notifyNewMessage, notifyReferralUpdate, requestNotificationPermission } from '@/lib/notifications'
 import {
@@ -35,6 +34,7 @@ import {
   toggleBookmark as dbToggleBookmark,
   updateJob as dbUpdateJob,
   fetchCandidates as dbFetchCandidates,
+  formatRelativeTime,
 } from '@/lib/db'
 
 const RATE_LIMIT = 3
@@ -51,19 +51,6 @@ function mapNotificationType(dbType: string): AppNotification['type'] {
     case 'system': return 'system'
     default: return 'system'
   }
-}
-
-function formatRelativeTime(iso: string): string {
-  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (seconds < 60) return 'Just now'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days === 1) return 'Yesterday'
-  if (days < 7) return `${days} days ago`
-  return `${Math.floor(days / 7)}w ago`
 }
 
 export interface StudentProfile {
@@ -107,7 +94,9 @@ export interface Candidate {
 interface AppState {
   role: Role
   setRole: (r: Role) => void
+  isAdmin: boolean
   authed: boolean
+  loading: boolean
   login: (r: Role) => void
   logout: () => void
 
@@ -156,13 +145,13 @@ interface AppState {
   unreadNotificationCount: number
 
   activity: { id: string; kind: string; text: string; time: string }[]
-  logActivity: (action: string, entityType: string, entityId?: string, metadata?: Record<string, unknown>) => Promise<void>
 
   jobs: Job[]
   setJobs: React.Dispatch<React.SetStateAction<Job[]>>
   updateJob: (id: string, patch: Partial<Job>) => void
 
   candidates: { id: string; name: string; role: string; company: string; stage: string; rating: number; source: string; gradient: string; skills: string[]; location: string; exp: number }[]
+  refreshCandidates: () => Promise<void>
 
   myReferralCount: number
   myAcceptedCount: number
@@ -172,8 +161,10 @@ interface AppState {
   demoMode: boolean
   toggleDemoMode: () => void
   visibleProfessionals: Professional[]
-  userPresenceMap: Record<string, boolean>
   getUserOnlineStatus: (userId: string) => boolean
+
+  npsOpen: boolean
+  setNpsOpen: (open: boolean) => void
 }
 
 const Ctx = createContext<AppState | null>(null)
@@ -181,8 +172,11 @@ const Ctx = createContext<AppState | null>(null)
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [role, setRole] = useState<Role>('student')
+  const [isAdmin, setIsAdmin] = useState(false)
   const [authed, setAuthed] = useState(false)
-  const [demoMode, setDemoMode] = useState(true)
+  const [loading, setLoading] = useState(true)
+  const [demoMode, setDemoMode] = useState(false)
+  const [npsOpen, setNpsOpen] = useState(false)
   const initialRoleLoaded = useRef(false)
 
   const [professionals, setProfessionals] = useState<Professional[]>([])
@@ -214,24 +208,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [requestTimestamps, setRequestTimestamps] = useState<number[]>([])
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [notifications, setNotifications] = useState<AppNotification[]>([])
-  const [activity, setActivity] = useState<{ id: string; kind: string; text: string; time: string }[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
   const [candidates, setCandidates] = useState<{ id: string; name: string; role: string; company: string; stage: string; rating: number; source: string; gradient: string; skills: string[]; location: string; exp: number }[]>([])
-  const [userPresenceMap, setUserPresenceMap] = useState<Record<string, boolean>>({})
+
+  const refreshCandidates = useCallback(async () => {
+    if (!user) return
+    try {
+      const cands = await dbFetchCandidates(user.id)
+      setCandidates(cands)
+    } catch { /* ignore */ }
+  }, [user])
 
   // ── Load real data from Supabase when user is authenticated ──
   useEffect(() => {
     if (!user) return
+    const currentUser = user
 
     async function loadRealData() {
-      const userId = user!.id
-      const meta = user!.user_metadata
+      const userId = currentUser.id
+      const meta = currentUser.user_metadata
 
-      // Read role from the users table (source of truth) instead of auth metadata
+      // Read role and profile data from the users table (source of truth)
       let userRole = 'job_seeker'
       const { data: userRow } = await supabase
         .from('users')
-        .select('role')
+        .select('role, full_name, city, state, country')
         .eq('id', userId)
         .single()
       if (userRow?.role) {
@@ -242,6 +243,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const mappedRole: Role = userRole === 'job_seeker' ? 'student' : (userRole as Role)
       if (!initialRoleLoaded.current) {
         setRole(mappedRole)
+        setIsAdmin(userRole === 'admin')
         initialRoleLoaded.current = true
       }
       setAuthed(true)
@@ -254,7 +256,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         dbFetchBookmarks(userId),
         dbFetchNotifications(userId),
         dbFetchJobs(),
-        dbFetchCandidates(),
+        dbFetchCandidates(userId),
       ])
 
       if (profs.status === 'fulfilled' && profs.value.length > 0) setProfessionals(profs.value)
@@ -265,14 +267,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (jbs.status === 'fulfilled' && jbs.value.length > 0) setJobs(jbs.value)
       if (cands.status === 'fulfilled' && cands.value.length > 0) setCandidates(cands.value)
 
-      // Set student profile from auth metadata
-      const displayName = meta?.full_name || meta?.name || user!.email?.split('@')[0] || ''
+      // Read name and location from users table (source of truth, not auth metadata)
+      const rawName = userRow?.full_name || meta?.full_name || meta?.name || currentUser.email?.split('@')[0] || 'User'
+      const displayName = rawName.trim() || currentUser.email?.split('@')[0] || 'User'
+      const locationParts = [userRow?.city, userRow?.state].filter(Boolean).join(', ')
+
+      // Always populate student name so it's available in any workspace
+      setStudent((prev) => ({
+        ...prev,
+        name: displayName,
+        email: currentUser.email || prev.email,
+        location: locationParts || prev.location,
+      }))
+
       if (mappedRole === 'student') {
-        setStudent((prev) => ({
-          ...prev,
-          name: displayName,
-          email: user!.email || prev.email,
-        }))
 
         // Hydrate full student profile from DB
         const { data: profileData } = await supabase
@@ -284,17 +292,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setStudent((prev) => ({
             ...prev,
             headline: profileData.headline ?? prev.headline,
-            openToWork: profileData.open_to_work ?? prev.openToWork,
-            certifications: typeof profileData.certifications === 'string' ? JSON.parse(profileData.certifications) : (profileData.certifications ?? prev.certifications),
-            achievements: typeof profileData.achievements === 'string' ? JSON.parse(profileData.achievements) : (profileData.achievements ?? prev.achievements),
-            projects: typeof profileData.projects === 'string' ? JSON.parse(profileData.projects) : (profileData.projects ?? prev.projects),
+            openToWork: profileData.is_open_to_work ?? prev.openToWork,
+            certifications: typeof profileData.certifications === 'string' ? (() => { try { return JSON.parse(profileData.certifications) } catch { return prev.certifications } })() : (profileData.certifications ?? prev.certifications),
+            achievements: typeof profileData.achievements === 'string' ? (() => { try { return JSON.parse(profileData.achievements) } catch { return prev.achievements } })() : (profileData.achievements ?? prev.achievements),
+            projects: typeof profileData.projects === 'string' ? (() => { try { return JSON.parse(profileData.projects) } catch { return prev.projects } })() : (profileData.projects ?? prev.projects),
             preferredCompanies: profileData.preferred_companies ?? prev.preferredCompanies,
+            preferredRoles: profileData.preferred_role ? profileData.preferred_role.split(',').map((s: string) => s.trim()).filter(Boolean) : prev.preferredRoles,
             skills: profileData.skills ?? prev.skills,
             links: {
               linkedin: profileData.portfolio_url ?? prev.links.linkedin,
               github: profileData.github_url ?? prev.links.github,
               website: profileData.website ?? prev.links.website,
             },
+            ...(profileData.experience ? { experience: typeof profileData.experience === 'string' ? (() => { try { return JSON.parse(profileData.experience) } catch { return prev.experience } })() : profileData.experience } : {}),
+            ...(profileData.education ? { education: typeof profileData.education === 'string' ? (() => { try { return JSON.parse(profileData.education) } catch { return prev.education } })() : profileData.education } : {}),
+            ...(profileData.languages ? { languages: typeof profileData.languages === 'string' ? (() => { try { return JSON.parse(profileData.languages) } catch { return prev.languages } })() : profileData.languages } : {}),
             ...(profileData.resume_url ? {
               resumeFile: {
                 name: profileData.resume_name || 'Resume',
@@ -312,37 +324,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }))
         }
       }
-
-// Load activity logs
-      if (userId) {
-        const { data: activityData } = await supabase
-          .from('activity_logs')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(20)
-        if (activityData) {
-          setActivity(activityData.map(a => ({
-            id: a.id,
-            kind: a.entity_type,
-            text: a.action,
-            time: new Date(a.created_at).toLocaleString()
-          })))
-        }
-      }
-
-      // Load saved candidates (recruiter)
-      const { data: savedData } = await supabase
-        .from('saved_candidates')
-        .select('candidate_id')
-        .eq('recruiter_id', userId)
-      if (savedData) {
-        setSavedCandidates(savedData.map(s => s.candidate_id))
-      }
     }
 
     loadRealData()
-    maybeRunPipeline()
+      .catch((err) => { console.error('loadRealData failed:', err); toast.error('Failed to load some data. Please refresh the page.') })
+      .finally(() => setLoading(false))
     // Request browser notification permission (non-blocking)
     requestNotificationPermission()
 
@@ -351,7 +337,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .channel('realtime-notifications')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${currentUser.id}` },
         (payload) => {
           const row = payload.new as { id: string; type: string; title: string; description: string | null; read: boolean; created_at: string }
           setNotifications((prev) => [
@@ -374,10 +360,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .channel('realtime-messages')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages', filter: `sender_id=neq.${user!.id}` },
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `sender_id=neq.${currentUser.id}` },
         (payload) => {
-          const msg = payload.new as { id: string; conversation_id?: string; sender_id?: string; content?: string; created_at: string }
+          const msg = payload.new as { id: string; conversation_id?: string; sender_id?: string; content?: string; created_at: string; kind?: string }
           if (!msg.conversation_id || !msg.sender_id) return
+
+          const newMessage: Message = {
+            id: msg.id,
+            from: 'them',
+            text: msg.content ?? '',
+            time: formatRelativeTime(msg.created_at),
+            read: false,
+            kind: (msg.kind === 'file' ? 'file' : 'text') as 'text' | 'file',
+          }
 
           setConversations((prev) =>
             prev.map((c) =>
@@ -387,6 +382,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     lastMessage: msg.content ?? c.lastMessage,
                     time: formatRelativeTime(msg.created_at),
                     unread: c.unread + 1,
+                    messages: [...c.messages, newMessage],
                   }
                 : c
             )
@@ -404,10 +400,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .channel('realtime-referrals')
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'referrals' },
+        { event: 'UPDATE', schema: 'public', table: 'referrals', filter: `requester_id=eq.${currentUser.id}` },
         (payload) => {
           const ref = payload.new as { status?: string; requester_id?: string; job_title?: string }
-          fetchReferrals(user!.id).then((refs) => setRequests(refs))
+          fetchReferrals(currentUser.id).then((refs) => setRequests(refs)).catch((err) => { console.error('Failed to refresh referrals:', err) })
           // Show browser notification on status change
           if (ref.status && ref.status !== 'pending' && ref.job_title) {
             notifyReferralUpdate('A candidate', ref.status, ref.job_title)
@@ -416,41 +412,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       )
       .subscribe()
 
-    // ── Presence: set online + heartbeat ──
-    setPresence(user!.id, true).catch(() => {
-      // Presence is best-effort, don't show errors
-    })
-    const heartbeat = setInterval(() => {
-      setPresence(user!.id, true).catch(() => {})
-    }, 60_000)
-
-    const presenceChannel2 = supabase.channel('presence-global')
-    presenceChannel2.on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'user_presence' },
-      (payload) => {
-        const row = payload.new as { user_id: string; online: boolean }
-        setUserPresenceMap((prev) => ({ ...prev, [row.user_id]: row.online }))
-      }
-    ).subscribe()
-
-    // Load initial presence for all professionals
-    supabase.from('user_presence').select('user_id,online').then(({ data }) => {
-      if (data) {
-        const map: Record<string, boolean> = {}
-        data.forEach((r: { user_id: string; online: boolean }) => { map[r.user_id] = r.online })
-        setUserPresenceMap(map)
-      }
-    })
-
     return () => {
-      clearInterval(heartbeat)
-      const uid = user?.id
-      if (uid) setPresence(uid, false).catch(() => {})
       supabase.removeChannel(notifChannel)
       supabase.removeChannel(msgChannel)
       supabase.removeChannel(refChannel)
-      supabase.removeChannel(presenceChannel2)
     }
   }, [user])
 
@@ -463,7 +428,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const nextReferralReset = useMemo(() => {
     if (requestTimestamps.length === 0) return 'Now'
-    const oldest = Math.min(...requestTimestamps.filter((t) => Date.now() - t < RATE_WINDOW_MS))
+    const recent = requestTimestamps.filter((t) => Date.now() - t < RATE_WINDOW_MS)
+    if (recent.length === 0) return 'Now'
+    const oldest = Math.min(...recent)
     const resetAt = new Date(oldest + RATE_WINDOW_MS)
     const diff = resetAt.getTime() - Date.now()
     if (diff <= 0) return 'Now'
@@ -494,6 +461,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         reviews: 0,
         verified: false,
         openForReferrals: patch.openForReferrals ?? false,
+        isOpenToWork: patch.isOpenToWork ?? false,
         maxPerMonth: patch.maxPerMonth ?? 5,
         usedThisMonth: 0,
         successRate: 0,
@@ -517,6 +485,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (user) {
       const userPatch: Record<string, unknown> = {}
       if (patch.name) userPatch.full_name = patch.name
+      if (patch.name) {
+        setProfessionals((prev) => prev.map((p) => (p.id === user.id ? { ...p, name: patch.name! } : p)))
+      }
       if (patch.location) {
         const parts = patch.location.split(',').map((s: string) => s.trim())
         if (parts.length >= 2) { userPatch.city = parts[0]; userPatch.state = parts[1] }
@@ -533,6 +504,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (patch.industry) profilePatch.department = patch.industry
       if (patch.yearsExp !== undefined) profilePatch.years_experience = patch.yearsExp
       if (patch.openForReferrals !== undefined) profilePatch.open_for_referrals = patch.openForReferrals
+      if (patch.isOpenToWork !== undefined) profilePatch.is_open_to_work = patch.isOpenToWork
       if (patch.maxPerMonth !== undefined) profilePatch.referral_capacity = patch.maxPerMonth
       if (patch.referralPolicy !== undefined) profilePatch.referral_policy = patch.referralPolicy
       if (patch.bio !== undefined) profilePatch.bio = patch.bio
@@ -550,10 +522,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateRecruiter = useCallback((patch: Record<string, unknown>) => {
     if (user) {
-      const userPatch: Record<string, unknown> = {}
-      if (patch.company_name) userPatch.full_name = patch.company_name
-      if (Object.keys(userPatch).length > 0) dbUpdateUserProfile(user.id, userPatch).catch(() => {})
-
       dbUpdateRecruiterProf(user.id, patch).catch((err) => {
         console.error('Failed to update recruiter profile:', err)
         toast.error('Something went wrong. Please try again.')
@@ -566,7 +534,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (user) {
       const userPatch: Record<string, unknown> = {}
       if (patch.name !== undefined) userPatch.full_name = patch.name
-      if (patch.email !== undefined) userPatch.mobile = patch.email
+      // email changes are handled through Supabase Auth, not the users table
       if (patch.location !== undefined) {
         const parts = patch.location.split(',').map((s: string) => s.trim())
         if (parts.length >= 2) { userPatch.city = parts[0]; userPatch.state = parts[1] }
@@ -581,17 +549,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (patch.skills !== undefined) profilePatch.skills = patch.skills
       if (patch.preferredRoles !== undefined) profilePatch.preferred_role = patch.preferredRoles.join(', ')
       if (patch.preferredCompanies !== undefined) profilePatch.preferred_companies = patch.preferredCompanies
-      if (patch.experience !== undefined) profilePatch.experience_years = patch.experience.length
-      if (patch.education?.[0]?.school) profilePatch.college = patch.education[0].school
-      if (patch.education?.[0]?.degree) profilePatch.qualification = patch.education[0].degree
-      if (patch.education?.[0]?.period) {
-        const year = parseInt(patch.education[0].period)
-        if (!isNaN(year)) profilePatch.graduation_year = year
+      if (patch.experience !== undefined) {
+        profilePatch.experience_years = patch.experience.length
+        profilePatch.experience = JSON.stringify(patch.experience)
       }
+      if (patch.education !== undefined) {
+        profilePatch.education = JSON.stringify(patch.education)
+        if (patch.education?.[0]?.school) profilePatch.college = patch.education[0].school
+        if (patch.education?.[0]?.degree) profilePatch.qualification = patch.education[0].degree
+        if (patch.education?.[0]?.period) {
+          const year = parseInt(patch.education[0].period)
+          if (!isNaN(year)) profilePatch.graduation_year = year
+        }
+      }
+      if (patch.languages !== undefined) profilePatch.languages = JSON.stringify(patch.languages)
       if (patch.links?.linkedin) profilePatch.portfolio_url = patch.links.linkedin
       if (patch.links?.github) profilePatch.github_url = patch.links.github
       if (patch.headline !== undefined) profilePatch.headline = patch.headline
-      if (patch.openToWork !== undefined) profilePatch.open_to_work = patch.openToWork
+      if (patch.openToWork !== undefined) profilePatch.is_open_to_work = patch.openToWork
       if (patch.certifications !== undefined) profilePatch.certifications = JSON.stringify(patch.certifications)
       if (patch.achievements !== undefined) profilePatch.achievements = JSON.stringify(patch.achievements)
       if (patch.projects !== undefined) profilePatch.projects = JSON.stringify(patch.projects)
@@ -605,7 +580,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addStudentCertification = useCallback((cert: string) => {
     setStudent((prev) => {
       const next = [...prev.certifications, cert]
-      if (user) dbUpdateJobSeekerProfile(user.id, { certifications: JSON.stringify(next) }).catch(() => {})
+      if (user) dbUpdateJobSeekerProfile(user.id, { certifications: JSON.stringify(next) }).catch((err) => { console.error('Failed to save certification:', err) })
       return { ...prev, certifications: next }
     })
   }, [user])
@@ -613,7 +588,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addStudentAchievement = useCallback((ach: string) => {
     setStudent((prev) => {
       const next = [...prev.achievements, ach]
-      if (user) dbUpdateJobSeekerProfile(user.id, { achievements: JSON.stringify(next) }).catch(() => {})
+      if (user) dbUpdateJobSeekerProfile(user.id, { achievements: JSON.stringify(next) }).catch((err) => { console.error('Failed to save achievement:', err) })
       return { ...prev, achievements: next }
     })
   }, [user])
@@ -621,7 +596,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addStudentProject = useCallback((proj: { name: string; desc: string; tags: string[] }) => {
     setStudent((prev) => {
       const next = [...prev.projects, proj]
-      if (user) dbUpdateJobSeekerProfile(user.id, { projects: JSON.stringify(next) }).catch(() => {})
+      if (user) dbUpdateJobSeekerProfile(user.id, { projects: JSON.stringify(next) }).catch((err) => { console.error('Failed to save project:', err) })
       return { ...prev, projects: next }
     })
   }, [user])
@@ -629,7 +604,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addStudentSkill = useCallback((skill: string) => {
     setStudent((prev) => {
       const next = [...prev.skills, skill]
-      if (user) dbUpdateJobSeekerProfile(user.id, { skills: next }).catch(() => {})
+      if (user) dbUpdateJobSeekerProfile(user.id, { skills: next }).catch((err) => { console.error('Failed to save skill:', err) })
       return { ...prev, skills: next }
     })
   }, [user])
@@ -637,7 +612,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const removeStudentSkill = useCallback((skill: string) => {
     setStudent((prev) => {
       const next = prev.skills.filter((s) => s !== skill)
-      if (user) dbUpdateJobSeekerProfile(user.id, { skills: next }).catch(() => {})
+      if (user) dbUpdateJobSeekerProfile(user.id, { skills: next }).catch((err) => { console.error('Failed to remove skill:', err) })
       return { ...prev, skills: next }
     })
   }, [user])
@@ -645,7 +620,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const removeStudentCertification = useCallback((cert: string) => {
     setStudent((prev) => {
       const next = prev.certifications.filter((c) => c !== cert)
-      if (user) dbUpdateJobSeekerProfile(user.id, { certifications: JSON.stringify(next) }).catch(() => {})
+      if (user) dbUpdateJobSeekerProfile(user.id, { certifications: JSON.stringify(next) }).catch((err) => { console.error('Failed to remove certification:', err) })
       return { ...prev, certifications: next }
     })
   }, [user])
@@ -653,7 +628,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const removeStudentAchievement = useCallback((ach: string) => {
     setStudent((prev) => {
       const next = prev.achievements.filter((a) => a !== ach)
-      if (user) dbUpdateJobSeekerProfile(user.id, { achievements: JSON.stringify(next) }).catch(() => {})
+      if (user) dbUpdateJobSeekerProfile(user.id, { achievements: JSON.stringify(next) }).catch((err) => { console.error('Failed to remove achievement:', err) })
       return { ...prev, achievements: next }
     })
   }, [user])
@@ -661,7 +636,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const removeStudentProject = useCallback((name: string) => {
     setStudent((prev) => {
       const next = prev.projects.filter((p) => p.name !== name)
-      if (user) dbUpdateJobSeekerProfile(user.id, { projects: JSON.stringify(next) }).catch(() => {})
+      if (user) dbUpdateJobSeekerProfile(user.id, { projects: JSON.stringify(next) }).catch((err) => { console.error('Failed to remove project:', err) })
       return { ...prev, projects: next }
     })
   }, [user])
@@ -669,7 +644,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addStudentExperience = useCallback((exp: { title: string; org: string; period: string; desc: string }) => {
     setStudent((prev) => {
       const next = [...prev.experience, exp]
-      if (user) dbUpdateJobSeekerProfile(user.id, { experience_years: next.length }).catch(() => {})
+      if (user) dbUpdateJobSeekerProfile(user.id, { experience_years: next.length, experience: JSON.stringify(next) }).catch((err) => { console.error('Failed to save experience:', err) })
       return { ...prev, experience: next }
     })
   }, [user])
@@ -677,7 +652,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const removeStudentExperience = useCallback((index: number) => {
     setStudent((prev) => {
       const next = prev.experience.filter((_, i) => i !== index)
-      if (user) dbUpdateJobSeekerProfile(user.id, { experience_years: next.length }).catch(() => {})
+      if (user) dbUpdateJobSeekerProfile(user.id, { experience_years: next.length, experience: JSON.stringify(next) }).catch((err) => { console.error('Failed to save experience:', err) })
       return { ...prev, experience: next }
     })
   }, [user])
@@ -685,7 +660,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addStudentEducation = useCallback((edu: { school: string; degree: string; period: string; detail: string }) => {
     setStudent((prev) => {
       const next = [...prev.education, edu]
-      if (user) dbUpdateJobSeekerProfile(user.id, { college: edu.school, qualification: edu.degree }).catch(() => {})
+      if (user) dbUpdateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || edu.school, qualification: next[0]?.degree || edu.degree }).catch((err) => { console.error('Failed to save education:', err) })
       return { ...prev, education: next }
     })
   }, [user])
@@ -693,7 +668,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const removeStudentEducation = useCallback((index: number) => {
     setStudent((prev) => {
       const next = prev.education.filter((_, i) => i !== index)
-      if (user) dbUpdateJobSeekerProfile(user.id, { college: next[0]?.school || undefined, qualification: next[0]?.degree || undefined }).catch(() => {})
+      if (user) dbUpdateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || undefined, qualification: next[0]?.degree || undefined }).catch((err) => { console.error('Failed to save education:', err) })
       return { ...prev, education: next }
     })
   }, [user])
@@ -703,7 +678,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { resumeFile: _, ...rest } = prev
       return rest
     })
-  }, [])
+    if (user) {
+      const resumePatch: Record<string, unknown> = { resume_url: undefined, resume_name: undefined, resume_size_bytes: undefined, resume_uploaded_at: undefined }
+      dbUpdateJobSeekerProfile(user.id, resumePatch).catch((err) => {
+        console.error('Failed to remove resume from DB:', err)
+      })
+    }
+  }, [user])
 
   const setStudentResume = useCallback((file: { name: string; size: string; date: string; url?: string }) => {
     setStudent((prev) => ({ ...prev, resumeFile: file }))
@@ -719,42 +700,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toggleCandidate = useCallback((candidateId: string) => {
     setSavedCandidates((prev) => {
-      const next = prev.includes(candidateId)
+      return prev.includes(candidateId)
         ? prev.filter((id) => id !== candidateId)
         : [...prev, candidateId]
-      // Persist to DB
-      if (user) {
-        if (prev.includes(candidateId)) {
-          supabase.from('saved_candidates').delete()
-            .eq('recruiter_id', user.id)
-            .eq('candidate_id', candidateId)
-        } else {
-          supabase.from('saved_candidates').insert({
-            recruiter_id: user.id,
-            candidate_id: candidateId
-          })
-        }
-      }
-      return next
     })
-  }, [user])
-
-  // Activity logging - must be defined before addRequest/setRequestStatus use it
-  const logActivity = useCallback(async (action: string, entityType: string, entityId?: string, metadata?: Record<string, unknown>) => {
-    if (!user) return
-    try {
-      await supabase.from('activity_logs').insert({
-        user_id: user.id,
-        actor_id: user.id,
-        action,
-        entity_type: entityType,
-        entity_id: entityId,
-        metadata: metadata ?? {}
-      })
-    } catch (err) {
-      console.error('Failed to log activity:', err)
-    }
-  }, [user])
+  }, [])
 
   const addRequest = useCallback((r: ReferralRequest) => {
     setRequests((prev) => [r, ...prev])
@@ -766,32 +716,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
         job_title: r.role,
         note: r.note,
       }).then((newRequest) => {
+        // Replace local optimistic request with server-returned one (has real UUID)
         if (newRequest) {
-          logActivity('referral_requested', 'referral', newRequest.id, { professional: professionals.find(p => p.id === r.professionalId)?.name })
+          setRequests((prev) => prev.map((req) => req.id === r.id ? { ...req, id: newRequest.id } : req))
+          // Notification for the professional — only after successful referral creation
+          supabase.from('notifications').insert({
+            user_id: r.professionalId,
+            type: 'referral_request',
+            title: 'New Referral Request',
+            description: `${student.name || 'A user'} has requested a referral from you`,
+          }).select().single().then(({ data: notifData }) => {
+            if (notifData) {
+              setNotifications((prev) => [{
+                id: notifData.id,
+                type: mapNotificationType(notifData.type),
+                title: notifData.title,
+                description: notifData.description ?? '',
+                time: formatRelativeTime(notifData.created_at),
+                read: notifData.read ?? false,
+              }, ...prev])
+            }
+          }, (err: unknown) => {
+            console.error('Failed to create notification:', err)
+          })
         }
       }).catch((err) => {
         console.error('Failed to create referral:', err)
+        // Roll back optimistic update
+        setRequests((prev) => prev.filter((req) => req.id !== r.id))
         toast.error('Failed to save referral — please try again')
       })
     }
-    // Insert notification into DB
-    if (user && r.professionalId) {
-      supabase.from('notifications').insert({
-        user_id: r.professionalId,
-        type: 'referral_request',
-        title: 'New Referral Request',
-        description: `${student.name} has requested a referral from you`,
-      }).select().single().then(({ data: notifData }) => {
-        if (notifData) {
-          setNotifications((prev) => [notifData as AppNotification, ...prev])
-        }
-      }, (err: unknown) => {
-        console.error('Failed to create notification:', err)
-      })
-    }
-  }, [user, student.name, professionals, logActivity])
+  }, [user, student.name])
 
   const setRequestStatus = useCallback((id: string, status: ReferralRequest['status']) => {
+    // Read the current request BEFORE updating state (avoids fragile side-effect pattern)
+    const req = requests.find((r) => r.id === id)
     setRequests((prev) => prev.map((r) => {
       if (r.id !== id) return r
       const updated = { ...r, status }
@@ -801,40 +761,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return updated
     }))
-    const req = requests.find((r) => r.id === id)
     if (req && (status === 'accepted' || status === 'rejected')) {
-      // Persist to Supabase
-      if (status === 'accepted' || status === 'rejected') {
-        dbUpdateReferralStatus(id, status as 'accepted' | 'rejected').catch((err) => {
-          console.error('Failed to update referral status:', err)
-          toast.error('Something went wrong. Please try again.')
-        })
-      }
-      const professional = professionals.find((p) => p.id === req.professionalId)
-      logActivity(`referral_${status}`, 'referral', req.id, { professional: professional?.name })
-      // Insert notification into DB
+      dbUpdateReferralStatus(id, status as 'accepted' | 'rejected').catch((err) => {
+        console.error('Failed to update referral status:', err)
+        toast.error('Something went wrong. Please try again.')
+      })
       if (user) {
         supabase.from('notifications').insert({
-          user_id: req.professionalId,
+          user_id: req.requesterId || req.professionalId,
           type: `referral_${status}`,
           title: `Referral ${status.charAt(0).toUpperCase() + status.slice(1)}`,
           description: `Your referral request for ${req.role} has been ${status}`,
         }).select().single().then(({ data: notifData }) => {
           if (notifData) {
-            setNotifications((prev) => [notifData as AppNotification, ...prev])
+            setNotifications((prev) => [{
+              id: notifData.id,
+              type: mapNotificationType(notifData.type),
+              title: notifData.title,
+              description: notifData.description ?? '',
+              time: formatRelativeTime(notifData.created_at),
+              read: notifData.read ?? false,
+            }, ...prev])
           }
         }, (err: unknown) => {
           console.error('Failed to create notification:', err)
         })
       }
-      // Send email notification to student
+      if (status === 'accepted') {
+        setNpsOpen(true)
+      }
       if (req.studentEmail) {
+        const professional = professionals.find((p) => p.id === req.professionalId)
         const proName = professional?.name || 'the professional'
         sendReferralStatusEmail(req.studentEmail, req.student, proName, req.role, status as 'accepted' | 'rejected')
-          .catch(() => {})
+          .catch((err) => { console.error('Failed to send referral status email:', err) })
       }
     }
-  }, [requests, professionals, user, logActivity])
+  }, [requests, professionals, user, setNpsOpen])
 
   // Auto-reminder: send reminder emails for pending referrals older than 3 days (once per session)
   const reminderSentRef = useRef(false)
@@ -851,25 +814,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const pro = professionals.find((p) => p.id === r.professionalId)
           if (pro?.email) {
             const daysPending = Math.floor((now - requestDate) / (24 * 60 * 60 * 1000))
-            sendReminderEmail(pro.email, pro.name, r.student, r.role, daysPending).catch(() => {})
+            sendReminderEmail(pro.email, pro.name, r.student, r.role, daysPending).catch((err) => { console.error('Failed to send reminder email:', err) })
           }
         }
       })
   }, [requests, professionals, user])
 
   const advancePipelineStage = useCallback((id: string) => {
-    setRequests((prev) => prev.map((r) => {
-      if (r.id !== id) return r
-      const stages = PIPELINE_STAGES.map((s) => s.key)
-      const currentIdx = stages.indexOf(r.pipelineStage)
-      if (currentIdx < stages.length - 1) {
-        const nextStage = stages[currentIdx + 1]
-        dbAdvancePipeline(id, nextStage).catch((err) => { console.error('Failed to advance pipeline:', err); toast.error('Something went wrong. Please try again.') })
+    const current = requests.find((r) => r.id === id)
+    if (!current) return
+    const stages = PIPELINE_STAGES.map((s) => s.key)
+    const currentIdx = stages.indexOf(current.pipelineStage)
+    if (currentIdx < stages.length - 1) {
+      const nextStage = stages[currentIdx + 1]
+      setRequests((prev) => prev.map((r) => {
+        if (r.id !== id) return r
         return { ...r, pipelineStage: nextStage, progress: Math.round(((currentIdx + 1) / (stages.length - 1)) * 100) }
-      }
-      return r
-    }))
-  }, [])
+      }))
+      dbAdvancePipeline(id, nextStage).catch((err) => {
+        console.error('Failed to advance pipeline:', err)
+        toast.error('Something went wrong. Please try again.')
+      })
+    }
+  }, [requests])
 
   const sendMessage = useCallback((conversationId: string, text: string) => {
     const newMsg: Message = {
@@ -878,6 +845,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       text,
       time: 'Just now',
       read: true,
+      kind: 'text',
     }
     setConversations((prev) =>
       prev.map((c) =>
@@ -888,16 +856,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     )
     // Persist to Supabase
     if (user) {
-      const conv = conversations.find(c => c.id === conversationId)
-      const participantName = conv?.name || 'unknown'
       dbSendMessage(conversationId, user.id, text).then(() => {
-        logActivity('message_sent', 'message', conversationId, { to: participantName })
+        // Message sent successfully
       }).catch((err) => {
         console.error('Failed to send message:', err)
+        // Rollback: remove phantom message
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === conversationId
+              ? { ...c, messages: c.messages.filter((m) => m.id !== newMsg.id), lastMessage: c.messages.length > 1 ? c.messages[c.messages.length - 2].text : '' }
+              : c
+          )
+        )
         toast.error('Message failed to send')
       })
     }
-  }, [user, conversations, logActivity])
+  }, [user])
 
   const markConversationRead = useCallback((id: string) => {
     setConversations((prev) =>
@@ -957,9 +931,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const myRequests = useMemo(() => {
-    const name = student.name
-    return requests.filter((r) => r.student === name)
-  }, [requests, student.name])
+    return requests.filter((r) => r.requesterId === user?.id)
+  }, [requests, user])
   const myReferralCount = myRequests.length
   const myAcceptedCount = useMemo(() => myRequests.filter((r) => r.status === 'accepted').length, [myRequests])
   const myPendingCount = useMemo(() => myRequests.filter((r) => r.status === 'pending').length, [myRequests])
@@ -973,11 +946,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  const visibleProfessionals = useMemo(
-    () => demoMode ? professionals : [],
-    [demoMode, professionals],
-  )
-
   const profileCompletion = useMemo(() => {
     const checks = [
       !!student.resumeFile?.name,
@@ -990,17 +958,77 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return Math.round((checks.filter(Boolean).length / 6) * 100)
   }, [student])
 
-  // Trigger lifecycle pipeline on app load (non-blocking, max once per 30 min)
-  useEffect(() => {
-    maybeRunPipeline()
+  const activity = useMemo(() => {
+    const items: { id: string; kind: string; text: string; time: string; sortTime: number }[] = []
+    requests.forEach((r) => {
+      const sortTime = r.date ? new Date(r.date).getTime() || 0 : 0
+      items.push({
+        id: `ref-${r.id}`,
+        kind: 'referral',
+          text: r.status === 'accepted'
+            ? `Your referral for ${r.role} was accepted`
+            : r.status === 'rejected'
+            ? `Your referral for ${r.role} was declined`
+            : `Referral request sent for ${r.role}`,
+        time: r.date,
+        sortTime,
+      })
+    })
+    conversations.forEach((c) => {
+      if (c.lastMessage) {
+        items.push({
+          id: `conv-${c.id}`,
+          kind: 'message',
+          text: `Message with ${c.name}: ${c.lastMessage}`,
+          time: c.time,
+          sortTime: 0,
+        })
+      }
+    })
+    items.sort((a, b) => b.sortTime - a.sortTime)
+    return items.slice(0, 20).map(({ sortTime: _, ...rest }) => rest)
+  }, [requests, conversations])
+
+  const getUserOnlineStatus = useCallback((_userId: string) => {
+    const userConvs = conversations.filter((c) =>
+      c.messages.length > 0 && c.messages[c.messages.length - 1].from === 'them'
+    )
+    const lastMsg = userConvs.length > 0 ? userConvs[userConvs.length - 1].messages[userConvs[userConvs.length - 1].messages.length - 1].time : null
+    if (!lastMsg) return false
+    if (lastMsg === 'Just now') return true
+    const minMatch = lastMsg.match(/^(\d+)m/)
+    if (minMatch) return parseInt(minMatch[1]) <= 5
+    return false
+  }, [conversations])
+
+  const login = useCallback((r: Role) => { setRole(r); setAuthed(true) }, [])
+
+  const logout = useCallback(() => {
+    setAuthed(false)
+    setIsAdmin(false)
+    setDemoMode(false)
+    initialRoleLoaded.current = false
+    reminderSentRef.current = false
+    setProfessionals([])
+    setRequests([])
+    setRequestTimestamps([])
+    setConversations([])
+    setBookmarks([])
+    setNotifications([])
+    setJobs([])
+    setCandidates([])
+    setSavedCandidates([])
+    setStudent((prev) => ({ ...prev, name: '', email: '' }))
   }, [])
 
   const value = useMemo<AppState>(() => ({
     role,
     setRole,
+    isAdmin,
     authed,
-    login: (r) => { setRole(r); setAuthed(true) },
-    logout: () => setAuthed(false),
+    loading,
+    login,
+    logout,
 
     professionals,
     updateProfessional,
@@ -1047,13 +1075,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     unreadNotificationCount,
 
     activity,
-    logActivity,
 
     jobs,
     setJobs,
     updateJob,
 
     candidates,
+    refreshCandidates,
 
     myReferralCount,
     myAcceptedCount,
@@ -1062,19 +1090,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     demoMode,
     toggleDemoMode,
-    visibleProfessionals,
-    userPresenceMap,
-    getUserOnlineStatus: (userId: string) => userPresenceMap[userId] ?? false,
+    visibleProfessionals: demoMode ? professionals : professionals.filter((p) => !p.email?.endsWith('@demo.com')),
+    getUserOnlineStatus,
+    npsOpen,
+    setNpsOpen,
   }), [
-    role, authed, professionals, updateProfessional, updateRecruiter,
+    role, authed, loading, login, logout, professionals, updateProfessional, updateRecruiter,
     student, updateStudent, addStudentCertification, removeStudentCertification, addStudentAchievement, removeStudentAchievement, addStudentProject, removeStudentProject, addStudentSkill, removeStudentSkill, addStudentExperience, removeStudentExperience, addStudentEducation, removeStudentEducation, setStudentResume, removeStudentResume,
     bookmarks, toggleBookmark, savedCandidates, toggleCandidate,
     requests, addRequest, setRequestStatus, advancePipelineStage, referralsSentToday, canSendReferral, nextReferralReset,
     conversations, setConversations, sendMessage, markConversationRead,
     notifications, markNotificationRead, markAllNotificationsRead, unreadNotificationCount,
-    activity, logActivity, jobs, setJobs, updateJob, candidates,
+    jobs, setJobs, updateJob, candidates, refreshCandidates,
     myReferralCount, myAcceptedCount, myPendingCount, myRejectedCount,
-    demoMode, toggleDemoMode, visibleProfessionals, userPresenceMap,
+    demoMode, toggleDemoMode, activity, getUserOnlineStatus,
+    npsOpen, setNpsOpen,
   ])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

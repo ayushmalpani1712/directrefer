@@ -92,33 +92,6 @@ export async function sendPasswordResetOtpEmail(to: string, otp: string) {
   `)
 }
 
-export async function sendPasswordResetEmail(to: string, resetUrl: string) {
-  const safeUrl = esc(resetUrl)
-  return sendEmail(to, 'Reset your Direct Refer password', `
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;max-width:480px;margin:0 auto;padding:40px 32px;background:#ffffff;border-radius:16px;border:1px solid #e5e7eb;">
-      ${EMAIL_HEADER}
-      <div style="text-align:center;margin-bottom:32px;">
-        <div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#EEF2FF,#E0E7FF);">
-          <span style="font-size:28px;">🔑</span>
-        </div>
-      </div>
-      <h2 style="text-align:center;font-size:24px;font-weight:700;color:#1B202C;margin:0 0 12px;">Reset your password</h2>
-      <p style="text-align:center;font-size:15px;color:#7D8798;margin:0 0 32px;line-height:1.6;">
-        Click the button below to set a new password for your account.
-      </p>
-      <div style="text-align:center;margin-bottom:32px;">
-        <a href="${safeUrl}" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#4F7CFF,#7C5CFF);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;letter-spacing:0.3px;">
-          Reset Password
-        </a>
-      </div>
-      <p style="text-align:center;font-size:12px;color:#A3AEC2;margin:0 0 8px;">
-        Or copy this link: <a href="${safeUrl}" style="color:#4F7CFF;text-decoration:none;">${safeUrl}</a>
-      </p>
-      ${EMAIL_FOOTER}
-    </div>
-  `)
-}
-
 export async function sendReferralStatusEmail(
   studentEmail: string,
   studentName: string,
@@ -145,10 +118,10 @@ export async function sendReferralStatusEmail(
         </p>
         <div style="text-align:center;margin-bottom:16px;">
           ${isAccepted
-            ? `<a href="${siteUrl}/applications" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#22C55E,#16A34A);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;">View Referral</a>
+            ? `<a href="${siteUrl}/job-seeker/applications" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#22C55E,#16A34A);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;">View Referral</a>
                <p style="text-align:center;font-size:14px;color:#7D8798;margin:16px 0 0;line-height:1.6;">You can now message ${esc(professionalName)} directly for next steps.</p>`
             : `<p style="font-size:14px;color:#7D8798;margin:0 0 16px;line-height:1.6;">Don't be discouraged! Try reaching out to other professionals.</p>
-               <a href="${siteUrl}/professionals" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#4F7CFF,#7C5CFF);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;">Find Professionals</a>`
+               <a href="${siteUrl}/job-seeker/professionals" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#4F7CFF,#7C5CFF);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;">Find Professionals</a>`
           }
         </div>
         ${EMAIL_FOOTER}
@@ -181,7 +154,7 @@ export async function sendReminderEmail(
           Hi ${esc(professionalName)}, <strong style="color:#1B202C;">${esc(studentName)}</strong> sent you a referral request for <strong style="color:#1B202C;">${esc(jobTitle)}</strong> <strong style="color:#F59E0B;">${daysPending} days ago</strong> and hasn't heard back yet.
         </p>
         <div style="text-align:center;margin-bottom:16px;">
-          <a href="${siteUrl}/requests" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#4F7CFF,#7C5CFF);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;">Review Request</a>
+          <a href="${siteUrl}/professional/referrals" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#4F7CFF,#7C5CFF);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;">Review Request</a>
         </div>
         <p style="text-align:center;font-size:13px;color:#A3AEC2;margin:0;line-height:1.5;">
           Candidates with a timely response are 3× more likely to be a great fit for your team.

@@ -38,9 +38,3 @@ export async function advanceReferralPipeline(
 
   return { error: error?.message }
 }
-
-export async function setPresence(userId: string, online: boolean): Promise<void> {
-  await supabase
-    .from('user_presence')
-    .upsert({ user_id: userId, online, last_seen: new Date().toISOString() }, { onConflict: 'user_id' })
-}

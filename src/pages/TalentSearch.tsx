@@ -11,7 +11,6 @@ import { Chip, EmptyState, GAvatar, SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
-import { Skeleton } from '@/components/ui/skeleton'
 
 export default function TalentSearch() {
   const loading = usePageLoading(400)
@@ -23,15 +22,16 @@ export default function TalentSearch() {
   const [minRating, setMinRating] = useState('0')
 
   const results = useMemo(() => candidates.filter((c) => {
+    if (c.id === user?.id) return false
     if (q && ![c.name, c.role, c.location, ...c.skills].join(' ').toLowerCase().includes(q.toLowerCase())) return false
     if (source !== 'all' && c.source !== source) return false
     if (c.rating < Number(minRating)) return false
     return true
-  }), [q, source, minRating])
+  }), [q, source, minRating, candidates, user?.id])
 
   return (
     <div className="space-y-6">
-      <SectionHeader title="Talent search" subtitle="Referral-warmed candidates actively looking — sorted by fit" />
+      <SectionHeader title="Discover job seekers" subtitle="Open-to-work candidates and referral-warmed talent — sorted by fit" />
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
@@ -43,7 +43,7 @@ export default function TalentSearch() {
           <SelectContent>
             <SelectItem value="all">All sources</SelectItem>
             <SelectItem value="Referral">Referral</SelectItem>
-            <SelectItem value="Applied">Applied</SelectItem>
+            <SelectItem value="Open to work">Open to work</SelectItem>
           </SelectContent>
         </Select>
         <Select value={minRating} onValueChange={setMinRating}>
@@ -57,7 +57,7 @@ export default function TalentSearch() {
       </div>
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-60 rounded-xl" />)}</div>
+        <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
       ) : results.length === 0 ? (
         <EmptyState
           icon={Users}
@@ -76,7 +76,7 @@ export default function TalentSearch() {
               const saved = savedCandidates.includes(c.id)
               return (
                 <motion.div key={c.id} layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ delay: Math.min(i * 0.04, 0.3) }}>
-                  <Card className="shadow-soft card-hover h-full ">
+                  <Card className="shadow-soft h-full cursor-pointer transition-all duration-200 hover:border-primary/15" onClick={() => navigate(`/job-seekers/${c.id}`)}>
                     <CardContent className="p-5">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
@@ -86,7 +86,7 @@ export default function TalentSearch() {
                             <div className="text-xs text-muted-foreground">{c.role} · {c.exp}y exp</div>
                           </div>
                         </div>
-                        <button onClick={() => { toggleCandidate(c.id); toast(saved ? 'Removed from saved' : 'Candidate saved') }} className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-primary">
+                        <button onClick={(e) => { e.stopPropagation(); toggleCandidate(c.id); toast(saved ? 'Removed from saved' : 'Candidate saved') }} className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-primary">
                           {saved ? <BookmarkCheck className="h-4.5 w-4.5 text-primary" /> : <Bookmark className="h-4.5 w-4.5" />}
                         </button>
                       </div>
@@ -97,13 +97,15 @@ export default function TalentSearch() {
                       </div>
                       <div className="mt-3 flex flex-wrap gap-1.5">{c.skills.map((s) => <Chip key={s}>{s}</Chip>)}</div>
                       <div className="mt-4 flex gap-2">
-                        <Button size="sm" className="flex-1 rounded-lg bg-primary" onClick={() => {
-                          const pro = professionals.find((p) => p.id === user?.id) ?? professionals[0]
+                        <Button size="sm" className="flex-1 rounded-lg bg-primary" onClick={(e) => {
+                          e.stopPropagation()
+                          const pro = professionals.find((p) => p.id === user?.id)
+                          if (!pro) { toast.error('No professional profile found. Complete your profile first.'); return }
                           addRequest({
                             id: `r${Date.now()}`,
                             student: c.name,
                             studentEmail: user?.email,
-                            professionalId: pro?.id ?? '',
+                            professionalId: pro.id,
                             role: c.role,
                             status: 'pending',
                             pipelineStage: 'request_sent',
@@ -115,7 +117,7 @@ export default function TalentSearch() {
                         }}>
                           <UserPlus className="mr-1.5 h-3.5 w-3.5" /> Invite
                         </Button>
-                        <Button size="sm" variant="outline" className="rounded-lg" onClick={() => { toast.success(`Opening conversation with ${c.name}`); navigate('/messages') }}>
+                        <Button size="sm" variant="outline" className="rounded-lg" onClick={(e) => { e.stopPropagation(); navigate('/messages') }}>
                           <MessageSquare className="h-3.5 w-3.5" />
                         </Button>
                       </div>

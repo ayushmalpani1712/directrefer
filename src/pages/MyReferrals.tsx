@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CompanyChip, EmptyState, GAvatar, SectionHeader, StatCard, StatusBadge } from '@/components/ui-kit'
+import { LinkedInShareButton } from '@/components/LinkedInShareButton'
+import { ReferralIllustration } from '@/components/illustrations'
 import { useApp } from '@/context/AppContext'
+import { useAuth } from '@/context/AuthContext'
 import { type ReferralStatus, PIPELINE_STAGES, type PipelineStage } from '@/data/mock'
-import { usePageLoading } from '@/hooks/usePageLoading'
-import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { exportReferralsCSV } from '@/lib/export'
 import { toast } from 'sonner'
@@ -19,6 +20,7 @@ const STAGES: { key: ReferralStatus | 'all'; label: string }[] = [
   { key: 'pending', label: 'Pending' },
   { key: 'accepted', label: 'Accepted' },
   { key: 'rejected', label: 'Declined' },
+  { key: 'hired', label: 'Hired' },
 ]
 
 const STAGE_ICONS: Record<PipelineStage, typeof Send> = {
@@ -26,6 +28,7 @@ const STAGE_ICONS: Record<PipelineStage, typeof Send> = {
   under_review: Clock,
   accepted: CheckCircle2,
   submitted: FileText,
+  hired: CheckCircle2,
 }
 
 const STAGE_COLORS: Record<PipelineStage, string> = {
@@ -33,6 +36,7 @@ const STAGE_COLORS: Record<PipelineStage, string> = {
   under_review: 'text-amber-500',
   accepted: 'text-emerald-500',
   submitted: 'text-[#8B8FD4]',
+  hired: 'text-violet-500',
 }
 
 function PipelineTracker({ stage, status }: { stage: PipelineStage; status: ReferralStatus }) {
@@ -110,13 +114,13 @@ function PipelineTracker({ stage, status }: { stage: PipelineStage; status: Refe
 }
 
 export default function MyReferrals() {
-  const loading = usePageLoading(400)
-  const { requests, professionals, student } = useApp()
+  const { requests, professionals, loading } = useApp()
+  const { user } = useAuth()
   const [tab, setTab] = useState<'all' | ReferralStatus>('all')
-  const mine = requests.filter((r) => r.student === student.name)
+  const mine = requests.filter((r) => r.requesterId === user?.id)
   const filtered = useMemo(() => (tab === 'all' ? mine : mine.filter((r) => r.status === tab)), [mine, tab])
 
-  if (loading) return <div className="space-y-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}</div>
+  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
 
   return (
     <div className="space-y-6">
@@ -127,7 +131,7 @@ export default function MyReferrals() {
             <Download className="mr-1.5 h-4 w-4" /> Export CSV
           </Button>
           <Button className="rounded-full bg-primary shadow-glow" asChild>
-            <Link to="/professionals"><Send className="mr-1.5 h-4 w-4" /> New request</Link>
+            <Link to="/job-seeker/professionals"><Send className="mr-1.5 h-4 w-4" /> New request</Link>
           </Button>
         </div>
       </div>
@@ -154,10 +158,15 @@ export default function MyReferrals() {
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon={Send}
-          title="No referrals yet"
-          description={tab === 'all' ? 'Request your first referral to get started.' : `No ${tab} requests right now.`}
-          action={<Button asChild><Link to="/professionals">Request your first referral</Link></Button>}
+          illustration={<ReferralIllustration />}
+          title={tab === 'all' ? "No referrals yet" : `No ${tab} requests`}
+          description={tab === 'all'
+            ? "Referrals are your gateway to dream roles. Send your first request to a verified professional and get one step closer to your next opportunity."
+            : `No ${tab} requests right now. Check back later or browse professionals to send a new request.`}
+          primaryCtaLabel="Send your first referral request"
+          primaryCtaHref="/job-seeker/professionals"
+          secondaryCtaLabel="Learn how referrals work"
+          onSecondaryCtaClick={() => window.open('/help', '_blank', 'noopener,noreferrer')}
         />
       ) : (
         <div className="space-y-4">
@@ -166,7 +175,7 @@ export default function MyReferrals() {
             if (!p) return null
             return (
               <motion.div key={r.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <Card className="shadow-soft card-hover transition-colors hover:border-primary/20">
+                <Card className="shadow-soft transition-colors hover:border-primary/20">
                   <CardContent className="p-5">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                       <Link to={`/professionals/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3.5 group">
@@ -181,6 +190,9 @@ export default function MyReferrals() {
                       </Link>
                       <div className="flex items-center gap-2">
                         <StatusBadge status={r.status} />
+                        {(r.status === 'accepted' || r.status === 'offered') && (
+                          <LinkedInShareButton role={r.role} company={p.company} professionalName={p.name} size="sm" showCopy={false} />
+                        )}
                         <Button variant="outline" size="sm" className="rounded-full" asChild><Link to="/messages"><MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message</Link></Button>
                       </div>
                     </div>

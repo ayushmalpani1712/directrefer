@@ -10,8 +10,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState, SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
-import { usePageLoading } from '@/hooks/usePageLoading'
-import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { ProfessionalCard } from '@/pages/FindProfessionals'
 
@@ -25,12 +23,11 @@ const ICONS: Record<string, { icon: typeof Bell; cls: string }> = {
 }
 
 export function NotificationsPage() {
-  const loading = usePageLoading(350)
-  const { notifications, markNotificationRead, markAllNotificationsRead } = useApp()
+  const { notifications, markNotificationRead, markAllNotificationsRead, loading } = useApp()
   const [filter, setFilter] = useState('all')
   const shown = filter === 'all' ? notifications : filter === 'unread' ? notifications.filter((n) => !n.read) : notifications.filter((n) => n.type === filter)
 
-  if (loading) return <div className="space-y-3">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
+  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -44,7 +41,7 @@ export function NotificationsPage() {
 
       <Tabs value={filter} onValueChange={setFilter}>
         <TabsList className="h-auto flex-wrap">
-          {['all', 'unread', 'accepted', 'message', 'system'].map((t) => (
+          {['all', 'unread', 'accepted', 'rejected', 'message', 'system'].map((t) => (
             <TabsTrigger key={t} value={t} className="capitalize">{t}</TabsTrigger>
           ))}
         </TabsList>
@@ -55,7 +52,7 @@ export function NotificationsPage() {
       ) : (
         <div className="space-y-2.5">
           {shown.map((n, i) => {
-            const cfg = ICONS[n.type]
+            const cfg = ICONS[n.type] ?? { icon: Bell, cls: 'bg-muted text-muted-foreground' }
             return (
               <motion.button
                 key={n.id}
@@ -84,11 +81,10 @@ export function NotificationsPage() {
 }
 
 export function BookmarksPage() {
-  const loading = usePageLoading(350)
-  const { visibleProfessionals: professionals, bookmarks } = useApp()
+  const { visibleProfessionals: professionals, bookmarks, loading } = useApp()
   const saved = professionals.filter((p) => bookmarks.includes(p.id))
 
-  if (loading) return <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-72 rounded-xl" />)}</div>
+  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
 
   return (
     <div className="space-y-6">
@@ -98,7 +94,7 @@ export function BookmarksPage() {
           icon={BookmarkIcon}
           title="No bookmarks yet"
           description="Save professionals while browsing and they'll show up here."
-          action={<Button asChild><Link to="/professionals">Browse professionals</Link></Button>}
+          action={<Button asChild><Link to="/job-seeker/professionals">Browse professionals</Link></Button>}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -117,9 +113,8 @@ const ACT_ICON: Record<string, { icon: typeof Bell; cls: string }> = {
 }
 
 export function ActivityPage() {
-  const loading = usePageLoading(350)
-  const { activity } = useApp()
-  if (loading) return <div className="space-y-3">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
+  const { activity, loading } = useApp()
+  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

@@ -1,44 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  CheckCheck, FileText, MessageSquare, MoreVertical, Paperclip, Pin, Search, Send, Smile,
+  CheckCheck, FileText, MoreVertical, Paperclip, Pin, Search, Send, Smile,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, GAvatar } from '@/components/ui-kit'
+import { MessageIllustration } from '@/components/illustrations'
 import { toast } from 'sonner'
 import { useApp } from '@/context/AppContext'
-import { checkRateLimit } from '@/lib/rateLimit'
-import { useAuth } from '@/context/AuthContext'
+import { checkRateLimit, checkServerRateLimit } from '@/lib/rateLimit'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { cn } from '@/lib/utils'
-import { supabase } from '@/lib/supabase'
-import type { Message } from '@/data/mock'
-
-function playNotificationSound() {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.frequency.value = 880
-    osc.type = 'sine'
-    gain.gain.setValueAtTime(0.08, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25)
-    osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + 0.25)
-  } catch {
-    // Audio not available — silent fail
-  }
-}
 
 export default function Messages() {
   const loading = usePageLoading(400)
-  const { user } = useAuth()
-  const { conversations, setConversations, sendMessage, markConversationRead } = useApp()
+  const { conversations, sendMessage, markConversationRead } = useApp()
   const [activeId, setActiveId] = useState('')
   const [draft, setDraft] = useState('')
   const [q, setQ] = useState('')
@@ -64,61 +42,15 @@ export default function Messages() {
     if (activeId) markConversationRead(activeId)
   }, [activeId, markConversationRead])
 
-  // ── Real-time: subscribe to new messages for the active conversation ──
-  useEffect(() => {
-    if (!activeId || !user) return
-
-    const channel = supabase
-      .channel('realtime-active-conversation')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${activeId}` },
-        (payload) => {
-          const row = payload.new as { id: string; sender_id: string; content: string; created_at: string; kind: string; read: boolean }
-
-          // Skip own messages — optimistic update in sendMessage already handled those
-          if (row.sender_id === user.id) return
-
-          const newMsg: Message = {
-            id: row.id,
-            from: 'them',
-            text: row.content,
-            time: 'Just now',
-            read: row.read,
-            kind: row.kind as 'text' | 'file',
-          }
-
-          setConversations((prev) =>
-            prev.map((c) =>
-              c.id === activeId
-                ? {
-                    ...c,
-                    messages: [...c.messages, newMsg],
-                    lastMessage: row.content,
-                    time: 'Just now',
-                  }
-                : c
-            )
-          )
-
-          // Play a subtle notification sound
-          playNotificationSound()
-        },
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [activeId, user, setConversations])
-
   if (conversations.length === 0 && !loading) {
     return (
       <div className="flex h-[calc(100vh-13rem)] min-h-[480px] items-center justify-center rounded-2xl border border-border bg-card">
         <EmptyState
-          icon={MessageSquare}
+          illustration={<MessageIllustration />}
           title="Start a conversation"
-          description="No conversations yet. Reach out to a professional or student to get started."
+          description="No messages yet. Once you send or receive a referral request, you'll be able to chat directly with professionals and recruiters here."
+          primaryCtaLabel="Browse professionals"
+          primaryCtaHref="/job-seeker/professionals"
         />
       </div>
     )
@@ -126,68 +58,29 @@ export default function Messages() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-13rem)] min-h-[480px] overflow-hidden rounded-2xl border border-border bg-card">
-        <aside className="hidden w-80 flex-col border-r border-border sm:flex">
-          <div className="border-b border-border p-4">
-            <Skeleton className="h-5 w-24 rounded-lg" />
-            <div className="relative mt-3">
-              <Skeleton className="h-9 w-full rounded-full" />
-            </div>
-          </div>
-          <div className="flex-1 space-y-0 p-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-3.5">
-                <Skeleton className="h-11 w-11 shrink-0 rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Skeleton className="h-4 w-28 rounded-md" />
-                    <Skeleton className="h-3 w-8 rounded-md" />
-                  </div>
-                  <Skeleton className="h-3 w-40 rounded-md" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </aside>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-            <Skeleton className="h-9 w-9 rounded-full" />
-            <div className="flex-1 space-y-1.5">
-              <Skeleton className="h-4 w-32 rounded-md" />
-              <Skeleton className="h-3 w-24 rounded-md" />
-            </div>
-          </div>
-          <div className="flex-1 space-y-4 px-4 py-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className={cn('flex', i % 2 === 0 ? 'justify-start' : 'justify-end')}>
-                <div className={cn('flex items-end gap-2', i % 2 === 0 ? '' : 'flex-row-reverse')}>
-                  {i % 2 === 0 && <Skeleton className="h-7 w-7 rounded-full" />}
-                  <div className="space-y-1">
-                    <Skeleton className={cn('h-10 rounded-2xl', i % 2 === 0 ? 'rounded-bl-md w-48' : 'rounded-br-md w-56')} />
-                    <Skeleton className="h-2.5 w-12 rounded-md" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="border-t border-border p-3.5">
-            <Skeleton className="h-10 w-full rounded-full" />
-          </div>
-        </div>
-      </div>
+      <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
     )
   }
 
-  const send = (kind: 'text' | 'file' = 'text', text?: string) => {
+  const send = async (kind: 'text' | 'file' = 'text', text?: string) => {
     if (!activeId) return
     if (!checkRateLimit('message-send', 30, 60_000)) {
       toast.error('Slow down! You can send up to 30 messages per minute.')
       return
     }
+    if (!await checkServerRateLimit('message', 30, 300)) {
+      toast.error('Message rate limit exceeded. Please wait before sending more.')
+      return
+    }
     const body = kind === 'file' ? (text ?? 'Resume.pdf') : draft.trim()
     if (!body) return
-    sendMessage(activeId, body)
-    setDraft('')
+    try {
+      sendMessage(activeId, body)
+      setDraft('')
+    } catch (err) {
+      console.error('Failed to send message:', err)
+      toast.error('Failed to send message')
+    }
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -253,7 +146,7 @@ export default function Messages() {
               {active.online ? <><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Online · {active.subtitle}</> : `Away · ${active.subtitle}`}
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast.info('More options coming soon')}><MoreVertical className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={async () => { try { await navigator.clipboard.writeText(active.messages.map(m => `${m.from === 'me' ? 'You' : active.name}: ${m.text}`).join('\n')); toast.success('Chat copied to clipboard') } catch { toast.error('Failed to copy') } }}><MoreVertical className="h-4 w-4" /></Button>
         </div>
 
         {/* Messages */}
@@ -275,7 +168,7 @@ export default function Messages() {
                           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary"><FileText className="h-5 w-5" /></div>
                           <div>
                             <div className="text-sm font-medium">{m.text}</div>
-                            <div className="text-[11px] text-muted-foreground">PDF · 214 KB</div>
+                            <div className="text-[11px] text-muted-foreground">{m.text || 'Shared file'}</div>
                           </div>
                         </div>
                       ) : (
@@ -313,7 +206,7 @@ export default function Messages() {
               placeholder={`Message ${active.name.split(' ')[0]}…`}
               className="h-10 rounded-full"
             />
-            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => toast.info('Emoji picker coming soon')}><Smile className="h-4.5 w-4.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setDraft((prev) => prev + '👍')}><Smile className="h-4.5 w-4.5" /></Button>
             <Button size="icon" className="h-10 w-10 shrink-0 rounded-full bg-primary shadow-glow" onClick={() => send()} disabled={!draft.trim()}>
               <Send className="h-4 w-4" />
             </Button>

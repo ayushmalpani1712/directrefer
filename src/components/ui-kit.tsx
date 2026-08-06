@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import { ArrowDownRight, ArrowUpRight, Star, type LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { initials, type ReferralStatus } from '@/data/mock'
 
@@ -49,8 +48,8 @@ const STATUS_STYLES: Record<ReferralStatus, { label: string; cls: string; dot: s
   pending: { label: 'Pending', cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25', dot: 'bg-amber-500' },
   accepted: { label: 'Accepted', cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25', dot: 'bg-emerald-500' },
   rejected: { label: 'Declined', cls: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25', dot: 'bg-rose-500' },
-
   offered: { label: 'Offer', cls: 'bg-primary/10 text-primary border-primary/25', dot: 'bg-primary' },
+  hired: { label: 'Hired', cls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25', dot: 'bg-violet-500' },
 }
 
 export function StatusBadge({ status }: { status: ReferralStatus }) {
@@ -71,7 +70,7 @@ export function StatCard({
 }) {
   const inner = (
     <div className="h-full transition-all duration-200">
-      <Card className="shadow-soft flex h-full flex-col transition-all duration-200 hover:border-primary/15 hover:translate-y-[-1px]">
+      <Card className={cn('shadow-soft flex h-full flex-col transition-all duration-200', href && 'hover:border-primary/15 hover:translate-y-[-1px]')}>
         <CardContent className="flex flex-1 flex-col p-5">
           <div className="flex items-start justify-between">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -110,41 +109,91 @@ export function SectionHeader({ title, subtitle, action }: { title: string; subt
 }
 
 // ── Empty state ─────────────────────────────────────────────
-export function EmptyState({ icon: Icon, title, description, action }: { icon: LucideIcon; title: string; description: string; action?: ReactNode }) {
+
+export interface EmptyStateProps {
+  /** Legacy: Lucide icon fallback when no illustration is provided */
+  icon?: LucideIcon
+  /** Full SVG illustration component (replaces the icon circle) */
+  illustration?: ReactNode
+  title: string
+  description: string
+  /** Legacy: pass a full button/link node */
+  action?: ReactNode
+  /** Primary CTA text — renders a styled Button linking to primaryCtaHref */
+  primaryCtaLabel?: string
+  /** Route or external URL for the primary CTA */
+  primaryCtaHref?: string
+  /** Click handler for primary CTA (used instead of href for modals/drawers) */
+  onPrimaryCtaClick?: () => void
+  /** Secondary CTA text (ghost button) */
+  secondaryCtaLabel?: string
+  /** Click handler for secondary CTA */
+  onSecondaryCtaClick?: () => void
+  /** Allow removing the dashed border for inline contexts */
+  bordered?: boolean
+}
+
+export function EmptyState({
+  icon: Icon,
+  illustration,
+  title,
+  description,
+  action,
+  primaryCtaLabel,
+  primaryCtaHref,
+  onPrimaryCtaClick,
+  secondaryCtaLabel,
+  onSecondaryCtaClick,
+  bordered = true,
+}: EmptyStateProps) {
+  const hasPrimary = primaryCtaLabel && (primaryCtaHref || onPrimaryCtaClick)
+
+  const primaryButton = primaryCtaLabel && primaryCtaHref ? (
+    <Button className="rounded-full bg-gradient-to-r from-[#4F7CFF] to-[#7C5CFF] text-white shadow-sm hover:opacity-90" asChild>
+      <Link to={primaryCtaHref}>{primaryCtaLabel}</Link>
+    </Button>
+  ) : primaryCtaLabel && onPrimaryCtaClick ? (
+    <Button className="rounded-full bg-gradient-to-r from-[#4F7CFF] to-[#7C5CFF] text-white shadow-sm hover:opacity-90" onClick={onPrimaryCtaClick}>
+      {primaryCtaLabel}
+    </Button>
+  ) : null
+
+  const secondaryButton = secondaryCtaLabel && onSecondaryCtaClick ? (
+    <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onSecondaryCtaClick}>
+      {secondaryCtaLabel}
+    </Button>
+  ) : null
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-16 text-center"
+      className={cn(
+        'flex flex-col items-center justify-center rounded-2xl py-16 text-center',
+        bordered && 'border border-dashed border-border/60',
+      )}
     >
-      <div className="relative">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/8">
-          <Icon className="h-7 w-7 text-primary/60" />
+      {illustration ? (
+        <div className="relative">{illustration}</div>
+      ) : Icon ? (
+        <div className="relative">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/8">
+            <Icon className="h-7 w-7 text-primary/60" />
+          </div>
+          <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background bg-primary/20" />
         </div>
-        <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background bg-primary/20" />
-      </div>
+      ) : null}
       <h3 className="mt-5 text-[15px] font-semibold text-foreground">{title}</h3>
       <p className="mt-1.5 max-w-sm text-[13px] leading-relaxed text-muted-foreground">{description}</p>
-      {action && <div className="mt-5">{action}</div>}
+      {(action || hasPrimary || secondaryButton) && (
+        <div className="mt-5 flex flex-col items-center gap-2.5 sm:flex-row">
+          {action}
+          {primaryButton}
+          {secondaryButton}
+        </div>
+      )}
     </motion.div>
-  )
-}
-
-// ── Dashboard skeleton ──────────────────────────────────────
-export function DashboardSkeleton() {
-  return (
-    <div className="space-y-6">
-      <Skeleton className="h-28 w-full rounded-xl" />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Skeleton className="h-72 rounded-xl" />
-        <Skeleton className="h-72 rounded-xl" />
-      </div>
-      <Skeleton className="h-56 w-full rounded-xl" />
-    </div>
   )
 }
 
@@ -198,7 +247,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { createReport } from '@/lib/db'
-import { checkRateLimit } from '@/lib/rateLimit'
+import { checkRateLimit, checkServerRateLimit } from '@/lib/rateLimit'
 
 const REPORT_REASONS = [
   'Spam or fake profile',
@@ -222,6 +271,10 @@ export function ReportDialog({ targetUserId, targetUserName }: { targetUserId: s
     }
     if (!checkRateLimit('report-submit', 3, 300_000)) {
       toast.error('Too many reports. Please wait 5 minutes before reporting again.')
+      return
+    }
+    if (!await checkServerRateLimit('report', 3, 300)) {
+      toast.error('Report rate limit exceeded. Please wait before reporting again.')
       return
     }
     setLoading(true)

@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
@@ -55,6 +54,7 @@ const FEATURES = [
 
 function HeroMock() {
   const { visibleProfessionals } = useApp()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const pros = visibleProfessionals.slice(0, 3)
   return (
@@ -62,32 +62,32 @@ function HeroMock() {
       initial={{ opacity: 0, y: 40, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
-      className="relative mx-auto mt-16 max-w-5xl"
+      className="relative mx-auto mt-16 max-w-5xl px-0 sm:px-4"
     >
-          <div className="absolute -inset-x-8 -top-10 bottom-0 -z-10 rounded-[2rem] bg-primary opacity-[0.1] blur-2xl" />
-      <div className="overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#151A21]">
+          <div className="absolute -inset-x-4 sm:-inset-x-8 -top-10 bottom-0 -z-10 rounded-[2rem] bg-primary opacity-[0.03]" />
+      <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#151A21]">
         <div className="flex items-center gap-2 border-b border-[rgba(255,255,255,0.04)] bg-[rgba(255,255,255,0.02)] px-4 py-2.5">
           <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
           <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-          <div className="ml-3 flex h-6 flex-1 max-w-xs items-center rounded-md bg-[#0F1115] px-2.5 text-[11px] text-[#9CA3AF]">
-            directrefer.in/dashboard
+          <div className="ml-3 hidden sm:flex h-6 flex-1 max-w-xs items-center rounded-md bg-[#0F1115] px-2.5 text-[11px] text-[#9CA3AF]">
+            www.directrefer.in/dashboard
           </div>
         </div>
-          <div className="grid gap-4 p-4 sm:p-6 md:grid-cols-3">
+          <div className="grid gap-3 p-3 sm:gap-4 sm:p-4 md:grid-cols-3 md:p-6">
           <div className="space-y-4 md:col-span-2">
             <div className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[rgba(59,95,229,0.06)] p-5">
               <div className="text-sm text-[#9CA3AF]">Good morning,</div>
-              <div className="font-display text-xl font-bold text-foreground">Alex — 2 referrals moved this week</div>
+              <div className="font-display text-base sm:text-xl font-bold text-foreground">Alex — 2 referrals moved this week</div>
               <div className="mt-3 flex gap-2">
-                <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-[#4ADE80] hover:bg-[rgba(74,222,128,0.1)]">Accepted · Stripe</Badge>
-                <Badge className="border border-[rgba(59,95,229,0.2)] bg-[rgba(59,95,229,0.1)] text-primary hover:bg-[rgba(59,95,229,0.1)]">Applied · Google</Badge>
+                <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-[#4ADE80] hover:bg-[rgba(74,222,128,0.1)] text-[10px] sm:text-xs">Accepted · Stripe</Badge>
+                <Badge className="border border-[rgba(59,95,229,0.2)] bg-[rgba(59,95,229,0.1)] text-primary hover:bg-[rgba(59,95,229,0.1)] text-[10px] sm:text-xs">Applied · Google</Badge>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {[['12', 'Referrals sent'], ['78', 'Profile score']].map(([v, l]) => (
                 <div key={l} className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#1A2028] p-4">
-                  <div className="font-display text-2xl font-bold text-primary">{v}</div>
+                  <div className="font-display text-xl sm:text-2xl font-bold text-primary">{v}</div>
                   <div className="mt-1 text-xs text-[#9CA3AF]">{l}</div>
                 </div>
               ))}
@@ -96,12 +96,12 @@ function HeroMock() {
               <div key={p.id} className="flex items-center gap-3 rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#151A21] p-3.5">
                 <GAvatar name={p.name} gradient={p.gradient} className="h-10 w-10 text-xs" />
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 text-[14px] font-semibold text-foreground">
+                  <div className="flex items-center gap-1.5 text-xs sm:text-[14px] font-semibold text-foreground">
                     {p.name} <ShieldCheck className="h-3.5 w-3.5 text-[#4ADE80]" />
                   </div>
                   <div className="truncate text-xs text-[#9CA3AF]">{p.designation} · {p.company}</div>
                 </div>
-                <Button size="sm" variant="outline" className="rounded-full border-[rgba(255,255,255,0.06)] text-xs text-foreground hover:bg-[rgba(255,255,255,0.04)]" onClick={() => navigate('/login')}>Request</Button>
+                <Button size="sm" variant="outline" className="rounded-full border-[rgba(255,255,255,0.06)] text-xs text-foreground hover:bg-[rgba(255,255,255,0.04)]" onClick={() => navigate(user ? '/dashboard' : '/login')}>{user ? 'View' : 'Request'}</Button>
               </div>
             ))}
           </div>
@@ -142,16 +142,9 @@ function scrollTo(id: string) {
 
 export default function Landing() {
   const { visibleProfessionals: professionals } = useApp()
-  const { user, loading } = useAuth()
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    if (!loading && user) {
-      navigate('/dashboard', { replace: true })
-    }
-  }, [user, loading, navigate])
+  const { user } = useAuth()
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen overflow-x-hidden bg-background">
       {/* Nav */}
       <header className="glass sticky top-0 z-40 border-b border-border/50">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -161,19 +154,25 @@ export default function Landing() {
             <button onClick={() => scrollTo('features')} className="hover:text-foreground">Features</button>
             <button onClick={() => scrollTo('network')} className="hover:text-foreground">Network</button>
           </nav>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild><Link to="/login">Sign in</Link></Button>
-            <Button size="sm" className="rounded-[14px] bg-gradient-to-r from-[#4F7CFF] to-[#7C5CFF] shadow-sm" asChild>
-              <Link to="/login">Get started <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
-            </Button>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {user ? (
+              <Button size="sm" className="rounded-[14px] bg-gradient-to-r from-[#4F7CFF] to-[#7C5CFF] shadow-sm text-xs sm:text-sm" asChild>
+                <Link to="/dashboard">Go to Dashboard <ArrowRight className="ml-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" /></Link>
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild><Link to="/login">Sign in</Link></Button>
+                <Button size="sm" className="rounded-[14px] bg-gradient-to-r from-[#4F7CFF] to-[#7C5CFF] shadow-sm text-xs sm:text-sm" asChild>
+                  <Link to="/login">Get started <ArrowRight className="ml-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" /></Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden px-4 pb-24 pt-20 sm:px-6 lg:px-8">
-        <div className="bg-grid absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_at_top,black_20%,transparent_70%)]" />
-        <div className="absolute left-1/2 top-0 -z-10 h-[480px] w-[820px] -translate-x-1/2 rounded-full bg-primary opacity-[0.12] blur-3xl" />
+      <section className="relative overflow-hidden px-4 pb-14 pt-12 sm:px-6 sm:pb-24 sm:pt-20 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Badge variant="outline" className="gap-1.5 rounded-full border-[rgba(59,95,229,0.3)] bg-[rgba(59,95,229,0.08)] px-3 py-1 text-xs font-medium text-primary">
@@ -182,24 +181,24 @@ export default function Landing() {
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.08 }}
-            className="font-display mt-6 text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl"
+            className="font-display mt-6 text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-4xl lg:text-6xl"
           >
             Get referred.<br />Get <span className="text-gradient">hired.</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.16 }}
-            className="mx-auto mt-5 max-w-xl text-lg text-muted-foreground"
+            className="mx-auto mt-5 max-w-xl text-base sm:text-lg text-muted-foreground"
           >
-            Direct Refer connects job seekers with verified professionals who refer them into the world's best companies — and gives recruiters a warmer pipeline.
+            Direct Refer connects job seekers with verified professionals who can refer them at top companies — and gives recruiters a warmer pipeline.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.24 }}
             className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
           >
-            <Button size="lg" className="rounded-full bg-primary px-7 shadow-glow" asChild>
-              <Link to="/login">Start free <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            <Button size="lg" className="rounded-full bg-primary px-6 sm:px-7 shadow-glow text-sm sm:text-base" asChild>
+              <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : 'Start free'} <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full px-7" onClick={() => scrollTo('network')}>
+            <Button size="lg" variant="outline" className="rounded-full px-6 sm:px-7 text-sm sm:text-base" onClick={() => scrollTo('network')}>
               Explore the network <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </motion.div>
@@ -208,10 +207,10 @@ export default function Landing() {
       </section>
 
       {/* Why referrals */}
-      <section className="border-t border-border/50 px-4 py-20 sm:px-6 lg:px-8">
+      <section className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <motion.div {...fadeUp} className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-[30px] font-bold tracking-tight sm:text-[34px]">Why referrals change everything</h2>
+            <h2 className="font-display text-2xl sm:text-[30px] lg:text-[34px] font-bold tracking-tight">Why referrals change everything</h2>
             <p className="mt-3 text-muted-foreground">The data is clear — referred candidates win.</p>
           </motion.div>
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -226,8 +225,8 @@ export default function Landing() {
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(59,95,229,0.08)]">
                     <item.icon className={`h-5 w-5 ${item.color}`} />
                   </div>
-                  <div className="mt-4 font-display text-3xl font-extrabold text-foreground">{item.stat}</div>
-                  <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{item.label}</p>
+                  <div className="mt-4 font-display text-2xl sm:text-3xl font-extrabold text-foreground">{item.stat}</div>
+                  <p className="mt-2 text-xs sm:text-[13px] leading-relaxed text-muted-foreground">{item.label}</p>
                 </div>
               </motion.div>
             ))}
@@ -237,10 +236,10 @@ export default function Landing() {
       </section>
 
       {/* Roles */}
-      <section id="roles" className="border-t border-border/50 px-4 py-24 sm:px-6 lg:px-8">
+      <section id="roles" className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <motion.div {...fadeUp} className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-[30px] font-bold tracking-tight sm:text-[34px]">One platform, three superpowers</h2>
+            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">One platform, three superpowers</h2>
             <p className="mt-3 text-muted-foreground">Every role gets its own dashboard, navigation and workflow — purpose-built, not one-size-fits-all.</p>
           </motion.div>
           <div className="mt-12 grid gap-5 md:grid-cols-3">
@@ -251,8 +250,8 @@ export default function Landing() {
                     <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[rgba(59,95,229,0.08)] text-primary">
                       <r.icon className="h-5 w-5" />
                     </div>
-                    <h3 className="mt-4 text-[18px] font-semibold text-foreground">{r.title}</h3>
-                    <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">{r.desc}</p>
+                    <h3 className="mt-4 text-base sm:text-[18px] font-semibold text-foreground">{r.title}</h3>
+                    <p className="mt-2 text-sm sm:text-[14px] leading-relaxed text-muted-foreground">{r.desc}</p>
                     <ul className="mt-4 space-y-2">
                       {r.points.map((p) => (
                         <li key={p} className="flex items-center gap-2 text-sm">
@@ -269,10 +268,10 @@ export default function Landing() {
       </section>
 
       {/* Features */}
-      <section id="features" className="border-t border-border/50 bg-muted/5 px-4 py-24 sm:px-6 lg:px-8">
+      <section id="features" className="border-t border-border/50 bg-muted/5 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <motion.div {...fadeUp} className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-[30px] font-bold tracking-tight sm:text-[34px]">Designed like the tools you love</h2>
+            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">Designed like the tools you love</h2>
             <p className="mt-3 text-muted-foreground">The polish of Linear, the warmth of Airbnb, the speed of Vercel — applied to your career.</p>
           </motion.div>
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -280,8 +279,8 @@ export default function Landing() {
               <motion.div key={f.title} {...fadeUp} transition={{ ...fadeUp.transition, delay: (i % 3) * 0.08 }}>
                 <div className="h-full rounded-xl border border-[rgba(255,255,255,0.06)] bg-card p-5 shadow-soft transition-all duration-200 hover:border-primary/15">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgba(59,95,229,0.08)] text-primary"><f.icon className="h-4.5 w-4.5" /></div>
-                  <h3 className="mt-3.5 font-semibold text-foreground">{f.title}</h3>
-                  <p className="mt-1 text-[14px] text-muted-foreground">{f.desc}</p>
+                  <h3 className="mt-3.5 text-sm sm:text-base font-semibold text-foreground">{f.title}</h3>
+                  <p className="mt-1 text-xs sm:text-[14px] text-muted-foreground">{f.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -290,36 +289,38 @@ export default function Landing() {
       </section>
 
       {/* Network */}
-      <section id="network" className="border-t border-border/50 px-4 py-24 sm:px-6 lg:px-8">
+      <section id="network" className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <motion.div {...fadeUp} className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <h2 className="font-display text-[30px] font-bold tracking-tight sm:text-[34px]">A network that opens doors</h2>
+              <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">A network that opens doors</h2>
               <p className="mt-3 max-w-xl text-muted-foreground">Verified professionals from the companies you actually want to work at.</p>
             </div>
             <Button variant="outline" className="rounded-full" asChild>
-              <Link to="/login">Browse all professionals <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
+              <Link to={user ? '/job-seeker/professionals' : '/login'}>Browse all professionals <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
             </Button>
           </motion.div>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {professionals.slice(0, 4).map((p, i) => (
               <motion.div key={p.id} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.08 }}>
-                <Card className="shadow-soft transition-all duration-200 hover:border-primary/15">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-3">
-                      <GAvatar name={p.name} gradient={p.gradient} className="h-11 w-11 text-sm" />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1 truncate text-[14px] font-semibold text-foreground">{p.name} <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#4ADE80]" /></div>
-                        <div className="truncate text-[13px] text-muted-foreground">{p.designation}</div>
+                <Link to={`/professionals/${p.id}`}>
+                  <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-3">
+                        <GAvatar name={p.name} gradient={p.gradient} className="h-11 w-11 text-sm" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1 truncate text-xs sm:text-[14px] font-semibold text-foreground">{p.name} <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#4ADE80]" /></div>
+                          <div className="truncate text-xs sm:text-[13px] text-muted-foreground">{p.designation}</div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between text-[13px] text-muted-foreground">
-                      <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-[#FBBF24] text-[#FBBF24]" /> {p.rating}</span>
-                      <span>{p.referralsCompleted} referrals</span>
-                      <span className="text-[#4ADE80]">{p.responseRate}% replies</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <div className="mt-3 flex items-center justify-between text-xs sm:text-[13px] text-muted-foreground">
+                        <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-[#FBBF24] text-[#FBBF24]" /> {p.rating}</span>
+                        <span>{p.referralsCompleted} referrals</span>
+                        <span className="text-[#4ADE80]">{p.responseRate}% replies</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -327,10 +328,10 @@ export default function Landing() {
       </section>
 
       {/* How it works */}
-      <section className="border-t border-border/50 px-4 py-24 sm:px-6 lg:px-8">
+      <section className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <motion.div {...fadeUp} className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-[30px] font-bold tracking-tight sm:text-[34px]">How it works</h2>
+            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">How it works</h2>
             <p className="mt-3 text-muted-foreground">Three simple steps to your next referral.</p>
           </motion.div>
           <div className="mt-12 grid gap-8 sm:grid-cols-3">
@@ -344,8 +345,8 @@ export default function Landing() {
                   <s.icon className="h-6 w-6" />
                 </div>
                 <div className="mt-4 text-xs font-bold uppercase tracking-widest text-primary">Step {s.step}</div>
-                <h3 className="mt-2 text-[18px] font-semibold text-foreground">{s.title}</h3>
-                <p className="mt-2 text-[14px] text-muted-foreground">{s.desc}</p>
+                <h3 className="mt-2 text-base sm:text-[18px] font-semibold text-foreground">{s.title}</h3>
+                <p className="mt-2 text-xs sm:text-[14px] text-muted-foreground">{s.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -353,10 +354,10 @@ export default function Landing() {
       </section>
 
       {/* FAQ */}
-      <section className="border-t border-border/50 bg-muted/5 px-4 py-24 sm:px-6 lg:px-8">
+      <section className="border-t border-border/50 bg-muted/5 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-3xl">
           <motion.div {...fadeUp} className="text-center">
-            <h2 className="font-display text-[30px] font-bold tracking-tight sm:text-[34px]">Frequently asked questions</h2>
+            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">Frequently asked questions</h2>
             <p className="mt-3 text-muted-foreground">Everything you need to know about Direct Refer.</p>
           </motion.div>
           <div className="mt-12 space-y-4">
@@ -369,8 +370,8 @@ export default function Landing() {
             ].map((item, i) => (
               <motion.div key={item.q} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.06 }}>
                 <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
-                  <h3 className="text-[15px] font-semibold text-foreground">{item.q}</h3>
-                  <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">{item.a}</p>
+                  <h3 className="text-sm sm:text-[15px] font-semibold text-foreground">{item.q}</h3>
+                  <p className="mt-2 text-xs sm:text-[14px] leading-relaxed text-muted-foreground">{item.a}</p>
                 </div>
               </motion.div>
             ))}
@@ -379,33 +380,37 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="relative overflow-hidden border-t border-border/50 px-4 py-24 text-center sm:px-6 lg:px-8">
-        <div className="absolute left-1/2 top-1/2 -z-10 h-[380px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary opacity-[0.1] blur-3xl" />
+      <section className="relative overflow-hidden border-t border-border/50 px-4 py-14 text-center sm:px-6 sm:py-20 lg:px-8">
+        <div className="absolute left-1/2 top-1/2 -z-10 h-[380px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary opacity-[0.04]" />
         <motion.div {...fadeUp}>
-          <h2 className="font-display text-3xl font-bold tracking-tight sm:text-5xl text-foreground">Your next role is one<br /><span className="text-primary">referral away</span></h2>
-          <p className="mx-auto mt-4 max-w-md text-muted-foreground">Join thousands of seekers, professionals and recruiters on Direct Refer.</p>
+          <h2 className="font-display text-2xl sm:text-3xl lg:text-5xl font-bold tracking-tight text-foreground">Your next role is one<br /><span className="text-primary">referral away</span></h2>
+          <p className="mx-auto mt-4 max-w-md text-muted-foreground">Join professionals and job seekers on Direct Refer.</p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Button size="lg" className="rounded-full bg-primary px-8 shadow-glow" asChild>
-              <Link to="/login">Create free account <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            <Button size="lg" className="rounded-full bg-primary px-6 sm:px-8 shadow-glow text-sm sm:text-base" asChild>
+              <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : 'Create free account'} <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full px-8" asChild>
-              <Link to="/login">I'm a professional — join now</Link>
+            <Button size="lg" variant="outline" className="rounded-full px-6 sm:px-8 text-sm sm:text-base" asChild>
+              <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : "I'm a professional — join now"}</Link>
             </Button>
           </div>
         </motion.div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row">
+      <footer className="border-t border-border/50 px-4 py-8 sm:px-6 sm:py-10 lg:px-8" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
+        <div className="mx-auto flex max-w-7xl min-w-0 flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
           <Logo />
-          <div className="flex items-center gap-6 text-[14px] text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-[14px] text-muted-foreground">
             <button onClick={() => scrollTo('features')} className="hover:text-foreground">Features</button>
             <button onClick={() => scrollTo('network')} className="hover:text-foreground">Network</button>
             <Link to="/help" className="hover:text-foreground">Support</Link>
-            <Link to="/login" className="hover:text-foreground">Sign in</Link>
+            {user ? (
+              <Link to="/dashboard" className="hover:text-foreground">Dashboard</Link>
+            ) : (
+              <Link to="/login" className="hover:text-foreground">Sign in</Link>
+            )}
           </div>
-          <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-xs sm:text-[13px] text-muted-foreground">
             <FileText className="h-3.5 w-3.5" /> © {new Date().getFullYear()} Direct Refer, Inc.
           </div>
         </div>

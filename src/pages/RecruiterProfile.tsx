@@ -1,36 +1,42 @@
-import { useRef, useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  BadgeCheck, Briefcase, Camera, Check, Clock, Globe, Heart, Linkedin, MapPin, Pencil, Trophy, Users, X,
+  Briefcase, Check, Clock, Globe, Heart, Linkedin, MapPin, Pencil, Trophy, Users, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+
 import { Chip, CompanyChip } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
+import { useAutoSaveForm, DraftStatusIndicator } from '@/hooks/useAutoSaveForm'
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard'
 
 
 export default function RecruiterProfile() {
   const { jobs, updateRecruiter, candidates, activity } = useApp()
   const { user } = useAuth()
   const loading = usePageLoading(400)
-  const [recruiterCompany, setRecruiterCompany] = useState({ name: 'Acme Corp', industry: 'Technology', size: '500-1000', website: 'acme.com', linkedin: 'linkedin.com/company/acme', description: 'Acme Corp is a forward-thinking technology company dedicated to building products that solve real-world problems. With a distributed team across 12 countries, we combine deep technical expertise with a customer-first mindset to deliver solutions used by millions every day.', mission: 'To empower businesses and individuals through innovative, accessible technology that drives growth and creates lasting impact.', highlights: ['Fortune 500', 'Remote-first', 'Series D · $420M raised', '2,400+ employees across 12 countries'], hiringStats: { timeToHire: 21, offerAccept: 78, referralShare: 34, activeJobs: jobs.filter((j) => j.stage === 'Active').length }, responseRate: 92, verified: true })
+  const [recruiterCompany, setRecruiterCompany] = useState({ name: '', industry: '', size: '', website: '', linkedin: '', description: '', mission: '', highlights: [] as string[], hiringStats: { timeToHire: 0, offerAccept: 0, referralShare: 0, activeJobs: jobs.filter((j) => j.stage === 'Active').length }, responseRate: 0, verified: false })
   const c = recruiterCompany
   const navigate = useNavigate()
+  const profileLoadedRef = useRef(false)
 
   useEffect(() => {
     const loadCompany = async () => {
       if (!user) return
-      const { data } = await supabase
-        .from('profiles_recruiter')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
+      if (profileLoadedRef.current) return
+      profileLoadedRef.current = true
+      try {
+        const { data } = await supabase
+          .from('profiles_recruiter')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
         if (data) {
           setRecruiterCompany((prev) => ({
             ...prev,
@@ -42,17 +48,25 @@ export default function RecruiterProfile() {
             mission: data.company_mission ?? prev.mission,
             highlights: data.company_highlights ?? prev.highlights,
             hiringStats: {
-              ...prev.hiringStats,
+              timeToHire: data.time_to_hire ?? prev.hiringStats.timeToHire,
+              offerAccept: data.offer_accept_rate ?? prev.hiringStats.offerAccept,
+              referralShare: data.referral_share ?? prev.hiringStats.referralShare,
               activeJobs: jobs.filter((j) => j.stage === 'Active').length,
             },
           }))
           if (data.company_description) setDescription(data.company_description)
           if (data.company_mission) setMission(data.company_mission)
           if (data.company_highlights) setHighlights(data.company_highlights)
+          if (Array.isArray(data.benefits) && data.benefits.length > 0) setBenefits(data.benefits)
+          if (Array.isArray(data.office_locations) && data.office_locations.length > 0) setLocations(data.office_locations)
         }
+      } catch (err) {
+        console.error('Failed to load recruiter profile:', err)
+        toast.error('Failed to load company profile')
+      }
     }
     loadCompany()
-  }, [user, jobs])
+  }, [user])
 
   const [editing, setEditing] = useState(false)
   const [description, setDescription] = useState(c.description)
@@ -64,112 +78,102 @@ export default function RecruiterProfile() {
   const [editingCard, setEditingCard] = useState<string | null>(null)
   const [mission, setMission] = useState(c.mission)
   const [highlights, setHighlights] = useState<string[]>(c.highlights)
-  const [editMission, setEditMission] = useState('')
+  const [editMission, setEditMission] = useState(c.mission)
   const [editHighlights, setEditHighlights] = useState('')
-  const [benefits, setBenefits] = useState<string[]>(['Health insurance', '401k matching', 'Stock options', 'Unlimited PTO'])
+  const [benefits, setBenefits] = useState<string[]>([])
   const [editBenefits, setEditBenefits] = useState('')
-  const [locations, setLocations] = useState(['San Francisco', 'New York'])
+  const [locations, setLocations] = useState<string[]>([])
   const [editLocations, setEditLocations] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // ── Auto-Save Draft ──
+  const draftSnapshot = {
+    editName, editIndustry, editSize, editWebsite, editLinkedin,
+    description, editMission, editHighlights, mission,
+  }
+  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges } = useAutoSaveForm({
+    userId: user?.id ?? '',
+    formId: 'recruiter-profile',
+    values: draftSnapshot,
+    enabled: !loading && !!user,
+  })
+  useUnsavedChangesGuard({ enabled: hasUnsavedChanges })
+
+  useEffect(() => {
+    if (draftStatus !== 'restored' || !user) return
+    try {
+      const raw = localStorage.getItem(`draft:${user.id}:recruiter-profile`)
+      if (!raw) return
+      const entry = JSON.parse(raw)
+      if (!entry?.values) return
+      const v = entry.values
+      if (v.editName !== undefined) setEditName(v.editName)
+      if (v.editIndustry !== undefined) setEditIndustry(v.editIndustry)
+      if (v.editSize !== undefined) setEditSize(v.editSize)
+      if (v.editWebsite !== undefined) setEditWebsite(v.editWebsite)
+      if (v.editLinkedin !== undefined) setEditLinkedin(v.editLinkedin)
+      if (v.description !== undefined) setDescription(v.description)
+      if (v.editMission !== undefined) setEditMission(v.editMission)
+      if (v.editHighlights !== undefined) setEditHighlights(v.editHighlights)
+      if (v.mission !== undefined) setMission(v.mission)
+      restoreDraft(v)
+    } catch { /* corrupted draft — ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftStatus])
+
+  // Sync local state when DB data loads
+  useEffect(() => {
+    setEditName(c.name)
+    setEditIndustry(c.industry)
+    setEditSize(c.size)
+    setEditWebsite(c.website)
+    setEditLinkedin(c.linkedin)
+    setDescription(c.description)
+    setMission(c.mission)
+    setEditMission(c.mission)
+    setHighlights(c.highlights)
+  }, [c.name, c.industry, c.size, c.website, c.linkedin, c.description, c.mission, c.highlights])
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <Skeleton className="h-40 w-full rounded-none sm:h-52" />
-          <div className="relative px-6 pb-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-4">
-                <Skeleton className="relative -mt-10 h-20 w-20 rounded-2xl border-4 border-card sm:-mt-12 sm:h-24 sm:w-24" />
-                <div className="space-y-2 pb-1">
-                  <Skeleton className="h-7 w-48 rounded-md" />
-                  <Skeleton className="h-4 w-40 rounded-md" />
-                  <Skeleton className="h-3 w-56 rounded-md" />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Skeleton className="h-9 w-24 rounded-full" />
-                <Skeleton className="h-9 w-28 rounded-full" />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="grid gap-6 lg:grid-cols-3 items-stretch">
-          <div className="flex flex-col gap-6 lg:col-span-2">
-            <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-              <Skeleton className="h-5 w-36 rounded-md" />
-              <Skeleton className="h-20 w-full rounded-lg" />
-            </div>
-            <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-              <Skeleton className="h-5 w-40 rounded-md" />
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 rounded-xl" />
-              ))}
-            </div>
-            <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-              <Skeleton className="h-5 w-32 rounded-md" />
-              <div className="flex flex-wrap gap-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-7 w-28 rounded-full" />
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-6">
-            <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-              <Skeleton className="h-5 w-28 rounded-md" />
-              {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="flex gap-3 rounded-xl border border-border p-3">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className="flex-1 space-y-1.5">
-                    <Skeleton className="h-4 w-32 rounded-md" />
-                    <Skeleton className="h-3 w-40 rounded-md" />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-              <Skeleton className="h-5 w-32 rounded-md" />
-              {Array.from({ length: 2 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 rounded-lg" />
-              ))}
-            </div>
-            <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-              <Skeleton className="h-5 w-28 rounded-md" />
-              <Skeleton className="h-36 w-full rounded-lg" />
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
     )
   }
   return (
     <div className="space-y-6">
+      {/* Draft status indicator */}
+      {(draftStatus === 'saved' || draftStatus === 'restored' || draftStatus === 'syncing') && (
+        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
+          <DraftStatusIndicator status={draftStatus} lastSavedAt={lastSavedAt} />
+          {hasUnsavedChanges && (
+            <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive" onClick={clearDraft}>Discard draft</Button>
+          )}
+        </div>
+      )}
+
+
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="overflow-hidden">
-          <div className="relative h-40 bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4] sm:h-52">
+          <div className="relative h-28 sm:h-40 md:h-52 bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4]">
             <div className="bg-grid absolute inset-0 opacity-20" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={() => toast.success('Banner updated successfully')} />
-            <Button size="sm" variant="secondary" className="absolute bottom-3 right-3 h-8 text-xs" onClick={() => fileInputRef.current?.click()}><Camera className="mr-1.5 h-3.5 w-3.5" /> Edit banner</Button>
           </div>
-          <CardContent className="relative px-6 pb-6">
+          <CardContent className="relative px-4 pb-4 sm:px-6 sm:pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-4">
-                <div className="-mt-10 sm:-mt-12">
-                  <CompanyChip name={c.name} className="h-20 w-20 rounded-2xl border-4 border-card text-2xl sm:h-24 sm:w-24" />
+              <div className="flex items-end gap-3 sm:gap-4">
+                <div className="-mt-8 sm:-mt-10 md:-mt-12">
+                  <CompanyChip name={c.name} className="h-16 w-16 rounded-2xl border-4 border-card text-xl sm:h-20 sm:w-20 sm:text-2xl md:h-24 md:w-24" />
                 </div>
                 <div className="pb-1">
                   {editing ? (
                     <input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="font-display text-2xl font-bold bg-transparent border-b border-primary outline-none w-full placeholder:text-muted-foreground/30"
+                      className="font-display text-xl sm:text-2xl font-bold bg-transparent border-b border-primary outline-none w-full placeholder:text-muted-foreground/30"
                       placeholder="Company name"
                     />
                   ) : (
                     <h1 className="font-display flex items-center gap-2 text-2xl font-bold">
-                      {c.name} {c.verified && <BadgeCheck className="h-5.5 w-5.5 text-sky-500" />}
+                      {c.name}
                     </h1>
                   )}
                   {editing ? (
@@ -231,7 +235,15 @@ export default function RecruiterProfile() {
               <div className="flex gap-2 sm:pb-1">
                 {editing ? (
                   <>
-                    <Button variant="outline" className="rounded-full" onClick={() => setEditing(false)}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => {
+                      setEditName(c.name)
+                      setEditIndustry(c.industry)
+                      setEditSize(c.size)
+                      setEditWebsite(c.website)
+                      setEditLinkedin(c.linkedin)
+                      setEditing(false)
+                      clearDraft()
+                    }}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
                     <Button className="rounded-full bg-primary shadow-glow" onClick={() => {
                       setRecruiterCompany((prev) => ({
                         ...prev,
@@ -248,9 +260,11 @@ export default function RecruiterProfile() {
                         company_size: editSize,
                         company_website: editWebsite,
                         company_description: description,
+                        company_linkedin: editLinkedin,
                       })
                       setEditing(false)
                       toast.success('Profile saved')
+                      onFormSaved()
                     }}><Check className="mr-1.5 h-4 w-4" /> Save</Button>
                   </>
                 ) : (
@@ -261,7 +275,6 @@ export default function RecruiterProfile() {
                     setEditWebsite(c.website)
                     setEditLinkedin(c.linkedin)
                     setEditing(true)
-                    toast.success('Edit mode enabled — click Save when done')
                   }}><Pencil className="mr-1.5 h-4 w-4" /> Edit profile</Button>
                 )}
               </div>
@@ -322,6 +335,7 @@ export default function RecruiterProfile() {
                       updateRecruiter({ company_description: description, company_mission: editMission, company_highlights: parsedHighlights })
                       setEditingCard(null)
                       toast.success('About section saved')
+                      onFormSaved()
                     }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
                   </div>
                 </div>
@@ -344,7 +358,7 @@ export default function RecruiterProfile() {
           <Card className="shadow-soft">
             <CardHeader className="">
               <CardTitle className="flex items-center gap-2 text-base"><Briefcase className="h-4 w-4 text-primary" /> Open positions ({jobs.filter((j) => j.stage === 'Active').length})</CardTitle>
-              <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { toast.success('Opening job creation form — fill in the role details, requirements, and benefits'); navigate('/jobs') }}>+ Post job</Button>
+              <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { toast.success('Opening job creation form — fill in the role details, requirements, and benefits'); navigate('/recruiter/jobs') }}>+ Post job</Button>
             </CardHeader>
             <CardContent className="space-y-2.5 pt-0">
               {jobs.filter((j) => j.stage === 'Active').map((j) => (
@@ -381,7 +395,16 @@ export default function RecruiterProfile() {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => setEditingCard(null)}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
-                    <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={() => { setBenefits(editBenefits.split(',').map((b) => b.trim()).filter(Boolean)); setEditingCard(null); toast.success('Benefits saved') }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
+                    <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={async () => {
+                      const newBenefits = editBenefits.split(',').map((b) => b.trim()).filter(Boolean)
+                      setBenefits(newBenefits)
+                      setEditingCard(null)
+                      if (user) {
+                        const { error } = await supabase.from('profiles_recruiter').update({ benefits: newBenefits }).eq('user_id', user.id)
+                        if (error) { toast.error('Failed to save benefits'); return }
+                      }
+                      toast.success('Benefits saved')
+                    }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
                   </div>
                 </div>
               ) : (
@@ -413,7 +436,16 @@ export default function RecruiterProfile() {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => setEditingCard(null)}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
-                    <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={() => { setLocations(editLocations.split(',').map((l) => l.trim()).filter(Boolean)); setEditingCard(null); toast.success('Office locations saved') }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
+                    <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={async () => {
+                      const newLocations = editLocations.split(',').map((l) => l.trim()).filter(Boolean)
+                      setLocations(newLocations)
+                      setEditingCard(null)
+                      if (user) {
+                        const { error } = await supabase.from('profiles_recruiter').update({ office_locations: newLocations }).eq('user_id', user.id)
+                        if (error) { toast.error('Failed to save locations'); return }
+                      }
+                      toast.success('Office locations saved')
+                    }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
                   </div>
                 </div>
               ) : (

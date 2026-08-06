@@ -1,11 +1,7 @@
-import { useMemo, useState, useEffect, useCallback } from 'react'
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react'
 import { type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
-
-function daysBetween(a: Date, b: Date): number {
-  return Math.ceil((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24))
-}
 
 export interface WeeklyDataPoint { label: string; applications: number; responses: number; referrals: number }
 export interface MonthlyDataPoint { label: string; referrals: number; accepted: number }
@@ -113,53 +109,56 @@ export function useFilteredStudentWeekly(range: DateRange): WeeklyDataPoint[] {
   const { user } = useAuth()
   const [data, setData] = useState<WeeklyDataPoint[]>([])
   const [loading, setLoading] = useState(true)
+  const genRef = useRef(0)
 
   const fetchData = useCallback(async () => {
+    const gen = ++genRef.current
     setLoading(true)
     const userId = user?.id ?? null
     const { from, to } = getRangeDates(range)
 
     if (!userId) {
-      setData([])
-      setLoading(false)
+      if (gen === genRef.current) { setData([]); setLoading(false) }
       return
     }
 
-    const { data: rows } = await supabase
-      .from('referrals')
-      .select('created_at, status')
-      .eq('requester_id', userId)
-      .gte('created_at', from.toISOString())
-      .lte('created_at', to.toISOString())
-      .order('created_at', { ascending: true })
+    try {
+      const { data: rows } = await supabase
+        .from('referrals')
+        .select('created_at, status')
+        .eq('requester_id', userId)
+        .gte('created_at', from.toISOString())
+        .lte('created_at', to.toISOString())
+        .order('created_at', { ascending: true })
 
-    if (!rows) {
-      setData([])
-      setLoading(false)
-      return
-    }
+      if (gen !== genRef.current) return
+      if (!rows) { setData([]); setLoading(false); return }
 
-    const slots = generateWeekSlots(from, to)
-    const result: WeeklyDataPoint[] = slots.map((s) => ({
-      label: formatWeekLabel(s),
-      applications: 0,
-      responses: 0,
-      referrals: 0,
-    }))
+      const slots = generateWeekSlots(from, to)
+      const result: WeeklyDataPoint[] = slots.map((s) => ({
+        label: formatWeekLabel(s),
+        applications: 0,
+        responses: 0,
+        referrals: 0,
+      }))
 
-    for (const row of rows) {
-      const idx = bucketToWeek(row.created_at, slots)
-      if (idx >= 0 && idx < result.length) {
-        result[idx].applications++
-        if (row.status === 'accepted' || row.status === 'offered') {
-          result[idx].responses++
+      for (const row of rows) {
+        const idx = bucketToWeek(row.created_at, slots)
+        if (idx >= 0 && idx < result.length) {
+          result[idx].applications++
+          if (row.status === 'accepted' || row.status === 'offered') {
+            result[idx].responses++
+          }
+          result[idx].referrals++
         }
-        result[idx].referrals++
       }
-    }
 
-    setData(result)
-    setLoading(false)
+      setData(result)
+    } catch {
+      if (gen === genRef.current) setData([])
+    } finally {
+      if (gen === genRef.current) setLoading(false)
+    }
   }, [range, user])
 
   useEffect(() => { fetchData() }, [fetchData])
@@ -172,51 +171,54 @@ export function useFilteredProMonthly(range: DateRange): MonthlyDataPoint[] {
   const { user } = useAuth()
   const [data, setData] = useState<MonthlyDataPoint[]>([])
   const [loading, setLoading] = useState(true)
+  const genRef = useRef(0)
 
   const fetchData = useCallback(async () => {
+    const gen = ++genRef.current
     setLoading(true)
     const userId = user?.id ?? null
     const { from, to } = getRangeDates(range)
 
     if (!userId) {
-      setData([])
-      setLoading(false)
+      if (gen === genRef.current) { setData([]); setLoading(false) }
       return
     }
 
-    const { data: rows } = await supabase
-      .from('referrals')
-      .select('created_at, status')
-      .eq('professional_id', userId)
-      .gte('created_at', from.toISOString())
-      .lte('created_at', to.toISOString())
-      .order('created_at', { ascending: true })
+    try {
+      const { data: rows } = await supabase
+        .from('referrals')
+        .select('created_at, status')
+        .eq('professional_id', userId)
+        .gte('created_at', from.toISOString())
+        .lte('created_at', to.toISOString())
+        .order('created_at', { ascending: true })
 
-    if (!rows) {
-      setData([])
-      setLoading(false)
-      return
-    }
+      if (gen !== genRef.current) return
+      if (!rows) { setData([]); setLoading(false); return }
 
-    const slots = generateMonthSlots(from, to)
-    const result: MonthlyDataPoint[] = slots.map((s) => ({
-      label: formatMonthLabel(s),
-      referrals: 0,
-      accepted: 0,
-    }))
+      const slots = generateMonthSlots(from, to)
+      const result: MonthlyDataPoint[] = slots.map((s) => ({
+        label: formatMonthLabel(s),
+        referrals: 0,
+        accepted: 0,
+      }))
 
-    for (const row of rows) {
-      const idx = bucketToMonth(row.created_at, slots)
-      if (idx >= 0 && idx < result.length) {
-        result[idx].referrals++
-        if (row.status === 'accepted' || row.status === 'offered') {
-          result[idx].accepted++
+      for (const row of rows) {
+        const idx = bucketToMonth(row.created_at, slots)
+        if (idx >= 0 && idx < result.length) {
+          result[idx].referrals++
+          if (row.status === 'accepted' || row.status === 'offered') {
+            result[idx].accepted++
+          }
         }
       }
-    }
 
-    setData(result)
-    setLoading(false)
+      setData(result)
+    } catch {
+      if (gen === genRef.current) setData([])
+    } finally {
+      if (gen === genRef.current) setLoading(false)
+    }
   }, [range, user])
 
   useEffect(() => { fetchData() }, [fetchData])
@@ -229,82 +231,89 @@ export function useFilteredProResponseTime(range: DateRange): DailyDataPoint[] {
   const { user } = useAuth()
   const [data, setData] = useState<DailyDataPoint[]>([])
   const [loading, setLoading] = useState(true)
+  const genRef = useRef(0)
 
   const fetchData = useCallback(async () => {
+    const gen = ++genRef.current
     setLoading(true)
     const userId = user?.id ?? null
     const { from, to } = getRangeDates(range)
 
     if (!userId) {
-      setData([])
-      setLoading(false)
+      if (gen === genRef.current) { setData([]); setLoading(false) }
       return
     }
 
-    const { data: rows } = await supabase
-      .from('messages')
-      .select('conversation_id, sender_id, created_at')
-      .eq('sender_id', userId)
-      .gte('created_at', from.toISOString())
-      .lte('created_at', to.toISOString())
-      .order('created_at', { ascending: true })
-
-    const { data: sentConvs } = await supabase
-      .from('messages')
-      .select('conversation_id')
-      .eq('sender_id', userId)
-
-    const convIds = sentConvs?.map((r) => r.conversation_id) ?? []
-
-    const { data: receivedRows } = convIds.length > 0
-      ? await supabase
+    try {
+      const { data: rows } = await supabase
         .from('messages')
         .select('conversation_id, sender_id, created_at')
-        .neq('sender_id', userId)
-        .in('conversation_id', convIds)
+        .eq('sender_id', userId)
         .gte('created_at', from.toISOString())
         .lte('created_at', to.toISOString())
         .order('created_at', { ascending: true })
-      : { data: [] }
 
-    if (!rows || !receivedRows) {
-      setData([])
-      setLoading(false)
-      return
-    }
+      if (gen !== genRef.current) return
 
-    const slots = generateDaySlots(from, to)
-    const result: DailyDataPoint[] = slots.map((s) => ({
-      label: formatDayLabel(s),
-      hours: 0,
-    }))
+      const { data: sentConvs } = await supabase
+        .from('messages')
+        .select('conversation_id')
+        .eq('sender_id', userId)
 
-    const sentByConv = new Map<string, string[]>()
-    for (const r of rows) {
-      const list = sentByConv.get(r.conversation_id) || []
-      list.push(r.created_at)
-      sentByConv.set(r.conversation_id, list)
-    }
+      if (gen !== genRef.current) return
 
-    const countByDay = new Map<number, number>()
-    for (const r of receivedRows) {
-      const sentTimes = sentByConv.get(r.conversation_id) || []
-      const nextReply = sentTimes.find((t) => new Date(t) > new Date(r.created_at))
-      if (nextReply) {
-        const hoursDiff = (new Date(nextReply).getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60)
-        if (hoursDiff >= 0 && hoursDiff <= 168) {
-          const dayIdx = bucketToDay(r.created_at, slots)
-          if (dayIdx >= 0 && dayIdx < result.length) {
-            const count = (countByDay.get(dayIdx) ?? 0) + 1
-            countByDay.set(dayIdx, count)
-            result[dayIdx].hours = Math.round((result[dayIdx].hours * (count - 1) + hoursDiff) / count * 10) / 10
+      const convIds = sentConvs?.map((r) => r.conversation_id) ?? []
+
+      const { data: receivedRows } = convIds.length > 0
+        ? await supabase
+          .from('messages')
+          .select('conversation_id, sender_id, created_at')
+          .neq('sender_id', userId)
+          .in('conversation_id', convIds)
+          .gte('created_at', from.toISOString())
+          .lte('created_at', to.toISOString())
+          .order('created_at', { ascending: true })
+        : { data: [] }
+
+      if (gen !== genRef.current) return
+      if (!rows || !receivedRows) { setData([]); setLoading(false); return }
+
+      const slots = generateDaySlots(from, to)
+      const result: DailyDataPoint[] = slots.map((s) => ({
+        label: formatDayLabel(s),
+        hours: 0,
+      }))
+
+      const sentByConv = new Map<string, string[]>()
+      for (const r of rows) {
+        const list = sentByConv.get(r.conversation_id) || []
+        list.push(r.created_at)
+        sentByConv.set(r.conversation_id, list)
+      }
+
+      const countByDay = new Map<number, number>()
+      for (const r of receivedRows) {
+        const sentTimes = sentByConv.get(r.conversation_id) || []
+        const nextReply = sentTimes.find((t) => new Date(t) > new Date(r.created_at))
+        if (nextReply) {
+          const hoursDiff = (new Date(nextReply).getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60)
+          if (hoursDiff >= 0 && hoursDiff <= 168) {
+            const dayIdx = bucketToDay(r.created_at, slots)
+            if (dayIdx >= 0 && dayIdx < result.length) {
+              const count = (countByDay.get(dayIdx) ?? 0) + 1
+              countByDay.set(dayIdx, count)
+              result[dayIdx].hours = Math.round((result[dayIdx].hours * (count - 1) + hoursDiff) / count * 10) / 10
+            }
           }
         }
       }
-    }
 
-    setData(result)
-    setLoading(false)
+      setData(result)
+    } catch {
+      if (gen === genRef.current) setData([])
+    } finally {
+      if (gen === genRef.current) setLoading(false)
+    }
   }, [range, user])
 
   useEffect(() => { fetchData() }, [fetchData])
@@ -317,69 +326,80 @@ export function useFilteredRecruiterWeekly(range: DateRange): WeeklyRecruitDataP
   const { user } = useAuth()
   const [data, setData] = useState<WeeklyRecruitDataPoint[]>([])
   const [loading, setLoading] = useState(true)
+  const genRef = useRef(0)
 
   const fetchData = useCallback(async () => {
+    const gen = ++genRef.current
     setLoading(true)
     const userId = user?.id ?? null
     const { from, to } = getRangeDates(range)
 
     if (!userId) {
-      setData([])
-      setLoading(false)
+      if (gen === genRef.current) { setData([]); setLoading(false) }
       return
     }
 
-    const { data: jobRows } = await supabase
-      .from('jobs')
-      .select('id')
-      .eq('recruiter_id', userId)
+    try {
+      const { data: jobRows } = await supabase
+        .from('jobs')
+        .select('id')
+        .eq('recruiter_id', userId)
 
-    const jobIds = jobRows?.map((j) => j.id) ?? []
+      if (gen !== genRef.current) return
 
-    if (jobIds.length === 0) {
-      setData([])
-      setLoading(false)
-      return
-    }
+      const jobIds = jobRows?.map((j) => j.id) ?? []
 
-    const { data: nonRecruiters } = await supabase
-      .from('users')
-      .select('id')
-      .neq('role', 'recruiter')
+      if (jobIds.length === 0) {
+        if (gen === genRef.current) { setData([]); setLoading(false) }
+        return
+      }
 
-    const proIds = nonRecruiters?.map((u) => u.id) ?? []
+      const { data: nonRecruiters } = await supabase
+        .from('users')
+        .select('id')
+        .neq('role', 'recruiter')
 
-    const { data: rows } = proIds.length > 0
-      ? await supabase
-        .from('referrals')
-        .select('created_at, status')
-        .in('professional_id', proIds)
-        .gte('created_at', from.toISOString())
-        .lte('created_at', to.toISOString())
-        .order('created_at', { ascending: true })
-      : { data: [] }
+      if (gen !== genRef.current) return
 
-    const slots = generateWeekSlots(from, to)
-    const result: WeeklyRecruitDataPoint[] = slots.map((s) => ({
-      label: formatWeekLabel(s),
-      applications: 0,
-      hires: 0,
-    }))
+      const proIds = nonRecruiters?.map((u) => u.id) ?? []
 
-    if (rows) {
-      for (const row of rows) {
-        const idx = bucketToWeek(row.created_at, slots)
-        if (idx >= 0 && idx < result.length) {
-          result[idx].applications++
-          if (row.status === 'accepted' || row.status === 'offered') {
-            result[idx].hires++
+      const { data: rows } = proIds.length > 0
+        ? await supabase
+          .from('referrals')
+          .select('created_at, status')
+          .in('professional_id', proIds)
+          .gte('created_at', from.toISOString())
+          .lte('created_at', to.toISOString())
+          .order('created_at', { ascending: true })
+        : { data: [] }
+
+      if (gen !== genRef.current) return
+
+      const slots = generateWeekSlots(from, to)
+      const result: WeeklyRecruitDataPoint[] = slots.map((s) => ({
+        label: formatWeekLabel(s),
+        applications: 0,
+        hires: 0,
+      }))
+
+      if (rows) {
+        for (const row of rows) {
+          const idx = bucketToWeek(row.created_at, slots)
+          if (idx >= 0 && idx < result.length) {
+            result[idx].applications++
+            if (row.status === 'accepted' || row.status === 'offered') {
+              result[idx].hires++
+            }
           }
         }
       }
-    }
 
-    setData(result)
-    setLoading(false)
+      setData(result)
+    } catch {
+      if (gen === genRef.current) setData([])
+    } finally {
+      if (gen === genRef.current) setLoading(false)
+    }
   }, [range, user])
 
   useEffect(() => { fetchData() }, [fetchData])
@@ -389,15 +409,7 @@ export function useFilteredRecruiterWeekly(range: DateRange): WeeklyRecruitDataP
 }
 
 export function useFilteredStats(range: DateRange, base: { value: number; delta?: number }) {
-  return useMemo(() => {
-    const { from, to } = range.preset === 'all' ? getPresetRange('all') : range
-    const days = daysBetween(from, to)
-    const factor = Math.max(0.1, days / 90)
-    return {
-      value: Math.round(base.value * factor),
-      delta: base.delta ? Math.round(base.delta * Math.sqrt(factor)) : undefined,
-    }
-  }, [range, base])
+  return useMemo(() => base, [range, base])
 }
 
 export function hasData<T>(data: T[]): boolean {

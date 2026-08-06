@@ -16,7 +16,6 @@ import { EmptyState, GAvatar } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { type Professional } from '@/data/mock'
 import { usePageLoading } from '@/hooks/usePageLoading'
-import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
 type SortKey = 'recommended' | 'top_rated' | 'fastest' | 'recent' | 'most_referrals'
@@ -51,7 +50,7 @@ export function ProfessionalCard({ p, index }: { p: Professional; index: number 
         <div className="flex items-start justify-between">
           <GAvatar name={p.name} gradient={p.gradient} className="h-12 w-12 text-sm" />
           <button
-            onClick={() => { toggleBookmark(p.id); toast(saved ? 'Removed' : 'Saved') }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleBookmark(p.id); toast(saved ? 'Removed' : 'Saved', { duration: 1500 }) }}
             className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {saved ? <BookmarkCheck className="h-4 w-4 text-primary" /> : <Bookmark className="h-4 w-4" />}
@@ -328,10 +327,10 @@ export default function FindProfessionals() {
       top_rated: (a, b) => b.rating - a.rating || b.reviews - a.reviews,
       fastest: (a, b) => a.avgReplyHours - b.avgReplyHours,
       most_referrals: (a, b) => b.referralsCompleted - a.referralsCompleted,
-      recent: (a, b) => a.joinedDaysAgo - b.joinedDaysAgo,
+      recent: (a, b) => b.joinedDaysAgo - a.joinedDaysAgo,
     }
     return list.sort(by[sort])
-  }, [f, sort])
+  }, [f, sort, professionals])
 
   const activeCount = f.companies.length + f.skills.length + f.locations.length + (f.availableOnly ? 1 : 0)
 
@@ -359,7 +358,7 @@ export default function FindProfessionals() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="inline-flex h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm text-muted-foreground transition-colors hover:border-foreground/20 hover:text-foreground">
-              {SORT_OPTIONS.find((o) => o.key === sort)?.label}
+              <span className="hidden sm:inline">{SORT_OPTIONS.find((o) => o.key === sort)?.label}</span>
               <ChevronDown className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
@@ -410,9 +409,7 @@ export default function FindProfessionals() {
 
       {/* Results */}
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-[320px] rounded-2xl" />)}
-        </div>
+        <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
       ) : results.length === 0 ? (
         <EmptyState
           icon={Search}

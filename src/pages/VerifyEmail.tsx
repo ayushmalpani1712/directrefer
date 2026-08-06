@@ -1,11 +1,11 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Loader2, Mail, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/layout'
 import { supabase } from '@/lib/supabase'
-import { sendVerificationEmail } from '@/lib/email'
+import { ROLE_ROUTE, type Role } from '@/data/mock'
 import { toast } from 'sonner'
 
 export default function VerifyEmail() {
@@ -17,30 +17,14 @@ export default function VerifyEmail() {
   const [verified, setVerified] = useState(false)
   const [resending, setResending] = useState(false)
   const [userEmail, setUserEmail] = useState('')
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
-  }, [])
 
   const verifyToken = useCallback(async () => {
     if (!token || !userId) return
     setVerifying(true)
     try {
-      const { data, error } = await supabase
-        .from('email_verification_tokens')
-        .select('user_id, expires_at')
-        .eq('token', token)
-        .single()
-
-      if (error || !data) {
-        toast.error('Invalid or expired verification link')
-        setVerifying(false)
-        return
-      }
-
-      if (new Date(data.expires_at) < new Date()) {
-        toast.error('Verification link has expired. Please request a new one.')
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser || authUser.id !== userId) {
+        toast.error('Invalid verification link')
         setVerifying(false)
         return
       }
@@ -48,7 +32,7 @@ export default function VerifyEmail() {
       const { error: updateError } = await supabase
         .from('users')
         .update({ email_verified: true })
-        .eq('id', data.user_id)
+        .eq('id', userId)
 
       if (updateError) {
         toast.error('Failed to verify email')
@@ -56,11 +40,16 @@ export default function VerifyEmail() {
         return
       }
 
-      await supabase.from('email_verification_tokens').delete().eq('token', token)
-
       setVerified(true)
       toast.success('Email verified! Redirecting...')
-      timerRef.current = setTimeout(() => navigate('/dashboard'), 2000)
+      const { data: { user: verifyUser } } = await supabase.auth.getUser()
+      let redirectRoute = ROLE_ROUTE.student
+      if (verifyUser) {
+        const { data: ur } = await supabase.from('users').select('role').eq('id', verifyUser.id).single()
+        if (ur?.role) redirectRoute = ROLE_ROUTE[ur.role as Role] || ROLE_ROUTE.student
+      }
+      const t = setTimeout(() => navigate(redirectRoute), 2000)
+      return () => clearTimeout(t)
     } catch {
       toast.error('Verification failed')
     } finally {
@@ -88,25 +77,17 @@ export default function VerifyEmail() {
         toast.error('Not logged in')
         return
       }
-
-      const tokenVal = crypto.randomUUID()
-      const { error: tokenError } = await supabase
-        .from('email_verification_tokens')
-        .insert({ user_id: user.id, token: tokenVal })
-
-      if (tokenError) {
-        toast.error('Failed to generate verification link')
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: user.email || '',
+      })
+      if (error) {
+        toast.error(error.message || 'Failed to resend verification email')
         return
       }
-
-      const verifyUrl = `${window.location.origin}/verify-email?token=${tokenVal}&uid=${user.id}`
-
-      try {
-        await sendVerificationEmail(user.email!, verifyUrl)
-        toast.success('Verification email sent! Check your inbox.')
-      } catch {
-        toast.info(`Verification link: ${verifyUrl}`)
-      }
+      toast.success('Verification email sent! Check your inbox.')
+    } catch {
+      toast.error('Failed to resend verification email')
     } finally {
       setResending(false)
     }
@@ -158,7 +139,7 @@ export default function VerifyEmail() {
           Didn't receive it? Check your spam folder, or{' '}
           <button onClick={() => navigate('/login')} className="font-medium text-primary hover:underline">sign in with a different account</button>
         </p>
-        <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mt-2 h-10 w-full rounded-lg text-muted-foreground">
+        <Button variant="ghost" onClick={() => navigate('/login')} className="mt-2 h-10 w-full rounded-lg text-muted-foreground">
           Skip for now
         </Button>
       </motion.div>

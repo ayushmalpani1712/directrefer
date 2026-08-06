@@ -19,7 +19,7 @@ export default function NotFound() {
             <Link to="/dashboard"><Home className="mr-1.5 h-4 w-4" /> Back to dashboard</Link>
           </Button>
           <Button variant="outline" className="rounded-full" asChild>
-            <Link to="/professionals"><Search className="mr-1.5 h-4 w-4" /> Find professionals</Link>
+            <Link to="/job-seeker/professionals"><Search className="mr-1.5 h-4 w-4" /> Find professionals</Link>
           </Button>
         </div>
         <div className="mt-8 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">

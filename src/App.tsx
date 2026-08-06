@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { Route, Routes, Navigate } from 'react-router'
+import { Route, Routes, Navigate, useNavigate, useLocation } from 'react-router'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -9,6 +9,8 @@ import AppShell from '@/components/layout'
 import { ErrorBoundary, LazyErrorFallback } from '@/components/ErrorBoundary'
 import { HeadManager } from '@/components/HeadManager'
 import { OnboardingOverlay } from '@/components/OnboardingOverlay'
+import { NPSSurveyModal } from '@/components/NPSSurveyModal'
+import { ROLE_ROUTE, type Role } from '@/data/mock'
 
 const Landing = lazy(() => import('@/pages/Landing'))
 const Login = lazy(() => import('@/pages/Login'))
@@ -21,6 +23,7 @@ const RecruiterProfile = lazy(() => import('@/pages/RecruiterProfile'))
 const FindProfessionals = lazy(() => import('@/pages/FindProfessionals'))
 const ProfessionalPublic = lazy(() => import('@/pages/ProfessionalPublic'))
 const RecruiterPublic = lazy(() => import('@/pages/RecruiterPublic'))
+const JobSeekerPublic = lazy(() => import('@/pages/JobSeekerPublic'))
 const RequestReferral = lazy(() => import('@/pages/RequestReferral'))
 const MyReferrals = lazy(() => import('@/pages/MyReferrals'))
 const ReferralInbox = lazy(() => import('@/pages/ReferralInbox'))
@@ -35,6 +38,7 @@ const Admin = lazy(() => import('@/pages/Admin'))
 const NotificationsPage = lazy(() => import('@/pages/Network').then((m) => ({ default: m.NotificationsPage })))
 const BookmarksPage = lazy(() => import('@/pages/Network').then((m) => ({ default: m.BookmarksPage })))
 const ActivityPage = lazy(() => import('@/pages/Network').then((m) => ({ default: m.ActivityPage })))
+const NotFound = lazy(() => import('@/pages/NotFound'))
 const AuthCallback = lazy(() => import('@/pages/AuthCallback'))
 const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'))
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'))
@@ -44,25 +48,16 @@ function LazyErrorBoundary({ children }: { children: React.ReactNode }) {
   const [key, setKey] = useState(0)
   return (
     <ErrorBoundary key={key} fallback={<LazyErrorFallback error={new Error('Page failed to load')} resetErrorBoundary={() => setKey(k => k + 1)} />}>
-      <Suspense fallback={
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <span className="text-sm text-muted-foreground">Loading...</span>
-          </div>
-        </div>
-      }>
+      <Suspense fallback={<div className="p-6"><div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div></div>}>
         {children}
       </Suspense>
     </ErrorBoundary>
   )
 }
 
-function Dashboard() {
+function DashboardRedirect() {
   const { role } = useApp()
-  if (role === 'professional' || role === 'admin') return <ProfessionalDashboard />
-  if (role === 'recruiter') return <RecruiterDashboard />
-  return <StudentDashboard />
+  return <Navigate to={ROLE_ROUTE[role]} replace />
 }
 
 function Profile() {
@@ -72,54 +67,50 @@ function Profile() {
   return <StudentProfile />
 }
 
+const PUBLIC_PATHS = new Set(['/', '/login', '/forgot-password'])
+
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth()
+  const { authed, role } = useApp()
+  const { pathname } = useLocation()
+
+  if (loading) {
+    return <div className="min-h-screen p-6"><div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div></div>
+  }
+
+  if (user && authed && PUBLIC_PATHS.has(pathname)) {
+    return <Navigate to={ROLE_ROUTE[role]} replace />
+  }
+
+  return <>{children}</>
+}
+
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading, emailVerified } = useAuth()
   const { authed } = useApp()
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
+    return <div className="min-h-screen p-6"><div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div></div>
   }
 
-  if (!user && !authed) return <Navigate to="/login" replace />
+  if (!user) return <Navigate to="/login" replace />
+  if (!authed) {
+    return <div className="min-h-screen p-6"><div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div></div>
+  }
   if (!emailVerified) return <Navigate to="/verify-email" replace />
   return <>{children}</>
 }
 
-function RequireAdmin({ children }: { children: React.ReactNode }) {
+function RequireRole({ allowed, children }: { allowed: Role[]; children: React.ReactNode }) {
   const { role } = useApp()
-  const { user } = useAuth()
-  if (role !== 'admin' && user?.email !== 'ayushmalpani479@gmail.com') return <Navigate to="/dashboard" replace />
+  if (role === 'admin') return <>{children}</>
+  if (!allowed.includes(role)) return <Navigate to={ROLE_ROUTE[role]} replace />
   return <>{children}</>
-}
-
-function CatchAllRedirect() {
-  const { user, loading } = useAuth()
-  const { authed } = useApp()
-
-  useEffect(() => {
-    if (window.location.hash) {
-      window.history.replaceState({}, '', window.location.pathname)
-    }
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
-  }
-
-  if (user || authed) return <Navigate to="/dashboard" replace />
-  return <Navigate to="/login" replace />
 }
 
 function RecoveryHandler() {
   const [isRecovery, setIsRecovery] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const hash = window.location.hash
@@ -128,10 +119,19 @@ function RecoveryHandler() {
     }
   }, [])
 
-  if (isRecovery) {
-    return <ResetPassword />
-  }
+  useEffect(() => {
+    if (isRecovery) {
+      navigate('/reset-password', { replace: true })
+    }
+  }, [isRecovery, navigate])
+
   return null
+}
+
+function NPSModal() {
+  const { npsOpen, setNpsOpen } = useApp()
+  const { user } = useAuth()
+  return <NPSSurveyModal open={npsOpen} onOpenChange={setNpsOpen} userId={user?.id} />
 }
 
 export default function App() {
@@ -146,38 +146,67 @@ export default function App() {
               <OnboardingOverlay />
               <RecoveryHandler />
               <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/login" element={<Login />} />
+                {/* ── Public routes (redirect authenticated users to dashboard) ── */}
+                <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
+                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+                <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
+
+                {/* ── Public profile pages (accessible by anyone) ── */}
+                <Route path="/job-seekers/:id" element={<JobSeekerPublic />} />
+                <Route path="/professionals/:id" element={<ProfessionalPublic />} />
+                <Route path="/company/:id" element={<RecruiterPublic />} />
+
+                {/* ── Protected routes (auth + layout) ── */}
                 <Route element={<RequireAuth><AppShell /></RequireAuth>}>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/professionals" element={<FindProfessionals />} />
-                  <Route path="/professionals/:id" element={<ProfessionalPublic />} />
-                  <Route path="/company/:id" element={<RecruiterPublic />} />
-                  <Route path="/request-referral" element={<RequestReferral />} />
-                  <Route path="/request-referral/:id" element={<RequestReferral />} />
-                  <Route path="/applications" element={<MyReferrals />} />
-                  <Route path="/requests" element={<ReferralInbox />} />
-                  <Route path="/jobs" element={<RecruiterJobs />} />
-                  <Route path="/talent" element={<TalentSearch />} />
+                  <Route path="/dashboard" element={<DashboardRedirect />} />
+
+                  {/* ── Job Seeker routes ── */}
+                  <Route path="/job-seeker" element={<Navigate to="/job-seeker/dashboard" replace />} />
+                  <Route path="/job-seeker/dashboard" element={<RequireRole allowed={['student', 'admin']}><StudentDashboard /></RequireRole>} />
+                  <Route path="/job-seeker/profile" element={<RequireRole allowed={['student', 'admin']}><Profile /></RequireRole>} />
+                  <Route path="/job-seeker/applications" element={<RequireRole allowed={['student', 'admin']}><MyReferrals /></RequireRole>} />
+                  <Route path="/job-seeker/professionals" element={<RequireRole allowed={['student', 'admin']}><FindProfessionals /></RequireRole>} />
+                  <Route path="/job-seeker/request-referral" element={<RequireRole allowed={['student', 'admin']}><RequestReferral /></RequireRole>} />
+                  <Route path="/job-seeker/request-referral/:id" element={<RequireRole allowed={['student', 'admin']}><RequestReferral /></RequireRole>} />
+
+                  {/* ── Professional routes ── */}
+                  <Route path="/professional" element={<Navigate to="/professional/dashboard" replace />} />
+                  <Route path="/professional/dashboard" element={<RequireRole allowed={['professional', 'admin']}><ProfessionalDashboard /></RequireRole>} />
+                  <Route path="/professional/profile" element={<RequireRole allowed={['professional', 'admin']}><Profile /></RequireRole>} />
+                  <Route path="/professional/referrals" element={<RequireRole allowed={['professional', 'admin']}><ReferralInbox /></RequireRole>} />
+                  <Route path="/professional/talent" element={<RequireRole allowed={['professional', 'admin']}><TalentSearch /></RequireRole>} />
+                  <Route path="/professional/professionals" element={<RequireRole allowed={['professional', 'admin']}><FindProfessionals /></RequireRole>} />
+
+                  {/* ── Recruiter routes ── */}
+                  <Route path="/recruiter" element={<Navigate to="/recruiter/dashboard" replace />} />
+                  <Route path="/recruiter/dashboard" element={<RequireRole allowed={['recruiter', 'admin']}><RecruiterDashboard /></RequireRole>} />
+                  <Route path="/recruiter/profile" element={<RequireRole allowed={['recruiter', 'admin']}><Profile /></RequireRole>} />
+                  <Route path="/recruiter/jobs" element={<RequireRole allowed={['recruiter', 'admin']}><RecruiterJobs /></RequireRole>} />
+                  <Route path="/recruiter/talent" element={<RequireRole allowed={['recruiter', 'admin']}><TalentSearch /></RequireRole>} />
+
+                  {/* ── Admin routes (tab-driven) ── */}
+                  <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
+                  <Route path="/admin/:tab" element={<RequireRole allowed={['admin']}><Admin /></RequireRole>} />
+
+                  {/* ── Shared routes (all authenticated roles) ── */}
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
                   <Route path="/bookmarks" element={<BookmarksPage />} />
                   <Route path="/activity" element={<ActivityPage />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/settings" element={<Settings />} />
-                  <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
                   <Route path="/help" element={<Help />} />
-                  <Route path="*" element={<CatchAllRedirect />} />
+
+                  <Route path="*" element={<NotFound />} />
                 </Route>
               </Routes>
             </LazyErrorBoundary>
             </ErrorBoundary>
             <Toaster richColors position="bottom-right" />
+            <NPSModal />
           </AppProvider>
         </AuthProvider>
       </TooltipProvider>

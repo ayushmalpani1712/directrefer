@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { sendEmail, sendVerificationEmail, sendPasswordResetEmail, sendReferralStatusEmail, sendReminderEmail } from '@/lib/email'
+import { sendEmail, sendVerificationEmail, sendReferralStatusEmail, sendReminderEmail } from '@/lib/email'
 
 describe('sendEmail', () => {
   beforeEach(() => {
@@ -51,23 +51,6 @@ describe('sendVerificationEmail', () => {
     expect(body.to).toBe('test@example.com')
     expect(body.subject).toContain('Verify')
     expect(body.html).toContain('https://verify.url')
-  })
-})
-
-describe('sendPasswordResetEmail', () => {
-  beforeEach(() => {
-    vi.stubGlobal('fetch', vi.fn())
-  })
-
-  it('sends reset email with correct content', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({ ok: true })
-    vi.stubGlobal('fetch', mockFetch)
-
-    await sendPasswordResetEmail('test@example.com', 'https://reset.url')
-
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body)
-    expect(body.subject).toContain('Reset')
-    expect(body.html).toContain('https://reset.url')
   })
 })
 

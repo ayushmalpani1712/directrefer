@@ -1,17 +1,16 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router'
 import {
   ArrowRight, CheckCheck, ChevronRight, Clock, Inbox,
-  MessageSquare, TrendingUp, XCircle,
+  MessageSquare, Search, TrendingUp, XCircle,
 } from 'lucide-react'
 import { LazyArea, LazyAreaChart, LazyBar, LazyBarChart, LazyCartesianGrid, LazyResponsiveContainer, LazyTooltip, LazyXAxis, LazyYAxis } from '@/components/Charts'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CompanyChip, DashboardSkeleton, GAvatar, StatCard, StatusBadge } from '@/components/ui-kit'
+import { CompanyChip, GAvatar, StatCard, StatusBadge } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { usePageLoading } from '@/hooks/usePageLoading'
 import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
 import { EmptyChart } from '@/components/analytics/EmptyChart'
 import { useFilteredProMonthly, useFilteredProResponseTime, hasData } from '@/hooks/useAnalytics'
@@ -32,8 +31,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
 }
 
 export default function ProfessionalDashboard() {
-  const loading = usePageLoading()
-  const { professionals, conversations, requests, setRequestStatus, student } = useApp()
+  const { professionals, conversations, requests, setRequestStatus, student, candidates, loading } = useApp()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [range, setRange] = useState<DateRange>(() => {
@@ -43,9 +41,9 @@ export default function ProfessionalDashboard() {
   const proMonthly = useFilteredProMonthly(range)
   const proResponseTime = useFilteredProResponseTime(range)
 
-  const fallback: Professional = {
+  const fallback = useMemo<Professional>(() => ({
     id: user?.id ?? '',
-    name: user?.email?.split('@')[0] ?? 'User',
+    name: student.name || (user?.email?.split('@')[0] ?? 'User'),
     designation: 'Professional',
     company: '',
     industry: '',
@@ -59,6 +57,7 @@ export default function ProfessionalDashboard() {
     reviews: 0,
     verified: false,
     openForReferrals: false,
+    isOpenToWork: false,
     maxPerMonth: 5,
     usedThisMonth: 0,
     successRate: 0,
@@ -77,10 +76,10 @@ export default function ProfessionalDashboard() {
     referralDuration: '',
     linkedinUrl: '',
     githubUrl: '',
-  }
-  const ME = professionals.find((p) => p.id === user?.id) ?? professionals[0] ?? fallback
-  if (loading) return <DashboardSkeleton />
-  const PRO_USER = { name: ME.name || student?.name || 'User', designation: ME.designation, company: ME.company, email: ME.email || student?.email || '', location: ME.location || student?.location || '', gradient: ME.gradient }
+  }), [user?.id, student.name, user?.email])
+  const ME = professionals.find((p) => p.id === user?.id) ?? fallback
+  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+  const PRO_USER = { name: ME.name || 'User', designation: ME.designation, company: ME.company, email: ME.email || '', location: ME.location || '', gradient: ME.gradient }
   const inbox = ME ? requests.filter((r) => r.professionalId === ME.id) : []
   const pending = inbox.filter((r) => r.status === 'pending')
 
@@ -90,14 +89,12 @@ export default function ProfessionalDashboard() {
       <div>
         <Card className="overflow-hidden border border-border bg-card shadow-soft">
           <CardContent className="relative p-4 sm:p-5">
-            <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary opacity-[0.04] blur-[48px]" />
-            <div className="absolute right-10 bottom-0 h-28 w-28 rounded-full bg-primary opacity-[0.03] blur-[32px]" />
             <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
                 <GAvatar name={PRO_USER.name} gradient={ME.gradient} className="h-12 w-12 text-base" ring />
                 <div>
                   <div className="text-[13px] text-muted-foreground">{PRO_USER.designation} · {PRO_USER.company}</div>
-                  <h1 className="font-display text-[28px] font-bold leading-tight text-foreground">Welcome back, {(student?.name || ME.name || 'User').split(' ')[0]}</h1>
+                  <h1 className="font-display text-[28px] font-bold leading-tight text-foreground">Welcome back, {(ME.name || 'User').split(' ')[0]}</h1>
                 </div>
               </div>
             </div>
@@ -110,8 +107,8 @@ export default function ProfessionalDashboard() {
         <DateRangeSelector value={range} onChange={setRange} />
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 items-stretch">
-        <StatCard icon={Inbox} label="Pending requests" value={pending.length} delta={pending.length} deltaLabel="pending" delay={0.05} href="/requests" />
-        <StatCard icon={CheckCheck} label="Referrals this month" value={ME.usedThisMonth} delta={ME.usedThisMonth} deltaLabel="this month" delay={0.1} href="/requests" />
+        <StatCard icon={Inbox} label="Pending requests" value={pending.length} delta={pending.length} deltaLabel="pending" delay={0.05} href="/professional/referrals" />
+        <StatCard icon={CheckCheck} label="Referrals this month" value={ME.usedThisMonth} delta={ME.usedThisMonth} deltaLabel="this month" delay={0.1} href="/professional/referrals" />
         <StatCard icon={TrendingUp} label="Acceptance rate" value={`${ME.successRate}%`} delta={ME.successRate} deltaLabel="% rate" delay={0.15} href="/analytics" />
       </div>
 
@@ -151,7 +148,7 @@ export default function ProfessionalDashboard() {
           </Link>
 
           {/* Pending requests */}
-          <Link to="/requests" className="block">
+          <Link to="/professional/referrals" className="block">
           <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
             <CardHeader className="">
                 <CardTitle className="text-[15px] font-semibold">Recent requests</CardTitle>
@@ -171,10 +168,10 @@ export default function ProfessionalDashboard() {
                   </div>
                   {r.status === 'pending' ? (
                     <div className="flex gap-2">
-                      <Button size="sm" className="rounded-lg bg-emerald-600 hover:bg-emerald-700" onClick={() => { setRequestStatus(r.id, 'accepted'); toast.success(`Accepted ${r.student}'s request`) }}>
+                      <Button size="sm" className="rounded-lg bg-emerald-600 hover:bg-emerald-700" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRequestStatus(r.id, 'accepted'); toast.success(`Accepted ${r.student}'s request`) }}>
                         <CheckCheck className="mr-1 h-3.5 w-3.5" /> Accept
                       </Button>
-                      <Button size="sm" variant="outline" className="rounded-lg" onClick={() => { setRequestStatus(r.id, 'rejected'); toast('Request declined') }}>
+                      <Button size="sm" variant="outline" className="rounded-lg" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRequestStatus(r.id, 'rejected'); toast('Request declined') }}>
                         <XCircle className="mr-1 h-3.5 w-3.5" /> Decline
                       </Button>
                     </div>
@@ -185,6 +182,34 @@ export default function ProfessionalDashboard() {
                   )}
                 </div>
               ))}
+            </CardContent>
+          </Card>
+          </Link>
+
+          {/* Discover Job Seekers */}
+          <Link to="/professional/talent" className="block">
+          <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
+            <CardHeader className="">
+              <CardTitle className="text-[15px] font-semibold">Discover Job Seekers</CardTitle>
+              <span data-slot="card-action" className="shrink-0"><Button variant="ghost" size="sm" className="text-primary">Browse all <ArrowRight className="ml-1 h-3.5 w-3.5" /></Button></span>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-2">
+              {candidates.filter((c) => c.source === 'Open to work' && c.id !== user?.id).slice(0, 4).map((c) => (
+                <div key={c.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/20 cursor-pointer" onClick={() => navigate(`/job-seekers/${c.id}`)}>
+                  <GAvatar name={c.name} gradient={c.gradient} className="h-9 w-9 text-xs" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[14px] font-semibold text-foreground">{c.name}</div>
+                    <div className="text-[13px] text-muted-foreground">{c.role} · {c.exp}y exp</div>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {c.skills.slice(0, 3).map((s) => <span key={s} className="rounded-full bg-muted/50 px-2 py-0.5 text-[11px] text-muted-foreground">{s}</span>)}
+                    </div>
+                  </div>
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                </div>
+              ))}
+              {candidates.filter((c) => c.source === 'Open to work' && c.id !== user?.id).length === 0 && (
+                <p className="py-2 text-center text-[13px] text-muted-foreground">No open-to-work seekers yet. Check back soon.</p>
+              )}
             </CardContent>
           </Card>
           </Link>
@@ -215,7 +240,7 @@ export default function ProfessionalDashboard() {
         {/* Right column */}
         <div className="flex flex-col gap-6">
           {/* Company info */}
-          <Link to="/profile" className="block">
+          <Link to="/professional/profile" className="block">
           <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
             <CardHeader className=""><CardTitle className="text-[15px] font-semibold">Your company</CardTitle></CardHeader>
             <CardContent className="pt-2">
@@ -223,7 +248,7 @@ export default function ProfessionalDashboard() {
                 <CompanyChip name={ME.company} className="h-10 w-10 rounded-lg text-sm" />
                 <div>
                   <div className="text-[14px] font-semibold text-foreground">{ME.company}</div>
-                  <div className="text-[13px] text-muted-foreground">Verified employer · Fintech</div>
+                  <div className="text-[13px] text-muted-foreground">{ME.industry || 'Employer'}</div>
                 </div>
               </div>
               <div className="mt-3 space-y-1.5">

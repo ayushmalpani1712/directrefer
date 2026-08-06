@@ -14,6 +14,21 @@ export const ROLE_META: Record<Role, { label: string; singular: string }> = {
   admin: { label: 'Admin', singular: 'Admin' },
 }
 
+export const ROLE_ROUTE: Record<Role, string> = {
+  student: '/job-seeker',
+  professional: '/professional',
+  recruiter: '/recruiter',
+  admin: '/admin',
+}
+
+export function getRoleFromPath(pathname: string): Role {
+  if (pathname.startsWith('/admin')) return 'admin'
+  if (pathname.startsWith('/recruiter')) return 'recruiter'
+  if (pathname.startsWith('/professional')) return 'professional'
+  if (pathname.startsWith('/job-seeker')) return 'student'
+  return 'student'
+}
+
 export interface Professional {
   id: string
   name: string
@@ -30,6 +45,7 @@ export interface Professional {
   reviews: number
   verified: boolean
   openForReferrals: boolean
+  isOpenToWork: boolean
   maxPerMonth: number
   usedThisMonth: number
   successRate: number
@@ -57,27 +73,29 @@ export const GRADIENTS = [
   'from-rose-500 to-pink-400',
   'from-amber-500 to-orange-400',
   'from-[#5B6FE5] to-purple-400',
-  'from-sky-500 to-cyan-400',
-  'from-[#3B5FE5] to-[#8B8FD4]',
   'from-orange-500 to-rose-400',
   'from-cyan-600 to-sky-400',
   'from-pink-500 to-rose-400',
+  'from-violet-500 to-indigo-400',
+  'from-teal-500 to-emerald-400',
 ]
 
-export type ReferralStatus = 'pending' | 'accepted' | 'rejected' | 'offered'
+export type ReferralStatus = 'pending' | 'accepted' | 'rejected' | 'offered' | 'hired'
 
-export type PipelineStage = 'request_sent' | 'under_review' | 'accepted' | 'submitted'
+export type PipelineStage = 'request_sent' | 'under_review' | 'accepted' | 'submitted' | 'hired'
 
 export const PIPELINE_STAGES: { key: PipelineStage; label: string; description: string }[] = [
   { key: 'request_sent', label: 'Request Sent', description: 'Your referral request has been sent' },
   { key: 'under_review', label: 'Under Review', description: 'The professional is reviewing your profile' },
   { key: 'accepted', label: 'Accepted', description: 'Your request has been accepted' },
   { key: 'submitted', label: 'Submitted', description: 'Your profile has been submitted internally' },
+  { key: 'hired', label: 'Hired', description: 'Congratulations! You got the offer' },
 ]
 
 export interface ReferralRequest {
   id: string
   student: string
+  requesterId?: string
   studentEmail?: string
   studentResumeUrl?: string
   professionalId: string
@@ -98,7 +116,7 @@ export interface Job {
   salary: string
   applicants: number
   referrals: number
-  stage: 'Active' | 'Paused' | 'Draft'
+  stage: 'Active' | 'Paused' | 'Draft' | 'Closed'
   postedDaysAgo: number
   pipeline: { stage: string; count: number }[]
   recruiterId?: string
@@ -122,8 +140,4 @@ export function initials(name: string) {
   return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
 }
 
-export function timeAgo(days: number) {
-  if (days < 30) return `${days}d ago`
-  if (days < 365) return `${Math.round(days / 30)}mo ago`
-  return `${Math.round(days / 365)}y ago`
-}
+

@@ -3,18 +3,18 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, ArrowRight, Check, CheckCircle2, FileText, FileUp, Github, Globe, Link2, Linkedin, Loader2,
-  MessageSquare, PartyPopper, Save, Search, Send, ShieldCheck, User,
+  MessageSquare, PartyPopper, Save, Search, Send, ShieldCheck, User, UserX,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { checkRateLimit } from '@/lib/rateLimit'
+import { checkRateLimit, checkServerRateLimit } from '@/lib/rateLimit'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
-import { Chip, CompanyChip, GAvatar } from '@/components/ui-kit'
+import { Chip, CompanyChip, EmptyState, GAvatar } from '@/components/ui-kit'
+import { LinkedInShareButton } from '@/components/LinkedInShareButton'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
@@ -43,7 +43,7 @@ interface Draft {
 }
 
 const DEFAULT_MSG = (p?: Professional, s?: { name: string }) =>
-  p ? `Hi ${p.name.split(' ')[0]}, I'm ${s?.name} — I'm very interested in the ${p.openPositions[0] ?? p.designation} role at ${p.company}. I'd be grateful for a referral and happy to share my resume and any additional information you need.` : ''
+  p ? `Hi ${p.name.split(' ')[0]}, I'm ${s?.name || 'a user'} — I'm very interested in the ${p.openPositions[0] ?? p.designation} role at ${p.company}. I'd be grateful for a referral and happy to share my resume and any additional information you need.` : ''
 
 export default function RequestReferral() {
   const { id } = useParams()
@@ -101,44 +101,18 @@ export default function RequestReferral() {
   }
 
   if (loading) {
-    return (
-      <div className="mx-auto max-w-3xl space-y-6">
-        <Skeleton className="h-8 w-32 rounded-lg" />
-        <div className="flex items-center gap-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex flex-1 items-center last:flex-none">
-              <Skeleton className="h-9 w-9 rounded-full" />
-              {i < 5 && <Skeleton className="mx-2 h-0.5 flex-1 rounded-full" />}
-            </div>
-          ))}
-        </div>
-        <Skeleton className="h-2.5 w-full rounded-full" />
-        <div className="rounded-xl border border-border bg-card p-6 space-y-5">
-          <Skeleton className="h-7 w-64 rounded-md" />
-          <Skeleton className="h-4 w-80 rounded-md" />
-          <Skeleton className="h-11 w-full rounded-xl" />
-          <div className="space-y-2.5">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3.5 rounded-xl border border-border p-3.5">
-                <Skeleton className="h-11 w-11 shrink-0 rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-40 rounded-md" />
-                  <Skeleton className="h-3 w-56 rounded-md" />
-                </div>
-                <Skeleton className="h-4 w-16 rounded-md" />
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-3 w-20 rounded-md" />
-          <Skeleton className="h-10 w-36 rounded-full" />
-        </div>
-      </div>
-    )
+    return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
   }
 
   const pro = professionals.find((p) => p.id === draft.professionalId)
+
+  if (id && !loading && !pro) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <EmptyState icon={UserX} title="Professional not found" description="This referral link may be outdated or the professional may have removed their profile." />
+      </div>
+    )
+  }
 
   const canNext =
     step === 1 ? !!draft.professionalId
@@ -164,11 +138,16 @@ export default function RequestReferral() {
       toast.error('Too many referral requests. Please wait a minute before trying again.')
       return
     }
+    if (!await checkServerRateLimit('referral_request', 5, 60)) {
+      toast.error('Rate limit exceeded. Please wait before sending more requests.')
+      return
+    }
     setSending(true)
     try {
       addRequest({
         id: `r${Date.now()}`,
         student: student.name,
+        requesterId: user?.id,
         studentEmail: user?.email,
         professionalId: draft.professionalId,
         role: draft.role || pro?.openPositions[0] || 'Open role',
@@ -180,7 +159,6 @@ export default function RequestReferral() {
       })
       setStep(6)
       toast.success(`Referral request sent to ${pro?.name ?? 'professional'} for ${draft.role || pro?.openPositions[0] || 'Open role'}`)
-      setTimeout(() => navigate('/my-referrals'), 1500)
     } catch {
       toast.error('Failed to send referral request. Please try again.')
     } finally {
@@ -465,11 +443,12 @@ export default function RequestReferral() {
                   </p>
                   <div className="mt-6 flex flex-col justify-center gap-2.5 sm:flex-row">
                     <Button className="rounded-full bg-primary" asChild>
-                      <Link to="/applications">Track my referrals <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
+                      <Link to="/job-seeker/applications">Track my referrals <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
                     </Button>
                     <Button variant="outline" className="rounded-full" asChild>
-                      <Link to="/professionals">Request another</Link>
+                      <Link to="/job-seeker/professionals">Request another</Link>
                     </Button>
+                    <LinkedInShareButton role={draft.role || pro.openPositions[0] || 'this role'} company={pro.company} professionalName={pro.name} variant="outline" />
                   </div>
                 </motion.div>
               </CardContent>

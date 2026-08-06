@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useTheme } from 'next-themes'
 import {
-  Bell, Check, CreditCard, Globe, KeyRound, Laptop, Lock, Mail, Monitor, Moon, Palette,
-  ShieldCheck, Smartphone, Sun, Trash2, User, Zap,
+  Bell, Building2, Check, CreditCard, Globe, KeyRound, Laptop, Lock, Mail, Monitor, Moon, Palette,
+  ShieldCheck, Sun, Trash2, User, Zap,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -11,15 +12,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
+import { useAuth } from '@/context/AuthContext'
+import { VerificationModal } from '@/components/VerificationModal'
+import { useVerification } from '@/hooks/useVerification'
 import { ROLE_META } from '@/data/mock'
-import { fetchNotificationPreferences, updateNotificationPreferences, type NotificationPreferences } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { useAutoSaveForm, DraftStatusIndicator } from '@/hooks/useAutoSaveForm'
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard'
 
 interface Session {
   id: string
@@ -40,44 +44,134 @@ function Row({ title, desc, children }: { title: string; desc?: string; children
 }
 
 export default function Settings() {
-  const { role, student, updateStudent } = useApp()
+  const { role, student, updateStudent, logout } = useApp()
   const { theme, setTheme } = useTheme()
-  const [twoFA, setTwoFA] = useState(true)
-  const [sessions, setSessions] = useState<Session[]>([
-    { id: 's1', device: 'MacBook Pro · San Francisco, CA', isCurrent: true },
-    { id: 's2', device: 'iPhone 17 · San Francisco, CA', isCurrent: false },
-    { id: 's3', device: 'Chrome on Windows · Seattle, WA', isCurrent: false },
-  ])
+  const { signOut, user } = useAuth()
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeTab = searchParams.get('tab') || 'profile'
+  const setActiveTab = (t: string) => setSearchParams({ tab: t }, { replace: true })
+  const [sessions, setSessions] = useState<Session[]>([])
   const [name, setName] = useState(student.name)
-  const [email, setEmail] = useState(student.email)
   const [location, setLocation] = useState(student.location)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmNew, setConfirmNew] = useState('')
   const [passwordLoading, setPasswordLoading] = useState(false)
-  const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>({
+  const [notifPrefs, setNotifPrefs] = useState({
     referral_updates: true, new_messages: true, profile_views: true,
     completion_reminders: true, product_announcements: false, weekly_digest: false, email_opt_out: false,
   })
+  const [privacy, setPrivacy] = useState({
+    public_profile: true, show_salary: false, activity_status: true, search_indexing: false,
+  })
+  const [language, setLanguage] = useState('en')
+  const [timezone, setTimezone] = useState('ist')
+
+  // ── Auto-Save Draft ──
+  const draftSnapshot = { name, location }
+  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges } = useAutoSaveForm({
+    userId: user?.id ?? '',
+    formId: 'settings-profile',
+    values: draftSnapshot,
+    enabled: !!user,
+  })
+  useUnsavedChangesGuard({ enabled: hasUnsavedChanges })
 
   useEffect(() => {
-    fetchNotificationPreferences().then(setNotifPrefs)
+    if (draftStatus !== 'restored' || !user) return
+    try {
+      const raw = localStorage.getItem(`draft:${user.id}:settings-profile`)
+      if (!raw) return
+      const entry = JSON.parse(raw)
+      if (!entry?.values) return
+      const v = entry.values
+      if (v.name !== undefined) setName(v.name)
+      if (v.location !== undefined) setLocation(v.location)
+      restoreDraft(v)
+    } catch { /* corrupted draft — ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftStatus])
+
+  useEffect(() => {
+    setName(student.name)
+    setLocation(student.location)
+  }, [student.name, student.location])
+
+  useEffect(() => {
+    try {
+      const prefs = localStorage.getItem('dr_notif_prefs')
+      if (prefs) setNotifPrefs((prev) => ({ ...prev, ...JSON.parse(prefs) }))
+      const priv = localStorage.getItem('dr_privacy_settings')
+      if (priv) setPrivacy((prev) => ({ ...prev, ...JSON.parse(priv) }))
+      const lang = localStorage.getItem('dr_language')
+      if (lang) setLanguage(lang)
+      const tz = localStorage.getItem('dr_timezone')
+      if (tz) setTimezone(tz)
+    } catch (e) {
+      console.error('Failed to load settings from localStorage:', e)
+    }
   }, [])
 
-  const handleNotifPrefChange = async (key: keyof NotificationPreferences, value: boolean) => {
-    const updated = { ...notifPrefs, [key]: value }
-    setNotifPrefs(updated)
-    const ok = await updateNotificationPreferences({ [key]: value })
-    if (ok) {
-      toast.success('Preference saved')
-    } else {
-      toast.error('Failed to save preference')
+  const saveSettings = async (patch: Record<string, unknown>) => {
+    try {
+      if ('notification_prefs' in patch) localStorage.setItem('dr_notif_prefs', JSON.stringify(patch.notification_prefs))
+      if ('privacy_settings' in patch) localStorage.setItem('dr_privacy_settings', JSON.stringify(patch.privacy_settings))
+      if ('language' in patch) localStorage.setItem('dr_language', String(patch.language))
+      if ('timezone' in patch) localStorage.setItem('dr_timezone', String(patch.timezone))
+      toast.success('Settings saved')
+    } catch (err) {
+      console.error('Settings save failed:', err)
+      toast.error('Failed to save settings')
     }
   }
 
+  const handleNotifPrefChange = (key: string, value: boolean) => {
+    const next = { ...notifPrefs, [key]: value }
+    setNotifPrefs(next)
+    saveSettings({ notification_prefs: next })
+  }
+
+  const handlePrivacyChange = (key: string, value: boolean) => {
+    const next = { ...privacy, [key]: value }
+    setPrivacy(next)
+    saveSettings({ privacy_settings: next })
+  }
+
+  useEffect(() => {
+    const loadSecurity = async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession()
+        const session = sessionData?.session
+        if (session) {
+          const ua = navigator.userAgent
+          let device = 'Unknown device'
+          if (ua.includes('Mac')) device = 'Mac'
+          else if (ua.includes('Windows')) device = 'Windows PC'
+          else if (ua.includes('iPhone')) device = 'iPhone'
+          else if (ua.includes('Android')) device = 'Android device'
+          else if (ua.includes('Linux')) device = 'Linux PC'
+
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+          const city = tz.split('/').pop()?.replace(/_/g, ' ') || ''
+
+          setSessions([{
+            id: session.access_token.slice(-8),
+            device: `${device} · ${city}`,
+            isCurrent: true,
+          }])
+        }
+      } catch {
+        setSessions([{ id: 'current', device: 'Current session', isCurrent: true }])
+      }
+    }
+    loadSecurity()
+  }, [])
+
   const handleSaveProfile = () => {
-    updateStudent({ name, email, location })
+    updateStudent({ name, location })
     toast.success('Profile updated successfully')
+    onFormSaved()
   }
 
   const handleUpdatePassword = async () => {
@@ -95,6 +189,14 @@ export default function Settings() {
     }
     setPasswordLoading(true)
     try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: student.email,
+        password: currentPassword,
+      })
+      if (signInError) {
+        toast.error('Current password is incorrect')
+        return
+      }
       const { error } = await supabase.auth.updateUser({ password: newPassword })
       if (error) {
         toast.error(error.message)
@@ -111,16 +213,28 @@ export default function Settings() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
+      {/* Draft status indicator */}
+      {(draftStatus === 'saved' || draftStatus === 'restored' || draftStatus === 'syncing') && (
+        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
+          <DraftStatusIndicator status={draftStatus} lastSavedAt={lastSavedAt} />
+          {hasUnsavedChanges && (
+            <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive" onClick={clearDraft}>Discard draft</Button>
+          )}
+        </div>
+      )}
+
+
       <SectionHeader title="Settings" subtitle="Manage your account, preferences and security" />
 
-      <Tabs defaultValue="profile">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="h-auto flex-wrap justify-start">
           <TabsTrigger value="profile"><User className="mr-1.5 h-4 w-4" /> Profile</TabsTrigger>
+          <TabsTrigger value="workspace"><Building2 className="mr-1.5 h-4 w-4" /> Workspace</TabsTrigger>
           <TabsTrigger value="notifications"><Bell className="mr-1.5 h-4 w-4" /> Notifications</TabsTrigger>
           <TabsTrigger value="privacy"><Lock className="mr-1.5 h-4 w-4" /> Privacy</TabsTrigger>
           <TabsTrigger value="security"><ShieldCheck className="mr-1.5 h-4 w-4" /> Security</TabsTrigger>
           <TabsTrigger value="appearance"><Palette className="mr-1.5 h-4 w-4" /> Appearance</TabsTrigger>
-          <TabsTrigger value="billing"><CreditCard className="mr-1.5 h-4 w-4" /> Billing</TabsTrigger>
+          <TabsTrigger value="billing" className="opacity-50 pointer-events-none"><CreditCard className="mr-1.5 h-4 w-4" /> Billing <Lock className="ml-1 h-3 w-3" /></TabsTrigger>
         </TabsList>
 
         {/* Profile */}
@@ -129,19 +243,58 @@ export default function Settings() {
             <CardHeader><CardTitle className="text-base">Personal information</CardTitle><CardDescription>Shown on your public {ROLE_META[role].label.toLowerCase()} profile</CardDescription></CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5"><Label>Full name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-              <div className="space-y-1.5"><Label>Email</Label><Input value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Email</Label><Input value={student.email} disabled className="opacity-60" /></div>
               <div className="space-y-1.5"><Label>Location</Label><Input value={location} onChange={(e) => setLocation(e.target.value)} /></div>
               <div className="space-y-1.5"><Label>Role</Label><Input value={ROLE_META[role].label} disabled /></div>
-              <div className="sm:col-span-2"><Button onClick={handleSaveProfile}>Save changes</Button></div>
+              <div className="sm:col-span-2 flex items-center gap-2">
+                <Button onClick={handleSaveProfile}>Save changes</Button>
+                {hasUnsavedChanges && (
+                  <Button variant="ghost" size="sm" onClick={() => { setName(student.name); setLocation(student.location); clearDraft() }}>Discard draft</Button>
+                )}
+              </div>
             </CardContent>
           </Card>
           <Card className="shadow-soft border-rose-500/30">
             <CardHeader><CardTitle className="flex items-center gap-2 text-base text-rose-500"><Trash2 className="h-4 w-4" /> Danger zone</CardTitle></CardHeader>
             <CardContent className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
               <p className="text-sm text-muted-foreground">Permanently delete your account and all referral history. This cannot be undone.</p>
-              <Button variant="outline" className="border-rose-500/40 text-rose-500 hover:bg-rose-500/10" onClick={() => toast.error('Account deletion requires email confirmation')}>Delete account</Button>
+              <Button variant="outline" className="border-rose-500/40 text-rose-500 hover:bg-rose-500/10" onClick={async () => {
+                if (role === 'admin') { toast.error('Admin accounts cannot be self-deleted. Contact another admin.'); return }
+                if (!confirm('Are you absolutely sure? This will permanently delete your account and all data. This action cannot be undone.')) return
+                try {
+                  const userId = (await supabase.auth.getUser()).data.user?.id
+                  if (!userId) { toast.error('Not authenticated'); return }
+                  const tables = ['notifications', 'bookmarks', 'messages', 'conversations', 'referrals', 'profiles_job_seeker', 'profiles_professional', 'profiles_recruiter']
+                  const errors: string[] = []
+                  for (const table of tables) {
+                    const { error } = table === 'conversations'
+                      ? await supabase.from(table).delete().or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`)
+                      : table === 'referrals'
+                      ? await supabase.from(table).delete().or(`requester_id.eq.${userId},professional_id.eq.${userId}`)
+                      : await supabase.from(table).delete().eq('user_id', userId)
+                    if (error) errors.push(table)
+                  }
+                  const { error: userDelError } = await supabase.from('users').delete().eq('id', userId)
+                  if (userDelError) errors.push('users')
+                  if (errors.length > 0) {
+                    toast.error(`Failed to delete data from: ${errors.join(', ')}. Please contact support.`)
+                    return
+                  }
+                  logout()
+                  await signOut()
+                  toast.success('Account deleted successfully')
+                  navigate('/')
+                } catch {
+                  toast.error('Failed to delete account. Please contact support.')
+                }
+              }}>Delete account</Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Workspace Verification */}
+        <TabsContent value="workspace" className="mt-5 space-y-5">
+          <WorkspaceVerificationCard />
         </TabsContent>
 
         {/* Notifications */}
@@ -173,10 +326,10 @@ export default function Settings() {
           <Card className="shadow-soft">
             <CardHeader><CardTitle className="text-base">Privacy</CardTitle></CardHeader>
             <CardContent className="divide-y divide-border">
-              <Row title="Public profile" desc="Appear in search results for professionals and recruiters"><Switch defaultChecked /></Row>
-              <Row title="Show salary expectations" desc="Visible to verified recruiters only"><Switch /></Row>
-              <Row title="Activity status" desc="Show when you're online in messages"><Switch defaultChecked /></Row>
-              <Row title="Search engine indexing" desc="Allow your public profile to appear on Google"><Switch /></Row>
+              <Row title="Public profile" desc="Appear in search results for professionals and recruiters"><Switch checked={privacy.public_profile} onCheckedChange={(v) => handlePrivacyChange('public_profile', v)} /></Row>
+              <Row title="Show salary expectations" desc="Visible to verified recruiters only"><Switch checked={privacy.show_salary} onCheckedChange={(v) => handlePrivacyChange('show_salary', v)} /></Row>
+              <Row title="Activity status" desc="Show when you're online in messages"><Switch checked={privacy.activity_status} onCheckedChange={(v) => handlePrivacyChange('activity_status', v)} /></Row>
+              <Row title="Search engine indexing" desc="Allow your public profile to appear on Google"><Switch checked={privacy.search_indexing} onCheckedChange={(v) => handlePrivacyChange('search_indexing', v)} /></Row>
             </CardContent>
           </Card>
         </TabsContent>
@@ -193,22 +346,10 @@ export default function Settings() {
             </CardContent>
           </Card>
           <Card className="shadow-soft">
-            <CardHeader><CardTitle className="text-base">Two-factor authentication</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Active sessions</CardTitle></CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between rounded-xl border border-border p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500"><Smartphone className="h-5 w-5" /></div>
-                  <div>
-                    <div className="text-sm font-semibold">Authenticator app</div>
-                    <div className="text-xs text-muted-foreground">{twoFA ? 'Enabled — codes from your authenticator app' : 'Add an extra layer of security'}</div>
-                  </div>
-                </div>
-                <Switch checked={twoFA} onCheckedChange={(v) => { setTwoFA(v); toast.success(v ? '2FA enabled' : '2FA disabled') }} />
-              </div>
-              <Separator className="my-4" />
-              <div className="text-sm font-medium">Active sessions</div>
               {sessions.map((s) => (
-                <div key={s.id} className="mt-2.5 flex items-center justify-between rounded-lg border border-border px-3.5 py-2.5 text-sm">
+                <div key={s.id} className="flex items-center justify-between rounded-lg border border-border px-3.5 py-2.5 text-sm">
                   <span className="flex items-center gap-2"><Laptop className="h-4 w-4 text-muted-foreground" /> {s.device}</span>
                   {s.isCurrent ? <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10">This device</Badge> : <Button variant="ghost" size="sm" className="h-7 text-xs text-rose-500" onClick={() => { setSessions((prev) => prev.filter((sess) => sess.id !== s.id)); toast.success('Session revoked') }}>Revoke</Button>}
                 </div>
@@ -247,7 +388,7 @@ export default function Settings() {
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Language</Label>
-                <Select defaultValue="en"><SelectTrigger><SelectValue /></SelectTrigger>
+                <Select value={language} onValueChange={(v) => { setLanguage(v); saveSettings({ language: v }) }}><SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English (US)</SelectItem>
                     <SelectItem value="en-gb">English (UK)</SelectItem>
@@ -258,7 +399,7 @@ export default function Settings() {
               </div>
               <div className="space-y-1.5">
                 <Label>Timezone</Label>
-                <Select defaultValue="pt"><SelectTrigger><SelectValue /></SelectTrigger>
+                <Select value={timezone} onValueChange={(v) => { setTimezone(v); saveSettings({ timezone: v }) }}><SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pt">Pacific Time (UTC−7)</SelectItem>
                     <SelectItem value="et">Eastern Time (UTC−4)</SelectItem>
@@ -270,51 +411,98 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        {/* Billing */}
-        <TabsContent value="billing" className="mt-5 space-y-5">
-          <Card className="overflow-hidden border-0 bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4] text-white shadow-glow">
-            <CardContent className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
-              <div>
-                <Badge className="border-0 bg-white/20 text-white hover:bg-white/20">Current plan</Badge>
-                <div className="font-display mt-2 text-2xl font-bold">Premium · $12/mo</div>
-                <div className="mt-1 text-sm text-white/70">Unlimited referral requests · AI resume review · Priority messaging</div>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="border-white/30 bg-transparent text-white hover:bg-white/10" onClick={() => toast.info('Opening billing portal — you can manage your plan, update payment methods, and view invoices here.')}>Manage</Button>
-                <Button className="bg-white text-[#3B5FE5] hover:bg-white/90" onClick={() => toast.success('Upgraded to Premium+')}>Upgrade</Button>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Billing — locked */}
+        <TabsContent value="billing" className="mt-5">
           <Card className="shadow-soft">
-            <CardHeader><CardTitle className="text-base">Payment method</CardTitle></CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between rounded-xl border border-border p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-14 items-center justify-center rounded-md bg-gradient-to-br from-slate-700 to-slate-900 text-[10px] font-bold italic text-white">VISA</div>
-                  <div>
-                    <div className="text-sm font-medium">Visa ···· 4242</div>
-                    <div className="text-xs text-muted-foreground">Expires 08/28</div>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => toast.info('Update your payment method — add a new card, update your billing address, or set a default payment option.')}>Update</Button>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-soft">
-            <CardHeader><CardTitle className="text-base">Billing history</CardTitle></CardHeader>
-            <CardContent className="space-y-2">
-              {['Jul 1, 2026', 'Jun 1, 2026', 'May 1, 2026'].map((d) => (
-                <div key={d} className="flex items-center justify-between rounded-lg border border-border px-4 py-3 text-sm">
-                  <span>{d}</span>
-                  <span className="text-muted-foreground">Premium monthly</span>
-                  <span className="font-semibold">$12.00</span>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs text-primary" onClick={() => toast.success('Invoice downloaded')}>Invoice</Button>
-                </div>
-              ))}
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted"><CreditCard className="h-6 w-6 text-muted-foreground" /></div>
+              <h3 className="mt-4 text-lg font-semibold">Billing & Payments</h3>
+              <p className="mt-2 max-w-sm text-sm text-muted-foreground">This feature is coming soon. Direct Refer is currently free for all users.</p>
+              <Badge className="mt-4 border border-border bg-muted/50 text-muted-foreground"><Lock className="mr-1 h-3 w-3" /> Coming soon</Badge>
             </CardContent>
           </Card>
         </TabsContent>
+
       </Tabs>
     </div>
+  )
+}
+
+function WorkspaceVerificationCard() {
+  const [verifyOpen, setVerifyOpen] = useState(false)
+  const { status, fetchStatus } = useVerification()
+  const { professionalVerified, recruiterVerified } = useAuth()
+
+  useEffect(() => { fetchStatus() }, [])
+
+  return (
+    <>
+      <Card className="shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Building2 className="h-4 w-4 text-primary" /> Work Identity Verification
+          </CardTitle>
+          <CardDescription>Optional — verify your corporate credentials to earn a verified badge</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className={cn(
+              'rounded-xl border p-4 transition-colors',
+              professionalVerified ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-muted',
+            )}>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Professional</span>
+                {professionalVerified ? (
+                  <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    <Check className="mr-1 h-3 w-3" /> Verified
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                    Unverified
+                  </Badge>
+                )}
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {professionalVerified
+                  ? 'You can give referrals, reviews, and mentorship.'
+                  : 'Verify to earn a verified badge on your profile.'}
+              </p>
+            </div>
+            <div className={cn(
+              'rounded-xl border p-4 transition-colors',
+              recruiterVerified ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-muted',
+            )}>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Recruiter</span>
+                {recruiterVerified ? (
+                  <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    <Check className="mr-1 h-3 w-3" /> Verified
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                    Unverified
+                  </Badge>
+                )}
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {recruiterVerified
+                  ? 'You can post jobs and contact candidates.'
+                  : 'Verify to earn a verified badge on your profile.'}
+              </p>
+            </div>
+          </div>
+
+          {!professionalVerified && !recruiterVerified && (
+            <Button onClick={() => setVerifyOpen(true)} className="gap-2">
+              <ShieldCheck className="h-4 w-4" /> Verify Work Identity
+            </Button>
+          )}
+          {status.hasPendingRequest && (
+            <p className="text-xs text-muted-foreground">A verification request is pending review.</p>
+          )}
+        </CardContent>
+      </Card>
+      <VerificationModal open={verifyOpen} onOpenChange={setVerifyOpen} />
+    </>
   )
 }

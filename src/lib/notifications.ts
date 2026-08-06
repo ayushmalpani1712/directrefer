@@ -42,9 +42,4 @@ export function notifyReferralUpdate(studentName: string, status: string, jobTit
   })
 }
 
-export function notifyNewReferralRequest(studentName: string, jobTitle: string) {
-  showNotification('New referral request', {
-    body: `${studentName} requested a referral for ${jobTitle}.`,
-    tag: 'new-referral',
-  })
-}
+

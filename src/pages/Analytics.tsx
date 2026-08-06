@@ -3,9 +3,8 @@ import { LazyArea, LazyAreaChart, LazyBar, LazyBarChart, LazyCartesianGrid, Lazy
 import { BarChart3, Calendar, CheckCheck, Download, Send, Target, TrendingUp, Trophy, Users, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { DashboardSkeleton, SectionHeader, StatCard } from '@/components/ui-kit'
+import { SectionHeader, StatCard } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
-import { usePageLoading } from '@/hooks/usePageLoading'
 import { PIPELINE_STAGES } from '@/data/mock'
 import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
 import { ChartCard, ChartCardGrid } from '@/components/analytics/ChartCard'
@@ -97,8 +96,9 @@ function StudentAnalytics({ range }: { range: DateRange }) {
         { name: 'Accepted', value: accepted, fill: 'hsl(152 69% 40%)' },
         { name: 'Declined', value: rejected, fill: 'hsl(0 72% 55%)' },
       ])
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error('Failed to load student analytics:', err)
+      toast.error('Failed to load analytics data')
     }
   }, [])
 
@@ -116,7 +116,7 @@ function StudentAnalytics({ range }: { range: DateRange }) {
         <StatCard icon={Send} label="Total applications" value={totalApps.value} delta={totalApps.delta} />
         <StatCard icon={CheckCheck} label="Referral accept rate" value={`${acceptRate.value}%`} delta={acceptRate.delta} />
         <StatCard icon={Calendar} label="Review conversion" value={`${reviewConv.value}%`} delta={reviewConv.delta} />
-        <StatCard icon={Trophy} label="Offers" value={Math.max(0, Math.round(totalApps.value * 0.02))} />
+        <StatCard icon={Trophy} label="Accepted referrals" value={acceptRate.value} />
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
         <ChartCardGrid title="Weekly activity" data={studentWeekly.map((w) => ({ week: w.label, ...w }))} filename="student-weekly" span="lg:col-span-2">
@@ -305,8 +305,9 @@ function RecruiterAnalytics({ range }: { range: DateRange }) {
         { stage: 'Offer', value: counts.Offer, fill: 'hsl(320 70% 60%)' },
         { stage: 'Hired', value: counts.Hired, fill: 'hsl(152 69% 40%)' },
       ])
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error('Failed to load recruiter analytics:', err)
+      toast.error('Failed to load analytics data')
     }
   }, [range])
 
@@ -363,8 +364,7 @@ function RecruiterAnalytics({ range }: { range: DateRange }) {
 }
 
 export default function Analytics() {
-  const loading = usePageLoading()
-  const { role } = useApp()
+  const { role, loading } = useApp()
   const [range, setRange] = useState<DateRange>(() => {
     const { from, to } = getPresetRange('6m')
     return { preset: '6m', from, to }
@@ -384,7 +384,7 @@ export default function Analytics() {
     toast.success('Analytics exported as CSV')
   }
 
-  if (loading) return <DashboardSkeleton />
+  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
 
   const noData =
     (role === 'student' && !hasData(studentWeekly)) ||

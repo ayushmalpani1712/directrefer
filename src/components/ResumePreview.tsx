@@ -79,7 +79,7 @@ export default function ResumePreview({ url, fileName, open, onOpenChange }: Res
               size="sm"
               variant="ghost"
               className="h-7 gap-1 text-xs"
-              onClick={() => window.open(url, '_blank')}
+              onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
             >
               <ExternalLink className="h-3 w-3" /> Open
             </Button>
@@ -110,7 +110,7 @@ export default function ResumePreview({ url, fileName, open, onOpenChange }: Res
                 <p className="mt-1 text-xs text-muted-foreground">
                   The file may be corrupt or too small to display.
                 </p>
-                <Button variant="outline" size="sm" className="mt-4" onClick={() => window.open(url, '_blank')}>
+                <Button variant="outline" size="sm" className="mt-4" onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}>
                   <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> Open in new tab
                 </Button>
               </div>
@@ -127,6 +127,7 @@ export default function ResumePreview({ url, fileName, open, onOpenChange }: Res
               src={`${previewUrl}#toolbar=0&navpanes=0`}
               className="h-full w-full border-0"
               title={fileName || 'Resume preview'}
+              sandbox="allow-same-origin"
               onError={handleIframeError}
             />
           )}

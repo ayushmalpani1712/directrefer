@@ -1,26 +1,28 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  Award, BadgeCheck, Briefcase, Building2, Camera, CheckCircle2,
+  Award, BadgeCheck, Briefcase, Building2, CheckCircle2,
   Download, FileText, Github, GraduationCap, Languages, Linkedin, MapPin, Pencil, Plus,
-  ShieldCheck, Sparkles, Trash2, Upload, Globe, X,
+  Sparkles, Trash2, Upload, Globe, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import ResumePreview from '@/components/ResumePreview'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
+
 import { Switch } from '@/components/ui/switch'
 import { Chip, GAvatar, ProgressRing, StatusBadge } from '@/components/ui-kit'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
-import { uploadAvatar, uploadResume, deleteResume } from '@/lib/db'
+import { uploadResume, deleteResume } from '@/lib/db'
+
 import { cn } from '@/lib/utils'
+import { useAutoSaveForm, DraftStatusIndicator } from '@/hooks/useAutoSaveForm'
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard'
 
 function Section({ title, icon: Icon, children, onAdd, actions, className }: { title: string; icon: typeof Award; children: React.ReactNode; onAdd?: () => void; actions?: React.ReactNode; className?: string }) {
   return (
@@ -46,13 +48,20 @@ export default function StudentProfile() {
     removeStudentExperience,
     removeStudentEducation,
     removeStudentResume, removeStudentSkill,
+    refreshCandidates,
   } = useApp()
   const { user } = useAuth()
   const loading = usePageLoading(450)
   const s = student
 
   const [openToWork, setOpenToWork] = useState(s.openToWork)
-  const myRequests = requests.filter((r) => r.student === s.name)
+
+  // Sync openToWork when DB data loads
+  useEffect(() => {
+    setOpenToWork(s.openToWork)
+  }, [s.openToWork])
+
+  const myRequests = requests.filter((r) => r.requesterId === user?.id)
 
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState(s.name)
@@ -61,8 +70,6 @@ export default function StudentProfile() {
   const [editLinkedin, setEditLinkedin] = useState(s.links.linkedin)
   const [editGithub, setEditGithub] = useState(s.links.github)
 
-  const profileInputRef = useRef<HTMLInputElement>(null)
-  const coverInputRef = useRef<HTMLInputElement>(null)
   const resumeInputRef = useRef<HTMLInputElement>(null)
 
   // Experience
@@ -128,100 +135,47 @@ export default function StudentProfile() {
   const [editExpectedSalary, setEditExpectedSalary] = useState(s.expectedSalary)
   const [editLanguages, setEditLanguages] = useState(s.languages.join(', '))
 
+  // ── Auto-Save Draft ──
+  const draftSnapshot = {
+    editName, editHeadline, editLocation, editLinkedin, editGithub,
+    editPreferredRoles, editPreferredCompanies, editCareerInterests, editExpectedSalary, editLanguages,
+  }
+  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges } = useAutoSaveForm({
+    userId: user?.id ?? '',
+    formId: 'student-profile',
+    values: draftSnapshot,
+    enabled: !loading && !!user,
+  })
+  useUnsavedChangesGuard({ enabled: hasUnsavedChanges })
+
+  // Restore draft on mount
+  useEffect(() => {
+    if (draftStatus !== 'restored' || !user) return
+    try {
+      const raw = localStorage.getItem(`draft:${user.id}:student-profile`)
+      if (!raw) return
+      const entry = JSON.parse(raw)
+      if (!entry?.values) return
+      const v = entry.values
+      if (v.editName !== undefined) setEditName(v.editName)
+      if (v.editHeadline !== undefined) setEditHeadline(v.editHeadline)
+      if (v.editLocation !== undefined) setEditLocation(v.editLocation)
+      if (v.editLinkedin !== undefined) setEditLinkedin(v.editLinkedin)
+      if (v.editGithub !== undefined) setEditGithub(v.editGithub)
+      if (v.editPreferredRoles !== undefined) setEditPreferredRoles(v.editPreferredRoles)
+      if (v.editPreferredCompanies !== undefined) setEditPreferredCompanies(v.editPreferredCompanies)
+      if (v.editCareerInterests !== undefined) setEditCareerInterests(v.editCareerInterests)
+      if (v.editExpectedSalary !== undefined) setEditExpectedSalary(v.editExpectedSalary)
+      if (v.editLanguages !== undefined) setEditLanguages(v.editLanguages)
+      restoreDraft(v)
+    } catch { /* corrupted draft — ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftStatus])
+
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <Skeleton className="h-36 w-full rounded-none sm:h-44" />
-          <div className="relative px-6 pb-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-4">
-                <Skeleton className="relative -mt-12 h-24 w-24 rounded-full border-4 border-card sm:-mt-16 sm:h-32 sm:w-32" />
-                <div className="space-y-2 pb-1">
-                  <Skeleton className="h-7 w-48 rounded-md" />
-                  <Skeleton className="h-4 w-64 rounded-md" />
-                  <Skeleton className="h-3 w-40 rounded-md" />
-                </div>
-              </div>
-              <div className="flex gap-2 sm:pb-1">
-                <Skeleton className="h-9 w-28 rounded-full" />
-                <Skeleton className="h-9 w-32 rounded-full" />
-              </div>
-            </div>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Skeleton className="h-10 w-36 rounded-full" />
-              <Skeleton className="h-4 w-28 rounded-md" />
-              <Skeleton className="h-4 w-24 rounded-md" />
-            </div>
-          </div>
-        </div>
-        <div className="grid gap-6 lg:grid-cols-3 items-stretch">
-          <div className="flex flex-col gap-6 lg:col-span-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-border bg-card p-5 space-y-4">
-                <Skeleton className="h-5 w-36 rounded-md" />
-                {Array.from({ length: 2 }).map((_, j) => (
-                  <div key={j} className="flex gap-4">
-                    <Skeleton className="h-11 w-11 shrink-0 rounded-xl" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-48 rounded-md" />
-                      <Skeleton className="h-3 w-36 rounded-md" />
-                      <Skeleton className="h-3 w-full rounded-md" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-col gap-6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-border bg-card p-5 space-y-3">
-                <Skeleton className="h-5 w-28 rounded-md" />
-                <div className="flex flex-wrap gap-2">
-                  {Array.from({ length: 3 }).map((_, j) => (
-                    <Skeleton key={j} className="h-6 w-20 rounded-full" />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
     )
-  }
-
-  async function handleProfilePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
-      return
-    }
-    if (!user) return
-    const url = await uploadAvatar(user.id, file)
-    if (url) {
-      toast.success('Profile photo updated')
-    } else {
-      toast.error('Failed to upload profile photo')
-    }
-    e.target.value = ''
-  }
-
-  async function handleCoverPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
-      return
-    }
-    if (!user) return
-    const url = await uploadAvatar(user.id, file)
-    if (url) {
-      toast.success('Cover photo updated')
-    } else {
-      toast.error('Failed to upload cover photo')
-    }
-    e.target.value = ''
   }
 
   function handleSaveProfile() {
@@ -232,6 +186,7 @@ export default function StudentProfile() {
     updateStudent({ name: editName.trim(), headline: editHeadline.trim(), location: editLocation.trim(), links: { linkedin: editLinkedin.trim(), github: editGithub.trim(), website: s.links.website } })
     setEditing(false)
     toast.success('Profile updated')
+    onFormSaved()
   }
 
   function handleCancelEdit() {
@@ -254,6 +209,7 @@ export default function StudentProfile() {
     })
     setShowCareerEdit(false)
     toast.success('Career preferences updated')
+    onFormSaved()
   }
 
   function handleCancelCareerEdit() {
@@ -475,7 +431,7 @@ export default function StudentProfile() {
       return
     }
     if (s.resumeFile.url) {
-      window.open(s.resumeFile.url, '_blank')
+      window.open(s.resumeFile.url, '_blank', 'noopener,noreferrer')
     } else {
       const blob = new Blob([`Resume: ${s.resumeFile.name}`], { type: 'application/pdf' })
       const url = URL.createObjectURL(blob)
@@ -499,38 +455,36 @@ export default function StudentProfile() {
 
   return (
     <div className="space-y-6">
-      <input ref={profileInputRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePhotoChange} />
-      <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverPhotoChange} />
+      {/* Draft status indicator */}
+      {(draftStatus === 'saved' || draftStatus === 'restored' || draftStatus === 'syncing') && (
+        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
+          <DraftStatusIndicator status={draftStatus} lastSavedAt={lastSavedAt} />
+          {hasUnsavedChanges && (
+            <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive" onClick={clearDraft}>Discard draft</Button>
+          )}
+        </div>
+      )}
+
+
       <input ref={resumeInputRef} type="file" accept=".pdf" className="hidden" onChange={handleResumeUpload} />
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="overflow-hidden ">
-          <div className="relative h-36 bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4] sm:h-44">
+          <div className="relative h-24 sm:h-36 md:h-44 bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4]">
             <div className="bg-grid absolute inset-0 opacity-20" />
-            <Button size="sm" variant="secondary" className="absolute bottom-3 right-3 h-8 text-xs" onClick={() => coverInputRef.current?.click()}>
-              <Camera className="mr-1.5 h-3.5 w-3.5" /> Edit cover
-            </Button>
           </div>
-          <CardContent className="relative px-6 pb-6">
+          <CardContent className="relative px-4 pb-4 sm:px-6 sm:pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-4">
-                <div className="relative -mt-12 sm:-mt-16">
-                  <GAvatar name={s.name} gradient={s.gradient} className="h-24 w-24 border-4 border-card text-2xl  sm:h-32 sm:w-32 sm:text-3xl" />
-                  <button className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground " onClick={() => profileInputRef.current?.click()}>
-                    <Camera className="h-3.5 w-3.5" />
-                  </button>
+              <div className="flex items-end gap-3 sm:gap-4">
+                <div className="relative -mt-10 sm:-mt-12 md:-mt-16">
+                  <GAvatar name={s.name} gradient={s.gradient} className="h-20 w-20 border-4 border-card text-xl sm:h-24 sm:w-24 sm:text-2xl md:h-32 md:w-32 md:text-3xl" />
                 </div>
                 <div className="pb-1">
-                  <h1 className="font-display flex items-center gap-2 text-2xl font-bold">
+                  <h1 className="font-display flex items-center gap-2 text-xl sm:text-2xl font-bold">
                     {editing ? (
-                      <input className="w-full bg-transparent border-b border-primary outline-none text-2xl font-bold placeholder:text-muted-foreground/30" placeholder="Your full name" value={editName} onChange={(e) => setEditName(e.target.value)} />
+                      <input className="w-full bg-transparent border-b border-primary outline-none text-xl sm:text-2xl font-bold placeholder:text-muted-foreground/30" placeholder="Your full name" value={editName} onChange={(e) => setEditName(e.target.value)} />
                     ) : (
-                      <>
-                        {s.name}
-                        {s.verified
-                          ? <BadgeCheck className="h-5.5 w-5.5 text-sky-500" />
-                          : <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"><ShieldCheck className="mr-1 h-3 w-3" /> Verify profile</Badge>}
-                      </>
+                      s.name
                     )}
                   </h1>
                   {editing ? (
@@ -569,7 +523,7 @@ export default function StudentProfile() {
                 )}
                 {editing ? (
                   <>
-                    <Button variant="outline" className="rounded-full" onClick={handleCancelEdit}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
+                    <Button variant="outline" className="rounded-full" onClick={() => { handleCancelEdit(); clearDraft() }}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
                     <Button className="rounded-full bg-primary shadow-glow" onClick={handleSaveProfile}><CheckCircle2 className="mr-1.5 h-4 w-4" /> Save</Button>
                   </>
                 ) : (
@@ -579,9 +533,27 @@ export default function StudentProfile() {
             </div>
 
             <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
-              <label className="flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/5 px-4 py-2">
-                <Switch checked={openToWork} onCheckedChange={(v) => { setOpenToWork(v); updateStudent({ openToWork: v }); toast.success(v ? 'You are now visible to recruiters' : 'Open-to-work hidden') }} />
-                <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Open to work</span>
+              <label className={cn(
+                'flex items-center gap-2.5 rounded-full border px-4 py-2 transition-colors',
+                openToWork
+                  ? 'border-emerald-500/30 bg-emerald-500/5'
+                  : 'border-border bg-transparent'
+              )}>
+                <Switch
+                  checked={openToWork}
+                  onCheckedChange={(v) => {
+                    setOpenToWork(v)
+                    updateStudent({ openToWork: v })
+                    refreshCandidates()
+                    toast.success(v ? 'You are now visible to recruiters' : 'Profile hidden from recruiters')
+                  }}
+                />
+                <span className={cn(
+                  'text-sm font-medium',
+                  openToWork
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-muted-foreground'
+                )}>Open to work</span>
               </label>
               {s.links.linkedin ? (
                 <a href={s.links.linkedin.startsWith('http') ? s.links.linkedin : `https://linkedin.com/in/${s.links.linkedin}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"><Linkedin className="h-4 w-4 text-[#0A66C2]" /> LinkedIn</a>
@@ -851,7 +823,7 @@ export default function StudentProfile() {
                   </div>
                 )
               })}
-              <Button variant="outline" size="sm" className="w-full" asChild><Link to="/applications">View full history</Link></Button>
+              <Button variant="outline" size="sm" className="w-full" asChild><Link to="/job-seeker/applications">View full history</Link></Button>
             </div>
           </Section>
         </div>
@@ -865,7 +837,10 @@ export default function StudentProfile() {
               <div>
                 <div className="text-sm font-semibold">Profile strength</div>
                 <p className="mt-0.5 text-xs text-muted-foreground">Add 1 certification and 2 skills to hit 90%.</p>
-                <Button variant="link" size="sm" className="mt-0.5 h-auto p-0 text-xs text-primary">Complete profile</Button>
+                <Button variant="link" size="sm" className="mt-0.5 h-auto p-0 text-xs text-primary" onClick={() => {
+                  if (!s.headline || s.skills.length === 0) toast.success('Keep adding details to strengthen your profile!')
+                  else toast.success('Your profile is looking great!')
+                }}>Complete profile</Button>
               </div>
             </CardContent>
           </Card>

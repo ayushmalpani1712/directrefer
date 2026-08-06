@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { motion } from 'framer-motion'
 import {
@@ -8,158 +9,149 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Skeleton } from '@/components/ui/skeleton'
+
 import { CompanyChip, GAvatar, ReportDialog } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
+import { supabase } from '@/lib/supabase'
 import NotFound from '@/pages/NotFound'
+
+interface PublicProfessional {
+  id: string; name: string; designation: string; company: string; location: string
+  yearsExp: number; verified: boolean; gradient: string; bio: string; skills: string[]
+  openPositions: string[]; openForReferrals: boolean; maxPerMonth: number
+  usedThisMonth: number; referralDuration: string; avgReplyHours: number
+  referralsCompleted: number; rating: number; linkedinUrl: string; githubUrl: string
+  email: string; phone: string; whatsapp: string
+}
 
 export default function ProfessionalPublic() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { visibleProfessionals: professionals, student, bookmarks, toggleBookmark, requests } = useApp()
+  const app = useApp()
+  const { bookmarks, toggleBookmark, requests, student } = app ?? {}
   const loading = usePageLoading(400)
-  const p = professionals.find((x) => x.id === id)
+  const [pro, setPro] = useState<PublicProfessional | null>(null)
+  const [loadingData, setLoadingData] = useState(true)
 
-  if (loading && p) {
+  useEffect(() => {
+    if (!id) return
+    const fetchPro = async () => {
+      setLoadingData(true)
+      try {
+        const { data } = await supabase
+          .from('profiles_professional')
+          .select('*')
+          .eq('user_id', id)
+          .single()
+        if (!data) { setLoadingData(false); return }
+        const { data: userData } = await supabase
+          .from('users')
+          .select('full_name, email')
+          .eq('id', id)
+          .single()
+        setPro({
+          id,
+          name: userData?.full_name || 'Professional',
+          designation: data.designation || 'Professional',
+          company: data.company_name || 'Company',
+          location: data.location || '',
+          yearsExp: data.years_exp || 0,
+          verified: true,
+          gradient: data.gradient || 'from-[#3B5FE5] to-[#8B8FD4]',
+          bio: data.bio || '',
+          skills: Array.isArray(data.skills) ? data.skills : [],
+          openPositions: Array.isArray(data.open_positions) ? data.open_positions : [],
+          openForReferrals: data.open_for_referrals ?? true,
+          maxPerMonth: data.max_per_month || 5,
+          usedThisMonth: data.used_this_month || 0,
+          referralDuration: data.referral_duration || '2 weeks',
+          avgReplyHours: data.avg_reply_hours || 12,
+          referralsCompleted: data.referrals_completed || 0,
+          rating: data.rating || 4.8,
+          linkedinUrl: data.linkedin_url || '',
+          githubUrl: data.github_url || '',
+          email: userData?.email || '',
+          phone: data.phone || '',
+          whatsapp: data.whatsapp || '',
+        })
+      } catch {
+        setPro(null)
+      }
+      setLoadingData(false)
+    }
+    fetchPro()
+  }, [id])
+
+  if (loading || loadingData) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-end">
-          <Skeleton className="h-8 w-32 rounded-lg" />
-        </div>
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <Skeleton className="h-32 w-full rounded-none sm:h-40" />
-          <div className="relative px-6 pb-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-4">
-                <Skeleton className="relative -mt-12 h-24 w-24 rounded-full border-4 border-card sm:-mt-14 sm:h-28 sm:w-28" />
-                <div className="space-y-2 pb-1">
-                  <Skeleton className="h-7 w-48 rounded-md" />
-                  <Skeleton className="h-4 w-56 rounded-md" />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Skeleton className="h-9 w-36 rounded-full" />
-                <Skeleton className="h-9 w-28 rounded-full" />
-              </div>
-            </div>
-            <div className="mt-5 flex gap-4">
-              <Skeleton className="h-4 w-28 rounded-md" />
-              <Skeleton className="h-4 w-32 rounded-md" />
-              <Skeleton className="h-4 w-20 rounded-md" />
-            </div>
-          </div>
-        </div>
-        <div className="grid gap-6 lg:grid-cols-3 items-stretch">
-          <div className="flex flex-col gap-6 lg:col-span-2">
-            <div className="rounded-xl border border-border bg-card p-6 space-y-3">
-              <Skeleton className="h-5 w-16 rounded-md" />
-              <Skeleton className="h-16 w-full rounded-lg" />
-            </div>
-            <div className="rounded-xl border border-border bg-card p-6 space-y-3">
-              <Skeleton className="h-5 w-36 rounded-md" />
-              <div className="flex flex-wrap gap-2">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-6 w-24 rounded-full" />
-                ))}
-              </div>
-            </div>
-            <div className="rounded-xl border border-border bg-card p-6 space-y-3">
-              <Skeleton className="h-5 w-32 rounded-md" />
-              {Array.from({ length: 2 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 rounded-xl" />
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-col gap-6">
-            <div className="rounded-xl border border-border bg-card p-6 space-y-3">
-              <Skeleton className="h-5 w-36 rounded-md" />
-              <Skeleton className="h-4 w-40 rounded-md" />
-              <Skeleton className="h-2.5 w-full rounded-md" />
-              <Skeleton className="h-12 w-full rounded-lg" />
-            </div>
-            <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-              <Skeleton className="h-5 w-32 rounded-md" />
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex gap-3">
-                  <Skeleton className="h-9 w-9 rounded-lg" />
-                  <div className="flex-1 space-y-1.5">
-                    <Skeleton className="h-3 w-16 rounded-md" />
-                    <Skeleton className="h-4 w-32 rounded-md" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
     )
   }
 
-  if (!p) return <NotFound />
-  const saved = bookmarks.includes(p.id)
-  const hasAcceptedReferral = requests.some(
-    (r) => r.professionalId === p.id && r.student === student.name && (r.status === 'accepted' || r.status === 'offered')
-  )
+  if (!pro) return <NotFound />
+  const saved = bookmarks?.includes(pro.id) ?? false
+  const hasAcceptedReferral = requests?.some(
+    (r) => r.professionalId === pro.id && r.student === student?.name && (r.status === 'accepted' || r.status === 'offered')
+  ) ?? false
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => navigate(-1)}>
-          <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to search
-        </Button>
-      </div>
+    <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl space-y-6">
+        <Link to="/job-seeker/professionals" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Back to professionals
+        </Link>
 
       {/* Hero card */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="overflow-hidden">
-          <div className={`h-32 bg-gradient-to-r ${p.gradient} relative sm:h-40`}>
+          <div className={`h-32 bg-gradient-to-r ${pro.gradient} relative sm:h-40`}>
             <div className="bg-grid absolute inset-0 opacity-20" />
           </div>
           <CardContent className="relative px-6 pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex items-end gap-4">
                 <div className="-mt-12 sm:-mt-14">
-                  <GAvatar name={p.name} gradient={p.gradient} className="h-24 w-24 border-4 border-card text-2xl sm:h-28 sm:w-28" />
+                  <GAvatar name={pro.name} gradient={pro.gradient} className="h-24 w-24 border-4 border-card text-2xl sm:h-28 sm:w-28" />
                 </div>
                 <div className="pb-1">
                   <h1 className="font-display flex items-center gap-2 text-2xl font-bold">
-                    {p.name} {p.verified && <BadgeCheck className="h-5.5 w-5.5 text-sky-500" />}
+                    {pro.name} {pro.verified && <BadgeCheck className="h-5.5 w-5.5 text-sky-500" />}
                   </h1>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                    <span>{p.designation}</span><span>·</span>
-                    <span className="flex items-center gap-1.5"><CompanyChip name={p.company} className="h-5 w-5 text-[8px]" />{p.company}</span>
+                    <span>{pro.designation}</span><span>·</span>
+                    <span className="flex items-center gap-1.5"><CompanyChip name={pro.company} className="h-5 w-5 text-[8px]" />{pro.company}</span>
                   </div>
                 </div>
               </div>
               <div className="flex gap-2 sm:pb-1">
                 <Button
                   className="rounded-full bg-primary shadow-glow"
-                  disabled={!p.openForReferrals}
-                  asChild={p.openForReferrals}
+                  disabled={!pro.openForReferrals}
+                  asChild={pro.openForReferrals}
                 >
-                  {p.openForReferrals
-                    ? <Link to={`/request-referral/${p.id}`}><Send className="mr-1.5 h-4 w-4" /> Request Referral</Link>
+                  {pro.openForReferrals
+                    ? <Link to={`/job-seeker/request-referral/${pro.id}`}><Send className="mr-1.5 h-4 w-4" /> Request Referral</Link>
                     : <span>At capacity</span>}
                 </Button>
                 <Button variant="outline" className="rounded-full" onClick={() => navigate('/messages')}><MessageSquare className="mr-1.5 h-4 w-4" /> Message</Button>
-                <Button variant="outline" size="icon" className="rounded-full" onClick={() => { toggleBookmark(p.id); toast(saved ? 'Removed from bookmarks' : 'Saved to bookmarks') }}>
+                <Button variant="outline" size="icon" className="rounded-full" onClick={() => { toggleBookmark?.(pro.id); toast(saved ? 'Removed from bookmarks' : 'Saved to bookmarks') }}>
                   {saved ? <BookmarkCheck className="h-4.5 w-4.5 text-primary" /> : <Bookmark className="h-4.5 w-4.5" />}
                 </Button>
-                <ReportDialog targetUserId={p.id} targetUserName={p.name} />
+                <ReportDialog targetUserId={pro.id} targetUserName={pro.name} />
               </div>
             </div>
 
             <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {p.location}</span>
-              <span className="flex items-center gap-1.5"><Briefcase className="h-4 w-4" /> {p.yearsExp} years experience</span>
-              {p.linkedinUrl ? (
-                <a href={p.linkedinUrl.startsWith('http') ? p.linkedinUrl : `https://linkedin.com/in/${p.linkedinUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-primary hover:underline transition-colors"><Linkedin className="h-4 w-4" /> LinkedIn</a>
+              <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {pro.location}</span>
+              <span className="flex items-center gap-1.5"><Briefcase className="h-4 w-4" /> {pro.yearsExp} years experience</span>
+              {pro.linkedinUrl ? (
+                <a href={pro.linkedinUrl.startsWith('http') ? pro.linkedinUrl : `https://linkedin.com/in/${pro.linkedinUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-primary hover:underline transition-colors"><Linkedin className="h-4 w-4" /> LinkedIn</a>
               ) : (
                 <span className="flex items-center gap-1.5 text-muted-foreground/50"><Linkedin className="h-4 w-4" /> LinkedIn</span>
               )}
-              {p.githubUrl ? (
-                <a href={p.githubUrl.startsWith('http') ? p.githubUrl : `https://github.com/${p.githubUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-primary hover:underline transition-colors"><Globe className="h-4 w-4" /> Portfolio</a>
+              {pro.githubUrl ? (
+                <a href={pro.githubUrl.startsWith('http') ? pro.githubUrl : `https://github.com/${pro.githubUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-primary hover:underline transition-colors"><Globe className="h-4 w-4" /> Portfolio</a>
               ) : (
                 <span className="flex items-center gap-1.5 text-muted-foreground/50"><Globe className="h-4 w-4" /> Portfolio</span>
               )}
@@ -174,7 +166,7 @@ export default function ProfessionalPublic() {
           <Card className="shadow-soft">
             <CardContent className="p-6">
               <h2 className="text-base font-semibold">About</h2>
-              <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{p.bio}</p>
+              <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{pro.bio}</p>
             </CardContent>
           </Card>
 
@@ -183,7 +175,7 @@ export default function ProfessionalPublic() {
             <CardContent className="p-6">
               <h2 className="text-base font-semibold">Skills & technologies</h2>
               <div className="mt-3 flex flex-wrap gap-2">
-                {p.skills.map((s) => (
+                {pro.skills.map((s) => (
                   <span key={s} className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">{s}</span>
                 ))}
               </div>
@@ -191,21 +183,21 @@ export default function ProfessionalPublic() {
           </Card>
 
           {/* Current Openings */}
-          {p.openPositions.length > 0 && (
+          {pro.openPositions.length > 0 && (
             <Card className="shadow-soft">
               <CardContent className="p-6">
                 <h2 className="text-base font-semibold">Current openings</h2>
                 <div className="mt-3 space-y-2.5">
-                  {p.openPositions.map((o, i) => (
+                  {pro.openPositions.map((o, i) => (
                     <div key={o} className="flex items-center justify-between rounded-xl border border-border p-4 transition-colors hover:border-primary/20">
                       <div className="flex items-center gap-3">
-                        <CompanyChip name={p.company} className="h-9 w-9 rounded-lg text-xs" />
+                        <CompanyChip name={pro.company} className="h-9 w-9 rounded-lg text-xs" />
                         <div>
                           <div className="text-sm font-semibold">{o}</div>
-                          <div className="text-xs text-muted-foreground">{p.location} · Full-time</div>
+                          <div className="text-xs text-muted-foreground">{pro.location} · Full-time</div>
                         </div>
                       </div>
-                      <span className="text-xs text-muted-foreground">{Math.max(0, (p.referralsCompleted - i * 3) % 15 + 5)} referred</span>
+                      <span className="text-xs text-muted-foreground">{Math.max(0, (pro.referralsCompleted - i * 3) % 15 + 5)} referred</span>
                     </div>
                   ))}
                 </div>
@@ -222,10 +214,10 @@ export default function ProfessionalPublic() {
                   <Calendar className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <div className="text-sm font-medium">{p.referralDuration}</div>
+                  <div className="text-sm font-medium">{pro.referralDuration}</div>
                   <div className="mt-0.5 text-xs text-muted-foreground">
-                    {p.openForReferrals
-                      ? `${p.maxPerMonth - p.usedThisMonth} of ${p.maxPerMonth} slots remaining`
+                    {pro.openForReferrals
+                      ? `${pro.maxPerMonth - pro.usedThisMonth} of ${pro.maxPerMonth} slots remaining`
                       : 'Currently at capacity'}
                   </div>
                 </div>
@@ -241,16 +233,16 @@ export default function ProfessionalPublic() {
               <h3 className="text-sm font-semibold">Capacity this month</h3>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Slots used</span>
-                <span className="font-semibold">{p.usedThisMonth} / {p.maxPerMonth}</span>
+                <span className="font-semibold">{pro.usedThisMonth} / {pro.maxPerMonth}</span>
               </div>
-              <Progress value={(p.usedThisMonth / p.maxPerMonth) * 100} className="h-2" />
+              <Progress value={(pro.usedThisMonth / pro.maxPerMonth) * 100} className="h-2" />
               <p className="text-xs text-muted-foreground">
-                {p.openForReferrals
-                  ? `${p.maxPerMonth - p.usedThisMonth} referral slots remaining — requests are reviewed in the order received.`
+                {pro.openForReferrals
+                  ? `${pro.maxPerMonth - pro.usedThisMonth} referral slots remaining — requests are reviewed in the order received.`
                   : 'Fully booked for this month. Check back later or send a message.'}
               </p>
               <div className="flex items-center gap-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
-                <Calendar className="h-4 w-4 shrink-0 text-primary" /> Typically replies {p.avgReplyHours <= 8 ? 'same day' : p.avgReplyHours <= 16 ? 'within a day' : 'within 2 days'}
+                <Calendar className="h-4 w-4 shrink-0 text-primary" /> Typically replies {pro.avgReplyHours <= 8 ? 'same day' : pro.avgReplyHours <= 16 ? 'within a day' : 'within 2 days'}
               </div>
             </CardContent>
           </Card>
@@ -266,7 +258,7 @@ export default function ProfessionalPublic() {
                     </div>
                     <div>
                       <div className="text-xs text-muted-foreground">Phone</div>
-                      <div className="text-sm font-medium">{p.phone}</div>
+                      <div className="text-sm font-medium">{pro.phone}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -275,7 +267,7 @@ export default function ProfessionalPublic() {
                     </div>
                     <div>
                       <div className="text-xs text-muted-foreground">WhatsApp</div>
-                      <div className="text-sm font-medium">{p.whatsapp}</div>
+                      <div className="text-sm font-medium">{pro.whatsapp}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -286,7 +278,7 @@ export default function ProfessionalPublic() {
                     </div>
                     <div>
                       <div className="text-xs text-muted-foreground">Email</div>
-                      <div className="text-sm font-medium">{p.email}</div>
+                      <div className="text-sm font-medium">{pro.email}</div>
                     </div>
                   </div>
                 </div>
@@ -321,6 +313,7 @@ export default function ProfessionalPublic() {
           </Card>
         </div>
       </div>
+    </div>
     </div>
   )
 }

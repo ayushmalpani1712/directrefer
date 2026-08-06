@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import { motion } from 'framer-motion'
 import {
@@ -11,11 +11,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Chip, CompanyChip, GAvatar, SectionHeader } from '@/components/ui-kit'
+import { Chip, CompanyChip, EmptyState, GAvatar, SectionHeader } from '@/components/ui-kit'
+import { JobIllustration } from '@/components/illustrations'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { usePageLoading } from '@/hooks/usePageLoading'
-import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { supabase } from '@/lib/supabase'
@@ -36,21 +35,28 @@ function nextStage(stage: string): string | null {
 }
 
 function BrowseJobsView() {
-  const loading = usePageLoading(400)
-  const { jobs } = useApp()
+  const { jobs, loading } = useApp()
   const [q, setQ] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [recruiterNames, setRecruiterNames] = useState<Record<string, string>>({})
+  const loadedRef = useRef(false)
 
   useEffect(() => {
     const loadRecruiters = async () => {
-      const { data } = await supabase
-        .from('profiles_recruiter')
-        .select('user_id, company_name')
-      if (data) {
-        const map: Record<string, string> = {}
-        data.forEach((r: { user_id: string; company_name: string }) => { map[r.user_id] = r.company_name })
-        setRecruiterNames(map)
+      if (loadedRef.current) return
+      loadedRef.current = true
+      try {
+        const { data } = await supabase
+          .from('profiles_recruiter')
+          .select('user_id, company_name')
+        if (data) {
+          const map: Record<string, string> = {}
+          data.forEach((r: { user_id: string; company_name: string }) => { map[r.user_id] = r.company_name })
+          setRecruiterNames(map)
+        }
+      } catch (err) {
+        console.error('Failed to load recruiter names:', err)
+        toast.error('Failed to load company data')
       }
     }
     loadRecruiters()
@@ -61,7 +67,7 @@ function BrowseJobsView() {
     .filter((j) => j.title.toLowerCase().includes(q.toLowerCase()) || j.location.toLowerCase().includes(q.toLowerCase()))
     .filter((j) => typeFilter === 'all' || j.type.toLowerCase() === typeFilter)
 
-  if (loading) return <div className="space-y-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}</div>
+  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
 
   return (
     <div className="space-y-6">
@@ -82,23 +88,29 @@ function BrowseJobsView() {
       </div>
 
       {filtered.length === 0 ? (
-        <Card className="shadow-soft">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <Briefcase className="mb-3 h-10 w-10 text-muted-foreground/40" />
-            <p className="text-sm font-medium text-muted-foreground">No active jobs found</p>
-            <p className="mt-1 text-xs text-muted-foreground/70">Try adjusting your search or filters</p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          illustration={<JobIllustration />}
+          title={q || typeFilter !== 'all' ? "No jobs match your search" : "No active jobs yet"}
+          description={q || typeFilter !== 'all'
+            ? "Try adjusting your search terms or clearing the filters to see more results."
+            : "There are no active job postings right now. Check back later or browse professionals to build your pipeline."}
+          primaryCtaLabel={q || typeFilter !== 'all' ? "Clear filters" : undefined}
+          onPrimaryCtaClick={q || typeFilter !== 'all' ? () => { setQ(''); setTypeFilter('all') } : undefined}
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {filtered.map((j, i) => (
             <motion.div key={j.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-              <Card className="shadow-soft card-hover h-full transition-colors hover:border-primary/20">
+              <Card className="shadow-soft h-full transition-colors hover:border-primary/20">
                 <CardContent className="flex flex-col p-5">
                   <div className="flex items-start gap-3">
-                    <Link to={j.recruiterId ? `/company/${j.recruiterId}` : '#'}>
-                      <CompanyChip name={recruiterNames[j.recruiterId ?? ''] ?? 'Co'} className="h-10 w-10 rounded-xl text-xs hover:ring-2 hover:ring-primary/30 transition-all" />
-                    </Link>
+                    {j.recruiterId ? (
+                      <Link to={`/company/${j.recruiterId}`}>
+                        <CompanyChip name={recruiterNames[j.recruiterId ?? ''] ?? 'Co'} className="h-10 w-10 rounded-xl text-xs hover:ring-2 hover:ring-primary/30 transition-all" />
+                      </Link>
+                    ) : (
+                      <CompanyChip name={recruiterNames[j.recruiterId ?? ''] ?? 'Co'} className="h-10 w-10 rounded-xl text-xs" />
+                    )}
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold">{j.title}</h3>
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -115,10 +127,10 @@ function BrowseJobsView() {
                     <span className="flex items-center gap-1 text-primary"><Star className="h-3.5 w-3.5" /> {j.referrals} referrals</span>
                   </div>
                   <div className="mt-auto flex gap-2 pt-4">
-                    <Link to="/request-referral" className="flex-1">
+                    <Link to="/job-seeker/request-referral" className="flex-1">
                       <Button size="sm" className="w-full rounded-full bg-primary shadow-glow text-xs">Request Referral</Button>
                     </Link>
-                    <Link to="/professionals" className="flex-1">
+                    <Link to="/job-seeker/professionals" className="flex-1">
                       <Button size="sm" variant="outline" className="w-full rounded-full text-xs">Find Referrer</Button>
                     </Link>
                   </div>
@@ -135,7 +147,7 @@ function BrowseJobsView() {
 export default function RecruiterJobs() {
   const { role } = useApp()
 
-  if (role === 'student' || role === 'professional' || role === 'admin') {
+  if (role === 'student' || role === 'professional') {
     return <BrowseJobsView />
   }
 
@@ -143,41 +155,48 @@ export default function RecruiterJobs() {
 }
 
 function RecruiterJobsManager() {
-  const loading = usePageLoading(400)
-  const { jobs, setJobs, candidates, updateJob, professionals } = useApp()
+  const { jobs, setJobs, candidates, updateJob, professionals, loading } = useApp()
   const { user } = useAuth()
-  const [recruiterCompany, setRecruiterCompany] = useState({ name: 'Acme Corp', tagline: 'Building the future', industry: 'Technology', size: '500-1000', website: 'acme.com', founded: 2015, locations: ['San Francisco', 'New York'], description: 'A leading technology company.', benefits: ['Health', '401k', 'Equity'], hiringStats: { timeToHire: 21, offerAccept: 78, referralShare: 34, activeJobs: jobs.filter((j) => j.stage === 'Active').length }, responseRate: 92, verified: true })
+  const [recruiterCompany, setRecruiterCompany] = useState({ name: '', tagline: '', industry: '', size: '', website: '', founded: 0, locations: [] as string[], description: '', benefits: [] as string[], hiringStats: { timeToHire: 0, offerAccept: 0, referralShare: 0, activeJobs: jobs.filter((j) => j.stage === 'Active').length }, responseRate: 0, verified: false })
+  const profileLoadedRef = useRef(false)
 
   useEffect(() => {
     const loadCompany = async () => {
       if (!user) return
-      const { data } = await supabase
-        .from('profiles_recruiter')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-      if (data) {
-        setRecruiterCompany((prev) => ({
-          ...prev,
-          name: data.company_name ?? data.company ?? prev.name,
-          tagline: data.company_tagline ?? prev.tagline,
-          industry: data.industry ?? data.hiring_department ?? prev.industry,
-          size: data.company_size ?? prev.size,
-          website: data.company_website ?? prev.website,
-          founded: data.founded ?? prev.founded,
-          locations: data.locations ?? prev.locations,
-          benefits: data.benefits ?? prev.benefits,
-          hiringStats: {
-            timeToHire: data.time_to_hire ?? prev.hiringStats.timeToHire,
-            offerAccept: data.offer_accept_rate ?? prev.hiringStats.offerAccept,
-            referralShare: data.referral_share ?? prev.hiringStats.referralShare,
-            activeJobs: jobs.filter((j) => j.stage === 'Active').length,
-          },
-        }))
+      if (profileLoadedRef.current) return
+      profileLoadedRef.current = true
+      try {
+        const { data } = await supabase
+          .from('profiles_recruiter')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+        if (data) {
+          setRecruiterCompany((prev) => ({
+            ...prev,
+            name: data.company_name ?? data.company ?? prev.name,
+            tagline: data.company_tagline ?? prev.tagline,
+            industry: data.industry ?? data.hiring_department ?? prev.industry,
+            size: data.company_size ?? prev.size,
+            website: data.company_website ?? prev.website,
+            founded: data.founded ?? prev.founded,
+            locations: data.locations ?? prev.locations,
+            benefits: data.benefits ?? prev.benefits,
+            hiringStats: {
+              timeToHire: data.time_to_hire ?? 0,
+              offerAccept: data.offer_accept_rate ?? 0,
+              referralShare: data.referral_share ?? 0,
+              activeJobs: jobs.filter((j) => j.stage === 'Active').length,
+            },
+          }))
+        }
+      } catch (err) {
+        console.error('Failed to load company profile:', err)
+        toast.error('Could not load company profile')
       }
     }
     loadCompany()
-  }, [user, jobs])
+  }, [user])
   const [q, setQ] = useState('')
   const [candidateStages, setCandidateStages] = useState<Record<string, string>>(() => {
     const map: Record<string, string> = {}
@@ -186,18 +205,12 @@ function RecruiterJobsManager() {
   })
 
   useEffect(() => {
-    const loadPipelines = async () => {
-      const { data } = await supabase
-        .from('candidate_pipelines')
-        .select('candidate_id, stage')
-      if (data) {
-        const stages: Record<string, string> = {}
-        data.forEach((p: { candidate_id: string; stage: string }) => { stages[p.candidate_id] = p.stage })
-        setCandidateStages(stages)
-      }
-    }
-    if (user) loadPipelines()
-  }, [user])
+    setCandidateStages((prev) => {
+      const next = { ...prev }
+      candidates.forEach((c) => { if (!(c.id in next)) next[c.id] = c.stage })
+      return next
+    })
+  }, [candidates])
 
   const [editingJobId, setEditingJobId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
@@ -215,20 +228,11 @@ function RecruiterJobsManager() {
     const currentStage = candidateStages[candidateId] || 'Applied'
     const next = nextStage(currentStage)
     if (!next) {
-      toast(`${candidates.find((c) => c.id === candidateId)?.name} is already at Offer stage`)
+      toast(`${allCandidates.find((c) => c.id === candidateId)?.name} is already at Offer stage`)
       return
     }
     setCandidateStages((prev) => ({ ...prev, [candidateId]: next }))
-    toast(`${candidates.find((c) => c.id === candidateId)?.name} moved to ${next}`)
-    // Persist to DB
-    const candidate = candidates.find((c) => c.id === candidateId)
-    if (candidate) {
-      supabase.from('candidate_pipelines').upsert({
-        job_id: jobs[0]?.id,
-        candidate_id: candidateId,
-        stage: next.toLowerCase(),
-      }, { onConflict: 'job_id,candidate_id' }).then(() => {}, () => {})
-    }
+    toast(`${allCandidates.find((c) => c.id === candidateId)?.name} moved to ${next}`)
   }
 
   const addCandidateToStage = (pro: typeof professionals[number], stage: string) => {
@@ -254,11 +258,6 @@ function RecruiterJobsManager() {
     setAddingToStage(null)
     setAddCandidateQuery('')
     toast(`${pro.name} added to ${stage}`)
-    supabase.from('candidate_pipelines').upsert({
-      job_id: jobs[0]?.id,
-      candidate_id: id,
-      stage: stage.toLowerCase(),
-    }, { onConflict: 'job_id,candidate_id' }).then(() => {}, () => {})
   }
 
   const startEdit = (jobId: string) => {
@@ -283,7 +282,7 @@ function RecruiterJobsManager() {
 
   const handleDelete = () => {
     if (!deleteTargetId) return
-    updateJob(deleteTargetId, { stage: 'Draft' })
+    updateJob(deleteTargetId, { stage: 'Closed' })
     toast.success('Job deleted')
     setDeleteTargetId(null)
   }
@@ -303,11 +302,9 @@ function RecruiterJobsManager() {
         title: 'New Job Posting',
         department: 'Engineering',
         location: 'Remote',
-        type: 'full-time',
-        experience_level: 'mid',
-        description: 'Job description coming soon...',
+        type: 'Full-time',
         stage: 'draft',
-      }).select('*, job_pipeline ( stage, count )').single()
+      }).select('*').single()
       if (error) throw error
       if (data) {
         const newJob = {
@@ -321,9 +318,7 @@ function RecruiterJobsManager() {
           referrals: data.referrals ?? 0,
           stage: (data.stage === 'active' ? 'Active' : data.stage === 'paused' ? 'Paused' : 'Draft') as 'Active' | 'Paused' | 'Draft',
           postedDaysAgo: 0,
-          pipeline: (data.job_pipeline as { stage: string; count: number }[] ?? []).map(
-            (p) => ({ stage: p.stage, count: p.count })
-          ),
+          pipeline: [],
           recruiterId: data.recruiter_id,
         }
         setJobs((prev) => [newJob, ...prev])
@@ -335,7 +330,7 @@ function RecruiterJobsManager() {
     }
   }
 
-  if (loading) return <div className="space-y-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}</div>
+  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
 
   return (
     <div className="space-y-6">
@@ -356,9 +351,26 @@ function RecruiterJobsManager() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search jobs…" className="pl-9" />
           </div>
-          {jobs.filter((j) => j.title.toLowerCase().includes(q.toLowerCase())).map((j, i) => (
-            <motion.div key={j.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <Card className="shadow-soft card-hover cursor-pointer transition-colors hover:border-primary/20">
+          {jobs.length === 0 ? (
+            <EmptyState
+              illustration={<JobIllustration />}
+              title="No jobs posted yet"
+              description="Publish your first open position to start receiving referrals and building your candidate pipeline."
+              primaryCtaLabel="Post your first job"
+              onPrimaryCtaClick={handlePostJob}
+            />
+          ) : jobs.filter((j) => j.title.toLowerCase().includes(q.toLowerCase())).length === 0 ? (
+            <EmptyState
+              illustration={<JobIllustration />}
+              title="No jobs match your search"
+              description="Try adjusting your search terms to find the job posting you're looking for."
+              primaryCtaLabel="Clear search"
+              onPrimaryCtaClick={() => setQ('')}
+            />
+          ) : (
+            jobs.filter((j) => j.title.toLowerCase().includes(q.toLowerCase())).map((j, i) => (
+              <motion.div key={j.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                <Card className="shadow-soft transition-colors hover:border-primary/20">
                 <CardContent className="p-5">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                     <CompanyChip name={recruiterCompany.name} className="h-11 w-11 rounded-xl text-xs" />
@@ -440,14 +452,14 @@ function RecruiterJobsManager() {
                         <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                           <span>{s.stage}</span><span className="font-semibold text-foreground">{s.count}</span>
                         </div>
-                        <Progress value={j.pipeline[0].count > 0 ? (s.count / j.pipeline[0].count) * 100 : 0} className="mt-1 h-1.5" />
+                        <Progress value={j.pipeline[0]?.count > 0 ? (s.count / j.pipeline[0].count) * 100 : 0} className="mt-1 h-1.5" />
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+          )))}
         </TabsContent>
 
         {/* ── Pipeline kanban ── */}

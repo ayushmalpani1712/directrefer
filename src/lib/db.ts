@@ -25,7 +25,7 @@ function daysSince(iso: string): number {
   return Math.floor(ms / 86_400_000)
 }
 
-function formatRelativeTime(iso: string): string {
+export function formatRelativeTime(iso: string): string {
   const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
   if (seconds < 60) return 'Just now'
   const minutes = Math.floor(seconds / 60)
@@ -42,7 +42,7 @@ function formatRelativeTime(iso: string): string {
 }
 
 function mapReferralStatus(
-  dbStatus: 'pending' | 'accepted' | 'rejected' | 'expired'
+  dbStatus: 'pending' | 'accepted' | 'rejected' | 'expired' | 'hired'
 ): ReferralStatus {
   if (dbStatus === 'expired') return 'rejected'
   return dbStatus
@@ -104,6 +104,7 @@ export async function fetchProfessionals(): Promise<Professional[]> {
         department: string | null
         years_experience: number
         open_for_referrals: boolean
+        is_open_to_work: boolean
         referral_capacity: number
         referrals_used: number
         referral_policy: string | null
@@ -119,11 +120,14 @@ export async function fetchProfessionals(): Promise<Professional[]> {
       } | undefined
 
       const openPositionsRaw = profile?.open_positions
-      const openPositions: string[] = typeof openPositionsRaw === 'string'
-        ? JSON.parse(openPositionsRaw)
-        : Array.isArray(openPositionsRaw)
-          ? openPositionsRaw
-          : []
+      let openPositions: string[] = []
+      try {
+        openPositions = typeof openPositionsRaw === 'string'
+          ? JSON.parse(openPositionsRaw)
+          : Array.isArray(openPositionsRaw)
+            ? openPositionsRaw
+            : []
+      } catch { openPositions = [] }
 
       return {
         id: row.id,
@@ -141,6 +145,7 @@ export async function fetchProfessionals(): Promise<Professional[]> {
         reviews: profile?.review_count ?? 0,
         verified: row.verified,
         openForReferrals: profile?.open_for_referrals ?? true,
+        isOpenToWork: profile?.is_open_to_work ?? false,
         maxPerMonth: profile?.referral_capacity ?? 5,
         usedThisMonth: profile?.referrals_used ?? 0,
         successRate: Number(profile?.success_rate ?? 0),
@@ -203,6 +208,7 @@ export async function fetchReferrals(userId: string): Promise<ReferralRequest[]>
       return {
         id: row.id,
         student: requester?.full_name ?? '',
+        requesterId: row.requester_id,
         studentResumeUrl: resumeMap.get(row.requester_id) ?? undefined,
         professionalId: row.professional_id,
         role: row.job_title,
@@ -357,7 +363,7 @@ export async function fetchConversations(userId: string): Promise<Conversation[]
         lastMessage: lastMsg?.text ?? '',
         time: lastMsg?.time ?? formatRelativeTime(conv.updated_at),
         unread: unreadCount,
-        pinned: unreadCount > 0,
+        pinned: false,
         online: false,
         gradient: GRADIENTS[conversations.length % GRADIENTS.length],
         messages,
@@ -408,10 +414,7 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
   try {
     let query = supabase
       .from('jobs')
-      .select(`
-        *,
-        job_pipeline ( stage, count )
-      `)
+      .select('*')
       .order('posted_at', { ascending: false })
 
     if (recruiterId) {
@@ -438,9 +441,7 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
             ? 'Paused'
             : 'Draft',
       postedDaysAgo: daysSince(row.posted_at),
-      pipeline: (row.job_pipeline as { stage: string; count: number }[] ?? []).map(
-        (p) => ({ stage: p.stage, count: p.count })
-      ),
+      pipeline: [],
       recruiterId: row.recruiter_id,
     }))
   } catch {
@@ -545,7 +546,7 @@ export async function markAllNotificationsRead(userId: string): Promise<boolean>
 // Derives candidates from job seekers who have referrals linked to the
 // recruiter's jobs, or from the profiles_job_seeker pool.
 
-export async function fetchCandidates(): Promise<
+export async function fetchCandidates(userId?: string): Promise<
   {
     id: string
     name: string
@@ -561,35 +562,36 @@ export async function fetchCandidates(): Promise<
   }[]
 > {
   try {
+    // 1) Referral-connected candidates (existing)
     const { data: referrals, error: refError } = await supabase
       .from('referrals')
       .select('id, status, job_title, requester_id, professional_id')
       .order('created_at', { ascending: false })
 
-    if (refError || !referrals) return []
+    const referralCandidates: {
+      id: string; name: string; role: string; company: string; stage: string;
+      rating: number; source: string; gradient: string; skills: string[];
+      location: string; exp: number
+    }[] = []
 
-    const requesterIds = [...new Set(referrals.map(r => r.requester_id).filter(Boolean))]
-    const professionalIds = [...new Set(referrals.map(r => r.professional_id).filter(Boolean))]
+    if (!refError && referrals && referrals.length > 0) {
+      const requesterIds = [...new Set(referrals.map(r => r.requester_id).filter(Boolean))]
+      const professionalIds = [...new Set(referrals.map(r => r.professional_id).filter(Boolean))]
 
-    const [usersRes, seekerProfilesRes, profProfilesRes] = await Promise.all([
-      supabase.from('users').select('id, full_name, city, state, country').in('id', [...requesterIds, ...professionalIds]),
-      supabase.from('profiles_job_seeker').select('user_id, skills, experience_years, preferred_role').in('user_id', requesterIds),
-      supabase.from('profiles_professional').select('user_id, company_name').in('user_id', professionalIds),
-    ])
+      const [usersRes, seekerProfilesRes, profProfilesRes] = await Promise.all([
+        supabase.from('users').select('id, full_name, city, state, country').in('id', [...requesterIds, ...professionalIds]),
+        supabase.from('profiles_job_seeker').select('user_id, skills, experience_years, preferred_role').in('user_id', requesterIds),
+        supabase.from('profiles_professional').select('user_id, company_name').in('user_id', professionalIds),
+      ])
 
-    const userMap = new Map<string, { id: string; full_name: string; city: string | null; state: string | null; country: string | null }>()
-    for (const u of usersRes.data ?? []) userMap.set(u.id, u)
+      const userMap = new Map<string, { id: string; full_name: string; city: string | null; state: string | null; country: string | null }>()
+      for (const u of usersRes.data ?? []) userMap.set(u.id, u)
 
-    const seekerMap = new Map<string, { user_id: string; skills: string[]; experience_years: number; preferred_role: string | null }>()
-    for (const sp of seekerProfilesRes.data ?? []) seekerMap.set(sp.user_id, sp)
+      const seekerMap = new Map<string, { user_id: string; skills: string[]; experience_years: number; preferred_role: string | null }>()
+      for (const sp of seekerProfilesRes.data ?? []) seekerMap.set(sp.user_id, sp)
 
-    const profMap = new Map<string, { user_id: string; company_name: string }>()
-    for (const pp of profProfilesRes.data ?? []) profMap.set(pp.user_id, pp)
-
-    return referrals.map((row, index) => {
-      const requester = userMap.get(row.requester_id)
-      const seekerProfile = seekerMap.get(row.requester_id)
-      const profCompany = profMap.get(row.professional_id)
+      const profMap = new Map<string, { user_id: string; company_name: string }>()
+      for (const pp of profProfilesRes.data ?? []) profMap.set(pp.user_id, pp)
 
       const statusMap: Record<string, string> = {
         pending: 'Applied',
@@ -598,24 +600,139 @@ export async function fetchCandidates(): Promise<
         expired: 'Applied',
       }
 
-      return {
-        id: row.id,
-        name: requester?.full_name ?? '',
-        role: seekerProfile?.preferred_role ?? row.job_title,
-        company: profCompany?.company_name ?? '',
-        stage: statusMap[row.status] ?? 'Applied',
-        rating: 0,
-        source: 'Referral',
-        gradient: GRADIENTS[index % GRADIENTS.length],
-        skills: seekerProfile?.skills ?? [],
-        location: buildLocation(
-          requester?.city ?? null,
-          requester?.state ?? null,
-          requester?.country ?? null
-        ),
-        exp: seekerProfile?.experience_years ?? 0,
+      for (const [index, row] of referrals.entries()) {
+        const requester = userMap.get(row.requester_id)
+        const seekerProfile = seekerMap.get(row.requester_id)
+        const profCompany = profMap.get(row.professional_id)
+
+        referralCandidates.push({
+          id: row.id,
+          name: requester?.full_name ?? '',
+          role: seekerProfile?.preferred_role ?? row.job_title,
+          company: profCompany?.company_name ?? '',
+          stage: statusMap[row.status] ?? 'Applied',
+          rating: 0,
+          source: 'Referral',
+          gradient: GRADIENTS[index % GRADIENTS.length],
+          skills: seekerProfile?.skills ?? [],
+          location: buildLocation(
+            requester?.city ?? null,
+            requester?.state ?? null,
+            requester?.country ?? null
+          ),
+          exp: seekerProfile?.experience_years ?? 0,
+        })
       }
-    })
+    }
+
+    // 2) Open-to-work job seekers NOT already in referral list
+    const referralUserIds = new Set(
+      referralCandidates.map((c) => c.id)
+    )
+
+    const { data: openSeekers } = await supabase
+      .from('profiles_job_seeker')
+      .select('user_id, skills, experience_years, preferred_role, headline, is_open_to_work')
+      .eq('is_open_to_work', true)
+
+    const openToWorkCandidates: typeof referralCandidates = []
+
+    if (openSeekers && openSeekers.length > 0) {
+      const newUserIds = openSeekers
+        .filter((sp) => !referralUserIds.has(sp.user_id))
+        .map((sp) => sp.user_id)
+
+      if (newUserIds.length > 0) {
+        const { data: openUsers } = await supabase
+          .from('users')
+          .select('id, full_name, city, state, country')
+          .in('id', newUserIds)
+          .eq('status', 'active')
+
+        const openUserMap = new Map<string, typeof openUsers extends (infer U)[] | null ? U : never>()
+        for (const u of openUsers ?? []) openUserMap.set(u.id, u)
+
+        let idx = 0
+        for (const sp of openSeekers) {
+          if (referralUserIds.has(sp.user_id)) continue
+          const u = openUserMap.get(sp.user_id)
+          if (!u) continue
+          openToWorkCandidates.push({
+            id: sp.user_id,
+            name: u.full_name ?? '',
+            role: sp.preferred_role ?? sp.headline ?? 'Job Seeker',
+            company: '',
+            stage: 'Open',
+            rating: 0,
+            source: 'Open to work',
+            gradient: GRADIENTS[(referralCandidates.length + idx) % GRADIENTS.length],
+            skills: sp.skills ?? [],
+            location: buildLocation(u.city, u.state, u.country),
+            exp: sp.experience_years ?? 0,
+          })
+          idx++
+        }
+      }
+    }
+
+    const all = [...referralCandidates, ...openToWorkCandidates]
+    if (userId) return all.filter((c) => c.id !== userId && c.name !== '')
+    return all.filter((c) => c.name !== '')
+  } catch {
+    return []
+  }
+}
+
+// ── Open-to-Work Job Seekers (discovery for recruiters & professionals) ──
+
+export type OpenToWorkSeeker = {
+  id: string
+  name: string
+  role: string
+  skills: string[]
+  location: string
+  exp: number
+  headline: string
+  gradient: string
+}
+
+export async function fetchOpenToWorkSeekers(): Promise<OpenToWorkSeeker[]> {
+  try {
+    const { data: seekerProfiles, error: seekerError } = await supabase
+      .from('profiles_job_seeker')
+      .select('user_id, skills, experience_years, preferred_role, headline, is_open_to_work')
+      .eq('is_open_to_work', true)
+
+    if (seekerError || !seekerProfiles || seekerProfiles.length === 0) return []
+
+    const userIds = seekerProfiles.map((sp) => sp.user_id)
+
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id, full_name, city, state, country, status')
+      .in('id', userIds)
+      .eq('status', 'active')
+
+    if (usersError || !users) return []
+
+    const userMap = new Map<string, typeof users[number]>()
+    for (const u of users) userMap.set(u.id, u)
+
+    return seekerProfiles
+      .filter((sp) => userMap.has(sp.user_id))
+      .map((sp, index) => {
+        const u = userMap.get(sp.user_id)!
+        return {
+          id: sp.user_id,
+          name: u.full_name ?? '',
+          role: sp.preferred_role ?? sp.headline ?? 'Job Seeker',
+          skills: sp.skills ?? [],
+          location: buildLocation(u.city, u.state, u.country),
+          exp: sp.experience_years ?? 0,
+          headline: sp.headline ?? '',
+          gradient: GRADIENTS[index % GRADIENTS.length],
+        }
+      })
   } catch {
     return []
   }
@@ -664,7 +781,7 @@ export async function updateJobSeekerProfile(
     resume_size_bytes?: number
     resume_uploaded_at?: string
     headline?: string
-    open_to_work?: boolean
+    is_open_to_work?: boolean
     certifications?: string
     achievements?: string
     projects?: string
@@ -743,8 +860,7 @@ export async function updateRecruiterProfile(
   try {
     const { error } = await supabase
       .from('profiles_recruiter')
-      .update(updates)
-      .eq('user_id', userId)
+      .upsert({ user_id: userId, ...updates }, { onConflict: 'user_id' })
 
     return !error
   } catch {
@@ -785,33 +901,6 @@ export async function toggleBookmark(
 }
 
 // ── File Uploads ───────────────────────────────────────────────
-
-export async function uploadAvatar(
-  userId: string,
-  file: File
-): Promise<string | null> {
-  try {
-    const ext = file.name.split('.').pop() ?? 'png'
-    const path = `${userId}/avatar.${ext}`
-
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(path, file, { upsert: true })
-
-    if (uploadError) return null
-
-    const { data } = supabase.storage.from('avatars').getPublicUrl(path)
-
-    await supabase
-      .from('users')
-      .update({ avatar_url: data.publicUrl })
-      .eq('id', userId)
-
-    return data.publicUrl
-  } catch {
-    return null
-  }
-}
 
 export async function uploadResume(
   userId: string,
@@ -865,6 +954,7 @@ export async function uploadResume(
 
     if (dbError) {
       console.error('Resume DB update error:', dbError)
+      return null
     }
 
     return { url: publicUrl, name: file.name, size: file.size }
@@ -882,7 +972,8 @@ export async function deleteResume(
     const { data: files } = await supabase.storage.from('resumes').list(userId)
     if (files && files.length > 0) {
       const paths = files.map(f => `${userId}/${f.name}`)
-      await supabase.storage.from('resumes').remove(paths).catch(() => {})
+      const { error: storageError } = await supabase.storage.from('resumes').remove(paths)
+      if (storageError) console.error('Resume storage delete error:', storageError)
     }
 
     await supabase
@@ -903,7 +994,7 @@ export async function deleteResume(
 
 // ── Admin: User Management ────────────────────────────────────
 
-export interface AdminUser {
+interface AdminUser {
   id: string
   name: string
   email: string
@@ -914,42 +1005,6 @@ export interface AdminUser {
   lastActivity: string
   gradient: string
   banned: boolean
-}
-
-export async function fetchAllUsers(): Promise<AdminUser[]> {
-  try {
-    const { data: users, error } = await supabase
-      .from('users')
-      .select('id, full_name, email, role, created_at, city, state')
-      .order('created_at', { ascending: false })
-
-    if (error || !users) return []
-
-    return users.map((u, i) => {
-      const lastLogin = u.created_at || new Date().toISOString()
-      const daysInactive = Math.floor((Date.now() - new Date(lastLogin).getTime()) / 86_400_000)
-      const roleMap: Record<string, string> = {
-        job_seeker: 'student',
-        professional: 'professional',
-        recruiter: 'recruiter',
-        admin: 'admin',
-      }
-      return {
-        id: u.id,
-        name: u.full_name || 'Unknown',
-        email: u.email || '',
-        role: roleMap[u.role] || u.role,
-        company: null,
-        lastActive: lastLogin,
-        daysInactive,
-        lastActivity: daysInactive < 1 ? 'Today' : `${daysInactive}d ago`,
-        gradient: GRADIENTS[i % GRADIENTS.length],
-        banned: false,
-      }
-    })
-  } catch {
-    return []
-  }
 }
 
 export async function banUser(userId: string): Promise<boolean> {
@@ -1053,36 +1108,9 @@ export async function fetchPlatformAnalytics(): Promise<PlatformAnalytics> {
   }
 }
 
-// ── Reviews ───────────────────────────────────────────────────
-
-export interface Review {
-  id: string
-  user_id: string
-  reviewer_name: string
-  company: string | null
-  text: string
-  rating: number
-  created_at: string
-}
-
-export async function fetchReviews(userId: string): Promise<Review[]> {
-  try {
-    const { data, error } = await supabase
-      .from('reviews')
-      .select('*')
-      .or(`reviewer_id.eq.${userId},professional_id.eq.${userId}`)
-      .order('created_at', { ascending: false })
-
-    if (error || !data) return []
-    return data as Review[]
-  } catch {
-    return []
-  }
-}
-
 // ── Reports (Admin) ─────────────────────────────────────────
 
-export interface Report {
+interface Report {
   id: string
   reporter_id: string
   target_id: string
@@ -1093,27 +1121,13 @@ export interface Report {
   resolved_at?: string
 }
 
-export async function fetchReports(): Promise<Report[]> {
-  try {
-    const { data, error } = await supabase
-      .from('reports')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (error || !data) return []
-    return data as Report[]
-  } catch {
-    return []
-  }
-}
-
 export async function createReport(targetId: string, reason: string, description: string = ''): Promise<boolean> {
   try {
-    const { error } = await supabase.rpc('create_report', {
-      p_target_id: targetId,
-      p_reason: reason,
-      p_description: description,
-    })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
+    const { error } = await supabase
+      .from('reports')
+      .insert({ reporter_id: user.id, target_id: targetId, reason, description })
     return !error
   } catch {
     return false
@@ -1122,10 +1136,10 @@ export async function createReport(targetId: string, reason: string, description
 
 export async function updateReportStatus(reportId: string, status: string): Promise<boolean> {
   try {
-    const { error } = await supabase.rpc('update_report_status', {
-      p_report_id: reportId,
-      p_status: status,
-    })
+    const { error } = await supabase
+      .from('reports')
+      .update({ status, resolved_at: status === 'resolved' ? new Date().toISOString() : null })
+      .eq('id', reportId)
     return !error
   } catch {
     return false
@@ -1133,71 +1147,6 @@ export async function updateReportStatus(reportId: string, status: string): Prom
 }
 
 // ── Notification Preferences ─────────────────────────────────
-
-export interface NotificationPreferences {
-  referral_updates: boolean
-  new_messages: boolean
-  profile_views: boolean
-  completion_reminders: boolean
-  product_announcements: boolean
-  weekly_digest: boolean
-  email_opt_out: boolean
-}
-
-const DEFAULT_PREFS: NotificationPreferences = {
-  referral_updates: true,
-  new_messages: true,
-  profile_views: true,
-  completion_reminders: true,
-  product_announcements: false,
-  weekly_digest: false,
-  email_opt_out: false,
-}
-
-export async function fetchNotificationPreferences(): Promise<NotificationPreferences> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return DEFAULT_PREFS
-
-    const { data, error } = await supabase
-      .from('notification_preferences')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
-
-    if (error || !data) return DEFAULT_PREFS
-    return {
-      referral_updates: data.referral_updates ?? true,
-      new_messages: data.new_messages ?? true,
-      profile_views: data.profile_views ?? true,
-      completion_reminders: data.completion_reminders ?? true,
-      product_announcements: data.product_announcements ?? false,
-      weekly_digest: data.weekly_digest ?? false,
-      email_opt_out: data.email_opt_out ?? false,
-    }
-  } catch {
-    return DEFAULT_PREFS
-  }
-}
-
-export async function updateNotificationPreferences(prefs: Partial<NotificationPreferences>): Promise<boolean> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return false
-
-    const { error } = await supabase
-      .from('notification_preferences')
-      .upsert({
-        user_id: user.id,
-        ...prefs,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' })
-
-    return !error
-  } catch {
-    return false
-  }
-}
 
 // ── Admin: Platform Settings ──────────────────────────────────
 
@@ -1243,6 +1192,7 @@ export interface Announcement {
   created_by: string | null
   created_at: string
   expires_at: string | null
+  target_role: string
 }
 
 export async function fetchAnnouncements(): Promise<Announcement[]> {
@@ -1258,7 +1208,7 @@ export async function fetchAnnouncements(): Promise<Announcement[]> {
   }
 }
 
-export async function createAnnouncement(title: string, body: string, type: string, expiresAt?: string): Promise<boolean> {
+export async function createAnnouncement(title: string, body: string, type: string, expiresAt?: string, targetRole?: string): Promise<boolean> {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     const { error } = await supabase
@@ -1269,6 +1219,7 @@ export async function createAnnouncement(title: string, body: string, type: stri
         type,
         created_by: user?.id || null,
         expires_at: expiresAt || null,
+        target_role: targetRole || 'all',
       })
     return !error
   } catch {
@@ -1361,6 +1312,7 @@ export async function fetchReportsWithUsers(): Promise<ReportWithUsers[]> {
     const { data: reports, error } = await supabase
       .from('reports')
       .select('*')
+      .in('status', ['open', 'under_review'])
       .order('created_at', { ascending: false })
     if (error || !reports) return []
 
@@ -1391,13 +1343,14 @@ export interface AdminUserFull extends AdminUser {
   company_name: string | null
   job_title: string | null
   status: string
+  created_at: string | null
 }
 
 export async function fetchAllUsersFull(): Promise<AdminUserFull[]> {
   try {
     const { data: users, error } = await supabase
       .from('users')
-      .select('id, full_name, email, role, created_at, city, state, status')
+      .select('id, full_name, email, role, created_at, last_login_at, city, state, status')
       .order('created_at', { ascending: false })
     if (error || !users) return []
 
@@ -1414,7 +1367,7 @@ export async function fetchAllUsersFull(): Promise<AdminUserFull[]> {
 
     return users.map((u, i) => {
       const profile = profileMap.get(u.id)
-      const lastLogin = u.created_at || new Date().toISOString()
+      const lastLogin = u.last_login_at || u.created_at || new Date().toISOString()
       const daysInactive = Math.floor((Date.now() - new Date(lastLogin).getTime()) / 86_400_000)
       const roleMap: Record<string, string> = {
         job_seeker: 'student',
@@ -1436,6 +1389,7 @@ export async function fetchAllUsersFull(): Promise<AdminUserFull[]> {
         company_name: profile?.company_name || null,
         job_title: profile?.job_title || null,
         status: u.status || 'active',
+        created_at: u.created_at,
       }
     })
   } catch {
@@ -1540,6 +1494,232 @@ export async function deleteUser(userId: string): Promise<boolean> {
       .delete()
       .eq('id', userId)
     return !error
+  } catch {
+    return false
+  }
+}
+
+// ── Admin: God-Mode User Management ───────────────────────────
+
+export interface AdminUserDetail {
+  id: string
+  full_name: string
+  email: string
+  role: string
+  status: string
+  verified: boolean
+  city: string | null
+  state: string | null
+  country: string | null
+  linkedin: string | null
+  avatar_url: string | null
+  created_at: string
+  last_login_at: string | null
+  bio?: string
+  designation?: string
+  company_name?: string
+  industry?: string
+  years_exp?: number
+  skills?: string[]
+  open_for_referrals?: boolean
+  experience?: { title: string; org: string; period: string; desc: string }[]
+  education?: { school: string; degree: string; period: string; detail: string }[]
+}
+
+export async function fetchUserDetail(userId: string): Promise<AdminUserDetail | null> {
+  try {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, full_name, email, role, city, state, country, status, last_login_at, created_at, verified, linkedin, avatar_url')
+      .eq('id', userId)
+      .single()
+    if (error || !user) return null
+
+    const roleMap: Record<string, string> = {
+      job_seeker: 'student',
+      professional: 'professional',
+      recruiter: 'recruiter',
+      admin: 'admin',
+    }
+
+    const base: AdminUserDetail = {
+      id: user.id,
+      full_name: user.full_name || '',
+      email: user.email || '',
+      role: roleMap[user.role] || user.role,
+      status: user.status || 'active',
+      verified: user.verified || false,
+      city: user.city,
+      state: user.state,
+      country: user.country,
+      linkedin: user.linkedin,
+      avatar_url: user.avatar_url,
+      created_at: user.created_at,
+      last_login_at: user.last_login_at,
+    }
+
+    // Fetch role-specific profile
+    if (user.role === 'professional') {
+      const { data: pro } = await supabase
+        .from('profiles_professional')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+      if (pro) {
+        base.bio = pro.bio
+        base.designation = pro.job_title
+        base.company_name = pro.company_name
+        base.industry = pro.department
+        base.years_exp = pro.years_experience
+        base.skills = pro.skills
+        base.open_for_referrals = pro.open_for_referrals
+      }
+    } else if (user.role === 'job_seeker') {
+      const { data: js } = await supabase
+        .from('profiles_job_seeker')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+      if (js) {
+        base.bio = js.headline
+        base.skills = js.skills
+        base.experience = js.experience
+        base.education = js.education
+      }
+    } else if (user.role === 'recruiter') {
+      const { data: rec } = await supabase
+        .from('profiles_recruiter')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+      if (rec) {
+        base.bio = rec.company_description
+        base.company_name = rec.company_name
+        base.designation = rec.job_title
+        base.industry = rec.hiring_department
+      }
+    }
+
+    return base
+  } catch {
+    return null
+  }
+}
+
+export async function updateUserProfileAdmin(
+  userId: string,
+  data: {
+    full_name?: string
+    role?: string
+    verified?: boolean
+    status?: string
+    city?: string
+    state?: string
+    country?: string
+    linkedin?: string
+    bio?: string
+    designation?: string
+    company_name?: string
+    industry?: string
+  }
+): Promise<boolean> {
+  try {
+    const roleMap: Record<string, string> = {
+      student: 'job_seeker',
+      professional: 'professional',
+      recruiter: 'recruiter',
+      admin: 'admin',
+    }
+
+    // Update core user fields
+    const userFields: Record<string, unknown> = {}
+    if (data.full_name !== undefined) userFields.full_name = data.full_name
+    if (data.role !== undefined) userFields.role = roleMap[data.role] || data.role
+    if (data.verified !== undefined) userFields.verified = data.verified
+    if (data.status !== undefined) userFields.status = data.status
+    if (data.city !== undefined) userFields.city = data.city
+    if (data.state !== undefined) userFields.state = data.state
+    if (data.country !== undefined) userFields.country = data.country
+    if (data.linkedin !== undefined) userFields.linkedin = data.linkedin
+
+    if (Object.keys(userFields).length > 0) {
+      const { error } = await supabase.from('users').update(userFields).eq('id', userId)
+      if (error) {
+        console.error('Admin update users failed:', error.message, error.details, error.hint)
+        return false
+      }
+    }
+
+    // Get the user's role to update the right profile table
+    const { data: userData } = await supabase.from('users').select('role').eq('id', userId).single()
+    const actualRole = userData?.role || 'job_seeker'
+
+    const profileFields: Record<string, unknown> = {}
+    if (data.bio !== undefined) {
+      if (actualRole === 'professional' || actualRole === 'recruiter') profileFields.bio = data.bio
+      else profileFields.headline = data.bio
+    }
+    if (data.designation !== undefined) profileFields.job_title = data.designation
+    if (data.company_name !== undefined) profileFields.company_name = data.company_name
+    if (data.industry !== undefined) {
+      if (actualRole === 'recruiter') profileFields.hiring_department = data.industry
+      else if (actualRole === 'professional') profileFields.department = data.industry
+    }
+
+    if (Object.keys(profileFields).length > 0) {
+      const table = actualRole === 'professional' ? 'profiles_professional'
+        : actualRole === 'recruiter' ? 'profiles_recruiter'
+        : 'profiles_job_seeker'
+      const { error: profileError } = await supabase.from(table).update(profileFields).eq('user_id', userId)
+      if (profileError) {
+        console.error('Admin update profile failed:', table, profileError.message, profileError.details, profileError.hint)
+        return false
+      }
+    }
+
+    return true
+  } catch {
+    return false
+  }
+}
+
+// ── Admin: Referral Moderation ────────────────────────────────
+
+export async function deleteReferralAdmin(referralId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.from('referrals').delete().eq('id', referralId)
+    return !error
+  } catch {
+    return false
+  }
+}
+
+export async function updateReferralStatusAdmin(referralId: string, status: string): Promise<boolean> {
+  try {
+    const validStatuses = ['pending', 'accepted', 'rejected', 'expired']
+    if (!validStatuses.includes(status)) {
+      console.error('Invalid referral status:', status)
+      return false
+    }
+    const { error } = await supabase.from('referrals').update({ status }).eq('id', referralId)
+    if (error) console.error('Failed to update referral status:', error.message)
+    return !error
+  } catch {
+    return false
+  }
+}
+
+// ── Admin: Flagged Content Actions ────────────────────────────
+
+export async function dismissReportAndBanUser(reportId: string, targetUserId: string): Promise<boolean> {
+  try {
+    // Ban the user
+    const { error: banError } = await supabase.from('users').update({ status: 'suspended' }).eq('id', targetUserId)
+    if (banError) return false
+    // Resolve the report
+    const { error: reportError } = await supabase.from('reports').update({ status: 'resolved', resolved_at: new Date().toISOString() }).eq('id', reportId)
+    if (reportError) return false
+    return true
   } catch {
     return false
   }

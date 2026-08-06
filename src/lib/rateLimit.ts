@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { supabase } from '@/lib/supabase'
 
 interface RateLimitEntry {
   count: number
@@ -8,46 +8,7 @@ interface RateLimitEntry {
 const store = new Map<string, RateLimitEntry>()
 
 /**
- * Simple client-side rate limiter.
- * Usage: const { check, reset } = useRateLimit('referral-request', { max: 5, windowMs: 60_000 })
- * if (!check()) return toast.error('Too many requests')
- */
-export function useRateLimit(key: string, opts: { max: number; windowMs: number }) {
-  const keyRef = useRef(key)
-  keyRef.current = key
-
-  const check = useCallback(() => {
-    const now = Date.now()
-    const entry = store.get(keyRef.current)
-
-    if (!entry || now > entry.resetAt) {
-      store.set(keyRef.current, { count: 1, resetAt: now + opts.windowMs })
-      return true
-    }
-
-    if (entry.count >= opts.max) {
-      return false
-    }
-
-    entry.count++
-    return true
-  }, [opts.max, opts.windowMs])
-
-  const reset = useCallback(() => {
-    store.delete(keyRef.current)
-  }, [])
-
-  const remaining = useCallback(() => {
-    const entry = store.get(keyRef.current)
-    if (!entry || Date.now() > entry.resetAt) return opts.max
-    return Math.max(0, opts.max - entry.count)
-  }, [opts.max])
-
-  return { check, reset, remaining }
-}
-
-/**
- * Check rate limit without hook (for use in callbacks)
+ * Client-side rate limit check (instant feedback, per-tab)
  */
 export function checkRateLimit(key: string, max: number, windowMs: number): boolean {
   const now = Date.now()
@@ -64,4 +25,27 @@ export function checkRateLimit(key: string, max: number, windowMs: number): bool
 
   entry.count++
   return true
+}
+
+/**
+ * Server-side rate limit check via Supabase RPC.
+ * Call this in addition to client-side check for real enforcement.
+ * Returns true if allowed, false if rate limited.
+ */
+export async function checkServerRateLimit(
+  action: string,
+  maxPerMinute = 10,
+  maxPerHour = 100,
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.rpc('rate_limit_check', {
+      p_action: action,
+      p_max_per_minute: maxPerMinute,
+      p_max_per_hour: maxPerHour,
+    })
+    if (error) return true // fail open — don't block on RPC errors
+    return (data as { allowed?: boolean })?.allowed !== false
+  } catch {
+    return true // fail open
+  }
 }

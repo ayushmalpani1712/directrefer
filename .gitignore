@@ -7,3 +7,5 @@ dist/
 *.log
 supabase/
 AGENT_CONTEXT.md
+
+.env*

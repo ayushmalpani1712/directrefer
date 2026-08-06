@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { useTheme } from 'next-themes'
-import { motion } from 'framer-motion'
+
 import {
   Bell, Bookmark, Briefcase, CheckCheck, ChevronRight, CircleHelp, Command,
-  FileText, FileUp, Home, LayoutDashboard, LogOut, Mail, MessageSquare, Moon,
+  FileText, FileUp, Home, LayoutDashboard, Mail, MessageSquare, Moon,
   Plus, Search, Settings, Shield, Sparkles, Sun, User, Users, Zap, Inbox, LineChart, Activity,
   type LucideIcon,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,7 +15,7 @@ import {
 } from '@/components/ui/command'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
-  DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -24,13 +23,16 @@ import { Separator } from '@/components/ui/separator'
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem,
-  SidebarProvider, SidebarRail, useSidebar,
+  SidebarProvider, SidebarRail, SidebarTrigger, useSidebar,
 } from '@/components/ui/sidebar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { GAvatar } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
+import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher'
 import {
   ROLE_META,
+  ROLE_ROUTE,
+  getRoleFromPath,
   type Role,
 } from '@/data/mock'
 import { cn } from '@/lib/utils'
@@ -54,35 +56,48 @@ interface NavItem { label: string; href: string; icon: LucideIcon; badge?: strin
 
 function navFor(role: Role, unread: number, pendingCount: number): { group: string; items: NavItem[] }[] {
   const common: { group: string; items: NavItem[] }[] = []
+  if (role === 'admin') {
+    common.push({
+      group: 'Admin',
+      items: [
+        { label: 'Dashboard', href: '/admin/overview', icon: LayoutDashboard },
+        { label: 'Workspaces', href: '/admin/workspaces', icon: Users },
+        { label: 'Messages', href: '/admin/messages', icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
+        { label: 'Settings', href: '/admin/settings', icon: Settings },
+      ],
+    })
+    return common
+  }
   if (role === 'student') {
     common.push({
       group: 'Workspace',
       items: [
-        { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-        { label: 'Find Professionals', href: '/professionals', icon: Users },
-        { label: 'Browse Jobs', href: '/jobs', icon: Briefcase },
-        { label: 'My Referrals', href: '/applications', icon: FileText, badge: pendingCount > 0 ? String(pendingCount) : undefined },
-
+        { label: 'Dashboard', href: '/job-seeker/dashboard', icon: LayoutDashboard },
+        { label: 'Find Professionals', href: '/job-seeker/professionals', icon: Users },
+        { label: 'Browse Jobs', href: '/job-seeker/professionals', icon: Briefcase },
+        { label: 'My Referrals', href: '/job-seeker/applications', icon: FileText, badge: pendingCount > 0 ? String(pendingCount) : undefined },
+        { label: 'My Profile', href: '/job-seeker/profile', icon: User },
       ],
     })
-  } else if (role === 'professional' || role === 'admin') {
+  } else if (role === 'professional') {
     common.push({
       group: 'Workspace',
       items: [
-        { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-        { label: 'Referral Requests', href: '/requests', icon: Inbox, badge: pendingCount > 0 ? String(pendingCount) : undefined },
-        { label: 'Browse Jobs', href: '/jobs', icon: Briefcase },
-        { label: 'My Profile', href: '/profile', icon: User },
+        { label: 'Dashboard', href: '/professional/dashboard', icon: LayoutDashboard },
+        { label: 'Find Job Seekers', href: '/professional/talent', icon: Users },
+        { label: 'Referral Requests', href: '/professional/referrals', icon: Inbox, badge: pendingCount > 0 ? String(pendingCount) : undefined },
+        { label: 'Browse Jobs', href: '/professional/professionals', icon: Briefcase },
+        { label: 'My Profile', href: '/professional/profile', icon: User },
       ],
     })
   } else {
     common.push({
       group: 'Workspace',
       items: [
-        { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-        { label: 'Jobs & Pipeline', href: '/jobs', icon: Briefcase },
-        { label: 'Talent Search', href: '/talent', icon: Users },
-        { label: 'Company Profile', href: '/profile', icon: Home },
+        { label: 'Dashboard', href: '/recruiter/dashboard', icon: LayoutDashboard },
+        { label: 'Jobs & Pipeline', href: '/recruiter/jobs', icon: Briefcase },
+        { label: 'Talent Search', href: '/recruiter/talent', icon: Users },
+        { label: 'Company Profile', href: '/recruiter/profile', icon: Home },
       ],
     })
   }
@@ -105,9 +120,10 @@ function AppSidebar() {
   const { state, setOpenMobile } = useSidebar()
   const unread = conversations.reduce((a, c) => a + c.unread, 0)
   const pendingCount = requests.filter((r) => r.status === 'pending').length
-  const groups = navFor(role, unread, pendingCount)
-  const user = student
   const { pathname } = useLocation()
+  const urlRole = getRoleFromPath(pathname)
+  const groups = navFor(urlRole, unread, pendingCount)
+  const user = student
 
   useEffect(() => { setOpenMobile(false) }, [pathname, setOpenMobile])
 
@@ -115,9 +131,9 @@ function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="h-14 justify-center border-b border-sidebar-border px-4">
         {state === 'collapsed' ? (
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <Link to="/" className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground" aria-label="Direct Refer — Go to homepage">
             <Zap className="h-4.5 w-4.5 fill-white text-white" />
-          </div>
+          </Link>
         ) : (
           <Logo />
         )}
@@ -169,10 +185,10 @@ function AppSidebar() {
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          {role === 'admin' && (
+          {role === 'admin' && urlRole !== 'admin' && (
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Admin Panel">
-              <NavLink to="/admin" className={({ isActive }) => cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', isActive && 'bg-primary/10 text-primary')}>
+              <NavLink to="/admin/overview" className={({ isActive }) => cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', isActive && 'bg-primary/10 text-primary')}>
                 <Shield className="h-[18px] w-[18px]" /> <span>Admin</span>
               </NavLink>
             </SidebarMenuButton>
@@ -191,7 +207,7 @@ function AppSidebar() {
             <GAvatar name={user.name} gradient={user.gradient} className="h-8 w-8 text-xs" />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-semibold">{user.name}</div>
-              <div className="truncate text-[11px] text-muted-foreground">{ROLE_META[role].label}</div>
+              <div className="truncate text-[11px] text-muted-foreground">{ROLE_META[urlRole].label}</div>
             </div>
           </div>
         )}
@@ -229,7 +245,7 @@ const NOTIF_ICON: Record<string, { icon: LucideIcon; cls: string }> = {
 
 function NotificationsMenu() {
   const navigate = useNavigate()
-  const { notifications } = useApp()
+  const { notifications, markNotificationRead, markAllNotificationsRead } = useApp()
   const [items, setItems] = useState(notifications)
   useEffect(() => { setItems(notifications) }, [notifications])
   const unread = items.filter((n) => !n.read).length
@@ -245,10 +261,10 @@ function NotificationsMenu() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[380px] p-0">
+      <DropdownMenuContent align="end" className="w-[380px] max-w-[calc(100vw-2rem)] p-0">
         <div className="flex items-center justify-between px-4 py-3">
           <DropdownMenuLabel className="p-0 text-sm font-semibold">Notifications</DropdownMenuLabel>
-          <Button variant="ghost" size="sm" className="h-7 text-xs text-primary" onClick={() => setItems(items.map((n) => ({ ...n, read: true })))}>
+          <Button variant="ghost" size="sm" className="h-7 text-xs text-primary" onClick={() => { markAllNotificationsRead(); setItems(items.map((n) => ({ ...n, read: true }))) }}>
             Mark all read
           </Button>
         </div>
@@ -260,7 +276,7 @@ function NotificationsMenu() {
               <DropdownMenuItem
                 key={n.id}
                 className="flex cursor-pointer items-start gap-3 px-4 py-3 focus:bg-muted/60"
-                onClick={() => { setItems(items.map((x) => (x.id === n.id ? { ...x, read: true } : x))); navigate('/notifications') }}
+                onClick={() => { markNotificationRead(n.id); setItems(items.map((x) => (x.id === n.id ? { ...x, read: true } : x))); navigate('/notifications') }}
               >
                 <div className={cn('mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full', cfg.cls)}>
                   <cfg.icon className="h-4 w-4" />
@@ -299,7 +315,7 @@ function MessagesMenu() {
           {unread > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[360px] p-0">
+      <DropdownMenuContent align="end" className="w-[360px] max-w-[calc(100vw-2rem)] p-0">
         <div className="px-4 py-3">
           <DropdownMenuLabel className="p-0 text-sm font-semibold">Messages</DropdownMenuLabel>
         </div>
@@ -331,70 +347,13 @@ function MessagesMenu() {
   )
 }
 
-// ── Profile / role switcher menu ────────────────────────────
-function ProfileMenu() {
-  const { role, setRole, logout, student } = useApp()
-  const navigate = useNavigate()
-  const user = student
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-full p-0.5 pr-1 transition-colors hover:bg-muted">
-          <GAvatar name={user.name} gradient={user.gradient} className="h-8 w-8 text-xs" ring />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <div className="flex items-center gap-3 px-3 py-2.5">
-          <GAvatar name={user.name} gradient={user.gradient} className="h-10 w-10 text-sm" />
-          <div className="min-w-0">
-            <div className="truncate text-sm font-semibold">{user.name}</div>
-            <div className="truncate text-xs text-muted-foreground">
-              {student.headline || ROLE_META[role].label}
-            </div>
-          </div>
-        </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Switch workspace
-        </DropdownMenuLabel>
-        {(['student', 'professional', 'recruiter'] as Role[]).map((r) => (
-          <DropdownMenuItem
-            key={r}
-            className="flex items-center justify-between"
-            onSelect={() => { setRole(r); navigate('/dashboard'); toast.success(`Switched to ${ROLE_META[r].label} workspace`) }}
-          >
-            <span className="flex items-center gap-2">
-              {r === 'student' ? <User className="h-4 w-4" /> : r === 'professional' ? <Briefcase className="h-4 w-4" /> : r === 'admin' ? <Shield className="h-4 w-4" /> : <Users className="h-4 w-4" />}
-              {ROLE_META[r].label}
-            </span>
-            {role === r && <span className="h-2 w-2 rounded-full bg-primary" />}
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => navigate('/profile')}>
-          <User className="mr-2 h-4 w-4" /> View profile
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => navigate('/settings')}>
-          <Settings className="mr-2 h-4 w-4" /> Settings
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="text-rose-500 focus:text-rose-500"
-          onSelect={() => { logout(); navigate('/login') }}
-        >
-          <LogOut className="mr-2 h-4 w-4" /> Sign out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
 // ── Command palette ─────────────────────────────────────────
 function CommandPalette() {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
-  const { role, visibleProfessionals, requests } = useApp()
+  const { pathname } = useLocation()
+  const { visibleProfessionals, requests } = useApp()
+  const urlRole = getRoleFromPath(pathname)
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
@@ -408,7 +367,7 @@ function CommandPalette() {
 
   const go = (href: string) => { setOpen(false); navigate(href) }
   const pendingCount = requests.filter((r) => r.status === 'pending').length
-  const groups = navFor(role, 0, pendingCount)
+  const groups = navFor(urlRole, 0, pendingCount)
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
@@ -416,7 +375,7 @@ function CommandPalette() {
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         {groups.map((g) => (
-          <CommandGroup key={g.group} heading={g.group}>
+          <CommandGroup key={g.group}>
             {g.items.map((i) => (
               <CommandItem key={i.href} onSelect={() => go(i.href)}>
                 <i.icon className="mr-2 h-4 w-4" /> {i.label}
@@ -425,7 +384,7 @@ function CommandPalette() {
           </CommandGroup>
         ))}
         <CommandSeparator />
-        <CommandGroup heading="Professionals">
+        <CommandGroup>
           {visibleProfessionals.slice(0, 6).map((p) => (
             <CommandItem key={p.id} onSelect={() => go(`/professionals/${p.id}`)}>
               <Search className="mr-2 h-4 w-4" /> {p.name} <span className="ml-2 text-xs text-muted-foreground">{p.designation} · {p.company}</span>
@@ -433,8 +392,8 @@ function CommandPalette() {
           ))}
         </CommandGroup>
         <CommandSeparator />
-        <CommandGroup heading="Actions">
-          <CommandItem onSelect={() => go('/professionals')}><Plus className="mr-2 h-4 w-4" /> Request a referral</CommandItem>
+        <CommandGroup>
+          <CommandItem onSelect={() => go('/job-seeker/professionals')}><Plus className="mr-2 h-4 w-4" /> Request a referral</CommandItem>
           <CommandItem onSelect={() => go('/settings')}><Sun className="mr-2 h-4 w-4" /> Change theme</CommandItem>
           <CommandItem onSelect={() => go('/help')}><CircleHelp className="mr-2 h-4 w-4" /> Get help</CommandItem>
         </CommandGroup>
@@ -445,21 +404,25 @@ function CommandPalette() {
 
 // ── Breadcrumbs ─────────────────────────────────────────────
 const CRUMB_LABELS: Record<string, string> = {
-  dashboard: 'Dashboard', professionals: 'Find Professionals', applications: 'My Referrals',
- requests: 'Referral Requests', profile: 'Profile',
+  'job-seeker': 'Job Seeker', dashboard: 'Dashboard', professionals: 'Find Professionals', applications: 'My Referrals',
+  referrals: 'Referral Requests', profile: 'Profile', overview: 'Overview',
   jobs: 'Jobs', talent: 'Talent Search', messages: 'Messages', notifications: 'Notifications',
   bookmarks: 'Bookmarks', activity: 'Activity', analytics: 'Analytics', settings: 'Settings',
   help: 'Help & Support', 'request-referral': 'Request Referral', company: 'Company Profile',
+  users: 'Users', flagged: 'Flagged', verification: 'Verification', announcements: 'Announcements',
+  flags: 'Feature Flags', audit: 'Audit Log', professional: 'Professional', recruiter: 'Recruiter',
+  admin: 'Admin',
 }
 
 function Breadcrumbs() {
   const { pathname } = useLocation()
   const { visibleProfessionals } = useApp()
+  const urlRole = getRoleFromPath(pathname)
   const segs = pathname.split('/').filter(Boolean)
   if (segs.length === 0) return null
   return (
     <nav className="mb-4 flex items-center gap-1 text-sm text-muted-foreground">
-      <Link to="/dashboard" className="hover:text-foreground"><Home className="h-3.5 w-3.5" /></Link>
+      <Link to={ROLE_ROUTE[urlRole]} className="hover:text-foreground"><Home className="h-3.5 w-3.5" /></Link>
       {segs.map((s, i) => {
         const href = '/' + segs.slice(0, i + 1).join('/')
         const label = CRUMB_LABELS[s] ?? visibleProfessionals.find((p) => p.id === s)?.name ?? s
@@ -481,31 +444,32 @@ function Breadcrumbs() {
 
 // ── Floating Action Button ──────────────────────────────────
 function FAB() {
-  const { role } = useApp()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const urlRole = getRoleFromPath(pathname)
   const actions = useMemo(() => {
-    if (role === 'student') {
+    if (urlRole === 'student') {
       return [
-        { icon: Plus, label: 'Request referral', run: () => navigate('/professionals') },
-        { icon: Briefcase, label: 'Browse jobs', run: () => navigate('/jobs') },
-        { icon: FileUp, label: 'Upload resume', run: () => toast.success('Resume uploaded — new score: 82/100') },
-        { icon: Sparkles, label: 'AI resume review', run: () => toast('AI review started — results in ~30s') },
+        { icon: Plus, label: 'Request referral', run: () => navigate('/job-seeker/professionals') },
+        { icon: Briefcase, label: 'Find professionals', run: () => navigate('/job-seeker/professionals') },
+        { icon: FileUp, label: 'Upload resume', run: () => navigate('/job-seeker/profile') },
+        { icon: Sparkles, label: 'View analytics', run: () => navigate('/analytics') },
 
       ]
     }
-    if (role === 'professional' || role === 'admin') {
+    if (urlRole === 'professional' || urlRole === 'admin') {
       return [
-        { icon: CheckCheck, label: 'Review pending requests', run: () => navigate('/requests') },
-        { icon: Briefcase, label: 'Browse jobs', run: () => navigate('/jobs') },
-        { icon: Plus, label: 'Add open position', run: () => toast.success('Position added to your profile') },
+        { icon: CheckCheck, label: 'Review pending requests', run: () => navigate('/professional/referrals') },
+        { icon: Briefcase, label: 'Find job seekers', run: () => navigate('/professional/talent') },
+        { icon: Plus, label: 'Update profile', run: () => navigate('/professional/profile') },
       ]
     }
     return [
-      { icon: Plus, label: 'Post a job', run: () => navigate('/jobs') },
-      { icon: Users, label: 'Search talent', run: () => navigate('/talent') },
-      { icon: FileText, label: 'Export report', run: () => toast.success('Hiring report exported') },
+      { icon: Plus, label: 'Post a job', run: () => navigate('/recruiter/jobs') },
+      { icon: Users, label: 'Search talent', run: () => navigate('/recruiter/talent') },
+      { icon: FileText, label: 'View analytics', run: () => navigate('/analytics') },
     ]
-  }, [role, navigate])
+  }, [urlRole, navigate])
 
   return (
     <Popover>
@@ -529,11 +493,18 @@ function FAB() {
 
 // ── Topbar ──────────────────────────────────────────────────
 function Topbar() {
-  const { role } = useApp()
+  const { pathname } = useLocation()
+  const urlRole = getRoleFromPath(pathname)
   return (
     <header className="glass sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border px-4">
+      <SidebarTrigger className="md:hidden h-9 w-9 shrink-0" />
       <button
-        onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+        onClick={() => {
+          const e = new KeyboardEvent('keydown', { key: 'k', bubbles: true, cancelable: true })
+          Object.defineProperty(e, 'metaKey', { value: true })
+          Object.defineProperty(e, 'ctrlKey', { value: true })
+          document.dispatchEvent(e)
+        }}
         className="hidden h-9 flex-1 items-center gap-2.5 rounded-xl border border-border bg-muted/40 px-4 text-[14px] text-muted-foreground transition-all duration-200 hover:border-primary/30 hover:bg-muted/60 focus:border-primary/50 focus:outline-none sm:flex sm:max-w-md"
         aria-label="Search (Ctrl+K)"
       >
@@ -544,15 +515,15 @@ function Topbar() {
         </kbd>
       </button>
       <Badge variant="outline" className="hidden border-primary/40 bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary sm:inline-flex">
-        {ROLE_META[role].label}
+        {ROLE_META[urlRole].label}
       </Badge>
       <div className="flex-1 sm:hidden" />
-      <div className="ml-auto flex items-center gap-0.5">
+      <div className="ml-auto flex items-center gap-0">
         <ThemeToggle />
         <MessagesMenu />
         <NotificationsMenu />
-        <Separator orientation="vertical" className="mx-2 h-5" />
-        <ProfileMenu />
+        <Separator orientation="vertical" className="mx-1 hidden h-5 sm:mx-2 sm:block" />
+        <WorkspaceSwitcher />
       </div>
     </header>
   )
@@ -560,17 +531,7 @@ function Topbar() {
 
 // ── Shell ───────────────────────────────────────────────────
 function AnimatedOutlet() {
-  const { pathname } = useLocation()
-  return (
-    <motion.div
-      key={pathname}
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.15, ease: 'easeOut' }}
-    >
-      <Outlet />
-    </motion.div>
-  )
+  return <Outlet />
 }
 
 export default function AppShell() {
@@ -582,12 +543,12 @@ export default function AppShell() {
       <AppSidebar aria-label="Main navigation" />
       <SidebarInset className="bg-background">
         <Topbar />
-        <main id="main-content" className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8" role="main">
+        <main id="main-content" className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8" role="main">
           <Breadcrumbs />
           <AnimatedOutlet />
         </main>
-        <footer className="border-t border-border py-5 text-center text-xs text-muted-foreground" role="contentinfo">
-          Direct Refer · Built for job seekers, professionals and recruiters · {new Date().getFullYear()}
+        <footer className="border-t border-border min-w-0 px-4 py-5 text-center text-[11px] leading-relaxed text-muted-foreground sm:text-xs" role="contentinfo" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
+          <span className="mx-auto block max-w-3xl overflow-hidden text-ellipsis whitespace-nowrap sm:whitespace-normal">Direct Refer · Built for job seekers, professionals and recruiters · {new Date().getFullYear()}</span>
         </footer>
         <FAB />
       </SidebarInset>

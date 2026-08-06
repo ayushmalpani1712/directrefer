@@ -7,12 +7,12 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Chip, EmptyState, GAvatar, SectionHeader, StatCard, StatusBadge } from '@/components/ui-kit'
+import { InboxIllustration } from '@/components/illustrations'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import type { ReferralStatus, PipelineStage } from '@/data/mock'
 import { PIPELINE_STAGES } from '@/data/mock'
 import { usePageLoading } from '@/hooks/usePageLoading'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useNavigate } from 'react-router'
 import { cn } from '@/lib/utils'
 import ResumePreview from '@/components/ResumePreview'
@@ -71,7 +71,7 @@ function ShareOnLinkedIn({ role, professionalName }: { student: string; role: st
   const shareText = encodeURIComponent(
     `Excited to share that I've been referred by ${professionalName} for the ${role} position! Grateful for the opportunity. #referral #hiring #jobsearch`
   )
-  const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://directrefer.in')}&summary=${shareText}`
+  const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://www.directrefer.in')}&summary=${shareText}`
 
   return (
     <Button
@@ -87,14 +87,14 @@ function ShareOnLinkedIn({ role, professionalName }: { student: string; role: st
 
 export default function ReferralInbox() {
   const loading = usePageLoading(400)
-  const { requests, setRequestStatus, professionals } = useApp()
+  const { requests, setRequestStatus, professionals, student } = useApp()
   const { user } = useAuth()
   const [tab, setTab] = useState<ReferralStatus | 'all'>('pending')
   const [q, setQ] = useState('')
   const [viewingResume, setViewingResume] = useState<{ url: string; name: string } | null>(null)
   const navigate = useNavigate()
 
-  const ME = professionals.find((p) => p.id === user?.id) ?? professionals[0] ?? { id: user?.id ?? '', name: user?.email?.split('@')[0] ?? 'User', email: user?.email ?? '' }
+  const ME = professionals.find((p) => p.id === user?.id) ?? { id: user?.id ?? '', name: student.name || (user?.email?.split('@')[0] ?? 'User'), email: user?.email ?? '' }
   const inbox = ME ? requests.filter((r) => r.professionalId === ME.id) : []
   const filtered = useMemo(
     () => inbox.filter((r) => (tab === 'all' || r.status === tab) && [r.student, r.role, r.note].join(' ').toLowerCase().includes(q.toLowerCase())),
@@ -102,7 +102,7 @@ export default function ReferralInbox() {
   )
   const counts = (s: ReferralStatus) => inbox.filter((r) => r.status === s).length
 
-  if (loading) return <div className="space-y-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}</div>
+  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
 
   return (
     <div className="space-y-6">
@@ -112,6 +112,7 @@ export default function ReferralInbox() {
         <StatCard icon={Inbox} label="Pending review" value={counts('pending')} />
         <StatCard icon={CheckCheck} label="Accepted" value={counts('accepted')} />
         <StatCard icon={XCircle} label="Declined" value={counts('rejected')} />
+        <StatCard icon={Inbox} label="Offered" value={counts('offered')} />
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -135,15 +136,19 @@ export default function ReferralInbox() {
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon={Inbox}
-          title="No referral requests"
-          description={tab === 'all' ? "When students request referrals, they'll appear here." : `No ${tab} requests right now.`}
+          illustration={<InboxIllustration />}
+          title={tab === 'all' ? "No referral requests yet" : `No ${tab} requests`}
+          description={tab === 'all'
+            ? "When students send referral requests, they'll appear here. Make sure your profile is complete so candidates can find you."
+            : `No ${tab} requests right now. Check back later.`}
+          primaryCtaLabel="Complete your profile"
+          primaryCtaHref="/professional/profile"
         />
       ) : (
         <div className="space-y-3.5">
           {filtered.map((r, i) => (
             <motion.div key={r.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-              <Card className="shadow-soft card-hover">
+              <Card className="shadow-soft">
                 <CardContent className="p-5">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                     <GAvatar name={r.student} gradient="from-slate-500 to-slate-700" className="h-12 w-12 text-sm" />
@@ -155,9 +160,8 @@ export default function ReferralInbox() {
                       <div className="mt-0.5 text-xs text-muted-foreground">{r.role} · {r.date}</div>
                       <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">"{r.note}"</p>
                       <div className="mt-2 flex flex-wrap gap-1.5">
-                        <Chip>Resume attached</Chip>
-                        <Chip>Portfolio</Chip>
-                        <Chip>GitHub</Chip>
+                        {r.studentResumeUrl && <Chip>Resume attached</Chip>}
+                        {r.note && <Chip>Note</Chip>}
                       </div>
                       {(r.status === 'accepted' || r.status === 'pending') && (
                         <InlinePipeline stage={r.pipelineStage} requestId={r.id} />

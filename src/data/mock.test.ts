@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { initials, timeAgo, PIPELINE_STAGES, GRADIENTS } from '@/data/mock'
+import { initials, PIPELINE_STAGES, GRADIENTS } from '@/data/mock'
 
 describe('initials', () => {
   it('returns first letters of each word', () => {
@@ -16,20 +16,6 @@ describe('initials', () => {
 
   it('handles lowercase', () => {
     expect(initials('alex morgan')).toBe('AM')
-  })
-})
-
-describe('timeAgo', () => {
-  it('formats days', () => {
-    expect(timeAgo(15)).toBe('15d ago')
-  })
-
-  it('formats months', () => {
-    expect(timeAgo(60)).toBe('2mo ago')
-  })
-
-  it('formats years', () => {
-    expect(timeAgo(400)).toBe('1y ago')
   })
 })
 

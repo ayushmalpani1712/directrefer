@@ -13,13 +13,14 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 900,
+    chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
         manualChunks: {
           react: ['react', 'react-dom', 'react-router'],
           charts: ['recharts'],
           motion: ['framer-motion'],
+          supabase: ['@supabase/supabase-js'],
         },
       },
     },

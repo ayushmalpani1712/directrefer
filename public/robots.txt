@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /settings
+Disallow: /auth
+
+Sitemap: https://www.directrefer.in/sitemap.xml

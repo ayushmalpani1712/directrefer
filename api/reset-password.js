@@ -1,93 +1,66 @@
-import { createClient } from '@supabase/supabase-js'
-
-const rateLimitMap = new Map()
-
-function checkRateLimit(ip, limit = 5, windowMs = 60_000) {
-  const now = Date.now()
-  const entry = rateLimitMap.get(ip)
-  if (!entry || now - entry.start > windowMs) {
-    rateLimitMap.set(ip, { start: now, count: 1 })
-    return true
-  }
-  entry.count++
-  return entry.count <= limit
-}
+import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown'
-  if (!checkRateLimit(ip, 5, 60_000)) {
-    return res.status(429).json({ ok: false, error: 'Too many requests' })
-  }
-
-  const { email, token, newPassword } = req.body
-  if (!email || !token || !newPassword) {
-    return res.status(400).json({ ok: false, error: 'Missing email, token, or password' })
-  }
-
-  if (typeof email !== 'string' || typeof token !== 'string' || typeof newPassword !== 'string') {
-    return res.status(400).json({ ok: false, error: 'Invalid input types' })
-  }
-
-  if (newPassword.length < 8) {
-    return res.status(400).json({ ok: false, error: 'Password must be at least 8 characters' })
-  }
-
-  const supabaseUrl = process.env.VITE_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return res.status(500).json({ ok: false, error: 'Server configuration error' })
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const supabase = createClient(supabaseUrl, serviceRoleKey)
-
-    // Validate token
-    const { data: otpRows, error: queryError } = await supabase
-      .from('password_reset_otps')
-      .select('id')
-      .eq('email', email.toLowerCase())
-      .eq('otp', `token:${token}`)
-      .eq('used', false)
-      .gt('expires_at', new Date().toISOString())
-      .limit(1)
-
-    if (queryError || !otpRows || otpRows.length === 0) {
-      return res.status(400).json({ ok: false, error: 'Invalid or expired reset token' })
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.status(400).json({ error: 'Token and password are required' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
     }
 
-    // Mark token as used
-    await supabase
-      .from('password_reset_otps')
-      .update({ used: true })
-      .eq('id', otpRows[0].id)
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    // Find user
-    const { data: users, error: userError } = await supabase.auth.admin.listUsers()
-    if (userError) {
-      return res.status(500).json({ ok: false, error: 'Failed to find user' })
+    if (!supabaseUrl || !serviceRoleKey) {
+      return res.status(500).json({ error: 'Server configuration error' });
     }
 
-    const user = users.users.find(u => u.email?.toLowerCase() === email.toLowerCase())
-    if (!user) {
-      return res.status(400).json({ ok: false, error: 'User not found' })
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: requests, error: queryError } = await supabase
+      .from('verification_requests')
+      .select('*')
+      .eq('type', 'password_reset')
+      .eq('otp_code', token)
+      .eq('status', 'pending')
+      .gt('otp_expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (queryError || !requests?.length) {
+      return res.status(400).json({ error: 'Invalid or expired reset link. Please request a new one.' });
     }
 
-    // Update password
-    const { error: updateError } = await supabase.auth.admin.updateUserById(user.id, {
-      password: newPassword,
-    })
+    const request = requests[0];
+
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      request.user_id,
+      { password }
+    );
 
     if (updateError) {
-      return res.status(500).json({ ok: false, error: 'Failed to update password' })
+      console.error('Password update error:', updateError);
+      return res.status(500).json({ error: 'Failed to update password. Please try again.' });
     }
 
-    return res.status(200).json({ ok: true })
-  } catch {
-    return res.status(500).json({ ok: false, error: 'Internal server error' })
+    await supabase
+      .from('verification_requests')
+      .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+      .eq('id', request.id);
+
+    return res.status(200).json({ success: true, message: 'Password updated successfully.' });
+
+  } catch (err) {
+    console.error('Reset password error:', err);
+    return res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 }
