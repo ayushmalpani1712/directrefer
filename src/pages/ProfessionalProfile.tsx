@@ -126,13 +126,14 @@ export default function ProfessionalProfile() {
 
   // Sync local state when ME changes (DB data loads)
   useEffect(() => {
-    // Skip first DB sync if draft was just restored to avoid overwriting draft values
+    // Always sync toggles from DB (not affected by draft)
+    setOpen(ME.openForReferrals)
+    setIsOpenToWork(ME.isOpenToWork)
+    // Skip form field sync if draft was just restored to avoid overwriting draft values
     if (draftRestoredRef.current) {
       draftRestoredRef.current = false
       return
     }
-    setOpen(ME.openForReferrals)
-    setIsOpenToWork(ME.isOpenToWork)
     setCapacity(ME.maxPerMonth)
     setBio(ME.bio)
     setReferralPolicy(ME.referralPolicy)
