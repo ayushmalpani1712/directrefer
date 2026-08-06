@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
 import {
-  Building2, Check, Github, Linkedin, MapPin, Pencil, Plus,
+  Check, Github, Linkedin, Pencil, Plus,
   ShieldCheck, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -11,15 +10,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { Chip, CompanyChip, GAvatar } from '@/components/ui-kit'
+import { Chip, CompanyChip } from '@/components/ui-kit'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import type { Professional } from '@/data/mock'
-import { cn } from '@/lib/utils'
 import { useAutoSaveForm, DraftStatusIndicator } from '@/hooks/useAutoSaveForm'
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard'
+import { ProfileHeader } from '@/components/ProfileHeader'
 
 export default function ProfessionalProfile() {
   const { professionals, updateProfessional, student } = useApp()
@@ -168,144 +167,70 @@ export default function ProfessionalProfile() {
       )}
 
 
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="overflow-hidden">
-          <div className="relative h-24 sm:h-36 md:h-44 bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4]">
-            <div className="bg-grid absolute inset-0 opacity-20" />
+      <ProfileHeader
+        role="professional"
+        name={editingHeader ? editName : p.name}
+        gradient={p.gradient}
+        designation={editingHeader ? editDesignation : p.designation}
+        company={editingHeader ? editCompany : p.company}
+        industry={editingHeader ? editIndustry : p.industry}
+        location={editingHeader ? editLocation : p.location}
+        yearsExp={p.yearsExp}
+        linkedin={editingHeader ? linkedinUrl : p.linkedinUrl}
+        github={editingHeader ? githubUrl : p.githubUrl}
+        editing={editingHeader}
+        onStartEdit={() => setEditingHeader(true)}
+        onCancelEdit={() => {
+          setEditName(ME.name)
+          setEditDesignation(ME.designation)
+          setEditCompany(ME.company)
+          setEditLocation(ME.location)
+          setEditIndustry(ME.industry)
+          setLinkedinUrl(ME.linkedinUrl)
+          setGithubUrl(ME.githubUrl)
+          setEditingHeader(false)
+          clearDraft()
+        }}
+        onSave={() => {
+          updateProfessional(ME.id, {
+            name: editName,
+            designation: editDesignation,
+            company: editCompany,
+            location: editLocation,
+            industry: editIndustry,
+            linkedinUrl,
+            githubUrl,
+          })
+          setEditingHeader(false)
+          toast.success('Profile saved')
+          onFormSaved()
+        }}
+        toggles={[
+          {
+            label: 'Open for referrals',
+            activeLabel: 'Now accepting referrals',
+            checked: open,
+            onCheckedChange: (v) => { setOpen(v); updateProfessional(ME.id, { openForReferrals: v }); toast.success(v ? 'Now accepting referral requests' : 'Referral requests paused') },
+          },
+          {
+            label: 'Open to work',
+            checked: isOpenToWork,
+            onCheckedChange: (v) => { setIsOpenToWork(v); updateProfessional(ME.id, { isOpenToWork: v }); toast.success(v ? 'You are now visible to recruiters' : 'Profile hidden from recruiters') },
+          },
+        ]}
+        editFields={
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <div className="flex items-center gap-2">
+              <Linkedin className="h-3.5 w-3.5 text-[#0A66C2] shrink-0" />
+              <input className="w-full sm:w-56 bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="linkedin.com/in/yourname" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} />
+            </div>
+            <div className="flex items-center gap-2">
+              <Github className="h-3.5 w-3.5 shrink-0" />
+              <input className="w-full sm:w-56 bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="github.com/yourname" value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)} />
+            </div>
           </div>
-          <CardContent className="relative px-4 pb-4 sm:px-6 sm:pb-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-4">
-                <div className="relative -mt-10 sm:-mt-12 md:-mt-16">
-                  <GAvatar name={p.name} gradient={p.gradient} className="h-20 w-20 border-4 border-card text-xl sm:h-24 sm:w-24 sm:text-2xl md:h-32 md:w-32 md:text-3xl" />
-                </div>
-                <div className="pb-1">
-                  <h1 className="font-display flex items-center gap-2 text-xl sm:text-2xl font-bold">
-                    {editingHeader ? (
-                      <input className="w-full bg-transparent border-b border-primary outline-none text-xl sm:text-2xl font-bold placeholder:text-muted-foreground/30" placeholder="Your full name" value={editName} onChange={(e) => setEditName(e.target.value)} />
-                    ) : (
-                      p.name
-                    )}
-                  </h1>
-                  {editingHeader ? (
-                    <div className="mt-0.5 flex flex-col gap-1 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-2">
-                      <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-sm text-muted-foreground placeholder:text-muted-foreground/40" placeholder="Professional title" value={editDesignation} onChange={(e) => setEditDesignation(e.target.value)} />
-                      <span className="hidden sm:inline">at</span>
-                      <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-sm text-muted-foreground placeholder:text-muted-foreground/40" placeholder="Company" value={editCompany} onChange={(e) => setEditCompany(e.target.value)} />
-                    </div>
-                  ) : (
-                    <div className="mt-0.5 text-sm text-muted-foreground">{p.designation} at <CompanyChip name={p.company} className="h-5 w-5 text-[8px]" /> {p.company}</div>
-                  )}
-                  <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    {editingHeader ? (
-                      <>
-                        <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. Pune, India" value={editLocation} onChange={(e) => setEditLocation(e.target.value)} /></span>
-                        <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. Technology" value={editIndustry} onChange={(e) => setEditIndustry(e.target.value)} /></span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {p.location}</span>
-                        <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> {p.industry}</span>
-                      </>
-                    )}
-                  </div>
-                  {editingHeader && (
-                    <div className="mt-2 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-                      <div className="flex items-center gap-2">
-                        <Linkedin className="h-3.5 w-3.5 text-[#0A66C2] shrink-0" />
-                        <input className="w-full sm:w-56 bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="linkedin.com/in/yourname" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Github className="h-3.5 w-3.5 shrink-0" />
-                        <input className="w-full sm:w-56 bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="github.com/yourname" value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-2 sm:pb-1">
-                {editingHeader ? (
-                  <>
-                    <Button variant="outline" className="rounded-full" onClick={() => {
-                      setEditName(ME.name)
-                      setEditDesignation(ME.designation)
-                      setEditCompany(ME.company)
-                      setEditLocation(ME.location)
-                      setEditIndustry(ME.industry)
-                      setLinkedinUrl(ME.linkedinUrl)
-                      setGithubUrl(ME.githubUrl)
-                      setEditingHeader(false)
-                      clearDraft()
-                    }}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
-                    <Button className="rounded-full bg-primary shadow-glow" onClick={() => {
-                      updateProfessional(ME.id, {
-                        name: editName,
-                        designation: editDesignation,
-                        company: editCompany,
-                        location: editLocation,
-                        industry: editIndustry,
-                        linkedinUrl,
-                        githubUrl,
-                      })
-                      setEditingHeader(false)
-                      toast.success('Profile saved')
-                      onFormSaved()
-                    }}><Check className="mr-1.5 h-4 w-4" /> Save</Button>
-                  </>
-                ) : (
-                  <Button className="rounded-full bg-primary shadow-glow" onClick={() => setEditingHeader(true)}>
-                    <Pencil className="mr-1.5 h-4 w-4" /> Edit profile
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 sm:mt-5 sm:gap-x-6 sm:gap-y-3">
-              <label className={cn(
-                'flex items-center gap-2.5 rounded-full border px-4 py-2 transition-colors',
-                open
-                  ? 'border-emerald-500/30 bg-emerald-500/5'
-                  : 'border-border bg-transparent'
-              )}>
-                <Switch checked={open} onCheckedChange={(v) => { setOpen(v); updateProfessional(ME.id, { openForReferrals: v }); toast.success(v ? 'Now accepting referral requests' : 'Referral requests paused') }} />
-                <span className={cn(
-                  'text-sm font-medium',
-                  open
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-muted-foreground'
-                )}>Open for referrals</span>
-              </label>
-              <label className={cn(
-                'flex items-center gap-2.5 rounded-full border px-4 py-2 transition-colors',
-                isOpenToWork
-                  ? 'border-emerald-500/30 bg-emerald-500/5'
-                  : 'border-border bg-transparent'
-              )}>
-                <Switch
-                  checked={isOpenToWork}
-                  onCheckedChange={(v) => { setIsOpenToWork(v); updateProfessional(ME.id, { isOpenToWork: v }); toast.success(v ? 'You are now visible to recruiters' : 'Profile hidden from recruiters') }}
-                />
-                <span className={cn(
-                  'text-sm font-medium',
-                  isOpenToWork
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-muted-foreground'
-                )}>Open to work</span>
-              </label>
-              {p.linkedinUrl ? (
-                <a href={p.linkedinUrl.startsWith('http') ? p.linkedinUrl : `https://linkedin.com/in/${p.linkedinUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"><Linkedin className="h-4 w-4 text-[#0A66C2]" /> LinkedIn</a>
-              ) : (
-                <button onClick={() => { setEditName(ME.name); setEditDesignation(ME.designation); setEditCompany(ME.company); setEditLocation(ME.location); setEditIndustry(ME.industry); setLinkedinUrl(ME.linkedinUrl); setGithubUrl(ME.githubUrl); setEditingHeader(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"><Linkedin className="h-4 w-4" /> Add LinkedIn</button>
-              )}
-              {p.githubUrl ? (
-                <a href={p.githubUrl.startsWith('http') ? p.githubUrl : `https://github.com/${p.githubUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"><Github className="h-4 w-4" /> GitHub</a>
-              ) : (
-                <button onClick={() => { setEditName(ME.name); setEditDesignation(ME.designation); setEditCompany(ME.company); setEditLocation(ME.location); setEditIndustry(ME.industry); setLinkedinUrl(ME.linkedinUrl); setGithubUrl(ME.githubUrl); setEditingHeader(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"><Github className="h-4 w-4" /> Add GitHub</button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">
