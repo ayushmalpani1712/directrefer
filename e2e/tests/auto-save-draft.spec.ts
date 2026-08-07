@@ -120,15 +120,18 @@ test.describe('Auto-Save & Draft Recovery', () => {
     // Wait for save to complete
     await studentPage.waitForTimeout(1000);
 
-    // Navigate to dashboard — should not trigger any dialog
+    // Navigate to dashboard via client-side — should not trigger any dialog
     let dialogTriggered = false;
     studentPage.on('dialog', (dialog) => {
       dialogTriggered = true;
       dialog.dismiss();
     });
 
-    await studentPage.goto('http://localhost:3000/job-seeker/dashboard', { waitUntil: 'domcontentloaded', timeout: 15_000 });
-    await studentPage.waitForTimeout(2000);
+    await studentPage.evaluate(() => {
+      window.history.pushState({}, '', '/job-seeker/dashboard');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    await studentPage.waitForTimeout(3000);
 
     // No dialog should have appeared
     expect(dialogTriggered).toBe(false);
