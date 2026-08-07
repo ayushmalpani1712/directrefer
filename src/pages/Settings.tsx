@@ -71,7 +71,7 @@ export default function Settings() {
 
   // ── Auto-Save Draft ──
   const draftSnapshot = { name, location }
-  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges } = useAutoSaveForm({
+  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges, statusMessage } = useAutoSaveForm({
     userId: user?.id ?? '',
     formId: 'settings-profile',
     values: draftSnapshot,
@@ -215,14 +215,13 @@ export default function Settings() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       {/* Draft status indicator */}
-      {(draftStatus === 'saved' || draftStatus === 'restored' || draftStatus === 'syncing') && (
-        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
-          <DraftStatusIndicator status={draftStatus} lastSavedAt={lastSavedAt} />
-          {hasUnsavedChanges && (
-            <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive" onClick={clearDraft}>Discard draft</Button>
-          )}
-        </div>
-      )}
+      <DraftStatusIndicator
+        status={draftStatus}
+        lastSavedAt={lastSavedAt}
+        statusMessage={statusMessage}
+        showDiscard={hasUnsavedChanges}
+        onDiscard={clearDraft}
+      />
 
 
       <SectionHeader title="Settings" subtitle="Manage your account, preferences and security" />

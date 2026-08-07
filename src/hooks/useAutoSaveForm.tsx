@@ -1,7 +1,9 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
-export type AutoSaveStatus = 'idle' | 'saved' | 'restored' | 'syncing'
+export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'restored' | 'error'
 
 interface UseAutoSaveFormOptions {
   userId: string
@@ -26,6 +28,8 @@ interface UseAutoSaveFormReturn {
   onFormSaved: () => void
   /** Whether there are unsaved local changes different from the initial values. */
   hasUnsavedChanges: boolean
+  /** Human-readable status message for the indicator. */
+  statusMessage: string
 }
 
 const STORAGE_PREFIX = 'draft'
@@ -50,6 +54,10 @@ function shallowEqual(a: Record<string, unknown>, b: Record<string, unknown>): b
  *
  * Storage key schema: `draft:{userId}:{formId}`
  * Stored value: `{ values: Record<string, unknown>, savedAt: number }`
+ *
+ * Status machine:
+ *   idle → saving (on change) → saved (after server ack) → idle (after 3s)
+ *   idle → error (on server failure, auto-retries on next change)
  */
 export function useAutoSaveForm({
   userId,
@@ -62,6 +70,7 @@ export function useAutoSaveForm({
   const [status, setStatus] = useState<AutoSaveStatus>('idle')
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('')
 
   const initialValuesRef = useRef<Record<string, unknown> | null>(null)
   const latestValuesRef = useRef(values)
@@ -69,7 +78,9 @@ export function useAutoSaveForm({
   const capturedRef = useRef(false)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const syncTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSyncedAtRef = useRef<Record<string, unknown> | null>(null)
+  const isSavingRef = useRef(false)
 
   latestValuesRef.current = values
 
@@ -81,14 +92,28 @@ export function useAutoSaveForm({
     }
   }, [enabled, values])
 
-  // Compute hasUnsavedChanges
+  // Compute hasUnsavedChanges (no dependency on status to avoid re-render loops)
   useEffect(() => {
     if (!enabled || !initialValuesRef.current) return
     const changed = !shallowEqual(initialValuesRef.current, values)
     setHasUnsavedChanges(changed)
-  }, [values, enabled, status])
+  }, [values, enabled])
 
-  // ── Debounced localStorage save ──────────────────────────
+  // Auto-clear "saved" status after 3 seconds (but not "restored" — that stays until restoreDraft() is called)
+  useEffect(() => {
+    if (status === 'saved') {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+      savedTimerRef.current = setTimeout(() => {
+        setStatus('idle')
+        setStatusMessage('')
+      }, 3000)
+    }
+    return () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+    }
+  }, [status])
+
+  // ── Debounced localStorage save + server sync ──────────────
   useEffect(() => {
     if (!enabled || !userId) return
 
@@ -96,12 +121,21 @@ export function useAutoSaveForm({
 
     saveTimerRef.current = setTimeout(() => {
       try {
+        // 1. Write to localStorage immediately
         const entry = { values: latestValuesRef.current, savedAt: Date.now() }
         localStorage.setItem(getStorageKey(userId, formId), JSON.stringify(entry))
-        setStatus('saved')
         setLastSavedAt(entry.savedAt)
-      } catch {
-        // localStorage full or unavailable — fail silently
+
+        // 2. Set saving state (unless server sync is already in progress)
+        if (!isSavingRef.current) {
+          setStatus('saving')
+          setStatusMessage('Saving...')
+        }
+
+        // 3. Sync to server in background
+        syncToServer(userId, formId, latestValuesRef.current)
+      } catch (err) {
+        console.error('[AutoSave] localStorage write failed:', err)
       }
     }, localStorageDelay)
 
@@ -109,6 +143,81 @@ export function useAutoSaveForm({
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
   }, [values, userId, formId, enabled, localStorageDelay])
+
+  // ── Server sync function ─────────────────────────────────
+  const syncToServer = useCallback(async (_uid: string, fid: string, vals: Record<string, unknown>) => {
+    if (isSavingRef.current) return
+    isSavingRef.current = true
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        console.warn('[AutoSave] No auth session — skipping server sync')
+        isSavingRef.current = false
+        setStatus('idle')
+        setStatusMessage('')
+        return
+      }
+
+      const res = await fetch('/api/profile-draft', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ formId: fid, values: vals }),
+      })
+
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => 'unknown')
+        console.error(`[AutoSave] Server sync failed (${res.status}):`, errorText)
+        setStatus('error')
+        setStatusMessage('Save failed — will retry')
+        isSavingRef.current = false
+        return
+      }
+
+      const result = await res.json()
+      if (!result.success) {
+        console.error('[AutoSave] Server returned error:', result)
+        setStatus('error')
+        setStatusMessage('Save failed — will retry')
+        isSavingRef.current = false
+        return
+      }
+
+      lastSyncedAtRef.current = vals
+      setStatus('saved')
+      setStatusMessage('Draft saved')
+    } catch (err) {
+      console.error('[AutoSave] Server sync exception:', err)
+      setStatus('error')
+      setStatusMessage('Save failed — will retry')
+    } finally {
+      isSavingRef.current = false
+    }
+  }, [])
+
+  // ── Background server sync (periodic retry) ──────────────
+  useEffect(() => {
+    if (!enabled || !userId || serverSyncInterval <= 0) return
+
+    syncTimerRef.current = setInterval(async () => {
+      const currentValues = latestValuesRef.current
+      // Don't sync if values haven't changed since last sync
+      if (lastSyncedAtRef.current && shallowEqual(currentValues, lastSyncedAtRef.current as unknown as Record<string, unknown>)) {
+        return
+      }
+      // Don't sync if already saving
+      if (isSavingRef.current) return
+
+      await syncToServer(userId, formId, currentValues)
+    }, serverSyncInterval)
+
+    return () => {
+      if (syncTimerRef.current) clearInterval(syncTimerRef.current)
+    }
+  }, [userId, formId, enabled, serverSyncInterval, syncToServer])
 
   // ── Restore draft on mount ───────────────────────────────
   useEffect(() => {
@@ -125,6 +234,7 @@ export function useAutoSaveForm({
       // Only restore if draft is meaningfully different from current values
       if (!shallowEqual(entry.values, latestValuesRef.current)) {
         setStatus('restored')
+        setStatusMessage('Draft restored from earlier session')
         setLastSavedAt(entry.savedAt)
         // Signal that draft was restored — the parent should call restoreDraft()
       }
@@ -135,49 +245,6 @@ export function useAutoSaveForm({
     // Run only on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, formId, enabled])
-
-  // ── Background server sync ───────────────────────────────
-  useEffect(() => {
-    if (!enabled || !userId || serverSyncInterval <= 0) return
-
-    syncTimerRef.current = setInterval(async () => {
-      const currentValues = latestValuesRef.current
-      // Don't sync if values haven't changed since last sync
-      if (lastSyncedAtRef.current && shallowEqual(currentValues, lastSyncedAtRef.current as unknown as Record<string, unknown>)) {
-        return
-      }
-
-      try {
-        setStatus('syncing')
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session?.access_token) {
-          setStatus('idle')
-          return
-        }
-
-        await fetch('/api/profile-draft', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ formId, values: currentValues }),
-        }).then((res) => {
-          if (!res.ok) throw new Error(`Server returned ${res.status}`)
-        })
-
-        lastSyncedAtRef.current = currentValues
-        setStatus('saved')
-      } catch {
-        // Network error — will retry on next interval
-        setStatus('idle')
-      }
-    }, serverSyncInterval)
-
-    return () => {
-      if (syncTimerRef.current) clearInterval(syncTimerRef.current)
-    }
-  }, [userId, formId, enabled, serverSyncInterval])
 
   // ── Fetch server draft on mount (for cross-device restore) ──
   useEffect(() => {
@@ -191,7 +258,10 @@ export function useAutoSaveForm({
         const res = await fetch(`/api/profile-draft?formId=${encodeURIComponent(formId)}`, {
           headers: { 'Authorization': `Bearer ${session.access_token}` },
         })
-        if (!res.ok) return
+        if (!res.ok) {
+          console.warn(`[AutoSave] Server draft fetch failed (${res.status})`)
+          return
+        }
 
         const result = await res.json()
         if (!result.success || !result.data?.values) return
@@ -207,10 +277,9 @@ export function useAutoSaveForm({
           // Save server draft to local storage
           const entry = { values: serverValues, savedAt: serverSavedAt }
           localStorage.setItem(getStorageKey(userId, formId), JSON.stringify(entry))
-          // Don't auto-restore — just update local cache. Status will show 'restored'.
         }
-      } catch {
-        // Silently fail
+      } catch (err) {
+        console.warn('[AutoSave] Server draft fetch error:', err)
       }
     }
 
@@ -224,6 +293,7 @@ export function useAutoSaveForm({
     initialValuesRef.current = { ...restoredValues }
     setHasUnsavedChanges(false)
     setStatus('idle')
+    setStatusMessage('')
   }, [])
 
   const clearDraft = useCallback(() => {
@@ -232,6 +302,7 @@ export function useAutoSaveForm({
       localStorage.removeItem(getStorageKey(userId, formId))
     } catch { /* ignore */ }
     setStatus('idle')
+    setStatusMessage('')
     setLastSavedAt(null)
     setHasUnsavedChanges(false)
     initialValuesRef.current = { ...latestValuesRef.current }
@@ -239,7 +310,6 @@ export function useAutoSaveForm({
 
   const onFormSaved = useCallback(() => {
     // Capture current values at call time before clearDraft runs
-    // (latestValuesRef may be stale due to React batching)
     const currentValues = latestValuesRef.current
     clearDraft()
     // Reset initial values to current (post-save) state
@@ -251,10 +321,11 @@ export function useAutoSaveForm({
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
       if (syncTimerRef.current) clearInterval(syncTimerRef.current)
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
     }
   }, [])
 
-  return { status, lastSavedAt, restoreDraft, clearDraft, onFormSaved, hasUnsavedChanges }
+  return { status, lastSavedAt, restoreDraft, clearDraft, onFormSaved, hasUnsavedChanges, statusMessage }
 }
 
 // ── Draft Status Indicator component ───────────────────────
@@ -262,10 +333,14 @@ export function useAutoSaveForm({
 interface DraftStatusIndicatorProps {
   status: AutoSaveStatus
   lastSavedAt: number | null
+  statusMessage: string
   className?: string
+  /** Whether to show the discard button. */
+  showDiscard?: boolean
+  onDiscard?: () => void
 }
 
-export function DraftStatusIndicator({ status, lastSavedAt, className }: DraftStatusIndicatorProps) {
+export function DraftStatusIndicator({ status, lastSavedAt, statusMessage, className, showDiscard, onDiscard }: DraftStatusIndicatorProps) {
   const formatTime = (ts: number) => {
     const diff = Date.now() - ts
     if (diff < 60_000) return 'just now'
@@ -273,32 +348,63 @@ export function DraftStatusIndicator({ status, lastSavedAt, className }: DraftSt
     return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
-  if (status === 'restored') {
-    return (
-      <span className={className}>
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500 mr-1.5 animate-pulse" />
-        Draft restored from {lastSavedAt ? formatTime(lastSavedAt) : 'earlier session'}
-      </span>
-    )
+  // Always render the container to reserve space and prevent layout shift
+  if (status === 'idle' && !statusMessage) {
+    return <div className={className} />
   }
 
-  if (status === 'syncing') {
-    return (
-      <span className={className}>
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500 mr-1.5 animate-pulse" />
-        Syncing to cloud...
+  return (
+    <div className={cn(
+      'flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-2 text-xs text-muted-foreground transition-all duration-200',
+      className
+    )}>
+      <span className="flex items-center gap-2">
+        {status === 'saving' && (
+          <>
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+            </span>
+            Saving...
+          </>
+        )}
+        {status === 'saved' && (
+          <>
+            <span className="relative flex h-2 w-2">
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            {statusMessage || 'Draft saved'}
+            {lastSavedAt && (
+              <span className="text-muted-foreground/60">({formatTime(lastSavedAt)})</span>
+            )}
+          </>
+        )}
+        {status === 'restored' && (
+          <>
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+            </span>
+            {statusMessage || 'Draft restored'}
+            {lastSavedAt && (
+              <span className="text-muted-foreground/60">({formatTime(lastSavedAt)})</span>
+            )}
+          </>
+        )}
+        {status === 'error' && (
+          <>
+            <span className="relative flex h-2 w-2">
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+            </span>
+            {statusMessage || 'Save failed'}
+          </>
+        )}
       </span>
-    )
-  }
-
-  if (status === 'saved') {
-    return (
-      <span className={className}>
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5" />
-        Draft saved {lastSavedAt ? formatTime(lastSavedAt) : ''}
-      </span>
-    )
-  }
-
-  return null
+      {showDiscard && (
+        <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive" onClick={onDiscard}>
+          Discard draft
+        </Button>
+      )}
+    </div>
+  )
 }

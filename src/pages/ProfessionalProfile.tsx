@@ -93,7 +93,7 @@ export default function ProfessionalProfile() {
     editName, editDesignation, editCompany, editLocation, editIndustry,
     linkedinUrl, githubUrl, bio, referralPolicy,
   }
-  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges } = useAutoSaveForm({
+  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges, statusMessage } = useAutoSaveForm({
     userId: user?.id ?? '',
     formId: 'professional-profile',
     values: draftSnapshot,
@@ -157,15 +157,6 @@ export default function ProfessionalProfile() {
 
   return (
     <div className="space-y-6">
-      {/* Draft status indicator */}
-      {(draftStatus === 'saved' || draftStatus === 'restored' || draftStatus === 'syncing') && (
-        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
-          <DraftStatusIndicator status={draftStatus} lastSavedAt={lastSavedAt} />
-          {hasUnsavedChanges && (
-            <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive" onClick={clearDraft}>Discard draft</Button>
-          )}
-        </div>
-      )}
 
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -306,6 +297,15 @@ export default function ProfessionalProfile() {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Draft status indicator — placed below banner, near content */}
+      <DraftStatusIndicator
+        status={draftStatus}
+        lastSavedAt={lastSavedAt}
+        statusMessage={statusMessage}
+        showDiscard={hasUnsavedChanges}
+        onDiscard={clearDraft}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">

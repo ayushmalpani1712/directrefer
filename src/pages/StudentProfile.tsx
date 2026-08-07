@@ -157,7 +157,7 @@ export default function StudentProfile() {
     editName, editHeadline, editLocation, editLinkedin, editGithub,
     editPreferredRoles, editPreferredCompanies, editCareerInterests, editExpectedSalary, editLanguages,
   }
-  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges } = useAutoSaveForm({
+  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges, statusMessage } = useAutoSaveForm({
     userId: user?.id ?? '',
     formId: 'student-profile',
     values: draftSnapshot,
@@ -481,15 +481,6 @@ export default function StudentProfile() {
 
   return (
     <div className="space-y-6">
-      {/* Draft status indicator */}
-      {(draftStatus === 'saved' || draftStatus === 'restored' || draftStatus === 'syncing') && (
-        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
-          <DraftStatusIndicator status={draftStatus} lastSavedAt={lastSavedAt} />
-          {hasUnsavedChanges && (
-            <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive" onClick={clearDraft}>Discard draft</Button>
-          )}
-        </div>
-      )}
 
 
       <input ref={resumeInputRef} type="file" accept=".pdf" className="hidden" onChange={handleResumeUpload} />
@@ -597,6 +588,15 @@ export default function StudentProfile() {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Draft status indicator — placed below banner, near content */}
+      <DraftStatusIndicator
+        status={draftStatus}
+        lastSavedAt={lastSavedAt}
+        statusMessage={statusMessage}
+        showDiscard={hasUnsavedChanges}
+        onDiscard={clearDraft}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">
