@@ -23,8 +23,17 @@ export class TalentSearchPage {
       professional: '/professional/talent',
       recruiter: '/recruiter/talent',
     };
-    await this.page.goto(routes[role]);
-    await this.page.waitForLoadState('networkidle');
+    const target = routes[role];
+    if (this.page.url().endsWith(target)) return;
+
+    // Use client-side navigation
+    await this.page.evaluate((path) => {
+      window.history.pushState({}, '', path);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }, target);
+
+    await this.page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+    await this.page.waitForTimeout(1000);
   }
 
   /** Search for a candidate by name. */

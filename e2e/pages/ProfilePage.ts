@@ -60,8 +60,37 @@ export class ProfilePage {
       professional: '/professional/profile',
       recruiter: '/recruiter/profile',
     };
-    await this.page.goto(routes[role]);
-    await this.page.waitForLoadState('networkidle');
+    const target = routes[role];
+
+    // If already on the target page, skip
+    if (this.page.url().endsWith(target)) return;
+
+    // Use client-side navigation to avoid SPA full-page reload conflicts
+    await this.page.evaluate((path) => {
+      window.history.pushState({}, '', path);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }, target);
+
+    // Wait for network to settle
+    await this.page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+    await this.page.waitForTimeout(1000);
+
+    // Dismiss onboarding wizard if present — click through all steps
+    for (let i = 0; i < 5; i++) {
+      const skipBtn = this.page.getByRole('button', { name: /skip/i });
+      if (await skipBtn.isVisible({ timeout: 1_000 }).catch(() => false)) {
+        await skipBtn.click();
+        await this.page.waitForTimeout(500);
+        break;
+      }
+      const dismissBtn = this.page.getByRole('button', { name: /dismiss/i });
+      if (await dismissBtn.isVisible({ timeout: 1_000 }).catch(() => false)) {
+        await dismissBtn.click();
+        await this.page.waitForTimeout(500);
+        break;
+      }
+      break;
+    }
   }
 
   /** Check if the open-to-work toggle is currently ON. */

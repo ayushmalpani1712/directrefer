@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/test';
+import { test, expect, spaReload } from '../fixtures/test';
 import { ProfilePage } from '../pages';
 
 /**
@@ -19,8 +19,7 @@ test.describe('Toggle State Persistence', () => {
     expect(await profile.isOpenToWorkOn()).toBe(true);
 
     // Reload
-    await studentPage.reload();
-    await studentPage.waitForLoadState('networkidle');
+    await spaReload(studentPage);
 
     // Assert still ON
     expect(await profile.isOpenToWorkOn()).toBe(true);
@@ -36,8 +35,7 @@ test.describe('Toggle State Persistence', () => {
     expect(await profile.isOpenToWorkOn()).toBe(false);
 
     // Reload
-    await studentPage.reload();
-    await studentPage.waitForLoadState('networkidle');
+    await spaReload(studentPage);
 
     // Assert still OFF
     expect(await profile.isOpenToWorkOn()).toBe(false);
@@ -53,8 +51,7 @@ test.describe('Toggle State Persistence', () => {
     expect(await profile.isOpenForReferralsOn()).toBe(true);
 
     // Reload
-    await professionalPage.reload();
-    await professionalPage.waitForLoadState('networkidle');
+    await spaReload(professionalPage);
 
     // Assert still ON
     expect(await profile.isOpenForReferralsOn()).toBe(true);
@@ -64,8 +61,7 @@ test.describe('Toggle State Persistence', () => {
     expect(await profile.isOpenForReferralsOn()).toBe(false);
 
     // Reload again
-    await professionalPage.reload();
-    await professionalPage.waitForLoadState('networkidle');
+    await spaReload(professionalPage);
 
     // Assert still OFF
     expect(await profile.isOpenForReferralsOn()).toBe(false);
@@ -79,8 +75,7 @@ test.describe('Toggle State Persistence', () => {
     await profile.setOpenToWork(true);
     expect(await profile.isOpenToWorkOn()).toBe(true);
 
-    await professionalPage.reload();
-    await professionalPage.waitForLoadState('networkidle');
+    await spaReload(professionalPage);
 
     expect(await profile.isOpenToWorkOn()).toBe(true);
   });

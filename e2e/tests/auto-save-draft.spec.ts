@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/test';
+import { test, expect, spaReload } from '../fixtures/test';
 import { ProfilePage } from '../pages';
 
 /**
@@ -42,12 +42,10 @@ test.describe('Auto-Save & Draft Recovery', () => {
     expect(draftData).not.toBeNull();
     expect(draftData.values).toBeDefined();
 
-    // Reload the page
-    await studentPage.reload();
-    await studentPage.waitForLoadState('networkidle');
+    // Reload the page (SPA-safe)
+    await spaReload(studentPage);
 
     // The draft indicator should show "restored" or the edit field should still have the draft value
-    // Wait for draft restoration
     await studentPage.waitForTimeout(1500);
 
     // Verify draft was restored by checking localStorage still has it
@@ -122,14 +120,6 @@ test.describe('Auto-Save & Draft Recovery', () => {
     // Wait for save to complete
     await studentPage.waitForTimeout(1000);
 
-    // Now try to navigate away — there should be NO beforeunload warning
-    // We verify this by checking that hasUnsavedChanges is false
-    const hasUnsaved = await studentPage.evaluate(() => {
-      // Check if the React state for unsaved changes is false
-      // We can verify this by attempting navigation without a dialog appearing
-      return (window as any).__hasUnsavedChanges ?? false;
-    });
-
     // Navigate to dashboard — should not trigger any dialog
     let dialogTriggered = false;
     studentPage.on('dialog', (dialog) => {
@@ -137,8 +127,8 @@ test.describe('Auto-Save & Draft Recovery', () => {
       dialog.dismiss();
     });
 
-    await studentPage.goto('/job-seeker/dashboard');
-    await studentPage.waitForLoadState('networkidle');
+    await studentPage.goto('http://localhost:3000/job-seeker/dashboard', { waitUntil: 'domcontentloaded', timeout: 15_000 });
+    await studentPage.waitForTimeout(2000);
 
     // No dialog should have appeared
     expect(dialogTriggered).toBe(false);
