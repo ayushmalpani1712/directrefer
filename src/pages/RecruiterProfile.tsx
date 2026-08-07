@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
+import { motion } from 'framer-motion'
 import {
   Briefcase, Check, Clock, Globe, Heart, Linkedin, MapPin, Pencil, Trophy, Users, X,
 } from 'lucide-react'
@@ -7,14 +8,13 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-import { Chip } from '@/components/ui-kit'
+import { Chip, CompanyChip } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
 import { useAutoSaveForm, DraftStatusIndicator } from '@/hooks/useAutoSaveForm'
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard'
-import { ProfileHeader } from '@/components/ProfileHeader'
 
 
 export default function RecruiterProfile() {
@@ -160,95 +160,142 @@ export default function RecruiterProfile() {
       )}
 
 
-      <ProfileHeader
-        role="recruiter"
-        name={editing ? editName : c.name}
-        industry={editing ? editIndustry : c.industry}
-        companySize={editing ? editSize : c.size}
-        website={editing ? editWebsite : c.website}
-        linkedin={editing ? editLinkedin : c.linkedin}
-        editing={editing}
-        onStartEdit={() => {
-          setEditName(c.name)
-          setEditIndustry(c.industry)
-          setEditSize(c.size)
-          setEditWebsite(c.website)
-          setEditLinkedin(c.linkedin)
-          setEditing(true)
-        }}
-        onCancelEdit={() => {
-          setEditName(c.name)
-          setEditIndustry(c.industry)
-          setEditSize(c.size)
-          setEditWebsite(c.website)
-          setEditLinkedin(c.linkedin)
-          setEditing(false)
-          clearDraft()
-        }}
-        saveDisabled={savingHeader}
-        saveLabel={savingHeader ? 'Saving...' : 'Save'}
-        onSave={async () => {
-          setSavingHeader(true)
-          try {
-            setRecruiterCompany((prev) => ({
-              ...prev,
-              name: editName,
-              industry: editIndustry,
-              size: editSize,
-              website: editWebsite,
-              linkedin: editLinkedin,
-              description,
-            }))
-            updateRecruiter({
-              company_name: editName,
-              hiring_department: editIndustry,
-              company_size: editSize,
-              company_website: editWebsite,
-              company_description: description,
-              company_linkedin: editLinkedin,
-            })
-            setEditing(false)
-            toast.success('Profile saved')
-            onFormSaved()
-          } finally {
-            setSavingHeader(false)
-          }
-        }}
-        editFields={
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-            <div className="flex items-center gap-2">
-              <Globe className="h-3.5 w-3.5 text-primary shrink-0" />
-              <input
-                value={editWebsite}
-                onChange={(e) => setEditWebsite(e.target.value)}
-                className="bg-transparent border-b border-primary/50 outline-none w-44 text-xs text-primary placeholder:text-muted-foreground/40"
-                placeholder="e.g. acme.com"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Linkedin className="h-3.5 w-3.5 text-[#0A66C2] shrink-0" />
-              <input
-                value={editLinkedin}
-                onChange={(e) => setEditLinkedin(e.target.value)}
-                className="bg-transparent border-b border-[#0A66C2]/50 outline-none w-44 text-xs text-[#0A66C2] placeholder:text-muted-foreground/40"
-                placeholder="e.g. linkedin.com/company/acme"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-3.5 w-3.5 shrink-0" />
-              <select
-                value={editSize}
-                onChange={(e) => setEditSize(e.target.value)}
-                className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs cursor-pointer"
-              >
-                {['1-10', '11-50', '51-200', '201-500', '500-1000', '1000+'].map((s) => (
-                  <option key={s} value={s}>{s} employees</option>
-                ))}
-              </select>
-            </div>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <Card className="overflow-hidden">
+          <div className="relative h-28 sm:h-40 md:h-52 bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4]">
+            <div className="bg-grid absolute inset-0 opacity-20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           </div>
-        }
-      />
+          <CardContent className="relative px-4 pb-4 sm:px-6 sm:pb-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex items-end gap-3 sm:gap-4">
+                <div className="-mt-8 sm:-mt-10 md:-mt-12">
+                  <CompanyChip name={c.name} className="h-16 w-16 rounded-2xl border-4 border-card text-xl sm:h-20 sm:w-20 sm:text-2xl md:h-24 md:w-24" />
+                </div>
+                <div className="pb-1">
+                  {editing ? (
+                    <input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="font-display text-xl sm:text-2xl font-bold bg-transparent border-b border-primary outline-none w-full placeholder:text-muted-foreground/30"
+                      placeholder="Company name"
+                    />
+                  ) : (
+                    <h1 className="font-display flex items-center gap-2 text-2xl font-bold">
+                      {c.name}
+                    </h1>
+                  )}
+                  {editing ? (
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      <input
+                        value={editIndustry}
+                        onChange={(e) => setEditIndustry(e.target.value)}
+                        className="bg-transparent border-b border-muted-foreground/30 outline-none w-full text-sm placeholder:text-muted-foreground/40"
+                        placeholder="e.g. Technology"
+                      />
+                    </div>
+                  ) : (
+                    <div className="mt-0.5 text-sm text-muted-foreground">{c.industry}</div>
+                  )}
+                  <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Users className="h-3.5 w-3.5" />
+                      {editing ? (
+                        <select
+                          value={editSize}
+                          onChange={(e) => setEditSize(e.target.value)}
+                          className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs cursor-pointer"
+                        >
+                          {['1-10', '11-50', '51-200', '201-500', '500-1000', '1000+'].map((s) => (
+                            <option key={s} value={s}>{s} employees</option>
+                          ))}
+                        </select>
+                      ) : `${c.size} employees`}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Globe className="h-3.5 w-3.5 text-primary" />
+                      {editing ? (
+                        <input
+                          value={editWebsite}
+                          onChange={(e) => setEditWebsite(e.target.value)}
+                          className="bg-transparent border-b border-primary/50 outline-none w-36 text-xs text-primary placeholder:text-muted-foreground/40"
+                          placeholder="e.g. acme.com"
+                        />
+                      ) : c.website ? (
+                        <a href={c.website.startsWith('http') ? c.website : `https://${c.website}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{c.website}</a>
+                      ) : c.website}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" />
+                      {editing ? (
+                        <input
+                          value={editLinkedin}
+                          onChange={(e) => setEditLinkedin(e.target.value)}
+                          className="bg-transparent border-b border-[#0A66C2]/50 outline-none w-44 text-xs text-[#0A66C2] placeholder:text-muted-foreground/40"
+                          placeholder="e.g. linkedin.com/company/acme"
+                        />
+                      ) : c.linkedin ? (
+                        <a href={c.linkedin.startsWith('http') ? c.linkedin : `https://${c.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-[#0A66C2] hover:underline">{c.linkedin}</a>
+                      ) : <span className="text-muted-foreground/50">No LinkedIn</span>}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 sm:pb-1">
+                {editing ? (
+                  <>
+                    <Button variant="outline" className="rounded-full" onClick={() => {
+                      setEditName(c.name)
+                      setEditIndustry(c.industry)
+                      setEditSize(c.size)
+                      setEditWebsite(c.website)
+                      setEditLinkedin(c.linkedin)
+                      setEditing(false)
+                      clearDraft()
+                    }}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
+                    <Button className="rounded-full bg-primary shadow-glow" disabled={savingHeader} onClick={async () => {
+                      setSavingHeader(true)
+                      try {
+                        setRecruiterCompany((prev) => ({
+                          ...prev,
+                          name: editName,
+                          industry: editIndustry,
+                          size: editSize,
+                          website: editWebsite,
+                          linkedin: editLinkedin,
+                          description,
+                        }))
+                        updateRecruiter({
+                          company_name: editName,
+                          hiring_department: editIndustry,
+                          company_size: editSize,
+                          company_website: editWebsite,
+                          company_description: description,
+                          company_linkedin: editLinkedin,
+                        })
+                        setEditing(false)
+                        toast.success('Profile saved')
+                        onFormSaved()
+                      } finally {
+                        setSavingHeader(false)
+                      }
+                    }}><Check className="mr-1.5 h-4 w-4" /> {savingHeader ? 'Saving...' : 'Save'}</Button>
+                  </>
+                ) : (
+                  <Button className="rounded-full bg-primary shadow-glow" onClick={() => {
+                    setEditName(c.name)
+                    setEditIndustry(c.industry)
+                    setEditSize(c.size)
+                    setEditWebsite(c.website)
+                    setEditLinkedin(c.linkedin)
+                    setEditing(true)
+                  }}><Pencil className="mr-1.5 h-4 w-4" /> Edit profile</Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">
