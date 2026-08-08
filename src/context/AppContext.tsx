@@ -420,7 +420,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         { event: 'UPDATE', schema: 'public', table: 'referrals', filter: `requester_id=eq.${currentUser.id}` },
         (payload) => {
           const ref = payload.new as { status?: string; requester_id?: string; job_title?: string }
-          fetchReferrals(currentUser.id).then((refs) => setRequests(refs)).catch((err) => { console.error('Failed to refresh referrals:', err) })
+          fetchReferrals(currentUser.id).then((refs) => setRequests(refs)).catch((err) => { console.error('Failed to refresh referrals:', err); toast.error('Failed to refresh referrals') })
           // Show browser notification on status change
           if (ref.status && ref.status !== 'pending' && ref.job_title) {
             notifyReferralUpdate('A candidate', ref.status, ref.job_title)
@@ -748,6 +748,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const resumePatch: Record<string, unknown> = { resume_url: undefined, resume_name: undefined, resume_size_bytes: undefined, resume_uploaded_at: undefined }
       dbUpdateJobSeekerProfile(user.id, resumePatch).catch((err) => {
         console.error('Failed to remove resume from DB:', err)
+        toast.error('Failed to remove resume')
       })
     }
   }, [user])
@@ -873,6 +874,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             }
           }, (err: unknown) => {
             console.error('Failed to create notification:', err)
+            toast.error('Failed to send notification')
           })
         }
       }).catch((err) => {
@@ -931,7 +933,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const professional = professionals.find((p) => p.id === req.professionalId)
         const proName = professional?.name || 'the professional'
         sendReferralStatusEmail(req.studentEmail, req.student, proName, req.role, status as 'accepted' | 'rejected')
-          .catch((err) => { console.error('Failed to send referral status email:', err) })
+          .catch((err) => { console.error('Failed to send referral status email:', err); toast.error('Failed to send status email') })
       }
     }
   }, [requests, professionals, user, setNpsOpen])
@@ -957,7 +959,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const daysPending = Math.floor((now - requestDate) / (24 * 60 * 60 * 1000))
             sendReminderEmail(pro.email, pro.name, r.student, r.role, daysPending)
               .then(() => { reminded.add(r.id); changed = true })
-              .catch((err) => { console.error('Failed to send reminder email:', err) })
+              .catch((err) => { console.error('Failed to send reminder email:', err); toast.error('Failed to send reminder email') })
           }
         }
       })

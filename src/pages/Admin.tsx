@@ -226,7 +226,7 @@ export default function Admin() {
   // ── Tab-based loading ──
   useEffect(() => {
     if (tab === 'overview') {
-      fetchPlatformAnalytics().then(setPlatformAnalytics).catch((err) => console.error('Failed to load analytics:', err))
+      fetchPlatformAnalytics().then(setPlatformAnalytics).catch((err) => { console.error('Failed to load analytics:', err); toast.error('Failed to load analytics') })
       loadSystemHealth()
       loadFlagged()
       loadUsers()

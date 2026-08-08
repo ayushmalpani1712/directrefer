@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef, type ReactNode } from 'react'
+import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import type { User, Session } from '@supabase/supabase-js'
 
@@ -77,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (s?.user) {
         // Run ensureUserRow + workspace fetch in parallel instead of sequentially
         await Promise.all([
-          ensureUserRow(s.user).catch((err) => console.error('Failed to ensure user row:', err)),
+          ensureUserRow(s.user).catch((err) => { console.error('Failed to ensure user row:', err); toast.error('Failed to initialize profile') }),
           syncAuthState(s.user),
         ])
       }
@@ -85,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       initializedRef.current = true
     }).catch((err) => {
       console.error('getSession failed:', err)
+      toast.error('Failed to load session')
       setLoading(false)
       initializedRef.current = true
     })
@@ -150,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Ensure user row exists for all roles (also handled by SQL trigger as fallback)
     if (data.user) {
-      try { await ensureUserRow(data.user) } catch (err) { console.error('ensureUserRow failed:', err) }
+      try { await ensureUserRow(data.user) } catch (err) { console.error('ensureUserRow failed:', err); toast.error('Failed to initialize profile') }
     }
 
     // If Supabase email confirmation is enabled, data.session will be null
@@ -167,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setNeedsVerification(false)
     setEmailVerified(true)
     if (data.user) {
-      try { await ensureUserRow(data.user) } catch (err) { console.error('ensureUserRow failed:', err) }
+      try { await ensureUserRow(data.user) } catch (err) { console.error('ensureUserRow failed:', err); toast.error('Failed to initialize profile') }
     }
     return {}
   }, [])
