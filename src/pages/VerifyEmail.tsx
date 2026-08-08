@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Loader2, Mail, RefreshCw } from 'lucide-react'
@@ -17,6 +17,7 @@ export default function VerifyEmail() {
   const [verified, setVerified] = useState(false)
   const [resending, setResending] = useState(false)
   const [userEmail, setUserEmail] = useState('')
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const verifyToken = useCallback(async () => {
     if (!token || !userId) return
@@ -48,14 +49,20 @@ export default function VerifyEmail() {
         const { data: ur } = await supabase.from('users').select('role').eq('id', verifyUser.id).single()
         if (ur?.role) redirectRoute = ROLE_ROUTE[ur.role as Role] || ROLE_ROUTE.student
       }
-      const t = setTimeout(() => navigate(redirectRoute), 2000)
-      return () => clearTimeout(t)
+      redirectTimerRef.current = setTimeout(() => navigate(redirectRoute), 2000)
     } catch {
       toast.error('Verification failed')
     } finally {
       setVerifying(false)
     }
   }, [token, userId, navigate])
+
+  // Cleanup redirect timer on unmount
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     if (token && userId) {

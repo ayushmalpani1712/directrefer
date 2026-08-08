@@ -96,42 +96,6 @@ export function JobIllustration({ className, size = 120 }: IllustrationProps) {
   )
 }
 
-// ── Talent / professionals illustration ─────────────────────
-export function TalentIllustration({ className, size = 120 }: IllustrationProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 120 120" fill="none" className={cn('', className)} aria-hidden="true">
-      <circle cx="60" cy="60" r="56" fill="hsl(var(--primary) / 0.06)" stroke="hsl(var(--primary) / 0.12)" strokeWidth="1" />
-
-      {/* Center person */}
-      <circle cx="60" cy="44" r="12" fill="hsl(var(--primary) / 0.12)" stroke="hsl(var(--primary) / 0.2)" strokeWidth="1.5" />
-      <circle cx="60" cy="41" r="4.5" fill="hsl(var(--primary) / 0.2)" />
-      <path d="M52 50c0-4.42 3.58-8 8-8s8 3.58 8 8" stroke="hsl(var(--primary) / 0.2)" strokeWidth="1.5" fill="none" />
-
-      {/* Body / shoulders */}
-      <path d="M46 58c0-7.73 6.27-14 14-14s14 6.27 14 14v4H46v-4z" fill="hsl(var(--primary) / 0.06)" stroke="hsl(var(--primary) / 0.12)" strokeWidth="1" />
-
-      {/* Left person (smaller) */}
-      <circle cx="30" cy="52" r="8" fill="hsl(var(--secondary) / 0.08)" stroke="hsl(var(--secondary) / 0.15)" strokeWidth="1" />
-      <circle cx="30" cy="50" r="3" fill="hsl(var(--secondary) / 0.15)" />
-      <path d="M25 55c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="hsl(var(--secondary) / 0.15)" strokeWidth="1" fill="none" />
-
-      {/* Right person (smaller) */}
-      <circle cx="90" cy="52" r="8" fill="hsl(var(--secondary) / 0.08)" stroke="hsl(var(--secondary) / 0.15)" strokeWidth="1" />
-      <circle cx="90" cy="50" r="3" fill="hsl(var(--secondary) / 0.15)" />
-      <path d="M85 55c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="hsl(var(--secondary) / 0.15)" strokeWidth="1" fill="none" />
-
-      {/* Connection lines */}
-      <line x1="38" y1="52" x2="50" y2="48" stroke="hsl(var(--primary) / 0.15)" strokeWidth="1" strokeDasharray="3 3" />
-      <line x1="82" y1="52" x2="70" y2="48" stroke="hsl(var(--primary) / 0.15)" strokeWidth="1" strokeDasharray="3 3" />
-
-      {/* Search magnifier */}
-      <circle cx="60" cy="82" r="10" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="1.5" />
-      <circle cx="60" cy="82" r="5" fill="none" stroke="hsl(var(--muted-foreground) / 0.2)" strokeWidth="1.5" />
-      <line x1="64" y1="86" x2="68" y2="90" stroke="hsl(var(--muted-foreground) / 0.2)" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  )
-}
-
 // ── Inbox / requests illustration ───────────────────────────
 export function InboxIllustration({ className, size = 120 }: IllustrationProps) {
   return (

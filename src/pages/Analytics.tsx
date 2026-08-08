@@ -4,6 +4,7 @@ import { BarChart3, Calendar, CheckCheck, Download, Send, Target, TrendingUp, Tr
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { SectionHeader, StatCard } from '@/components/ui-kit'
+import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { useApp } from '@/context/AppContext'
 import { PIPELINE_STAGES } from '@/data/mock'
 import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
@@ -62,7 +63,7 @@ function StudentAnalytics({ range }: { range: DateRange }) {
       if (!rows) return
 
       const total = rows.length
-      const accepted = rows.filter((r) => r.status === 'accepted' || r.status === 'offered').length
+      const accepted = rows.filter((r) => r.status === 'accepted').length
       const pending = rows.filter((r) => r.status === 'pending').length
       const rejected = rows.filter((r) => r.status === 'rejected').length
       const inReview = rows.filter((r) => r.pipeline_stage === 'under_review').length
@@ -384,7 +385,7 @@ export default function Analytics() {
     toast.success('Analytics exported as CSV')
   }
 
-  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+  if (loading) return <DashboardSkeleton />
 
   const noData =
     (role === 'student' && !hasData(studentWeekly)) ||

@@ -16,7 +16,6 @@ interface AuthState {
   signInWithGoogle: () => Promise<{ error?: string }>
   signInWithLinkedIn: () => Promise<{ error?: string }>
   signOut: () => Promise<void>
-  getUserRole: () => string | null
   refreshWorkspaceStatus: () => Promise<void>
 }
 
@@ -24,43 +23,22 @@ const AuthCtx = createContext<AuthState | null>(null)
 
 async function ensureUserRow(user: User) {
   const meta = user.user_metadata
-  const fullName = meta?.full_name || meta?.name || user.email?.split('@')[0] || 'User'
   const role = (meta?.role as string) || 'job_seeker'
+  // Only create/update users row for students — admin/professional/recruiter rows are managed via admin dashboard
+  if (role !== 'job_seeker' && role !== 'student') return
+  const fullName = meta?.full_name || meta?.name || user.email?.split('@')[0] || 'User'
   const provider = user.app_metadata?.provider || 'email'
 
-  const { data: existing } = await supabase
-    .from('users')
-    .select('id')
-    .eq('id', user.id)
-    .single()
-
-  if (!existing) {
-    await supabase.from('users').upsert({
-      id: user.id,
-      email: user.email || '',
-      full_name: fullName,
-      role,
-      email_verified: provider !== 'email',
-      verified: provider !== 'email',
-      last_login_at: new Date().toISOString(),
-    }, { onConflict: 'id' })
-  } else {
-    const { data: row } = await supabase
-      .from('users')
-      .select('full_name')
-      .eq('id', user.id)
-      .single()
-    const currentName = (row?.full_name ?? '').trim()
-    const updates: Record<string, unknown> = { last_login_at: new Date().toISOString() }
-    // Always sync full_name from auth metadata when the DB value is empty or looks like an email prefix
-    if (fullName && fullName !== 'User' && (!currentName || currentName === user.email?.split('@')[0])) {
-      updates.full_name = fullName
-    }
-    await supabase
-      .from('users')
-      .update(updates)
-      .eq('id', user.id)
-  }
+  // Single upsert — eliminates the SELECT → INSERT/UPDATE waterfall
+  await supabase.from('users').upsert({
+    id: user.id,
+    email: user.email || '',
+    full_name: fullName,
+    role,
+    email_verified: provider !== 'email',
+    verified: provider !== 'email',
+    last_login_at: new Date().toISOString(),
+  }, { onConflict: 'id', ignoreDuplicates: false })
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -75,7 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initializedRef = useRef(false)
 
   const syncAuthState = async (u: User) => {
-    try { await ensureUserRow(u) } catch (err) { console.error('Failed to ensure user row:', err) }
     setEmailVerified(true)
     try {
       const { data: wsData } = await supabase
@@ -88,8 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRecruiterVerified(wsData.recruiter_verified ?? false)
         setActiveWorkspace(wsData.active_workspace ?? 'job_seeker')
       }
-    } catch {
-      // workspace columns may not exist yet — silently ignore
+    } catch (err) {
+      console.error('Failed to sync auth state:', err)
     }
   }
 
@@ -97,7 +74,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       setSession(s)
       setUser(s?.user ?? null)
-      if (s?.user) await syncAuthState(s.user)
+      if (s?.user) {
+        // Run ensureUserRow + workspace fetch in parallel instead of sequentially
+        await Promise.all([
+          ensureUserRow(s.user).catch((err) => console.error('Failed to ensure user row:', err)),
+          syncAuthState(s.user),
+        ])
+      }
       setLoading(false)
       initializedRef.current = true
     }).catch((err) => {
@@ -111,7 +94,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!initializedRef.current && event === 'INITIAL_SESSION') return
 
       setSession(s)
-      setUser(s?.user ?? null)
+      // Only update user reference on sign-in/sign-out — not on TOKEN_REFRESHED
+      // (avoids triggering loadRealData re-runs that overwrite toggle state)
+      if (event !== 'TOKEN_REFRESHED') {
+        setUser(s?.user ?? null)
+      }
 
       // Only run full auth state sync on sign-in/sign-out events, not on token refresh
       if (s?.user && event !== 'TOKEN_REFRESHED') {
@@ -138,6 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signUp = useCallback(async (email: string, password: string, meta?: { full_name?: string; role?: string }) => {
+    if (password.length < 6) return { error: 'Password must be at least 6 characters' }
+
     const allowedRoles = ['job_seeker', 'professional', 'recruiter']
     const roleMap: Record<string, string> = {
       student: 'job_seeker',
@@ -152,14 +141,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: { data: dbMeta },
     })
-    if (error) return { error: error.message }
+    if (error) {
+      const msg = error.message
+      if (msg.includes('already registered')) return { error: 'An account with this email already exists. Please sign in.' }
+      if (msg.includes('valid email')) return { error: 'Please enter a valid email address.' }
+      return { error: msg }
+    }
 
     // Ensure user row exists for all roles (also handled by SQL trigger as fallback)
     if (data.user) {
       try { await ensureUserRow(data.user) } catch (err) { console.error('ensureUserRow failed:', err) }
     }
 
-    return {}
+    // If Supabase email confirmation is enabled, data.session will be null
+    const needsVerification = !data.session
+    if (needsVerification) setNeedsVerification(true)
+
+    return { needsVerification }
   }, [])
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -215,13 +213,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setActiveWorkspace('job_seeker')
   }, [])
 
-  const getUserRole = useCallback(() => {
-    const metaRole = user?.user_metadata?.role as string || null
-    const activeWsRole = activeWorkspace
-    if (activeWsRole && activeWsRole !== 'job_seeker') return activeWsRole
-    return metaRole
-  }, [user, activeWorkspace])
-
   const refreshWorkspaceStatus = useCallback(async () => {
     if (!user) return
     try {
@@ -241,8 +232,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const value = useMemo<AuthState>(() => ({
-    user, session, loading, emailVerified, needsVerification, professionalVerified, recruiterVerified, activeWorkspace, signUp, signIn, signInWithGoogle, signInWithLinkedIn, signOut, getUserRole, refreshWorkspaceStatus,
-  }), [user, session, loading, emailVerified, needsVerification, professionalVerified, recruiterVerified, activeWorkspace, signUp, signIn, signInWithGoogle, signInWithLinkedIn, signOut, getUserRole, refreshWorkspaceStatus])
+    user, session, loading, emailVerified, needsVerification, professionalVerified, recruiterVerified, activeWorkspace, signUp, signIn, signInWithGoogle, signInWithLinkedIn, signOut, refreshWorkspaceStatus,
+  }), [user, session, loading, emailVerified, needsVerification, professionalVerified, recruiterVerified, activeWorkspace, signUp, signIn, signInWithGoogle, signInWithLinkedIn, signOut, refreshWorkspaceStatus])
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>
 }

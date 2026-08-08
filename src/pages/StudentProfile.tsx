@@ -15,14 +15,13 @@ import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Chip, GAvatar, ProgressRing, StatusBadge } from '@/components/ui-kit'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { ProfileSkeleton } from '@/components/ui/skeleton'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { uploadResume, deleteResume } from '@/lib/db'
 
 import { cn } from '@/lib/utils'
-import { useAutoSaveForm, DraftStatusIndicator } from '@/hooks/useAutoSaveForm'
-import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard'
 
 function Section({ title, icon: Icon, children, onAdd, actions, className }: { title: string; icon: typeof Award; children: React.ReactNode; onAdd?: () => void; actions?: React.ReactNode; className?: string }) {
   return (
@@ -48,6 +47,7 @@ export default function StudentProfile() {
     removeStudentExperience,
     removeStudentEducation,
     removeStudentResume, removeStudentSkill,
+    toggleStudentOpenToWork,
   } = useApp()
   const { user } = useAuth()
   const loading = usePageLoading(450)
@@ -152,46 +152,9 @@ export default function StudentProfile() {
   const [editExpectedSalary, setEditExpectedSalary] = useState(s.expectedSalary)
   const [editLanguages, setEditLanguages] = useState(s.languages.join(', '))
 
-  // ── Auto-Save Draft ──
-  const draftSnapshot = {
-    editName, editHeadline, editLocation, editLinkedin, editGithub,
-    editPreferredRoles, editPreferredCompanies, editCareerInterests, editExpectedSalary, editLanguages,
-  }
-  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges, statusMessage } = useAutoSaveForm({
-    userId: user?.id ?? '',
-    formId: 'student-profile',
-    values: draftSnapshot,
-    enabled: !loading && !!user,
-  })
-  useUnsavedChangesGuard({ enabled: hasUnsavedChanges })
-
-  // Restore draft on mount
-  useEffect(() => {
-    if (draftStatus !== 'restored' || !user) return
-    try {
-      const raw = localStorage.getItem(`draft:${user.id}:student-profile`)
-      if (!raw) return
-      const entry = JSON.parse(raw)
-      if (!entry?.values) return
-      const v = entry.values
-      if (v.editName !== undefined) setEditName(v.editName)
-      if (v.editHeadline !== undefined) setEditHeadline(v.editHeadline)
-      if (v.editLocation !== undefined) setEditLocation(v.editLocation)
-      if (v.editLinkedin !== undefined) setEditLinkedin(v.editLinkedin)
-      if (v.editGithub !== undefined) setEditGithub(v.editGithub)
-      if (v.editPreferredRoles !== undefined) setEditPreferredRoles(v.editPreferredRoles)
-      if (v.editPreferredCompanies !== undefined) setEditPreferredCompanies(v.editPreferredCompanies)
-      if (v.editCareerInterests !== undefined) setEditCareerInterests(v.editCareerInterests)
-      if (v.editExpectedSalary !== undefined) setEditExpectedSalary(v.editExpectedSalary)
-      if (v.editLanguages !== undefined) setEditLanguages(v.editLanguages)
-      restoreDraft(v)
-    } catch { /* corrupted draft — ignore */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftStatus])
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+      <ProfileSkeleton />
     )
   }
 
@@ -203,7 +166,6 @@ export default function StudentProfile() {
     updateStudent({ name: editName.trim(), headline: editHeadline.trim(), location: editLocation.trim(), links: { linkedin: editLinkedin.trim(), github: editGithub.trim(), website: s.links.website } })
     setEditing(false)
     toast.success('Profile updated')
-    onFormSaved()
   }
 
   function handleCancelEdit() {
@@ -226,7 +188,6 @@ export default function StudentProfile() {
     })
     setShowCareerEdit(false)
     toast.success('Career preferences updated')
-    onFormSaved()
   }
 
   function handleCancelCareerEdit() {
@@ -540,7 +501,7 @@ export default function StudentProfile() {
                 )}
                 {editing ? (
                   <>
-                    <Button variant="outline" className="rounded-full" onClick={() => { handleCancelEdit(); clearDraft() }}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
+                    <Button variant="outline" className="rounded-full" onClick={handleCancelEdit}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
                     <Button className="rounded-full bg-primary shadow-glow" onClick={handleSaveProfile}><CheckCircle2 className="mr-1.5 h-4 w-4" /> Save</Button>
                   </>
                 ) : (
@@ -558,10 +519,10 @@ export default function StudentProfile() {
               )}>
                 <Switch
                   checked={openToWork}
-                  onCheckedChange={(v) => {
+                  onCheckedChange={async (v) => {
                     setOpenToWork(v)
-                    updateStudent({ openToWork: v })
-                    toast.success(v ? 'You are now visible to recruiters' : 'Profile hidden from recruiters')
+                    const ok = await toggleStudentOpenToWork(v)
+                    if (ok) toast.success(v ? 'You are now visible to recruiters' : 'Profile hidden from recruiters')
                   }}
                 />
                 <span className={cn(
@@ -588,15 +549,6 @@ export default function StudentProfile() {
           </CardContent>
         </Card>
       </motion.div>
-
-      {/* Draft status indicator — placed below banner, near content */}
-      <DraftStatusIndicator
-        status={draftStatus}
-        lastSavedAt={lastSavedAt}
-        statusMessage={statusMessage}
-        showDiscard={hasUnsavedChanges}
-        onDiscard={clearDraft}
-      />
 
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">

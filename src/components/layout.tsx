@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import { useTheme } from 'next-themes'
 
 import {
@@ -62,8 +62,16 @@ function navFor(role: Role, unread: number, pendingCount: number): { group: stri
       items: [
         { label: 'Dashboard', href: '/admin/overview', icon: LayoutDashboard },
         { label: 'Workspaces', href: '/admin/workspaces', icon: Users },
-        { label: 'Messages', href: '/admin/messages', icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
+        { label: 'Messages', href: '/messages', icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
         { label: 'Settings', href: '/admin/settings', icon: Settings },
+      ],
+    })
+    common.push({
+      group: 'Network',
+      items: [
+        { label: 'Notifications', href: '/notifications', icon: Bell },
+        { label: 'Activity', href: '/activity', icon: Activity },
+        { label: 'Analytics', href: '/analytics', icon: LineChart },
       ],
     })
     return common
@@ -74,7 +82,7 @@ function navFor(role: Role, unread: number, pendingCount: number): { group: stri
       items: [
         { label: 'Dashboard', href: '/job-seeker/dashboard', icon: LayoutDashboard },
         { label: 'Find Professionals', href: '/job-seeker/professionals', icon: Users },
-        { label: 'Browse Jobs', href: '/job-seeker/professionals', icon: Briefcase },
+        { label: 'Browse Jobs', href: '/job-seeker/browse-jobs', icon: Briefcase },
         { label: 'My Referrals', href: '/job-seeker/applications', icon: FileText, badge: pendingCount > 0 ? String(pendingCount) : undefined },
         { label: 'My Profile', href: '/job-seeker/profile', icon: User },
       ],
@@ -86,7 +94,7 @@ function navFor(role: Role, unread: number, pendingCount: number): { group: stri
         { label: 'Dashboard', href: '/professional/dashboard', icon: LayoutDashboard },
         { label: 'Find Job Seekers', href: '/professional/talent', icon: Users },
         { label: 'Referral Requests', href: '/professional/referrals', icon: Inbox, badge: pendingCount > 0 ? String(pendingCount) : undefined },
-        { label: 'Browse Jobs', href: '/professional/professionals', icon: Briefcase },
+        { label: 'Browse Jobs', href: '/professional/browse-jobs', icon: Briefcase },
         { label: 'My Profile', href: '/professional/profile', icon: User },
       ],
     })
@@ -118,14 +126,13 @@ function navFor(role: Role, unread: number, pendingCount: number): { group: stri
 function AppSidebar() {
   const { role, student, conversations, requests } = useApp()
   const { state, setOpenMobile } = useSidebar()
+  const { pathname } = useLocation()
   const unread = conversations.reduce((a, c) => a + c.unread, 0)
   const pendingCount = requests.filter((r) => r.status === 'pending').length
-  const { pathname } = useLocation()
-  const urlRole = getRoleFromPath(pathname)
-  const groups = navFor(urlRole, unread, pendingCount)
+  const groups = navFor(role, unread, pendingCount)
   const user = student
 
-  useEffect(() => { setOpenMobile(false) }, [pathname, setOpenMobile])
+  useEffect(() => { setOpenMobile(false) }, [setOpenMobile])
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -146,31 +153,32 @@ function AppSidebar() {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {g.items.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild tooltip={item.label}>
-                      <NavLink
-                        to={item.href}
-                        className={({ isActive }) =>
-                          cn(
+                {g.items.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + '?') || pathname.startsWith(item.href + '/')
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild tooltip={item.label}>
+                        <Link
+                          to={item.href}
+                          className={cn(
                             'flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-all duration-200',
                             isActive
                               ? 'bg-primary/10 text-foreground font-semibold before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[2px] before:rounded-full before:bg-primary'
                               : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground',
-                          )
-                        }
-                      >
-                        <item.icon className="h-[18px] w-[18px] shrink-0" />
-                        <span className="truncate">{item.label}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                    {item.badge && (
-                      <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary">
-                        {item.badge}
-                      </SidebarMenuBadge>
-                    )}
-                  </SidebarMenuItem>
-                ))}
+                          )}
+                        >
+                          <item.icon className="h-[18px] w-[18px] shrink-0" />
+                          <span className="truncate">{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                      {item.badge && (
+                        <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary">
+                          {item.badge}
+                        </SidebarMenuBadge>
+                      )}
+                    </SidebarMenuItem>
+                  )
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -180,25 +188,25 @@ function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Settings">
-              <NavLink to="/settings" className={({ isActive }) => cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', isActive && 'bg-primary/10 text-primary')}>
+              <Link to="/settings" className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', pathname === '/settings' && 'bg-primary/10 text-primary')}>
                 <Settings className="h-[18px] w-[18px]" /> <span>Settings</span>
-              </NavLink>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          {role === 'admin' && urlRole !== 'admin' && (
+          {role === 'admin' && (
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Admin Panel">
-              <NavLink to="/admin/overview" className={({ isActive }) => cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', isActive && 'bg-primary/10 text-primary')}>
+              <Link to="/admin/overview" className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', pathname.startsWith('/admin') && 'bg-primary/10 text-primary')}>
                 <Shield className="h-[18px] w-[18px]" /> <span>Admin</span>
-              </NavLink>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           )}
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Help & Support">
-              <NavLink to="/help" className={({ isActive }) => cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', isActive && 'bg-primary/10 text-primary')}>
+              <Link to="/help" className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', pathname === '/help' && 'bg-primary/10 text-primary')}>
                 <CircleHelp className="h-[18px] w-[18px]" /> <span>Help & Support</span>
-              </NavLink>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -207,7 +215,7 @@ function AppSidebar() {
             <GAvatar name={user.name} gradient={user.gradient} className="h-8 w-8 text-xs" />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-semibold">{user.name}</div>
-              <div className="truncate text-[11px] text-muted-foreground">{ROLE_META[urlRole].label}</div>
+              <div className="truncate text-[11px] text-muted-foreground">{ROLE_META[role].label}</div>
             </div>
           </div>
         )}
@@ -351,9 +359,7 @@ function MessagesMenu() {
 function CommandPalette() {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
-  const { pathname } = useLocation()
-  const { visibleProfessionals, requests } = useApp()
-  const urlRole = getRoleFromPath(pathname)
+  const { role, visibleProfessionals, requests } = useApp()
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
@@ -367,7 +373,7 @@ function CommandPalette() {
 
   const go = (href: string) => { setOpen(false); navigate(href) }
   const pendingCount = requests.filter((r) => r.status === 'pending').length
-  const groups = navFor(urlRole, 0, pendingCount)
+  const groups = navFor(role, 0, pendingCount)
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
@@ -393,7 +399,7 @@ function CommandPalette() {
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup>
-          <CommandItem onSelect={() => go('/dashboard')}><Plus className="mr-2 h-4 w-4" /> Request a referral</CommandItem>
+          <CommandItem onSelect={() => go('/job-seeker/request-referral')}><Plus className="mr-2 h-4 w-4" /> Request a referral</CommandItem>
           <CommandItem onSelect={() => go('/settings')}><Sun className="mr-2 h-4 w-4" /> Change theme</CommandItem>
           <CommandItem onSelect={() => go('/help')}><CircleHelp className="mr-2 h-4 w-4" /> Get help</CommandItem>
         </CommandGroup>
@@ -416,13 +422,12 @@ const CRUMB_LABELS: Record<string, string> = {
 
 function Breadcrumbs() {
   const { pathname } = useLocation()
-  const { visibleProfessionals } = useApp()
-  const urlRole = getRoleFromPath(pathname)
+  const { visibleProfessionals, role } = useApp()
   const segs = pathname.split('/').filter(Boolean)
   if (segs.length === 0) return null
   return (
     <nav className="mb-4 flex items-center gap-1 text-sm text-muted-foreground">
-      <Link to={ROLE_ROUTE[urlRole]} className="hover:text-foreground"><Home className="h-3.5 w-3.5" /></Link>
+      <Link to={ROLE_ROUTE[role]} className="hover:text-foreground"><Home className="h-3.5 w-3.5" /></Link>
       {segs.map((s, i) => {
         const href = '/' + segs.slice(0, i + 1).join('/')
         const label = CRUMB_LABELS[s] ?? visibleProfessionals.find((p) => p.id === s)?.name ?? s
@@ -450,8 +455,8 @@ function FAB() {
   const actions = useMemo(() => {
     if (urlRole === 'student') {
       return [
-        { icon: Plus, label: 'Request referral', run: () => navigate('/job-seeker/professionals') },
-        { icon: Briefcase, label: 'Find professionals', run: () => navigate('/job-seeker/professionals') },
+        { icon: Plus, label: 'Request referral', run: () => navigate('/job-seeker/request-referral') },
+        { icon: Users, label: 'Find professionals', run: () => navigate('/job-seeker/professionals') },
         { icon: FileUp, label: 'Upload resume', run: () => navigate('/job-seeker/profile') },
         { icon: Sparkles, label: 'View analytics', run: () => navigate('/analytics') },
 
@@ -493,8 +498,7 @@ function FAB() {
 
 // ── Topbar ──────────────────────────────────────────────────
 function Topbar() {
-  const { pathname } = useLocation()
-  const urlRole = getRoleFromPath(pathname)
+  const { role } = useApp()
   return (
     <header className="glass sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border px-4">
       <SidebarTrigger className="md:hidden h-9 w-9 shrink-0" />
@@ -515,7 +519,7 @@ function Topbar() {
         </kbd>
       </button>
       <Badge variant="outline" className="hidden border-primary/40 bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary sm:inline-flex">
-        {ROLE_META[urlRole].label}
+        {ROLE_META[role].label}
       </Badge>
       <div className="flex-1 sm:hidden" />
       <div className="ml-auto flex items-center gap-0">

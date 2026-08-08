@@ -27,7 +27,7 @@ const BASE_URL = 'https://www.directrefer.in'
 
 export function HeadManager() {
   const { pathname } = useLocation()
-  const { visibleProfessionals } = useApp()
+  const { visibleProfessionals = [] } = useApp()
   const [companyMeta, setCompanyMeta] = useState<{ title: string; description: string } | null>(null)
 
   // Fetch company data for /company/:id routes

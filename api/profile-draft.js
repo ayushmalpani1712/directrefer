@@ -3,6 +3,10 @@ import { authenticate } from './lib/auth.js';
 import { getServiceClient } from './lib/db.js';
 import { success, error, parseBody, parseQuery } from './lib/response.js';
 
+function isTableMissing(dbError) {
+  return dbError?.code === '42P01' || dbError?.message?.includes('does not exist');
+}
+
 export default async function handler(req, res) {
   if (handleCors(req, res)) return;
 
@@ -23,14 +27,23 @@ export default async function handler(req, res) {
         .eq('form_id', formId)
         .single();
 
-      if (dbError && dbError.code !== 'PGRST116') {
-        // PGRST116 = no rows found, which is fine
+      if (dbError) {
+        if (dbError.code === 'PGRST116') {
+          // No rows found — fine
+          return success(res, null);
+        }
+        if (isTableMissing(dbError)) {
+          return error(res, 'Drafts feature not available', 501);
+        }
         console.error('Failed to fetch draft:', dbError);
         return error(res, 'Failed to fetch draft', 500);
       }
 
       return success(res, data || null);
     } catch (err) {
+      if (isTableMissing(err)) {
+        return error(res, 'Drafts feature not available', 501);
+      }
       console.error('Draft fetch error:', err);
       return error(res, 'Failed to fetch draft', 500);
     }
@@ -68,12 +81,18 @@ export default async function handler(req, res) {
         );
 
       if (upsertError) {
+        if (isTableMissing(upsertError)) {
+          return error(res, 'Drafts feature not available', 501);
+        }
         console.error('Failed to save draft:', upsertError);
         return error(res, 'Failed to save draft', 500);
       }
 
       return success(res, { formId, saved: true });
     } catch (err) {
+      if (isTableMissing(err)) {
+        return error(res, 'Drafts feature not available', 501);
+      }
       console.error('Draft save error:', err);
       return error(res, 'Failed to save draft', 500);
     }
@@ -96,12 +115,18 @@ export default async function handler(req, res) {
         .eq('form_id', formId);
 
       if (delError) {
+        if (isTableMissing(delError)) {
+          return error(res, 'Drafts feature not available', 501);
+        }
         console.error('Failed to delete draft:', delError);
         return error(res, 'Failed to delete draft', 500);
       }
 
       return success(res, { formId, deleted: true });
     } catch (err) {
+      if (isTableMissing(err)) {
+        return error(res, 'Drafts feature not available', 501);
+      }
       console.error('Draft delete error:', err);
       return error(res, 'Failed to delete draft', 500);
     }

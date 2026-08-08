@@ -33,6 +33,8 @@ interface UseAutoSaveFormReturn {
 }
 
 const STORAGE_PREFIX = 'draft'
+const MAX_SERVER_RETRIES = 3
+const SERVER_COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
 
 function getStorageKey(userId: string, formId: string): string {
   return `${STORAGE_PREFIX}:${userId}:${formId}`
@@ -50,14 +52,19 @@ function shallowEqual(a: Record<string, unknown>, b: Record<string, unknown>): b
 
 /**
  * Auto-save form hook with localStorage persistence, debounced writes,
- * draft restoration, and background server sync.
+ * draft restoration, and background server sync with circuit breaker.
  *
  * Storage key schema: `draft:{userId}:{formId}`
  * Stored value: `{ values: Record<string, unknown>, savedAt: number }`
  *
  * Status machine:
  *   idle → saving (on change) → saved (after server ack) → idle (after 3s)
- *   idle → error (on server failure, auto-retries on next change)
+ *   idle → error (on server failure, retries up to MAX_SERVER_RETRIES then goes idle)
+ *
+ * Circuit breaker:
+ *   After MAX_SERVER_RETRIES consecutive failures, server sync is paused for
+ *   SERVER_COOLDOWN_MS. localStorage still works. After cooldown, one retry
+ *   is attempted; if it fails again, cooldown restarts.
  */
 export function useAutoSaveForm({
   userId,
@@ -81,6 +88,8 @@ export function useAutoSaveForm({
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSyncedAtRef = useRef<Record<string, unknown> | null>(null)
   const isSavingRef = useRef(false)
+  const consecutiveFailuresRef = useRef(0)
+  const serverCooldownUntilRef = useRef(0)
 
   latestValuesRef.current = values
 
@@ -113,6 +122,29 @@ export function useAutoSaveForm({
     }
   }, [status])
 
+  // ── Check if server is available (circuit breaker) ──────────
+  const isServerAvailable = useCallback(() => {
+    if (consecutiveFailuresRef.current >= MAX_SERVER_RETRIES) {
+      // In cooldown — don't retry yet
+      if (Date.now() < serverCooldownUntilRef.current) return false
+      // Cooldown expired — allow one retry
+      return true
+    }
+    return true
+  }, [])
+
+  const onServerFailure = useCallback(() => {
+    consecutiveFailuresRef.current += 1
+    if (consecutiveFailuresRef.current >= MAX_SERVER_RETRIES) {
+      serverCooldownUntilRef.current = Date.now() + SERVER_COOLDOWN_MS
+    }
+  }, [])
+
+  const onServerSuccess = useCallback(() => {
+    consecutiveFailuresRef.current = 0
+    serverCooldownUntilRef.current = 0
+  }, [])
+
   // ── Debounced localStorage save + server sync ──────────────
   useEffect(() => {
     if (!enabled || !userId) return
@@ -121,18 +153,26 @@ export function useAutoSaveForm({
 
     saveTimerRef.current = setTimeout(() => {
       try {
-        // 1. Write to localStorage immediately
+        // 1. Write to localStorage immediately (always works)
         const entry = { values: latestValuesRef.current, savedAt: Date.now() }
         localStorage.setItem(getStorageKey(userId, formId), JSON.stringify(entry))
         setLastSavedAt(entry.savedAt)
 
-        // 2. Set saving state (unless server sync is already in progress)
+        // 2. If server is in cooldown, skip — just show "Saved locally"
+        if (!isServerAvailable()) {
+          setStatus('saved')
+          setStatusMessage('Saved locally')
+          isSavingRef.current = false
+          return
+        }
+
+        // 3. Set saving state (unless server sync is already in progress)
         if (!isSavingRef.current) {
           setStatus('saving')
           setStatusMessage('Saving...')
         }
 
-        // 3. Sync to server in background
+        // 4. Sync to server in background
         syncToServer(userId, formId, latestValuesRef.current)
       } catch (err) {
         console.error('[AutoSave] localStorage write failed:', err)
@@ -142,7 +182,7 @@ export function useAutoSaveForm({
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
-  }, [values, userId, formId, enabled, localStorageDelay])
+  }, [values, userId, formId, enabled, localStorageDelay, isServerAvailable])
 
   // ── Server sync function ─────────────────────────────────
   const syncToServer = useCallback(async (_uid: string, fid: string, vals: Record<string, unknown>) => {
@@ -152,7 +192,6 @@ export function useAutoSaveForm({
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) {
-        console.warn('[AutoSave] No auth session — skipping server sync')
         isSavingRef.current = false
         setStatus('idle')
         setStatusMessage('')
@@ -169,40 +208,63 @@ export function useAutoSaveForm({
       })
 
       if (!res.ok) {
+        // 501 = feature not available (table doesn't exist) — circuit-break immediately
+        if (res.status === 501) {
+          consecutiveFailuresRef.current = MAX_SERVER_RETRIES
+          serverCooldownUntilRef.current = Date.now() + SERVER_COOLDOWN_MS
+          setStatus('saved')
+          setStatusMessage('Saved locally')
+          isSavingRef.current = false
+          return
+        }
+
         const errorText = await res.text().catch(() => 'unknown')
-        console.error(`[AutoSave] Server sync failed (${res.status}):`, errorText)
-        setStatus('error')
-        setStatusMessage('Save failed — will retry')
+        if (consecutiveFailuresRef.current === 0) {
+          console.warn(`[AutoSave] Server sync failed (${res.status}):`, errorText)
+        }
+        onServerFailure()
+        setStatus('saved')
+        setStatusMessage('Saved locally')
         isSavingRef.current = false
         return
       }
 
       const result = await res.json()
       if (!result.success) {
-        console.error('[AutoSave] Server returned error:', result)
-        setStatus('error')
-        setStatusMessage('Save failed — will retry')
+        if (consecutiveFailuresRef.current === 0) {
+          console.warn('[AutoSave] Server returned error:', result.error || result)
+        }
+        onServerFailure()
+        setStatus('saved')
+        setStatusMessage('Saved locally')
         isSavingRef.current = false
         return
       }
 
+      onServerSuccess()
       lastSyncedAtRef.current = vals
       setStatus('saved')
       setStatusMessage('Draft saved')
     } catch (err) {
-      console.error('[AutoSave] Server sync exception:', err)
-      setStatus('error')
-      setStatusMessage('Save failed — will retry')
+      if (consecutiveFailuresRef.current === 0) {
+        console.warn('[AutoSave] Server sync exception:', err)
+      }
+      onServerFailure()
+      setStatus('saved')
+      setStatusMessage('Saved locally')
     } finally {
       isSavingRef.current = false
     }
-  }, [])
+  }, [onServerFailure, onServerSuccess])
 
   // ── Background server sync (periodic retry) ──────────────
   useEffect(() => {
     if (!enabled || !userId || serverSyncInterval <= 0) return
 
     syncTimerRef.current = setInterval(async () => {
+      // Circuit breaker: skip if server is in cooldown
+      if (!isServerAvailable()) return
+
       const currentValues = latestValuesRef.current
       // Don't sync if values haven't changed since last sync
       if (lastSyncedAtRef.current && shallowEqual(currentValues, lastSyncedAtRef.current as unknown as Record<string, unknown>)) {
@@ -217,7 +279,7 @@ export function useAutoSaveForm({
     return () => {
       if (syncTimerRef.current) clearInterval(syncTimerRef.current)
     }
-  }, [userId, formId, enabled, serverSyncInterval, syncToServer])
+  }, [userId, formId, enabled, serverSyncInterval, syncToServer, isServerAvailable])
 
   // ── Restore draft on mount ───────────────────────────────
   useEffect(() => {
@@ -236,7 +298,6 @@ export function useAutoSaveForm({
         setStatus('restored')
         setStatusMessage('Draft restored from earlier session')
         setLastSavedAt(entry.savedAt)
-        // Signal that draft was restored — the parent should call restoreDraft()
       }
     } catch {
       // Corrupted data — clear it
@@ -259,13 +320,18 @@ export function useAutoSaveForm({
           headers: { 'Authorization': `Bearer ${session.access_token}` },
         })
         if (!res.ok) {
-          console.warn(`[AutoSave] Server draft fetch failed (${res.status})`)
+          // 501 = table doesn't exist — circuit-break immediately
+          if (res.status === 501) {
+            consecutiveFailuresRef.current = MAX_SERVER_RETRIES
+            serverCooldownUntilRef.current = Date.now() + SERVER_COOLDOWN_MS
+          }
           return
         }
 
         const result = await res.json()
         if (!result.success || !result.data?.values) return
 
+        onServerSuccess()
         const serverValues = result.data.values
         const serverSavedAt = new Date(result.data.updated_at).getTime()
 
@@ -274,17 +340,15 @@ export function useAutoSaveForm({
         const localSavedAt = localRaw ? (JSON.parse(localRaw).savedAt ?? 0) : 0
 
         if (serverSavedAt > localSavedAt && !shallowEqual(serverValues, latestValuesRef.current)) {
-          // Save server draft to local storage
           const entry = { values: serverValues, savedAt: serverSavedAt }
           localStorage.setItem(getStorageKey(userId, formId), JSON.stringify(entry))
         }
-      } catch (err) {
-        console.warn('[AutoSave] Server draft fetch error:', err)
+      } catch {
+        // Silently skip server draft fetch failures
       }
     }
 
     fetchServerDraft()
-    // Run only on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, formId, enabled])
 
@@ -309,10 +373,8 @@ export function useAutoSaveForm({
   }, [userId, formId])
 
   const onFormSaved = useCallback(() => {
-    // Capture current values at call time before clearDraft runs
     const currentValues = latestValuesRef.current
     clearDraft()
-    // Reset initial values to current (post-save) state
     initialValuesRef.current = { ...currentValues }
   }, [clearDraft])
 
@@ -350,12 +412,12 @@ export function DraftStatusIndicator({ status, lastSavedAt, statusMessage, class
 
   // Always render the container to reserve space and prevent layout shift
   if (status === 'idle' && !statusMessage) {
-    return <div className={className} />
+    return <div className={cn('min-h-[36px] transition-opacity duration-300 opacity-0', className)} />
   }
 
   return (
     <div className={cn(
-      'flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-2 text-xs text-muted-foreground transition-all duration-200',
+      'flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-2 text-xs text-muted-foreground transition-all duration-300 opacity-100',
       className
     )}>
       <span className="flex items-center gap-2">

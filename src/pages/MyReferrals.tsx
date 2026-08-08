@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Clock, Download, FileText, MessageSquare, Send, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,7 @@ import { type ReferralStatus, PIPELINE_STAGES, type PipelineStage } from '@/data
 import { cn } from '@/lib/utils'
 import { exportReferralsCSV } from '@/lib/export'
 import { toast } from 'sonner'
+import { ListSkeleton } from '@/components/ui/skeleton'
 
 const STAGES: { key: ReferralStatus | 'all'; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -114,13 +115,14 @@ function PipelineTracker({ stage, status }: { stage: PipelineStage; status: Refe
 }
 
 export default function MyReferrals() {
-  const { requests, professionals, loading } = useApp()
+  const { requests, professionals, loading, startConversation } = useApp()
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [tab, setTab] = useState<'all' | ReferralStatus>('all')
   const mine = requests.filter((r) => r.requesterId === user?.id)
   const filtered = useMemo(() => (tab === 'all' ? mine : mine.filter((r) => r.status === tab)), [mine, tab])
 
-  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+  if (loading) return <ListSkeleton count={5} />
 
   return (
     <div className="space-y-6">
@@ -138,7 +140,7 @@ export default function MyReferrals() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard icon={Send} label="Total sent" value={mine.length} />
-        <StatCard icon={CheckCircle2} label="Accepted" value={mine.filter((r) => r.status === 'accepted' || r.status === 'offered').length} />
+        <StatCard icon={CheckCircle2} label="Accepted" value={mine.filter((r) => r.status === 'accepted').length} />
         <StatCard icon={Clock} label="Awaiting reply" value={mine.filter((r) => r.status === 'pending').length} />
         <StatCard icon={XCircle} label="Declined" value={mine.filter((r) => r.status === 'rejected').length} />
       </div>
@@ -190,10 +192,10 @@ export default function MyReferrals() {
                       </Link>
                       <div className="flex items-center gap-2">
                         <StatusBadge status={r.status} />
-                        {(r.status === 'accepted' || r.status === 'offered') && (
+                        {r.status === 'accepted' && (
                           <LinkedInShareButton role={r.role} company={p.company} professionalName={p.name} size="sm" showCopy={false} />
                         )}
-                        <Button variant="outline" size="sm" className="rounded-full" asChild><Link to="/messages"><MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message</Link></Button>
+                        <Button variant="outline" size="sm" className="rounded-full" onClick={async () => { const convId = await startConversation(p.id); if (convId) navigate(`/messages?conversation=${convId}`) }}><MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message</Button>
                       </div>
                     </div>
 

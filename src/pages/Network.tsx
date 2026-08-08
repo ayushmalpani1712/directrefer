@@ -12,6 +12,7 @@ import { EmptyState, SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 import { ProfessionalCard } from '@/pages/FindProfessionals'
+import { ListSkeleton } from '@/components/ui/skeleton'
 
 const ICONS: Record<string, { icon: typeof Bell; cls: string }> = {
   accepted: { icon: CheckCheck, cls: 'bg-emerald-500/10 text-emerald-500' },
@@ -27,7 +28,7 @@ export function NotificationsPage() {
   const [filter, setFilter] = useState('all')
   const shown = filter === 'all' ? notifications : filter === 'unread' ? notifications.filter((n) => !n.read) : notifications.filter((n) => n.type === filter)
 
-  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+  if (loading) return <ListSkeleton count={5} />
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -84,7 +85,7 @@ export function BookmarksPage() {
   const { visibleProfessionals: professionals, bookmarks, loading } = useApp()
   const saved = professionals.filter((p) => bookmarks.includes(p.id))
 
-  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+  if (loading) return <ListSkeleton count={5} />
 
   return (
     <div className="space-y-6">
@@ -114,7 +115,7 @@ const ACT_ICON: Record<string, { icon: typeof Bell; cls: string }> = {
 
 export function ActivityPage() {
   const { activity, loading } = useApp()
-  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+  if (loading) return <ListSkeleton count={5} />
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

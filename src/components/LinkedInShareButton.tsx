@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { Share2, Copy, Check } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -54,7 +55,9 @@ export function LinkedInShareButton({
     navigator.clipboard.writeText(shareText).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    }).catch(() => {})
+    }).catch(() => {
+      toast.error('Failed to copy to clipboard')
+    })
   }, [shareText])
 
   return (

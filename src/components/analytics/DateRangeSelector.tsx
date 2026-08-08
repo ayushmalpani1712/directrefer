@@ -121,7 +121,11 @@ export function DateRangeSelector({ value, onChange, className }: { value: DateR
                 <Input
                   type="date"
                   value={value.from.toISOString().split('T')[0]}
-                  onChange={(e) => onChange({ ...value, from: new Date(e.target.value) })}
+                  onChange={(e) => {
+                    const fromDate = new Date(e.target.value)
+                    const newTo = fromDate > value.to ? fromDate : value.to
+                    onChange({ ...value, from: fromDate, to: newTo })
+                  }}
                   className="h-8 w-[150px] rounded-lg text-xs"
                 />
               </div>
@@ -131,7 +135,11 @@ export function DateRangeSelector({ value, onChange, className }: { value: DateR
                 <Input
                   type="date"
                   value={value.to.toISOString().split('T')[0]}
-                  onChange={(e) => onChange({ ...value, to: new Date(e.target.value) })}
+                  onChange={(e) => {
+                    const toDate = new Date(e.target.value)
+                    const newFrom = toDate < value.from ? toDate : value.from
+                    onChange({ ...value, to: toDate, from: newFrom })
+                  }}
                   className="h-8 w-[150px] rounded-lg text-xs"
                 />
               </div>

@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { CompanyChip, EmptyState, GAvatar, ProgressRing, StatCard, StatusBadge } from '@/components/ui-kit'
+import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
@@ -66,7 +67,7 @@ export default function StudentDashboard() {
       .slice(0, 3)
   }, [professionals])
 
-  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+  if (loading) return <DashboardSkeleton />
 
   return (
     <div className="space-y-6">
@@ -85,7 +86,7 @@ export default function StudentDashboard() {
                   <Briefcase className="mr-1.5 h-4 w-4" /> {myRequests.length} referrals
                 </Badge>
                 <Badge className="border border-border bg-muted/30 text-[13px] text-muted-foreground hover:bg-muted/50">
-                  <Flame className="mr-1.5 h-4 w-4" /> {myRequests.filter((r) => r.status === 'accepted' || r.status === 'offered').length} accepted
+                  <Flame className="mr-1.5 h-4 w-4" /> {myRequests.filter((r) => r.status === 'accepted').length} accepted
                 </Badge>
                 <Badge className="border border-border bg-muted/30 text-[13px] text-muted-foreground hover:bg-muted/50">
                   <Clock className="mr-1.5 h-4 w-4" /> {referralsSentToday}/{RATE_LIMIT} referrals today
@@ -108,7 +109,7 @@ export default function StudentDashboard() {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 items-stretch">
         <StatCard icon={Send} label="Referrals sent" value={myRequests.length} delta={myRequests.length > 0 ? Math.round((myRequests.length / Math.max(1, myRequests.length + 2)) * 100) : 0} deltaLabel="completion" delay={0.05} href="/job-seeker/applications" />
-        <StatCard icon={TrendingUp} label="Acceptance rate" value={myRequests.length > 0 ? `${Math.round((myRequests.filter((r) => r.status === 'accepted' || r.status === 'offered').length / myRequests.length) * 100)}%` : '0%'} delta={myRequests.filter((r) => r.status === 'accepted' || r.status === 'offered').length} deltaLabel="accepted" delay={0.1} href="/job-seeker/applications" />
+        <StatCard icon={TrendingUp} label="Acceptance rate" value={myRequests.length > 0 ? `${Math.round((myRequests.filter((r) => r.status === 'accepted').length / myRequests.length) * 100)}%` : '0%'} delta={myRequests.filter((r) => r.status === 'accepted').length} deltaLabel="accepted" delay={0.1} href="/job-seeker/applications" />
         <StatCard icon={Users} label="Active referrals" value={myRequests.filter((r) => r.status === 'pending').length} delta={myRequests.filter((r) => r.status === 'pending').length} deltaLabel="awaiting reply" delay={0.15} href="/job-seeker/applications" />
       </div>
 

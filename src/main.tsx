@@ -5,14 +5,6 @@ import './index.css'
 import App from './App.tsx'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
-// ── Suppress noisy console errors ───────────────────────────
-const origError = console.error.bind(console)
-console.error = (...args: unknown[]) => {
-  const msg = args.map(String).join(' ')
-  if (msg.includes('Failed to load resource') && (msg.includes('400') || msg.includes('403'))) return
-  origError(...args)
-}
-
 // ── Global error handlers (catch errors outside React tree) ─
 window.addEventListener('error', (event) => {
   console.error('[GlobalError] Uncaught error:', event.error || event.message)
@@ -21,27 +13,6 @@ window.addEventListener('error', (event) => {
 window.addEventListener('unhandledrejection', (event) => {
   console.error('[UnhandledRejection]', event.reason)
 })
-
-// ── Service worker registration ─────────────────────────────
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register(`/sw.js?v=${Date.now()}`)
-      .then((reg) => {
-        reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                newWorker.postMessage({ type: 'SKIP_WAITING' })
-              }
-            })
-          }
-        })
-      })
-      .catch(() => {})
-  })
-}
 
 // ── Render ──────────────────────────────────────────────────
 createRoot(document.getElementById('root')!).render(

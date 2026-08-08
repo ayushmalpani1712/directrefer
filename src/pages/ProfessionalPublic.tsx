@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 
+import { SkeletonCard } from '@/components/ui/skeleton'
 import { CompanyChip, GAvatar, ReportDialog } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
@@ -47,33 +48,36 @@ export default function ProfessionalPublic() {
         if (!data) { setLoadingData(false); return }
         const { data: userData } = await supabase
           .from('users')
-          .select('full_name, email')
+          .select('full_name, email, city, state, country, linkedin')
           .eq('id', id)
           .single()
+        const locationParts = [userData?.city, userData?.state].filter(Boolean).join(', ')
+        const GRADIENTS = ['from-[#3B5FE5] to-[#8B8FD4]', 'from-[#4F7CFF] to-[#7C5CFF]', 'from-[#6366F1] to-[#8B5CF6]', 'from-[#0EA5E9] to-[#6366F1]']
+        const gradientIndex = id ? id.charCodeAt(0) % GRADIENTS.length : 0
         setPro({
           id,
           name: userData?.full_name || 'Professional',
-          designation: data.designation || 'Professional',
+          designation: data.job_title || 'Professional',
           company: data.company_name || 'Company',
-          location: data.location || '',
-          yearsExp: data.years_exp || 0,
+          location: locationParts || '',
+          yearsExp: data.years_experience || 0,
           verified: true,
-          gradient: data.gradient || 'from-[#3B5FE5] to-[#8B8FD4]',
+          gradient: GRADIENTS[gradientIndex],
           bio: data.bio || '',
           skills: Array.isArray(data.skills) ? data.skills : [],
           openPositions: Array.isArray(data.open_positions) ? data.open_positions : [],
           openForReferrals: data.open_for_referrals ?? true,
-          maxPerMonth: data.max_per_month || 5,
-          usedThisMonth: data.used_this_month || 0,
-          referralDuration: data.referral_duration || '2 weeks',
+          maxPerMonth: data.referral_capacity || 5,
+          usedThisMonth: data.referrals_used || 0,
+          referralDuration: '2 weeks',
           avgReplyHours: data.avg_reply_hours || 12,
-          referralsCompleted: data.referrals_completed || 0,
+          referralsCompleted: data.referrals_used || 0,
           rating: data.rating || 4.8,
-          linkedinUrl: data.linkedin_url || '',
+          linkedinUrl: userData?.linkedin || '',
           githubUrl: data.github_url || '',
           email: userData?.email || '',
-          phone: data.phone || '',
-          whatsapp: data.whatsapp || '',
+          phone: '',
+          whatsapp: '',
         })
       } catch {
         setPro(null)
@@ -85,22 +89,26 @@ export default function ProfessionalPublic() {
 
   if (loading || loadingData) {
     return (
-      <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+      <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl space-y-6">
+          <SkeletonCard />
+        </div>
+      </div>
     )
   }
 
   if (!pro) return <NotFound />
   const saved = bookmarks?.includes(pro.id) ?? false
   const hasAcceptedReferral = requests?.some(
-    (r) => r.professionalId === pro.id && r.student === student?.name && (r.status === 'accepted' || r.status === 'offered')
+    (r) => r.professionalId === pro.id && r.student === student?.name && r.status === 'accepted'
   ) ?? false
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl space-y-6">
-        <Link to="/job-seeker/professionals" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back to professionals
-        </Link>
+        <button onClick={() => window.history.back()} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Back
+        </button>
 
       {/* Hero card */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -134,7 +142,10 @@ export default function ProfessionalPublic() {
                     ? <Link to={`/job-seeker/request-referral/${pro.id}`}><Send className="mr-1.5 h-4 w-4" /> Request Referral</Link>
                     : <span>At capacity</span>}
                 </Button>
-                <Button variant="outline" className="rounded-full" onClick={() => navigate('/messages')}><MessageSquare className="mr-1.5 h-4 w-4" /> Message</Button>
+                <Button variant="outline" className="rounded-full" onClick={async () => {
+                  const convId = await app.startConversation(pro.id)
+                  if (convId) navigate(`/messages?conversation=${convId}`)
+                }}><MessageSquare className="mr-1.5 h-4 w-4" /> Message</Button>
                 <Button variant="outline" size="icon" className="rounded-full" onClick={() => { toggleBookmark?.(pro.id); toast(saved ? 'Removed from bookmarks' : 'Saved to bookmarks') }}>
                   {saved ? <BookmarkCheck className="h-4.5 w-4.5 text-primary" /> : <Bookmark className="h-4.5 w-4.5" />}
                 </Button>

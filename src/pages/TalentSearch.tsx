@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { SkeletonGrid } from '@/components/ui/skeleton'
 import { Chip, EmptyState, GAvatar, SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
@@ -14,7 +15,7 @@ import { usePageLoading } from '@/hooks/usePageLoading'
 
 export default function TalentSearch() {
   const loading = usePageLoading(400)
-  const { candidates, savedCandidates, toggleCandidate, addRequest, visibleProfessionals: professionals } = useApp()
+  const { candidates, savedCandidates, toggleCandidate, addRequest, visibleProfessionals: professionals, startConversation } = useApp()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [q, setQ] = useState('')
@@ -22,12 +23,11 @@ export default function TalentSearch() {
   const [minRating, setMinRating] = useState('0')
 
   const results = useMemo(() => candidates.filter((c) => {
-    if (c.id === user?.id) return false
     if (q && ![c.name, c.role, c.location, ...c.skills].join(' ').toLowerCase().includes(q.toLowerCase())) return false
     if (source !== 'all' && c.source !== source) return false
     if (c.rating < Number(minRating)) return false
     return true
-  }), [q, source, minRating, candidates, user?.id])
+  }), [q, source, minRating, candidates])
 
   return (
     <div className="space-y-6">
@@ -57,7 +57,7 @@ export default function TalentSearch() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+        <SkeletonGrid count={6} />
       ) : results.length === 0 ? (
         <EmptyState
           icon={Users}
@@ -97,14 +97,15 @@ export default function TalentSearch() {
                       </div>
                       <div className="mt-3 flex flex-wrap gap-1.5">{c.skills.map((s) => <Chip key={s}>{s}</Chip>)}</div>
                       <div className="mt-4 flex gap-2">
-                        <Button size="sm" className="flex-1 rounded-lg bg-primary" onClick={(e) => {
+                        <Button size="sm" className="flex-1 rounded-lg bg-primary" disabled={c.id === user?.id} onClick={(e) => {
                           e.stopPropagation()
                           const pro = professionals.find((p) => p.id === user?.id)
                           if (!pro) { toast.error('No professional profile found. Complete your profile first.'); return }
                           addRequest({
-                            id: `r${Date.now()}`,
+                            id: `r${crypto.randomUUID()}`,
                             student: c.name,
                             studentEmail: user?.email,
+                            requesterId: user?.id,
                             professionalId: pro.id,
                             role: c.role,
                             status: 'pending',
@@ -115,9 +116,9 @@ export default function TalentSearch() {
                           })
                           toast.success(`Referral request sent for ${c.name}`)
                         }}>
-                          <UserPlus className="mr-1.5 h-3.5 w-3.5" /> Invite
+                          <UserPlus className="mr-1.5 h-3.5 w-3.5" /> {c.id === user?.id ? 'You' : 'Invite'}
                         </Button>
-                        <Button size="sm" variant="outline" className="rounded-lg" onClick={(e) => { e.stopPropagation(); navigate('/messages') }}>
+                        <Button size="sm" variant="outline" className="rounded-lg" disabled={c.id === user?.id} onClick={async (e) => { e.stopPropagation(); const convId = await startConversation(c.id); if (convId) navigate(`/messages?conversation=${convId}`) }}>
                           <MessageSquare className="h-3.5 w-3.5" />
                         </Button>
                       </div>

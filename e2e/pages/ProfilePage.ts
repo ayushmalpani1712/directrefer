@@ -108,11 +108,10 @@ export class ProfilePage {
     const isOn = await this.isOpenToWorkOn();
     if (isOn !== targetState) {
       await this.openToWorkToggle.click();
-      // Wait for the API call to resolve
+      // Wait for any Supabase request (RPC call, POST, or PATCH)
       await this.page.waitForResponse(
-        (resp) => resp.url().includes('/rest/v1/') && resp.request().method() === 'PATCH'
+        (resp) => resp.url().includes('/rest/v1/') && ['POST', 'PATCH'].includes(resp.request().method())
       ).catch(() => {});
-      // Brief wait for optimistic UI to settle
       await this.page.waitForTimeout(500);
     }
   }
@@ -122,8 +121,9 @@ export class ProfilePage {
     const isOn = await this.isOpenForReferralsOn();
     if (isOn !== targetState) {
       await this.openForReferralsToggle.click();
+      // Wait for any Supabase request (RPC call, POST, or PATCH)
       await this.page.waitForResponse(
-        (resp) => resp.url().includes('/rest/v1/') && resp.request().method() === 'PATCH'
+        (resp) => resp.url().includes('/rest/v1/') && ['POST', 'PATCH'].includes(resp.request().method())
       ).catch(() => {});
       await this.page.waitForTimeout(500);
     }

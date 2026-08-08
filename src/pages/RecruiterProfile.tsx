@@ -13,8 +13,7 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { useAutoSaveForm, DraftStatusIndicator } from '@/hooks/useAutoSaveForm'
-import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard'
+import { ProfileSkeleton } from '@/components/ui/skeleton'
 
 
 export default function RecruiterProfile() {
@@ -25,7 +24,6 @@ export default function RecruiterProfile() {
   const c = recruiterCompany
   const navigate = useNavigate()
   const profileLoadedRef = useRef(false)
-  const draftRestoredRef = useRef(false)
 
   useEffect(() => {
     const loadCompany = async () => {
@@ -88,63 +86,22 @@ export default function RecruiterProfile() {
   const [savingHeader, setSavingHeader] = useState(false)
   const [savingAbout, setSavingAbout] = useState(false)
 
-  // ── Auto-Save Draft ──
-  const draftSnapshot = {
-    editName, editIndustry, editSize, editWebsite, editLinkedin,
-    description, editMission, editHighlights, mission,
-  }
-  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges, statusMessage } = useAutoSaveForm({
-    userId: user?.id ?? '',
-    formId: 'recruiter-profile',
-    values: draftSnapshot,
-    enabled: !loading && !!user,
-  })
-  useUnsavedChangesGuard({ enabled: hasUnsavedChanges })
-
-  useEffect(() => {
-    if (draftStatus !== 'restored' || !user) return
-    try {
-      const raw = localStorage.getItem(`draft:${user.id}:recruiter-profile`)
-      if (!raw) return
-      const entry = JSON.parse(raw)
-      if (!entry?.values) return
-      const v = entry.values
-      if (v.editName !== undefined) setEditName(v.editName)
-      if (v.editIndustry !== undefined) setEditIndustry(v.editIndustry)
-      if (v.editSize !== undefined) setEditSize(v.editSize)
-      if (v.editWebsite !== undefined) setEditWebsite(v.editWebsite)
-      if (v.editLinkedin !== undefined) setEditLinkedin(v.editLinkedin)
-      if (v.description !== undefined) setDescription(v.description)
-      if (v.editMission !== undefined) setEditMission(v.editMission)
-      if (v.editHighlights !== undefined) setEditHighlights(v.editHighlights)
-      if (v.mission !== undefined) setMission(v.mission)
-      restoreDraft(v)
-      draftRestoredRef.current = true
-    } catch { /* corrupted draft — ignore */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftStatus])
-
   // Sync local state when DB data loads
   useEffect(() => {
-    // Skip first DB sync if draft was just restored to avoid overwriting draft values
-    if (draftRestoredRef.current) {
-      draftRestoredRef.current = false
-      return
-    }
-    setEditName(c.name)
-    setEditIndustry(c.industry)
-    setEditSize(c.size)
-    setEditWebsite(c.website)
-    setEditLinkedin(c.linkedin)
-    setDescription(c.description)
-    setMission(c.mission)
-    setEditMission(c.mission)
-    setHighlights(c.highlights)
+    setEditName((prev) => prev === c.name ? prev : c.name)
+    setEditIndustry((prev) => prev === c.industry ? prev : c.industry)
+    setEditSize((prev) => prev === c.size ? prev : c.size)
+    setEditWebsite((prev) => prev === c.website ? prev : c.website)
+    setEditLinkedin((prev) => prev === c.linkedin ? prev : c.linkedin)
+    setDescription((prev) => prev === c.description ? prev : c.description)
+    setMission((prev) => prev === c.mission ? prev : c.mission)
+    setEditMission((prev) => prev === c.mission ? prev : c.mission)
+    setHighlights((prev) => prev === c.highlights ? prev : c.highlights)
   }, [c.name, c.industry, c.size, c.website, c.linkedin, c.description, c.mission, c.highlights])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+      <ProfileSkeleton />
     )
   }
   return (
@@ -242,7 +199,6 @@ export default function RecruiterProfile() {
                       setEditWebsite(c.website)
                       setEditLinkedin(c.linkedin)
                       setEditing(false)
-                      clearDraft()
                     }}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
                     <Button className="rounded-full bg-primary shadow-glow" disabled={savingHeader} onClick={async () => {
                       setSavingHeader(true)
@@ -256,7 +212,7 @@ export default function RecruiterProfile() {
                           linkedin: editLinkedin,
                           description,
                         }))
-                        updateRecruiter({
+                        await updateRecruiter({
                           company_name: editName,
                           hiring_department: editIndustry,
                           company_size: editSize,
@@ -266,7 +222,8 @@ export default function RecruiterProfile() {
                         })
                         setEditing(false)
                         toast.success('Profile saved')
-                        onFormSaved()
+                      } catch {
+                        toast.error('Failed to save. Please try again.')
                       } finally {
                         setSavingHeader(false)
                       }
@@ -287,15 +244,6 @@ export default function RecruiterProfile() {
           </CardContent>
         </Card>
       </motion.div>
-
-      {/* Draft status indicator — placed below banner, near content */}
-      <DraftStatusIndicator
-        status={draftStatus}
-        lastSavedAt={lastSavedAt}
-        statusMessage={statusMessage}
-        showDiscard={hasUnsavedChanges}
-        onDiscard={clearDraft}
-      />
 
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">
@@ -351,7 +299,6 @@ export default function RecruiterProfile() {
                         updateRecruiter({ company_description: description, company_mission: editMission, company_highlights: parsedHighlights })
                         setEditingCard(null)
                         toast.success('About section saved')
-                        onFormSaved()
                       } finally {
                         setSavingAbout(false)
                       }

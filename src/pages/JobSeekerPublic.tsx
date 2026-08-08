@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Link, useParams, useNavigate } from 'react-router'
+import { useParams, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft, Briefcase, ExternalLink, GraduationCap,
-  Globe, Github, MapPin, MessageSquare, Send, Star,
+  Globe, Github, MapPin, MessageSquare, Send, Star, Trophy,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
+import { SkeletonCard } from '@/components/ui/skeleton'
 import { GAvatar, Chip } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
@@ -31,7 +32,7 @@ export default function JobSeekerPublic() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { addRequest, visibleProfessionals: professionals } = useApp()
+  const { addRequest, visibleProfessionals: professionals, startConversation } = useApp()
   const loading = usePageLoading(400)
   const [seeker, setSeeker] = useState<PublicJobSeeker | null>(null)
   const [loadingData, setLoadingData] = useState(true)
@@ -63,6 +64,7 @@ export default function JobSeekerPublic() {
         const city = userData?.city ?? ''
         const state = userData?.state ?? ''
         const locationParts = [city, state].filter(Boolean)
+        const gradientIndex = id ? id.charCodeAt(0) % GRADIENTS.length : 0
 
         setSeeker({
           id,
@@ -70,7 +72,7 @@ export default function JobSeekerPublic() {
           headline: profileData.headline || profileData.preferred_role || 'Job Seeker',
           location: locationParts.join(', ') || 'Remote',
           openToWork: profileData.is_open_to_work ?? false,
-          gradient: GRADIENTS[0],
+          gradient: GRADIENTS[gradientIndex],
           skills: Array.isArray(profileData.skills) ? profileData.skills : [],
           experienceYears: profileData.experience_years ?? 0,
           preferredRole: profileData.preferred_role || '',
@@ -95,7 +97,11 @@ export default function JobSeekerPublic() {
 
   if (loading || loadingData) {
     return (
-      <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+      <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl space-y-6">
+          <SkeletonCard />
+        </div>
+      </div>
     )
   }
 
@@ -106,9 +112,9 @@ export default function JobSeekerPublic() {
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl space-y-6">
-        <Link to="/professional/talent" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back to talent search
-        </Link>
+        <button onClick={() => window.history.back()} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Back
+        </button>
 
         {/* Hero card */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -147,9 +153,10 @@ export default function JobSeekerPublic() {
                       const pro = professionals?.find((p) => p.id === user?.id)
                       if (!pro) return
                       addRequest({
-                        id: `r${Date.now()}`,
+                        id: `r${crypto.randomUUID()}`,
                         student: seeker.name,
                         studentEmail: user?.email,
+                        requesterId: user?.id,
                         professionalId: pro.id,
                         role: seeker.preferredRole || 'Referral',
                         status: 'pending',
@@ -161,7 +168,10 @@ export default function JobSeekerPublic() {
                     }}>
                       <Send className="mr-1.5 h-4 w-4" /> Request Referral
                     </Button>
-                    <Button variant="outline" className="rounded-full" onClick={() => navigate('/messages')}>
+                    <Button variant="outline" className="rounded-full" onClick={async () => {
+                      const convId = await startConversation(seeker.id)
+                      if (convId) navigate(`/messages?conversation=${convId}`)
+                    }}>
                       <MessageSquare className="mr-1.5 h-4 w-4" /> Message
                     </Button>
                   </div>
@@ -252,6 +262,18 @@ export default function JobSeekerPublic() {
                   <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold"><Star className="h-4 w-4 text-amber-400" /> Certifications</h3>
                   <ul className="space-y-1.5 text-[13px] text-muted-foreground">
                     {seeker.certifications.map((c, i) => <li key={i}>{c}</li>)}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Achievements */}
+            {seeker.achievements.length > 0 && (
+              <Card className="shadow-soft">
+                <CardContent className="p-6">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold"><Trophy className="h-4 w-4 text-primary" /> Achievements</h3>
+                  <ul className="space-y-1.5 text-[13px] text-muted-foreground">
+                    {seeker.achievements.map((a, i) => <li key={i}>{a}</li>)}
                   </ul>
                 </CardContent>
               </Card>

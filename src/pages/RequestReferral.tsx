@@ -21,6 +21,7 @@ import { usePageLoading } from '@/hooks/usePageLoading'
 import { type Professional } from '@/data/mock'
 import { uploadResume } from '@/lib/db'
 import { cn } from '@/lib/utils'
+import { ListSkeleton } from '@/components/ui/skeleton'
 
 const STEPS = [
   { id: 1, label: 'Professional', icon: User },
@@ -101,7 +102,7 @@ export default function RequestReferral() {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+    return <ListSkeleton count={3} />
   }
 
   const pro = professionals.find((p) => p.id === draft.professionalId)

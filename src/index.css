@@ -189,29 +189,17 @@
   stroke: hsl(var(--border) / 0.5);
 }
 
-/* Skeleton shimmer */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+/* Skeleton — flat, no glow */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
-.skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    hsl(var(--muted) / 0.5) 25%,
-    hsl(var(--muted) / 0.9) 50%,
-    hsl(var(--muted) / 0.5) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+.skeleton-base {
+  background: hsl(var(--muted));
+  animation: skeleton-pulse 2s ease-in-out infinite;
 }
-.dark .skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    hsl(var(--muted) / 0.3) 25%,
-    hsl(var(--muted) / 0.6) 50%,
-    hsl(var(--muted) / 0.3) 75%
-  );
-  background-size: 200% 100%;
+.dark .skeleton-base {
+  background: hsl(var(--muted) / 0.6);
 }
 
 /* Mobile safe-area support for gesture bars */

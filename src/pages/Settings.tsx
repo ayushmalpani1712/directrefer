@@ -6,6 +6,7 @@ import {
   ShieldCheck, Sun, Trash2, User, Zap,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,8 +23,6 @@ import { useVerification } from '@/hooks/useVerification'
 import { ROLE_META } from '@/data/mock'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
-import { useAutoSaveForm, DraftStatusIndicator } from '@/hooks/useAutoSaveForm'
-import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard'
 
 interface Session {
   id: string
@@ -46,7 +45,7 @@ function Row({ title, desc, children }: { title: string; desc?: string; children
 export default function Settings() {
   const { role, student, updateStudent, logout } = useApp()
   const { theme, setTheme } = useTheme()
-  const { signOut, user } = useAuth()
+  const { signOut } = useAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') || 'profile'
@@ -59,6 +58,7 @@ export default function Settings() {
   const [confirmNew, setConfirmNew] = useState('')
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [notifPrefs, setNotifPrefs] = useState({
     referral_updates: true, new_messages: true, profile_views: true,
     completion_reminders: true, product_announcements: false, weekly_digest: false, email_opt_out: false,
@@ -68,31 +68,6 @@ export default function Settings() {
   })
   const [language, setLanguage] = useState('en')
   const [timezone, setTimezone] = useState('ist')
-
-  // ── Auto-Save Draft ──
-  const draftSnapshot = { name, location }
-  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges, statusMessage } = useAutoSaveForm({
-    userId: user?.id ?? '',
-    formId: 'settings-profile',
-    values: draftSnapshot,
-    enabled: !!user,
-  })
-  useUnsavedChangesGuard({ enabled: hasUnsavedChanges })
-
-  useEffect(() => {
-    if (draftStatus !== 'restored' || !user) return
-    try {
-      const raw = localStorage.getItem(`draft:${user.id}:settings-profile`)
-      if (!raw) return
-      const entry = JSON.parse(raw)
-      if (!entry?.values) return
-      const v = entry.values
-      if (v.name !== undefined) setName(v.name)
-      if (v.location !== undefined) setLocation(v.location)
-      restoreDraft(v)
-    } catch { /* corrupted draft — ignore */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftStatus])
 
   useEffect(() => {
     setName(student.name)
@@ -172,7 +147,6 @@ export default function Settings() {
   const handleSaveProfile = () => {
     updateStudent({ name, location })
     toast.success('Profile updated successfully')
-    onFormSaved()
   }
 
   const handleUpdatePassword = async () => {
@@ -213,16 +187,8 @@ export default function Settings() {
   }
 
   return (
+    <>
     <div className="mx-auto max-w-4xl space-y-6">
-      {/* Draft status indicator */}
-      <DraftStatusIndicator
-        status={draftStatus}
-        lastSavedAt={lastSavedAt}
-        statusMessage={statusMessage}
-        showDiscard={hasUnsavedChanges}
-        onDiscard={clearDraft}
-      />
-
 
       <SectionHeader title="Settings" subtitle="Manage your account, preferences and security" />
 
@@ -248,9 +214,6 @@ export default function Settings() {
               <div className="space-y-1.5"><Label>Role</Label><Input value={ROLE_META[role].label} disabled /></div>
               <div className="sm:col-span-2 flex items-center gap-2">
                 <Button onClick={handleSaveProfile}>Save changes</Button>
-                {hasUnsavedChanges && (
-                  <Button variant="ghost" size="sm" onClick={() => { setName(student.name); setLocation(student.location); clearDraft() }}>Discard draft</Button>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -258,38 +221,9 @@ export default function Settings() {
             <CardHeader><CardTitle className="flex items-center gap-2 text-base text-rose-500"><Trash2 className="h-4 w-4" /> Danger zone</CardTitle></CardHeader>
             <CardContent className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
               <p className="text-sm text-muted-foreground">Permanently delete your account and all referral history. This cannot be undone.</p>
-              <Button variant="outline" className="border-rose-500/40 text-rose-500 hover:bg-rose-500/10" disabled={deleting} onClick={async () => {
+              <Button variant="outline" className="border-rose-500/40 text-rose-500 hover:bg-rose-500/10" disabled={deleting} onClick={() => {
                 if (role === 'admin') { toast.error('Admin accounts cannot be self-deleted. Contact another admin.'); return }
-                if (!confirm('Are you absolutely sure? This will permanently delete your account and all data. This action cannot be undone.')) return
-                setDeleting(true)
-                try {
-                  const userId = (await supabase.auth.getUser()).data.user?.id
-                  if (!userId) { toast.error('Not authenticated'); return }
-                  const tables = ['notifications', 'bookmarks', 'messages', 'conversations', 'referrals', 'profiles_job_seeker', 'profiles_professional', 'profiles_recruiter']
-                  const errors: string[] = []
-                  for (const table of tables) {
-                    const { error } = table === 'conversations'
-                      ? await supabase.from(table).delete().or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`)
-                      : table === 'referrals'
-                      ? await supabase.from(table).delete().or(`requester_id.eq.${userId},professional_id.eq.${userId}`)
-                      : await supabase.from(table).delete().eq('user_id', userId)
-                    if (error) errors.push(table)
-                  }
-                  const { error: userDelError } = await supabase.from('users').delete().eq('id', userId)
-                  if (userDelError) errors.push('users')
-                  if (errors.length > 0) {
-                    toast.error(`Failed to delete data from: ${errors.join(', ')}. Please contact support.`)
-                    return
-                  }
-                  logout()
-                  await signOut()
-                  toast.success('Account deleted successfully')
-                  navigate('/')
-                } catch {
-                  toast.error('Failed to delete account. Please contact support.')
-                } finally {
-                  setDeleting(false)
-                }
+                setDeleteDialogOpen(true)
               }}>{deleting ? 'Deleting...' : 'Delete account'}</Button>
             </CardContent>
           </Card>
@@ -436,6 +370,49 @@ export default function Settings() {
 
       </Tabs>
     </div>
+    <ConfirmDialog
+      open={deleteDialogOpen}
+      onOpenChange={setDeleteDialogOpen}
+      title="Delete account"
+      description="This will permanently delete your account and all data. This action cannot be undone."
+      confirmLabel="Delete"
+      onConfirm={async () => {
+        setDeleting(true)
+        try {
+          const userId = (await supabase.auth.getUser()).data.user?.id
+          if (!userId) { toast.error('Not authenticated'); return }
+          const tables = ['notifications', 'bookmarks', 'messages', 'conversations', 'referrals', 'reports', 'admin_logs', 'profiles_job_seeker', 'profiles_professional', 'profiles_recruiter']
+          const errors: string[] = []
+          for (const table of tables) {
+            const { error } = table === 'conversations'
+              ? await supabase.from(table).delete().or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`)
+              : table === 'referrals'
+              ? await supabase.from(table).delete().or(`requester_id.eq.${userId},professional_id.eq.${userId}`)
+              : table === 'reports'
+              ? await supabase.from(table).delete().eq('reporter_id', userId)
+              : table === 'admin_logs'
+              ? await supabase.from(table).delete().eq('admin_id', userId)
+              : await supabase.from(table).delete().eq('user_id', userId)
+            if (error) errors.push(table)
+          }
+          const { error: userDelError } = await supabase.from('users').delete().eq('id', userId)
+          if (userDelError) errors.push('users')
+          if (errors.length > 0) {
+            toast.error(`Failed to delete data from: ${errors.join(', ')}. Please contact support.`)
+            return
+          }
+          logout()
+          await signOut()
+          toast.success('Account deleted successfully')
+          navigate('/')
+        } catch {
+          toast.error('Failed to delete account. Please contact support.')
+        } finally {
+          setDeleting(false)
+        }
+      }}
+    />
+    </>
   )
 }
 

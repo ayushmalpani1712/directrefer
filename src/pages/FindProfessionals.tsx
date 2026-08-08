@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
+import { SkeletonGrid } from '@/components/ui/skeleton'
 import { EmptyState, GAvatar } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { type Professional } from '@/data/mock'
@@ -409,7 +410,7 @@ export default function FindProfessionals() {
 
       {/* Results */}
       {loading ? (
-        <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+        <SkeletonGrid count={6} />
       ) : results.length === 0 ? (
         <EmptyState
           icon={Search}

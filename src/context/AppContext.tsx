@@ -34,6 +34,8 @@ import {
   toggleBookmark as dbToggleBookmark,
   updateJob as dbUpdateJob,
   fetchCandidates as dbFetchCandidates,
+  findOrCreateConversation as dbFindOrCreateConversation,
+  upsertProfessionalField as dbUpsertProfessionalField,
   formatRelativeTime,
 } from '@/lib/db'
 
@@ -97,7 +99,6 @@ interface AppState {
   isAdmin: boolean
   authed: boolean
   loading: boolean
-  login: (r: Role) => void
   logout: () => void
 
   professionals: Professional[]
@@ -136,8 +137,12 @@ interface AppState {
 
   conversations: Conversation[]
   setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>
-  sendMessage: (conversationId: string, text: string) => void
+  sendMessage: (conversationId: string, text: string, kind?: 'text' | 'file', fileUrl?: string, fileName?: string) => void
   markConversationRead: (id: string) => void
+  startConversation: (targetUserId: string) => Promise<string | null>
+  toggleStudentOpenToWork: (value: boolean) => Promise<boolean>
+  toggleProfessionalOpenForReferrals: (value: boolean) => Promise<boolean>
+  toggleProfessionalOpenToWork: (value: boolean) => Promise<boolean>
 
   notifications: AppNotification[]
   markNotificationRead: (id: string) => void
@@ -202,6 +207,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     achievements: [],
     links: { linkedin: '', github: '', website: '' },
   })
+  const studentSnapshotRef = useRef<StudentProfile>(student)
   const [bookmarks, setBookmarks] = useState<string[]>([])
   const [savedCandidates, setSavedCandidates] = useState<string[]>([])
   const [requests, setRequests] = useState<ReferralRequest[]>([])
@@ -228,7 +234,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const userId = currentUser.id
       const meta = currentUser.user_metadata
 
-      // Read role and profile data from the users table (source of truth)
+      // Read role from users table (single query, no redundant getUser — session already valid)
       let userRole = 'job_seeker'
       const { data: userRow } = await supabase
         .from('users')
@@ -248,31 +254,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       setAuthed(true)
 
-      // Load in parallel
-      const [profs, refs, convs, bms, notifs, jbs, cands] = await Promise.allSettled([
-        fetchProfessionals(),
-        fetchReferrals(userId),
-        fetchConversations(userId),
-        dbFetchBookmarks(userId),
-        dbFetchNotifications(userId),
-        dbFetchJobs(),
-        dbFetchCandidates(userId),
-      ])
-
-      if (profs.status === 'fulfilled' && profs.value.length > 0) setProfessionals(profs.value)
-      if (refs.status === 'fulfilled') setRequests(refs.value)
-      if (convs.status === 'fulfilled' && convs.value.length > 0) setConversations(convs.value)
-      if (bms.status === 'fulfilled') setBookmarks(bms.value)
-      if (notifs.status === 'fulfilled' && notifs.value.length > 0) setNotifications(notifs.value)
-      if (jbs.status === 'fulfilled' && jbs.value.length > 0) setJobs(jbs.value)
-      if (cands.status === 'fulfilled' && cands.value.length > 0) setCandidates(cands.value)
-
-      // Read name and location from users table (source of truth, not auth metadata)
+      // Read name and location (inlined to avoid blocking data fetch)
       const rawName = userRow?.full_name || meta?.full_name || meta?.name || currentUser.email?.split('@')[0] || 'User'
       const displayName = rawName.trim() || currentUser.email?.split('@')[0] || 'User'
       const locationParts = [userRow?.city, userRow?.state].filter(Boolean).join(', ')
-
-      // Always populate student name so it's available in any workspace
       setStudent((prev) => ({
         ...prev,
         name: displayName,
@@ -280,49 +265,81 @@ export function AppProvider({ children }: { children: ReactNode }) {
         location: locationParts || prev.location,
       }))
 
-      if (mappedRole === 'student') {
+      // All critical data in parallel — student profile included
+      const studentProfilePromise = (mappedRole === 'student' || mappedRole === 'admin')
+        ? (async () => {
+            await supabase
+              .from('profiles_job_seeker')
+              .upsert({ user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true })
+            const { data } = await supabase
+              .from('profiles_job_seeker')
+              .select('headline, is_open_to_work, certifications, achievements, projects, preferred_companies, preferred_role, skills, portfolio_url, github_url, website, experience, education, languages, resume_url, resume_name, resume_size_bytes, resume_uploaded_at')
+              .eq('user_id', userId)
+              .single()
+            return data
+          })()
+        : Promise.resolve(null)
 
-        // Hydrate full student profile from DB
-        const { data: profileData } = await supabase
-          .from('profiles_job_seeker')
-          .select('*')
-          .eq('user_id', userId)
-          .single()
-        if (profileData) {
-          setStudent((prev) => ({
-            ...prev,
-            headline: profileData.headline ?? prev.headline,
-            openToWork: profileData.is_open_to_work ?? prev.openToWork,
-            certifications: typeof profileData.certifications === 'string' ? (() => { try { return JSON.parse(profileData.certifications) } catch { return prev.certifications } })() : (profileData.certifications ?? prev.certifications),
-            achievements: typeof profileData.achievements === 'string' ? (() => { try { return JSON.parse(profileData.achievements) } catch { return prev.achievements } })() : (profileData.achievements ?? prev.achievements),
-            projects: typeof profileData.projects === 'string' ? (() => { try { return JSON.parse(profileData.projects) } catch { return prev.projects } })() : (profileData.projects ?? prev.projects),
-            preferredCompanies: profileData.preferred_companies ?? prev.preferredCompanies,
-            preferredRoles: profileData.preferred_role ? profileData.preferred_role.split(',').map((s: string) => s.trim()).filter(Boolean) : prev.preferredRoles,
-            skills: profileData.skills ?? prev.skills,
-            links: {
-              linkedin: profileData.portfolio_url ?? prev.links.linkedin,
-              github: profileData.github_url ?? prev.links.github,
-              website: profileData.website ?? prev.links.website,
+      const [profs, refs, convs, cands, profileData] = await Promise.allSettled([
+        fetchProfessionals(userId),
+        fetchReferrals(userId),
+        fetchConversations(userId),
+        dbFetchCandidates(userId),
+        studentProfilePromise,
+      ])
+
+      if (profs.status === 'fulfilled' && profs.value.length > 0) setProfessionals(profs.value)
+      if (refs.status === 'fulfilled') setRequests(refs.value)
+      if (convs.status === 'fulfilled' && convs.value.length > 0) setConversations(convs.value)
+      if (cands.status === 'fulfilled' && cands.value.length > 0) setCandidates(cands.value)
+
+      // Non-critical — load after first paint (deferred)
+      Promise.allSettled([
+        dbFetchBookmarks(userId),
+        dbFetchNotifications(userId),
+        dbFetchJobs(),
+      ]).then(([bms, notifs, jbs]) => {
+        if (bms.status === 'fulfilled') setBookmarks(bms.value)
+        if (notifs.status === 'fulfilled' && notifs.value.length > 0) setNotifications(notifs.value)
+        if (jbs.status === 'fulfilled' && jbs.value.length > 0) setJobs(jbs.value)
+      })
+
+      // Apply student profile data if available
+      if (profileData.status === 'fulfilled' && profileData.value) {
+        const pd = profileData.value
+        setStudent((prev) => ({
+          ...prev,
+          headline: pd.headline ?? prev.headline,
+          openToWork: pd.is_open_to_work ?? prev.openToWork,
+          certifications: typeof pd.certifications === 'string' ? (() => { try { return JSON.parse(pd.certifications) } catch { return prev.certifications } })() : (pd.certifications ?? prev.certifications),
+          achievements: typeof pd.achievements === 'string' ? (() => { try { return JSON.parse(pd.achievements) } catch { return prev.achievements } })() : (pd.achievements ?? prev.achievements),
+          projects: typeof pd.projects === 'string' ? (() => { try { return JSON.parse(pd.projects) } catch { return prev.projects } })() : (pd.projects ?? prev.projects),
+          preferredCompanies: pd.preferred_companies ?? prev.preferredCompanies,
+          preferredRoles: pd.preferred_role ? pd.preferred_role.split(',').map((s: string) => s.trim()).filter(Boolean) : prev.preferredRoles,
+          skills: pd.skills ?? prev.skills,
+          links: {
+            linkedin: pd.portfolio_url ?? prev.links.linkedin,
+            github: pd.github_url ?? prev.links.github,
+            website: pd.website ?? prev.links.website,
+          },
+          ...(pd.experience ? { experience: typeof pd.experience === 'string' ? (() => { try { return JSON.parse(pd.experience) } catch { return prev.experience } })() : pd.experience } : {}),
+          ...(pd.education ? { education: typeof pd.education === 'string' ? (() => { try { return JSON.parse(pd.education) } catch { return prev.education } })() : pd.education } : {}),
+          ...(pd.languages ? { languages: typeof pd.languages === 'string' ? (() => { try { return JSON.parse(pd.languages) } catch { return prev.languages } })() : pd.languages } : {}),
+          ...(pd.resume_url ? {
+            resumeFile: {
+              name: pd.resume_name || 'Resume',
+              size: pd.resume_size_bytes
+                ? pd.resume_size_bytes > 1048576
+                  ? `${(pd.resume_size_bytes / 1048576).toFixed(1)} MB`
+                  : `${Math.round(pd.resume_size_bytes / 1024)} KB`
+                : 'Unknown',
+              date: pd.resume_uploaded_at
+                ? new Date(pd.resume_uploaded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : '',
+              url: pd.resume_url,
             },
-            ...(profileData.experience ? { experience: typeof profileData.experience === 'string' ? (() => { try { return JSON.parse(profileData.experience) } catch { return prev.experience } })() : profileData.experience } : {}),
-            ...(profileData.education ? { education: typeof profileData.education === 'string' ? (() => { try { return JSON.parse(profileData.education) } catch { return prev.education } })() : profileData.education } : {}),
-            ...(profileData.languages ? { languages: typeof profileData.languages === 'string' ? (() => { try { return JSON.parse(profileData.languages) } catch { return prev.languages } })() : profileData.languages } : {}),
-            ...(profileData.resume_url ? {
-              resumeFile: {
-                name: profileData.resume_name || 'Resume',
-                size: profileData.resume_size_bytes
-                  ? profileData.resume_size_bytes > 1048576
-                    ? `${(profileData.resume_size_bytes / 1048576).toFixed(1)} MB`
-                    : `${Math.round(profileData.resume_size_bytes / 1024)} KB`
-                  : 'Unknown',
-                date: profileData.resume_uploaded_at
-                  ? new Date(profileData.resume_uploaded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                  : '',
-                url: profileData.resume_url,
-              },
-            } : { resumeFile: undefined }),
-          }))
-        }
+          } : { resumeFile: undefined }),
+        }))
       }
     }
 
@@ -417,7 +434,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       supabase.removeChannel(msgChannel)
       supabase.removeChannel(refChannel)
     }
-  }, [user])
+  }, [user?.id])
 
   const referralsSentToday = useMemo(() => {
     const now = Date.now()
@@ -440,6 +457,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [requestTimestamps])
 
   const updateProfessional = useCallback((id: string, patch: Partial<Professional>) => {
+    // Snapshot previous state for rollback
+    const prevProfessionals = professionals
     setProfessionals((prev) => {
       const idx = prev.findIndex((p) => p.id === id)
       if (idx >= 0) {
@@ -460,7 +479,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         rating: 0,
         reviews: 0,
         verified: false,
-        openForReferrals: patch.openForReferrals ?? false,
+        openForReferrals: patch.openForReferrals ?? true,
         isOpenToWork: patch.isOpenToWork ?? false,
         maxPerMonth: patch.maxPerMonth ?? 5,
         usedThisMonth: 0,
@@ -485,9 +504,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (user) {
       const userPatch: Record<string, unknown> = {}
       if (patch.name) userPatch.full_name = patch.name
-      if (patch.name) {
-        setProfessionals((prev) => prev.map((p) => (p.id === user.id ? { ...p, name: patch.name! } : p)))
-      }
       if (patch.location) {
         const parts = patch.location.split(',').map((s: string) => s.trim())
         if (parts.length >= 2) { userPatch.city = parts[0]; userPatch.state = parts[1] }
@@ -495,7 +511,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (patch.linkedinUrl !== undefined) userPatch.linkedin = patch.linkedinUrl
       if (Object.keys(userPatch).length > 0) dbUpdateUserProfile(id, userPatch).catch((err) => {
         console.error('Failed to update user profile:', err)
-        toast.error('Something went wrong. Please try again.')
+        setProfessionals(prevProfessionals) // Rollback
+        toast.error('Failed to save changes. Please try again.')
       })
 
       const profilePatch: Record<string, unknown> = {}
@@ -514,27 +531,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (Object.keys(profilePatch).length > 0) {
         dbUpdateProProf(id, profilePatch).catch((err) => {
           console.error('Failed to update professional profile:', err)
-          toast.error('Something went wrong. Please try again.')
+          setProfessionals(prevProfessionals) // Rollback
+          toast.error('Failed to save changes. Please try again.')
         })
+      }
+    }
+  }, [user, professionals])
+
+  const updateRecruiter = useCallback(async (patch: Record<string, unknown>) => {
+    if (user) {
+      try {
+        await dbUpdateRecruiterProf(user.id, patch)
+      } catch (err) {
+        console.error('Failed to update recruiter profile:', err)
+        toast.error('Something went wrong. Please try again.')
+        throw err
       }
     }
   }, [user])
 
-  const updateRecruiter = useCallback((patch: Record<string, unknown>) => {
-    if (user) {
-      dbUpdateRecruiterProf(user.id, patch).catch((err) => {
-        console.error('Failed to update recruiter profile:', err)
-        toast.error('Something went wrong. Please try again.')
-      })
-    }
-  }, [user])
-
   const updateStudent = useCallback((patch: Partial<StudentProfile>) => {
-    setStudent((prev) => ({ ...prev, ...patch }))
+    // Snapshot previous state for rollback
+    const prev = studentSnapshotRef.current
+    setStudent((s) => {
+      const next = { ...s, ...patch }
+      studentSnapshotRef.current = next
+      return next
+    })
     if (user) {
       const userPatch: Record<string, unknown> = {}
       if (patch.name !== undefined) userPatch.full_name = patch.name
-      // email changes are handled through Supabase Auth, not the users table
       if (patch.location !== undefined) {
         const parts = patch.location.split(',').map((s: string) => s.trim())
         if (parts.length >= 2) { userPatch.city = parts[0]; userPatch.state = parts[1] }
@@ -542,7 +568,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       if (Object.keys(userPatch).length > 0) dbUpdateUserProfile(user.id, userPatch).catch((err) => {
         console.error('Failed to update student profile:', err)
-        toast.error('Something went wrong. Please try again.')
+        setStudent(prev)
+        studentSnapshotRef.current = prev
+        toast.error('Failed to save changes. Please try again.')
       })
 
       const profilePatch: Record<string, unknown> = {}
@@ -572,106 +600,144 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (patch.projects !== undefined) profilePatch.projects = JSON.stringify(patch.projects)
       if (Object.keys(profilePatch).length > 0) dbUpdateJobSeekerProfile(user.id, profilePatch).catch((err) => {
         console.error('Failed to update job seeker profile:', err)
-        toast.error('Something went wrong. Please try again.')
+        setStudent(prev)
+        studentSnapshotRef.current = prev
+        toast.error('Failed to save changes. Please try again.')
       })
     }
-  }, [user])
+  }, [user, student])
 
   const addStudentCertification = useCallback((cert: string) => {
-    setStudent((prev) => {
-      const next = [...prev.certifications, cert]
-      if (user) dbUpdateJobSeekerProfile(user.id, { certifications: JSON.stringify(next) }).catch((err) => { console.error('Failed to save certification:', err) })
-      return { ...prev, certifications: next }
+    const prev = studentSnapshotRef.current
+    setStudent((p) => {
+      const next = { ...p, certifications: [...p.certifications, cert] }
+      studentSnapshotRef.current = next
+      return next
     })
-  }, [user])
+    if (user) dbUpdateJobSeekerProfile(user.id, { certifications: JSON.stringify([...student.certifications, cert]) }).catch((err) => { console.error('Failed to save certification:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+  }, [user, student.certifications])
 
   const addStudentAchievement = useCallback((ach: string) => {
-    setStudent((prev) => {
-      const next = [...prev.achievements, ach]
-      if (user) dbUpdateJobSeekerProfile(user.id, { achievements: JSON.stringify(next) }).catch((err) => { console.error('Failed to save achievement:', err) })
-      return { ...prev, achievements: next }
+    const prev = studentSnapshotRef.current
+    setStudent((p) => {
+      const next = { ...p, achievements: [...p.achievements, ach] }
+      studentSnapshotRef.current = next
+      return next
     })
-  }, [user])
+    if (user) dbUpdateJobSeekerProfile(user.id, { achievements: JSON.stringify([...student.achievements, ach]) }).catch((err) => { console.error('Failed to save achievement:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+  }, [user, student.achievements])
 
   const addStudentProject = useCallback((proj: { name: string; desc: string; tags: string[] }) => {
-    setStudent((prev) => {
-      const next = [...prev.projects, proj]
-      if (user) dbUpdateJobSeekerProfile(user.id, { projects: JSON.stringify(next) }).catch((err) => { console.error('Failed to save project:', err) })
-      return { ...prev, projects: next }
+    const prev = studentSnapshotRef.current
+    setStudent((p) => {
+      const next = { ...p, projects: [...p.projects, proj] }
+      studentSnapshotRef.current = next
+      return next
     })
-  }, [user])
+    if (user) dbUpdateJobSeekerProfile(user.id, { projects: JSON.stringify([...student.projects, proj]) }).catch((err) => { console.error('Failed to save project:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+  }, [user, student.projects])
 
   const addStudentSkill = useCallback((skill: string) => {
-    setStudent((prev) => {
-      const next = [...prev.skills, skill]
-      if (user) dbUpdateJobSeekerProfile(user.id, { skills: next }).catch((err) => { console.error('Failed to save skill:', err) })
-      return { ...prev, skills: next }
+    const prev = studentSnapshotRef.current
+    setStudent((p) => {
+      const next = { ...p, skills: [...p.skills, skill] }
+      studentSnapshotRef.current = next
+      return next
     })
-  }, [user])
+    if (user) dbUpdateJobSeekerProfile(user.id, { skills: [...student.skills, skill] }).catch((err) => { console.error('Failed to save skill:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+  }, [user, student.skills])
 
   const removeStudentSkill = useCallback((skill: string) => {
-    setStudent((prev) => {
-      const next = prev.skills.filter((s) => s !== skill)
-      if (user) dbUpdateJobSeekerProfile(user.id, { skills: next }).catch((err) => { console.error('Failed to remove skill:', err) })
-      return { ...prev, skills: next }
+    const prev = studentSnapshotRef.current
+    setStudent((p) => {
+      const next = { ...p, skills: p.skills.filter((s) => s !== skill) }
+      studentSnapshotRef.current = next
+      return next
     })
-  }, [user])
+    if (user) dbUpdateJobSeekerProfile(user.id, { skills: student.skills.filter((s) => s !== skill) }).catch((err) => { console.error('Failed to remove skill:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+  }, [user, student.skills])
 
   const removeStudentCertification = useCallback((cert: string) => {
-    setStudent((prev) => {
-      const next = prev.certifications.filter((c) => c !== cert)
-      if (user) dbUpdateJobSeekerProfile(user.id, { certifications: JSON.stringify(next) }).catch((err) => { console.error('Failed to remove certification:', err) })
-      return { ...prev, certifications: next }
+    const prev = studentSnapshotRef.current
+    setStudent((p) => {
+      const next = { ...p, certifications: p.certifications.filter((c) => c !== cert) }
+      studentSnapshotRef.current = next
+      return next
     })
-  }, [user])
+    if (user) dbUpdateJobSeekerProfile(user.id, { certifications: JSON.stringify(student.certifications.filter((c) => c !== cert)) }).catch((err) => { console.error('Failed to remove certification:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+  }, [user, student.certifications])
 
   const removeStudentAchievement = useCallback((ach: string) => {
-    setStudent((prev) => {
-      const next = prev.achievements.filter((a) => a !== ach)
-      if (user) dbUpdateJobSeekerProfile(user.id, { achievements: JSON.stringify(next) }).catch((err) => { console.error('Failed to remove achievement:', err) })
-      return { ...prev, achievements: next }
+    const prev = studentSnapshotRef.current
+    setStudent((p) => {
+      const next = { ...p, achievements: p.achievements.filter((a) => a !== ach) }
+      studentSnapshotRef.current = next
+      return next
     })
-  }, [user])
+    if (user) dbUpdateJobSeekerProfile(user.id, { achievements: JSON.stringify(student.achievements.filter((a) => a !== ach)) }).catch((err) => { console.error('Failed to remove achievement:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+  }, [user, student.achievements])
 
   const removeStudentProject = useCallback((name: string) => {
-    setStudent((prev) => {
-      const next = prev.projects.filter((p) => p.name !== name)
-      if (user) dbUpdateJobSeekerProfile(user.id, { projects: JSON.stringify(next) }).catch((err) => { console.error('Failed to remove project:', err) })
-      return { ...prev, projects: next }
+    const prev = studentSnapshotRef.current
+    setStudent((p) => {
+      const next = { ...p, projects: p.projects.filter((pr) => pr.name !== name) }
+      studentSnapshotRef.current = next
+      return next
     })
-  }, [user])
+    if (user) dbUpdateJobSeekerProfile(user.id, { projects: JSON.stringify(student.projects.filter((p) => p.name !== name)) }).catch((err) => { console.error('Failed to remove project:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+  }, [user, student.projects])
 
   const addStudentExperience = useCallback((exp: { title: string; org: string; period: string; desc: string }) => {
-    setStudent((prev) => {
-      const next = [...prev.experience, exp]
-      if (user) dbUpdateJobSeekerProfile(user.id, { experience_years: next.length, experience: JSON.stringify(next) }).catch((err) => { console.error('Failed to save experience:', err) })
-      return { ...prev, experience: next }
+    const prev = studentSnapshotRef.current
+    setStudent((p) => {
+      const next = { ...p, experience: [...p.experience, exp] }
+      studentSnapshotRef.current = next
+      return next
     })
-  }, [user])
+    if (user) {
+      const updatedExp = [...student.experience, exp]
+      dbUpdateJobSeekerProfile(user.id, { experience_years: updatedExp.length, experience: JSON.stringify(updatedExp) }).catch((err) => { console.error('Failed to save experience:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    }
+  }, [user, student.experience])
 
   const removeStudentExperience = useCallback((index: number) => {
-    setStudent((prev) => {
-      const next = prev.experience.filter((_, i) => i !== index)
-      if (user) dbUpdateJobSeekerProfile(user.id, { experience_years: next.length, experience: JSON.stringify(next) }).catch((err) => { console.error('Failed to save experience:', err) })
-      return { ...prev, experience: next }
+    const prev = studentSnapshotRef.current
+    setStudent((p) => {
+      const next = { ...p, experience: p.experience.filter((_, i) => i !== index) }
+      studentSnapshotRef.current = next
+      return next
     })
-  }, [user])
+    if (user) {
+      const updatedExp = student.experience.filter((_, i) => i !== index)
+      dbUpdateJobSeekerProfile(user.id, { experience_years: updatedExp.length, experience: JSON.stringify(updatedExp) }).catch((err) => { console.error('Failed to save experience:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    }
+  }, [user, student.experience])
 
   const addStudentEducation = useCallback((edu: { school: string; degree: string; period: string; detail: string }) => {
-    setStudent((prev) => {
-      const next = [...prev.education, edu]
-      if (user) dbUpdateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || edu.school, qualification: next[0]?.degree || edu.degree }).catch((err) => { console.error('Failed to save education:', err) })
-      return { ...prev, education: next }
+    const prev = studentSnapshotRef.current
+    setStudent((p) => {
+      const next = { ...p, education: [...p.education, edu] }
+      studentSnapshotRef.current = next
+      return next
     })
-  }, [user])
+    if (user) {
+      const next = [...student.education, edu]
+      dbUpdateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || edu.school, qualification: next[0]?.degree || edu.degree }).catch((err) => { console.error('Failed to save education:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    }
+  }, [user, student.education])
 
   const removeStudentEducation = useCallback((index: number) => {
-    setStudent((prev) => {
-      const next = prev.education.filter((_, i) => i !== index)
-      if (user) dbUpdateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || undefined, qualification: next[0]?.degree || undefined }).catch((err) => { console.error('Failed to save education:', err) })
-      return { ...prev, education: next }
+    const prev = studentSnapshotRef.current
+    setStudent((p) => {
+      const next = { ...p, education: p.education.filter((_, i) => i !== index) }
+      studentSnapshotRef.current = next
+      return next
     })
-  }, [user])
+    if (user) {
+      const next = student.education.filter((_, i) => i !== index)
+      dbUpdateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || undefined, qualification: next[0]?.degree || undefined }).catch((err) => { console.error('Failed to save education:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    }
+  }, [user, student.education])
 
   const removeStudentResume = useCallback(() => {
     setStudent((prev) => {
@@ -691,12 +757,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const toggleBookmark = useCallback((id: string) => {
+    const wasBookmarked = bookmarks.includes(id)
     setBookmarks((b) => (b.includes(id) ? b.filter((x) => x !== id) : [...b, id]))
     if (user) dbToggleBookmark(user.id, id).catch((err) => {
       console.error('Failed to toggle bookmark:', err)
       toast.error('Something went wrong. Please try again.')
+      setBookmarks((b) => (wasBookmarked ? [...b, id] : b.filter((x) => x !== id)))
     })
-  }, [user])
+  }, [user, bookmarks])
 
   const toggleCandidate = useCallback((candidateId: string) => {
     setSavedCandidates((prev) => {
@@ -705,6 +773,73 @@ export function AppProvider({ children }: { children: ReactNode }) {
         : [...prev, candidateId]
     })
   }, [])
+
+  const toggleStudentOpenToWork = useCallback(async (value: boolean): Promise<boolean> => {
+    if (!user) return false
+    let prevValue = false
+    setStudent((s) => { prevValue = s.openToWork; return { ...s, openToWork: value } })
+    try {
+      // Try RPC first (bypasses RLS like professional toggle does)
+      const { error: rpcErr } = await supabase.rpc('upsert_jobseeker_toggle', {
+        p_user_id: user.id,
+        p_field: 'is_open_to_work',
+        p_value: value,
+      })
+      if (rpcErr) {
+        // Fallback: use upsert directly
+        const { error: upsertErr } = await supabase
+          .from('profiles_job_seeker')
+          .upsert({ user_id: user.id, is_open_to_work: value }, { onConflict: 'user_id' })
+        if (upsertErr) {
+          throw new Error(upsertErr.message)
+        }
+      }
+      const { data: verify } = await supabase
+        .from('profiles_job_seeker')
+        .select('is_open_to_work')
+        .eq('user_id', user.id)
+        .single()
+      if (verify?.is_open_to_work !== value) {
+        throw new Error('Toggle value did not persist in database')
+      }
+      return true
+    } catch (err) {
+      setStudent((s) => ({ ...s, openToWork: prevValue }))
+      toast.error('Failed to update toggle. Please try again.')
+      return false
+    }
+  }, [user])
+
+  const toggleProfessionalOpenForReferrals = useCallback(async (value: boolean): Promise<boolean> => {
+    if (!user) return false
+    setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, openForReferrals: value } : p))
+    try {
+      const { error } = await supabase
+        .from('profiles_professional')
+        .upsert({ user_id: user.id, open_for_referrals: value }, { onConflict: 'user_id' })
+      if (error) throw error
+      return true
+    } catch (err) {
+      console.error('TOGGLE PERSIST FAILED (open_for_referrals):', err)
+      setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, openForReferrals: !value } : p))
+      toast.error('Failed to update toggle. Please try again.')
+      return false
+    }
+  }, [user])
+
+  const toggleProfessionalOpenToWork = useCallback(async (value: boolean): Promise<boolean> => {
+    if (!user) return false
+    setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, isOpenToWork: value } : p))
+    try {
+      await dbUpsertProfessionalField(user.id, 'is_open_to_work', value)
+      return true
+    } catch (err) {
+      console.error('TOGGLE PERSIST FAILED (professional is_open_to_work):', err)
+      setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, isOpenToWork: !value } : p))
+      toast.error('Failed to update toggle. Please try again.')
+      return false
+    }
+  }, [user])
 
   const addRequest = useCallback((r: ReferralRequest) => {
     setRequests((prev) => [r, ...prev])
@@ -768,9 +903,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.error('Failed to update referral status:', err)
         toast.error('Something went wrong. Please try again.')
       })
-      if (user) {
+      if (user && req.requesterId) {
         supabase.from('notifications').insert({
-          user_id: req.requesterId || req.professionalId,
+          user_id: req.requesterId,
           type: `referral_${status}`,
           title: `Referral ${status.charAt(0).toUpperCase() + status.slice(1)}`,
           description: `Your referral request for ${req.role} has been ${status}`,
@@ -808,18 +943,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     reminderSentRef.current = true
     const now = Date.now()
     const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000
+    const remindedKey = `reminded_${user.id}`
+    const reminded = new Set<string>(JSON.parse(localStorage.getItem(remindedKey) || '[]'))
+    let changed = false
     requests
       .filter((r) => r.status === 'pending')
       .forEach((r) => {
+        if (reminded.has(r.id)) return
         const requestDate = new Date(r.date).getTime()
         if (now - requestDate >= THREE_DAYS_MS) {
           const pro = professionals.find((p) => p.id === r.professionalId)
           if (pro?.email) {
             const daysPending = Math.floor((now - requestDate) / (24 * 60 * 60 * 1000))
-            sendReminderEmail(pro.email, pro.name, r.student, r.role, daysPending).catch((err) => { console.error('Failed to send reminder email:', err) })
+            sendReminderEmail(pro.email, pro.name, r.student, r.role, daysPending)
+              .then(() => { reminded.add(r.id); changed = true })
+              .catch((err) => { console.error('Failed to send reminder email:', err) })
           }
         }
       })
+    if (changed) localStorage.setItem(remindedKey, JSON.stringify([...reminded]))
   }, [requests, professionals, user])
 
   const advancePipelineStage = useCallback((id: string) => {
@@ -836,18 +978,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dbAdvancePipeline(id, nextStage).catch((err) => {
         console.error('Failed to advance pipeline:', err)
         toast.error('Something went wrong. Please try again.')
+        setRequests((prev) => prev.map((r) => {
+          if (r.id !== id) return r
+          return { ...r, pipelineStage: current.pipelineStage, progress: current.progress }
+        }))
       })
     }
   }, [requests])
 
-  const sendMessage = useCallback((conversationId: string, text: string) => {
+  const sendMessage = useCallback((conversationId: string, text: string, kind: 'text' | 'file' = 'text', fileUrl?: string, fileName?: string) => {
+    const displayText = kind === 'file' && fileName ? `📎 ${fileName}` : text
+    const storedContent = kind === 'file' && fileUrl
+      ? JSON.stringify({ type: 'file', name: fileName || 'File', url: fileUrl })
+      : text
+
     const newMsg: Message = {
       id: `mm-${Date.now()}`,
       from: 'me',
-      text,
+      text: storedContent,
       time: 'Just now',
       read: true,
-      kind: 'text',
+      kind,
     }
     // Capture previous lastMessage for rollback
     let prevLastMessage = ''
@@ -855,14 +1006,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       prev.map((c) => {
         if (c.id === conversationId) {
           prevLastMessage = c.lastMessage
-          return { ...c, messages: [...c.messages, newMsg], lastMessage: text, time: 'Just now' }
+          return { ...c, messages: [...c.messages, newMsg], lastMessage: displayText, time: 'Just now' }
         }
         return c
       })
     )
     // Persist to Supabase
     if (user) {
-      dbSendMessage(conversationId, user.id, text).then(() => {
+      dbSendMessage(conversationId, user.id, text, kind, fileUrl, fileName).then(() => {
         // Message sent successfully
       }).catch((err) => {
         console.error('Failed to send message:', err)
@@ -895,6 +1046,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
           toast.error('Something went wrong. Please try again.')
         })
     }
+  }, [user])
+
+  const startConversation = useCallback(async (targetUserId: string): Promise<string | null> => {
+    if (!user) return null
+    const convId = await dbFindOrCreateConversation(user.id, targetUserId)
+    if (!convId) {
+      toast.error('Failed to start conversation')
+      return null
+    }
+    // Refresh conversations list so the new conversation appears
+    const updatedConvs = await fetchConversations(user.id)
+    setConversations(updatedConvs)
+    return convId
   }, [user])
 
   const markNotificationRead = useCallback((id: string) => {
@@ -1007,8 +1171,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return false
   }, [conversations])
 
-  const login = useCallback((r: Role) => { setRole(r); setAuthed(true) }, [])
-
   const logout = useCallback(() => {
     setAuthed(false)
     setIsAdmin(false)
@@ -1024,7 +1186,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setJobs([])
     setCandidates([])
     setSavedCandidates([])
-    setStudent((prev) => ({ ...prev, name: '', email: '' }))
+    setStudent((prev) => ({
+      ...prev,
+      name: '',
+      email: '',
+      headline: '',
+      skills: [],
+      preferredRoles: [],
+      preferredCompanies: [],
+      expectedSalary: '',
+      careerInterests: [],
+      languages: [],
+      experience: [],
+      education: [],
+      certifications: [],
+      achievements: [],
+      projects: [],
+      links: { linkedin: '', github: '', website: '' },
+      openToWork: false,
+      location: '',
+    }))
   }, [])
 
   const value = useMemo<AppState>(() => ({
@@ -1033,7 +1214,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isAdmin,
     authed,
     loading,
-    login,
     logout,
 
     professionals,
@@ -1074,6 +1254,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setConversations,
     sendMessage,
     markConversationRead,
+    startConversation,
+    toggleStudentOpenToWork,
+    toggleProfessionalOpenForReferrals,
+    toggleProfessionalOpenToWork,
 
     notifications,
     markNotificationRead,
@@ -1101,7 +1285,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     npsOpen,
     setNpsOpen,
   }), [
-    role, authed, loading, login, logout, professionals, updateProfessional, updateRecruiter,
+    role, authed, loading, logout, isAdmin, professionals, updateProfessional, updateRecruiter,
     student, updateStudent, addStudentCertification, removeStudentCertification, addStudentAchievement, removeStudentAchievement, addStudentProject, removeStudentProject, addStudentSkill, removeStudentSkill, addStudentExperience, removeStudentExperience, addStudentEducation, removeStudentEducation, setStudentResume, removeStudentResume,
     bookmarks, toggleBookmark, savedCandidates, toggleCandidate,
     requests, addRequest, setRequestStatus, advancePipelineStage, referralsSentToday, canSendReferral, nextReferralReset,

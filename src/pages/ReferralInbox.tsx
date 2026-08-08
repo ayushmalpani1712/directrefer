@@ -15,12 +15,12 @@ import { PIPELINE_STAGES } from '@/data/mock'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { useNavigate } from 'react-router'
 import { cn } from '@/lib/utils'
+import { ListSkeleton } from '@/components/ui/skeleton'
 import ResumePreview from '@/components/ResumePreview'
 
 const TABS: { key: ReferralStatus | 'all'; label: string }[] = [
   { key: 'pending', label: 'Pending' },
   { key: 'accepted', label: 'Accepted' },
-  { key: 'offered', label: 'Offers' },
   { key: 'rejected', label: 'Declined' },
   { key: 'all', label: 'All' },
 ]
@@ -87,7 +87,7 @@ function ShareOnLinkedIn({ role, professionalName }: { student: string; role: st
 
 export default function ReferralInbox() {
   const loading = usePageLoading(400)
-  const { requests, setRequestStatus, professionals, student } = useApp()
+  const { requests, setRequestStatus, professionals, student, startConversation } = useApp()
   const { user } = useAuth()
   const [tab, setTab] = useState<ReferralStatus | 'all'>('pending')
   const [q, setQ] = useState('')
@@ -102,7 +102,7 @@ export default function ReferralInbox() {
   )
   const counts = (s: ReferralStatus) => inbox.filter((r) => r.status === s).length
 
-  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+  if (loading) return <ListSkeleton count={5} />
 
   return (
     <div className="space-y-6">
@@ -112,7 +112,6 @@ export default function ReferralInbox() {
         <StatCard icon={Inbox} label="Pending review" value={counts('pending')} />
         <StatCard icon={CheckCheck} label="Accepted" value={counts('accepted')} />
         <StatCard icon={XCircle} label="Declined" value={counts('rejected')} />
-        <StatCard icon={Inbox} label="Offered" value={counts('offered')} />
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -178,7 +177,7 @@ export default function ReferralInbox() {
                           </Button>
                         </>
                       ) : (
-                        <Button size="sm" variant="outline" className="rounded-lg" onClick={() => navigate('/messages')}>
+                        <Button size="sm" variant="outline" className="rounded-lg" disabled={!r.requesterId} onClick={async () => { if (!r.requesterId) return; const convId = await startConversation(r.requesterId); if (convId) navigate(`/messages?conversation=${convId}`) }}>
                           <MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message
                         </Button>
                       )}

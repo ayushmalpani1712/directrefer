@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CompanyChip, GAvatar, StatCard, StatusBadge } from '@/components/ui-kit'
+import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
@@ -31,7 +32,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
 }
 
 export default function ProfessionalDashboard() {
-  const { professionals, conversations, requests, setRequestStatus, student, candidates, loading } = useApp()
+  const { professionals, conversations, requests, setRequestStatus, student, candidates, loading, startConversation } = useApp()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [range, setRange] = useState<DateRange>(() => {
@@ -78,7 +79,7 @@ export default function ProfessionalDashboard() {
     githubUrl: '',
   }), [user?.id, student.name, user?.email])
   const ME = professionals.find((p) => p.id === user?.id) ?? fallback
-  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+  if (loading) return <DashboardSkeleton />
   const PRO_USER = { name: ME.name || 'User', designation: ME.designation, company: ME.company, email: ME.email || '', location: ME.location || '', gradient: ME.gradient }
   const inbox = ME ? requests.filter((r) => r.professionalId === ME.id) : []
   const pending = inbox.filter((r) => r.status === 'pending')
@@ -176,7 +177,7 @@ export default function ProfessionalDashboard() {
                       </Button>
                     </div>
                   ) : (
-                    <Button size="sm" variant="outline" className="rounded-lg" onClick={() => navigate('/messages')}>
+                    <Button size="sm" variant="outline" className="rounded-lg" onClick={async () => { const convId = await startConversation(r.requesterId || r.professionalId); if (convId) navigate(`/messages?conversation=${convId}`) }}>
                       <MessageSquare className="mr-1 h-3.5 w-3.5" /> Message
                     </Button>
                   )}
@@ -272,7 +273,7 @@ export default function ProfessionalDashboard() {
             </CardHeader>
             <CardContent className="space-y-2.5 pt-2">
               {conversations.slice(0, 3).map((c) => (
-                <Link to="/messages" key={c.id} className="flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted/20">
+                <Link to={`/messages?conversation=${c.id}`} key={c.id} className="flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted/20">
                   <GAvatar name={c.name} gradient={c.gradient} className="h-8 w-8 text-[10px]" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[14px] font-medium text-foreground">{c.name}</div>

@@ -7,6 +7,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
+import { SkeletonCard } from '@/components/ui/skeleton'
 import { Chip, CompanyChip, ReportDialog, Stars } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
@@ -28,7 +29,7 @@ export default function RecruiterPublic() {
   const { id } = useParams()
   const navigate = useNavigate()
   const loading = usePageLoading(400)
-  const { jobs } = useApp()
+  const { jobs, startConversation } = useApp()
   const [recruiter, setRecruiter] = useState<RecruiterData | null>(null)
   const [loadingData, setLoadingData] = useState(true)
 
@@ -51,6 +52,10 @@ export default function RecruiterPublic() {
           .select('*')
           .eq('id', id)
           .single()
+        if (!userData) {
+          setLoadingData(false)
+          return
+        }
         setRecruiter({
           user: userData as RecruiterData['user'],
           company_name: profile.company_name ?? 'Company',
@@ -71,20 +76,24 @@ export default function RecruiterPublic() {
 
   if (loading || loadingData) {
     return (
-      <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+      <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl space-y-6">
+          <SkeletonCard />
+        </div>
+      </div>
     )
   }
 
   if (!recruiter) return <NotFound />
 
   const c = recruiter
-  const activeJobs = jobs.filter((j) => j.stage === 'Active')
+  const activeJobs = jobs.filter((j) => j.stage === 'Active' && j.recruiterId === id)
 
   return (
     <div className="space-y-6">
-      <Link to="/recruiter/jobs" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="h-4 w-4" /> Back to jobs
-      </Link>
+        <button onClick={() => window.history.back()} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Back
+        </button>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="overflow-hidden">
@@ -115,7 +124,10 @@ export default function RecruiterPublic() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" className="rounded-full" onClick={() => navigate('/messages')}>
+                <Button variant="outline" className="rounded-full" onClick={async () => {
+                  const convId = await startConversation(id ?? '')
+                  if (convId) navigate(`/messages?conversation=${convId}`)
+                }}>
                   <Send className="mr-1.5 h-4 w-4" /> Contact Recruiter
                 </Button>
                 <ReportDialog targetUserId={id ?? ''} targetUserName={c.company_name} />
@@ -147,7 +159,7 @@ export default function RecruiterPublic() {
                     <div className="text-sm font-semibold">{j.title}</div>
                     <div className="mt-0.5 text-xs text-muted-foreground">{j.location} &middot; {j.type} &middot; {j.salary}</div>
                   </div>
-                  <Link to="/job-seeker/request-referral">
+                  <Link to={`/job-seeker/request-referral/${id}`}>
                     <Button size="sm" variant="outline" className="rounded-full text-xs">
                       <Send className="mr-1 h-3 w-3" /> Get Referral
                     </Button>

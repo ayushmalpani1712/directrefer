@@ -17,6 +17,7 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/utils'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { ListSkeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 
 const STAGE_COLORS: Record<string, string> = {
@@ -34,7 +35,7 @@ function nextStage(stage: string): string | null {
   return STAGES[idx + 1]
 }
 
-function BrowseJobsView() {
+export function BrowseJobsView() {
   const { jobs, loading } = useApp()
   const [q, setQ] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
@@ -67,7 +68,7 @@ function BrowseJobsView() {
     .filter((j) => j.title.toLowerCase().includes(q.toLowerCase()) || j.location.toLowerCase().includes(q.toLowerCase()))
     .filter((j) => typeFilter === 'all' || j.type.toLowerCase() === typeFilter)
 
-  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+  if (loading) return <ListSkeleton count={4} />
 
   return (
     <div className="space-y-6">
@@ -330,7 +331,7 @@ function RecruiterJobsManager() {
     }
   }
 
-  if (loading) return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+  if (loading) return <ListSkeleton count={4} />
 
   return (
     <div className="space-y-6">

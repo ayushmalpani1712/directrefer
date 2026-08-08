@@ -18,11 +18,10 @@ import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import type { Professional } from '@/data/mock'
 import { cn } from '@/lib/utils'
-import { useAutoSaveForm, DraftStatusIndicator } from '@/hooks/useAutoSaveForm'
-import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard'
+import { ProfileSkeleton } from '@/components/ui/skeleton'
 
 export default function ProfessionalProfile() {
-  const { professionals, updateProfessional, student } = useApp()
+  const { professionals, updateProfessional, student, toggleProfessionalOpenForReferrals, toggleProfessionalOpenToWork } = useApp()
   const { user } = useAuth()
   const loading = usePageLoading(450)
   const fallback: Professional = {
@@ -40,7 +39,7 @@ export default function ProfessionalProfile() {
     rating: 0,
     reviews: 0,
     verified: false,
-    openForReferrals: false,
+    openForReferrals: true,
     isOpenToWork: false,
     maxPerMonth: 5,
     usedThisMonth: 0,
@@ -86,70 +85,27 @@ export default function ProfessionalProfile() {
   const [editingPosition, setEditingPosition] = useState<string | null>(null)
   const [editingPositionValue, setEditingPositionValue] = useState('')
   const capacityRef = useRef(ME.maxPerMonth)
-  const draftRestoredRef = useRef(false)
-
-  // ── Auto-Save Draft ──
-  const draftSnapshot = {
-    editName, editDesignation, editCompany, editLocation, editIndustry,
-    linkedinUrl, githubUrl, bio, referralPolicy,
-  }
-  const { status: draftStatus, lastSavedAt, clearDraft, onFormSaved, restoreDraft, hasUnsavedChanges, statusMessage } = useAutoSaveForm({
-    userId: user?.id ?? '',
-    formId: 'professional-profile',
-    values: draftSnapshot,
-    enabled: !loading && !!user,
-  })
-  useUnsavedChangesGuard({ enabled: hasUnsavedChanges })
-
-  useEffect(() => {
-    if (draftStatus !== 'restored' || !user) return
-    try {
-      const raw = localStorage.getItem(`draft:${user.id}:professional-profile`)
-      if (!raw) return
-      const entry = JSON.parse(raw)
-      if (!entry?.values) return
-      const v = entry.values
-      if (v.editName !== undefined) setEditName(v.editName)
-      if (v.editDesignation !== undefined) setEditDesignation(v.editDesignation)
-      if (v.editCompany !== undefined) setEditCompany(v.editCompany)
-      if (v.editLocation !== undefined) setEditLocation(v.editLocation)
-      if (v.editIndustry !== undefined) setEditIndustry(v.editIndustry)
-      if (v.linkedinUrl !== undefined) setLinkedinUrl(v.linkedinUrl)
-      if (v.githubUrl !== undefined) setGithubUrl(v.githubUrl)
-      if (v.bio !== undefined) setBio(v.bio)
-      if (v.referralPolicy !== undefined) setReferralPolicy(v.referralPolicy)
-      restoreDraft(v)
-      draftRestoredRef.current = true
-    } catch { /* corrupted draft — ignore */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftStatus])
 
   // Sync local state when ME changes (DB data loads)
   useEffect(() => {
-    // Always sync toggles from DB (not affected by draft)
-    setOpen(ME.openForReferrals)
-    setIsOpenToWork(ME.isOpenToWork)
-    // Skip form field sync if draft was just restored to avoid overwriting draft values
-    if (draftRestoredRef.current) {
-      draftRestoredRef.current = false
-      return
-    }
-    setCapacity(ME.maxPerMonth)
-    setBio(ME.bio)
-    setReferralPolicy(ME.referralPolicy)
-    setEditName(ME.name)
-    setEditDesignation(ME.designation)
-    setEditCompany(ME.company)
-    setEditLocation(ME.location)
-    setEditIndustry(ME.industry)
-    setLinkedinUrl(ME.linkedinUrl)
-    setGithubUrl(ME.githubUrl)
+    setOpen((prev) => prev === ME.openForReferrals ? prev : ME.openForReferrals)
+    setIsOpenToWork((prev) => prev === ME.isOpenToWork ? prev : ME.isOpenToWork)
+    setCapacity((prev) => prev === ME.maxPerMonth ? prev : ME.maxPerMonth)
+    setBio((prev) => prev === ME.bio ? prev : ME.bio)
+    setReferralPolicy((prev) => prev === ME.referralPolicy ? prev : ME.referralPolicy)
+    setEditName((prev) => prev === ME.name ? prev : ME.name)
+    setEditDesignation((prev) => prev === ME.designation ? prev : ME.designation)
+    setEditCompany((prev) => prev === ME.company ? prev : ME.company)
+    setEditLocation((prev) => prev === ME.location ? prev : ME.location)
+    setEditIndustry((prev) => prev === ME.industry ? prev : ME.industry)
+    setLinkedinUrl((prev) => prev === ME.linkedinUrl ? prev : ME.linkedinUrl)
+    setGithubUrl((prev) => prev === ME.githubUrl ? prev : ME.githubUrl)
     capacityRef.current = ME.maxPerMonth
   }, [ME.openForReferrals, ME.isOpenToWork, ME.maxPerMonth, ME.bio, ME.referralPolicy, ME.name, ME.designation, ME.company, ME.location, ME.industry, ME.linkedinUrl, ME.githubUrl])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+      <ProfileSkeleton />
     )
   }
 
@@ -226,7 +182,6 @@ export default function ProfessionalProfile() {
                       setLinkedinUrl(ME.linkedinUrl)
                       setGithubUrl(ME.githubUrl)
                       setEditingHeader(false)
-                      clearDraft()
                     }}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
                     <Button className="rounded-full bg-primary shadow-glow" onClick={() => {
                       updateProfessional(ME.id, {
@@ -240,7 +195,6 @@ export default function ProfessionalProfile() {
                       })
                       setEditingHeader(false)
                       toast.success('Profile saved')
-                      onFormSaved()
                     }}><Check className="mr-1.5 h-4 w-4" /> Save</Button>
                   </>
                 ) : (
@@ -258,7 +212,7 @@ export default function ProfessionalProfile() {
                   ? 'border-emerald-500/30 bg-emerald-500/5'
                   : 'border-border bg-transparent'
               )}>
-                <Switch checked={open} onCheckedChange={(v) => { setOpen(v); updateProfessional(ME.id, { openForReferrals: v }); toast.success(v ? 'Now accepting referral requests' : 'Referral requests paused') }} />
+                <Switch checked={open} onCheckedChange={async (v) => { setOpen(v); const ok = await toggleProfessionalOpenForReferrals(v); if (ok) toast.success(v ? 'Now accepting referral requests' : 'Referral requests paused') }} />
                 <span className={cn(
                   'text-sm font-medium',
                   open
@@ -274,7 +228,7 @@ export default function ProfessionalProfile() {
               )}>
                 <Switch
                   checked={isOpenToWork}
-                  onCheckedChange={(v) => { setIsOpenToWork(v); updateProfessional(ME.id, { isOpenToWork: v }); toast.success(v ? 'You are now visible to recruiters' : 'Profile hidden from recruiters') }}
+                  onCheckedChange={async (v) => { setIsOpenToWork(v); const ok = await toggleProfessionalOpenToWork(v); if (ok) toast.success(v ? 'You are now visible to recruiters' : 'Profile hidden from recruiters') }}
                 />
                 <span className={cn(
                   'text-sm font-medium',
@@ -298,15 +252,6 @@ export default function ProfessionalProfile() {
         </Card>
       </motion.div>
 
-      {/* Draft status indicator — placed below banner, near content */}
-      <DraftStatusIndicator
-        status={draftStatus}
-        lastSavedAt={lastSavedAt}
-        statusMessage={statusMessage}
-        showDiscard={hasUnsavedChanges}
-        onDiscard={clearDraft}
-      />
-
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">
           {/* About */}
@@ -321,7 +266,7 @@ export default function ProfessionalProfile() {
                   <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4} className="resize-none text-sm leading-relaxed" />
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => { setBio(ME.bio); setEditingAbout(false) }}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
-                    <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={() => { updateProfessional(ME.id, { bio }); setEditingAbout(false); toast.success('About section saved'); onFormSaved() }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
+                    <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={() => { updateProfessional(ME.id, { bio }); setEditingAbout(false); toast.success('About section saved') }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
                   </div>
                 </div>
               ) : (
@@ -350,7 +295,7 @@ export default function ProfessionalProfile() {
                   <div className="text-sm font-semibold">Open for referrals</div>
                   <div className="text-xs text-muted-foreground">You'll appear in student search results</div>
                 </div>
-                <Switch checked={open} onCheckedChange={(v) => { setOpen(v); updateProfessional(ME.id, { openForReferrals: v }); toast.success(v ? 'Now accepting referral requests' : 'Referral requests paused') }} />
+                <Switch checked={open} onCheckedChange={async (v) => { setOpen(v); const ok = await toggleProfessionalOpenForReferrals(v); if (ok) toast.success(v ? 'Now accepting referral requests' : 'Referral requests paused') }} />
               </div>
               <div>
                 <div className="flex items-center justify-between text-sm">
@@ -361,7 +306,7 @@ export default function ProfessionalProfile() {
               </div>
               <div className="space-y-1.5">
                 <div className="text-sm font-medium">Your referral policy</div>
-                <Textarea value={referralPolicy} onChange={(e) => setReferralPolicy(e.target.value)} rows={3} className="resize-none" onBlur={() => { updateProfessional(ME.id, { referralPolicy }); toast.success('Policy saved') }} />
+                <Textarea value={referralPolicy} onChange={(e) => setReferralPolicy(e.target.value)} rows={3} className="resize-none" onBlur={() => { try { updateProfessional(ME.id, { referralPolicy }); toast.success('Policy saved') } catch { toast.error('Failed to save policy') } }} />
               </div>
               <div className="space-y-1.5">
                 <div className="text-sm font-medium">Available positions</div>

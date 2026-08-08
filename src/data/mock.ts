@@ -80,7 +80,7 @@ export const GRADIENTS = [
   'from-teal-500 to-emerald-400',
 ]
 
-export type ReferralStatus = 'pending' | 'accepted' | 'rejected' | 'offered' | 'hired'
+export type ReferralStatus = 'pending' | 'accepted' | 'rejected' | 'hired'
 
 export type PipelineStage = 'request_sent' | 'under_review' | 'accepted' | 'submitted' | 'hired'
 
@@ -126,6 +126,8 @@ export interface Message { id: string; from: 'me' | 'them'; text: string; time: 
 export interface Conversation {
   id: string; name: string; subtitle: string; lastMessage: string; time: string
   unread: number; pinned: boolean; online: boolean; gradient: string; messages: Message[]
+  otherUserId?: string
+  otherUserRole?: string
 }
 
 export type NotificationType = 'accepted' | 'rejected' | 'message' | 'view' | 'reminder' | 'system'

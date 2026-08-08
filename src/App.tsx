@@ -6,7 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { AppProvider, useApp } from '@/context/AppContext'
 import AppShell from '@/components/layout'
-import { ErrorBoundary, LazyErrorFallback } from '@/components/ErrorBoundary'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { HeadManager } from '@/components/HeadManager'
 import { OnboardingOverlay } from '@/components/OnboardingOverlay'
 import { NPSSurveyModal } from '@/components/NPSSurveyModal'
@@ -29,6 +29,7 @@ const MyReferrals = lazy(() => import('@/pages/MyReferrals'))
 const ReferralInbox = lazy(() => import('@/pages/ReferralInbox'))
 
 const RecruiterJobs = lazy(() => import('@/pages/RecruiterJobs'))
+const BrowseJobs = lazy(() => import('@/pages/RecruiterJobs').then((m) => ({ default: m.BrowseJobsView })))
 const TalentSearch = lazy(() => import('@/pages/TalentSearch'))
 const Messages = lazy(() => import('@/pages/Messages'))
 const Analytics = lazy(() => import('@/pages/Analytics'))
@@ -45,10 +46,9 @@ const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
 
 function LazyErrorBoundary({ children }: { children: React.ReactNode }) {
-  const [key, setKey] = useState(0)
   return (
-    <ErrorBoundary key={key} fallback={<LazyErrorFallback error={new Error('Page failed to load')} resetErrorBoundary={() => setKey(k => k + 1)} />}>
-      <Suspense fallback={<div className="p-6"><div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div></div>}>
+    <ErrorBoundary>
+      <Suspense fallback={null}>
         {children}
       </Suspense>
     </ErrorBoundary>
@@ -61,13 +61,14 @@ function DashboardRedirect() {
 }
 
 function Profile() {
-  const { pathname } = useLocation()
-  if (pathname.startsWith('/professional')) return <ProfessionalProfile />
-  if (pathname.startsWith('/recruiter')) return <RecruiterProfile />
+  const { role } = useApp()
+  if (role === 'professional' || role === 'admin') return <ProfessionalProfile />
+  if (role === 'recruiter') return <RecruiterProfile />
   return <StudentProfile />
 }
 
-const PUBLIC_PATHS = new Set(['/', '/login', '/forgot-password'])
+const PUBLIC_PATHS = new Set(['/', '/login', '/forgot-password', '/reset-password'])
+const POST_AUTH_PATHS = new Set(['/verify-email', '/auth/callback'])
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -75,10 +76,10 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation()
 
   if (loading) {
-    return <div className="min-h-screen p-6"><div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div></div>
+    return null
   }
 
-  if (user && authed && PUBLIC_PATHS.has(pathname)) {
+  if (user && authed && (PUBLIC_PATHS.has(pathname) || POST_AUTH_PATHS.has(pathname))) {
     return <Navigate to={ROLE_ROUTE[role]} replace />
   }
 
@@ -90,12 +91,12 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   const { authed } = useApp()
 
   if (loading) {
-    return <div className="min-h-screen p-6"><div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div></div>
+    return null
   }
 
   if (!user) return <Navigate to="/login" replace />
   if (!authed) {
-    return <div className="min-h-screen p-6"><div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div></div>
+    return null
   }
   if (!emailVerified) return <Navigate to="/verify-email" replace />
   return <>{children}</>
@@ -141,18 +142,18 @@ export default function App() {
         <AuthProvider>
           <AppProvider>
             <ErrorBoundary>
-            <LazyErrorBoundary>
               <HeadManager />
               <OnboardingOverlay />
               <RecoveryHandler />
+              <LazyErrorBoundary>
               <Routes>
                 {/* ── Public routes (redirect authenticated users to dashboard) ── */}
                 <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
                 <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                 <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
                 <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/auth/callback" element={<PublicRoute><AuthCallback /></PublicRoute>} />
+                <Route path="/verify-email" element={<PublicRoute><VerifyEmail /></PublicRoute>} />
 
                 {/* ── Public profile pages (accessible by anyone) ── */}
                 <Route path="/job-seekers/:id" element={<JobSeekerPublic />} />
@@ -169,6 +170,7 @@ export default function App() {
                   <Route path="/job-seeker/profile" element={<RequireRole allowed={['student', 'admin']}><Profile /></RequireRole>} />
                   <Route path="/job-seeker/applications" element={<RequireRole allowed={['student', 'admin']}><MyReferrals /></RequireRole>} />
                   <Route path="/job-seeker/professionals" element={<RequireRole allowed={['student', 'admin']}><FindProfessionals /></RequireRole>} />
+                  <Route path="/job-seeker/browse-jobs" element={<RequireRole allowed={['student', 'admin']}><BrowseJobs /></RequireRole>} />
                   <Route path="/job-seeker/request-referral" element={<RequireRole allowed={['student', 'admin']}><RequestReferral /></RequireRole>} />
                   <Route path="/job-seeker/request-referral/:id" element={<RequireRole allowed={['student', 'admin']}><RequestReferral /></RequireRole>} />
 
@@ -179,6 +181,7 @@ export default function App() {
                   <Route path="/professional/referrals" element={<RequireRole allowed={['professional', 'admin']}><ReferralInbox /></RequireRole>} />
                   <Route path="/professional/talent" element={<RequireRole allowed={['professional', 'admin']}><TalentSearch /></RequireRole>} />
                   <Route path="/professional/professionals" element={<RequireRole allowed={['professional', 'admin']}><FindProfessionals /></RequireRole>} />
+                  <Route path="/professional/browse-jobs" element={<RequireRole allowed={['professional', 'admin']}><BrowseJobs /></RequireRole>} />
 
                   {/* ── Recruiter routes ── */}
                   <Route path="/recruiter" element={<Navigate to="/recruiter/dashboard" replace />} />
@@ -194,16 +197,16 @@ export default function App() {
                   {/* ── Shared routes (all authenticated roles) ── */}
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
-                  <Route path="/bookmarks" element={<BookmarksPage />} />
-                  <Route path="/activity" element={<ActivityPage />} />
-                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/bookmarks" element={<RequireRole allowed={['student']}><BookmarksPage /></RequireRole>} />
+                  <Route path="/activity" element={<RequireRole allowed={['student', 'professional']}><ActivityPage /></RequireRole>} />
+                  <Route path="/analytics" element={<RequireRole allowed={['student', 'professional']}><Analytics /></RequireRole>} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/help" element={<Help />} />
 
                   <Route path="*" element={<NotFound />} />
                 </Route>
               </Routes>
-            </LazyErrorBoundary>
+              </LazyErrorBoundary>
             </ErrorBoundary>
             <Toaster richColors position="bottom-right" />
             <NPSModal />

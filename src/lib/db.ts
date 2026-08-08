@@ -76,24 +76,33 @@ function buildLocation(
 
 // ── Professionals ───────────────────────────────────────────────
 
-export async function fetchProfessionals(): Promise<Professional[]> {
+export async function fetchProfessionals(currentUserId?: string): Promise<Professional[]> {
   try {
-    const [usersRes, profilesRes] = await Promise.all([
-      supabase
-        .from('users')
-        .select('id, full_name, email, mobile, city, state, country, verified, created_at, linkedin')
-        .eq('role', 'professional')
-        .eq('status', 'active'),
-      supabase
-        .from('profiles_professional')
-        .select('*'),
+    const [allProfilesRes, ] = await Promise.all([
+      currentUserId
+        ? supabase
+            .from('profiles_professional')
+            .select('user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url')
+            .or(`open_for_referrals.eq.true,is_open_to_work.eq.true,user_id.eq.${currentUserId}`)
+        : supabase
+            .from('profiles_professional')
+            .select('user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url')
+            .or('open_for_referrals.eq.true,is_open_to_work.eq.true'),
     ])
 
-    if (usersRes.error || !usersRes.data) return []
-    if (profilesRes.error || !profilesRes.data) return []
+    if (allProfilesRes.error || !allProfilesRes.data) return []
 
-    const profileMap = new Map<string, typeof profilesRes.data[number]>()
-    for (const p of profilesRes.data) {
+    const userIds = [...new Set(allProfilesRes.data.map((p) => p.user_id))]
+
+    const usersRes = await supabase
+      .from('users')
+      .select('id, full_name, email, mobile, city, state, country, verified, created_at, linkedin')
+      .in('id', userIds)
+
+    if (usersRes.error || !usersRes.data) return []
+
+    const profileMap = new Map<string, typeof allProfilesRes.data[number]>()
+    for (const p of allProfilesRes.data) {
       profileMap.set(p.user_id, p)
     }
 
@@ -171,7 +180,8 @@ export async function fetchProfessionals(): Promise<Professional[]> {
         githubUrl: profile?.github_url ?? '',
       }
     })
-  } catch {
+  } catch (err) {
+    console.error('fetchProfessionals failed:', err)
     return []
   }
 }
@@ -182,11 +192,7 @@ export async function fetchReferrals(userId: string): Promise<ReferralRequest[]>
   try {
     const { data, error } = await supabase
       .from('referrals')
-      .select(`
-        *,
-        requester:users!referrals_requester_id_fkey(full_name),
-        professional:users!referrals_professional_id_fkey(full_name)
-      `)
+      .select('id, requester_id, professional_id, job_title, status, pipeline_stage, created_at, note, progress, requester:users!referrals_requester_id_fkey(full_name), professional:users!referrals_professional_id_fkey(full_name)')
       .or(`requester_id.eq.${userId},professional_id.eq.${userId}`)
       .order('created_at', { ascending: false })
 
@@ -204,7 +210,8 @@ export async function fetchReferrals(userId: string): Promise<ReferralRequest[]>
     }
 
     return data.map((row) => {
-      const requester = row.requester as { full_name: string } | null
+      const requesterArr = row.requester as unknown as { full_name: string }[] | null
+      const requester = requesterArr?.[0] ?? null
       return {
         id: row.id,
         student: requester?.full_name ?? '',
@@ -223,7 +230,8 @@ export async function fetchReferrals(userId: string): Promise<ReferralRequest[]>
         progress: row.progress,
       }
     })
-  } catch {
+  } catch (err) {
+    console.error('fetchReferrals failed:', err)
     return []
   }
 }
@@ -245,17 +253,14 @@ export async function createReferral(params: {
         pipeline_stage: 'request_sent',
         progress: 15,
       })
-      .select(`
-        *,
-        requester:users!referrals_requester_id_fkey(full_name)
-      `)
+      .select('id, professional_id, job_title, status, created_at, note, progress, requester:users!referrals_requester_id_fkey(full_name)')
       .single()
 
     if (error || !data) return null
 
     return {
       id: data.id,
-      student: (data.requester as { full_name: string })?.full_name ?? '',
+      student: ((data.requester as unknown as { full_name: string }[] | null)?.[0])?.full_name ?? '',
       professionalId: data.professional_id,
       role: data.job_title,
       status: mapReferralStatus(data.status),
@@ -268,7 +273,8 @@ export async function createReferral(params: {
       note: data.note ?? '',
       progress: data.progress,
     }
-  } catch {
+  } catch (err) {
+    console.error('createReferral failed:', err)
     return null
   }
 }
@@ -290,7 +296,8 @@ export async function updateReferralStatus(
       .eq('id', referralId)
 
     return !error
-  } catch {
+  } catch (err) {
+    console.error('updateReferralStatus failed:', err)
     return false
   }
 }
@@ -306,8 +313,8 @@ export async function fetchConversations(userId: string): Promise<Conversation[]
         user_a_id,
         user_b_id,
         updated_at,
-        user_a:users!conversations_user_a_id_fkey(id, full_name, avatar_url),
-        user_b:users!conversations_user_b_id_fkey(id, full_name, avatar_url)
+        user_a:users!conversations_user_a_id_fkey(id, full_name, avatar_url, role),
+        user_b:users!conversations_user_b_id_fkey(id, full_name, avatar_url, role)
       `)
       .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`)
       .order('updated_at', { ascending: false })
@@ -318,7 +325,7 @@ export async function fetchConversations(userId: string): Promise<Conversation[]
     const convIds = convRows.map(c => c.id)
     const { data: allMsgRows } = await supabase
       .from('messages')
-      .select('*')
+      .select('id, conversation_id, sender_id, content, created_at, read, kind')
       .in('conversation_id', convIds)
       .order('created_at', { ascending: true })
 
@@ -334,8 +341,8 @@ export async function fetchConversations(userId: string): Promise<Conversation[]
     const conversations: Conversation[] = []
 
     for (const conv of convRows) {
-      const userA = Array.isArray(conv.user_a) ? conv.user_a[0] : conv.user_a as { id: string; full_name: string; avatar_url: string | null } | null
-      const userB = Array.isArray(conv.user_b) ? conv.user_b[0] : conv.user_b as { id: string; full_name: string; avatar_url: string | null } | null
+      const userA = Array.isArray(conv.user_a) ? conv.user_a[0] : conv.user_a as { id: string; full_name: string; avatar_url: string | null; role: string } | null
+      const userB = Array.isArray(conv.user_b) ? conv.user_b[0] : conv.user_b as { id: string; full_name: string; avatar_url: string | null; role: string } | null
 
       const otherUser = userA?.id === userId ? userB : userA
       if (!otherUser) continue
@@ -352,6 +359,16 @@ export async function fetchConversations(userId: string): Promise<Conversation[]
       }))
 
       const lastMsg = messages[messages.length - 1]
+
+      // Parse lastMessage display text (handle file JSON content)
+      let lastMessageDisplay = lastMsg?.text ?? ''
+      if (lastMsg?.kind === 'file' && lastMsg.text) {
+        try {
+          const parsed = JSON.parse(lastMsg.text)
+          if (parsed.type === 'file') lastMessageDisplay = `📎 ${parsed.name || 'File'}`
+        } catch { /* keep raw text */ }
+      }
+
       const unreadCount = messages.filter(
         (m) => m.from === 'them' && !m.read
       ).length
@@ -360,35 +377,75 @@ export async function fetchConversations(userId: string): Promise<Conversation[]
         id: conv.id,
         name: otherUser.full_name,
         subtitle: '',
-        lastMessage: lastMsg?.text ?? '',
+        lastMessage: lastMessageDisplay,
         time: lastMsg?.time ?? formatRelativeTime(conv.updated_at),
         unread: unreadCount,
         pinned: false,
         online: false,
         gradient: GRADIENTS[conversations.length % GRADIENTS.length],
         messages,
+        otherUserId: otherUser.id,
+        otherUserRole: otherUser.role,
       })
     }
 
     return conversations
-  } catch {
+  } catch (err) {
+    console.error('fetchConversations failed:', err)
     return []
+  }
+}
+
+export async function findOrCreateConversation(userId1: string, userId2: string): Promise<string | null> {
+  try {
+    // Check if conversation already exists (either direction)
+    const { data: existing } = await supabase
+      .from('conversations')
+      .select('id')
+      .or(`and(user_a_id.eq.${userId1},user_b_id.eq.${userId2}),and(user_a_id.eq.${userId2},user_b_id.eq.${userId1})`)
+      .maybeSingle()
+
+    if (existing) return existing.id
+
+    // Create new conversation — user_a is the lower ID for consistency
+    const [a, b] = userId1 < userId2 ? [userId1, userId2] : [userId2, userId1]
+    const { data, error } = await supabase
+      .from('conversations')
+      .insert({ user_a_id: a, user_b_id: b })
+      .select('id')
+      .single()
+
+    if (error || !data) {
+      console.error('Failed to create conversation:', error)
+      return null
+    }
+    return data.id
+  } catch (err) {
+    console.error('findOrCreateConversation failed:', err)
+    return null
   }
 }
 
 export async function sendMessage(
   conversationId: string,
   senderId: string,
-  content: string
+  content: string,
+  kind: 'text' | 'file' = 'text',
+  fileUrl?: string,
+  fileName?: string
 ): Promise<Message | null> {
   try {
+    const storedContent = kind === 'file' && fileUrl
+      ? JSON.stringify({ type: 'file', name: fileName || 'File', url: fileUrl })
+      : content
+
     const { data, error } = await supabase
       .from('messages')
       .insert({
         conversation_id: conversationId,
         sender_id: senderId,
-        content,
-        kind: 'text',
+        content: storedContent,
+        kind,
       })
       .select()
       .single()
@@ -403,7 +460,8 @@ export async function sendMessage(
       read: data.read,
       kind: data.kind as 'text' | 'file',
     }
-  } catch {
+  } catch (err) {
+    console.error('sendMessage failed:', err)
     return null
   }
 }
@@ -414,7 +472,7 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
   try {
     let query = supabase
       .from('jobs')
-      .select('*')
+      .select('id, title, department, location, type, salary_range, applicants, referrals, stage, posted_at, recruiter_id, description')
       .order('posted_at', { ascending: false })
 
     if (recruiterId) {
@@ -425,26 +483,45 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
 
     if (error || !data) return []
 
-    return data.map((row) => ({
-      id: row.id,
-      title: row.title,
-      department: row.department ?? '',
-      location: row.location ?? '',
-      type: row.type ?? 'Full-time',
-      salary: row.salary_range ?? '',
-      applicants: row.applicants,
-      referrals: row.referrals,
-      stage:
-        row.stage === 'active'
-          ? 'Active'
-          : row.stage === 'paused'
-            ? 'Paused'
-            : 'Draft',
-      postedDaysAgo: daysSince(row.posted_at),
-      pipeline: [],
-      recruiterId: row.recruiter_id,
-    }))
-  } catch {
+    // Fetch pipeline counts for all jobs
+    const jobIds = data.map((r) => r.id)
+    const { data: pipelineRows } = await supabase
+      .from('job_pipeline')
+      .select('job_id, stage')
+      .in('job_id', jobIds)
+
+    // Group pipeline by job_id and count by stage
+    const pipelineByJob = new Map<string, Record<string, number>>()
+    for (const row of (pipelineRows ?? []) as Array<{ job_id: string; stage: string }>) {
+      const counts = pipelineByJob.get(row.job_id) ?? {}
+      counts[row.stage] = (counts[row.stage] ?? 0) + 1
+      pipelineByJob.set(row.job_id, counts)
+    }
+
+    return data.map((row) => {
+      const counts = pipelineByJob.get(row.id) ?? {}
+      return {
+        id: row.id,
+        title: row.title,
+        department: row.department ?? '',
+        location: row.location ?? '',
+        type: row.type ?? 'Full-time',
+        salary: row.salary_range ?? '',
+        applicants: row.applicants,
+        referrals: row.referrals,
+        stage:
+          row.stage === 'active'
+            ? 'Active'
+            : row.stage === 'paused'
+              ? 'Paused'
+              : 'Draft',
+        postedDaysAgo: daysSince(row.posted_at),
+        pipeline: Object.entries(counts).map(([stage, count]) => ({ stage, count })),
+        recruiterId: row.recruiter_id,
+      }
+    })
+  } catch (err) {
+    console.error('fetchJobs failed:', err)
     return []
   }
 }
@@ -467,7 +544,8 @@ export async function updateJob(
       .eq('id', jobId)
 
     return !error
-  } catch {
+  } catch (err) {
+    console.error('updateJob failed:', err)
     return false
   }
 }
@@ -484,7 +562,8 @@ export async function fetchBookmarks(userId: string): Promise<string[]> {
     if (error || !data) return []
 
     return data.map((row) => row.professional_id)
-  } catch {
+  } catch (err) {
+    console.error('fetchBookmarks failed:', err)
     return []
   }
 }
@@ -495,7 +574,7 @@ export async function fetchNotifications(userId: string): Promise<AppNotificatio
   try {
     const { data, error } = await supabase
       .from('notifications')
-      .select('*')
+      .select('id, type, title, description, created_at, read')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(50)
@@ -510,7 +589,8 @@ export async function fetchNotifications(userId: string): Promise<AppNotificatio
       time: formatRelativeTime(row.created_at),
       read: row.read,
     }))
-  } catch {
+  } catch (err) {
+    console.error('fetchNotifications failed:', err)
     return []
   }
 }
@@ -546,7 +626,7 @@ export async function markAllNotificationsRead(userId: string): Promise<boolean>
 // Derives candidates from job seekers who have referrals linked to the
 // recruiter's jobs, or from the profiles_job_seeker pool.
 
-export async function fetchCandidates(userId?: string): Promise<
+export async function fetchCandidates(_userId?: string): Promise<
   {
     id: string
     name: string
@@ -562,11 +642,20 @@ export async function fetchCandidates(userId?: string): Promise<
   }[]
 > {
   try {
-    // 1) Referral-connected candidates (existing)
-    const { data: referrals, error: refError } = await supabase
-      .from('referrals')
-      .select('id, status, job_title, requester_id, professional_id')
-      .order('created_at', { ascending: false })
+    // Wave 1: fetch referral data + open-to-work profiles in parallel
+    const [referralResult, openSeekersResult] = await Promise.all([
+      supabase
+        .from('referrals')
+        .select('id, status, job_title, requester_id, professional_id')
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('profiles_job_seeker')
+        .select('user_id, skills, experience_years, preferred_role, headline, is_open_to_work')
+        .eq('is_open_to_work', true),
+    ])
+
+    const { data: referrals, error: refError } = referralResult
+    const { data: openSeekers } = openSeekersResult
 
     const referralCandidates: {
       id: string; name: string; role: string; company: string; stage: string;
@@ -574,32 +663,57 @@ export async function fetchCandidates(userId?: string): Promise<
       location: string; exp: number
     }[] = []
 
+    // Collect all user IDs needed upfront
+    const allUserIds = new Set<string>()
+    const requesterIds = new Set<string>()
+    const professionalIds = new Set<string>()
+
     if (!refError && referrals && referrals.length > 0) {
-      const requesterIds = [...new Set(referrals.map(r => r.requester_id).filter(Boolean))]
-      const professionalIds = [...new Set(referrals.map(r => r.professional_id).filter(Boolean))]
-
-      const [usersRes, seekerProfilesRes, profProfilesRes] = await Promise.all([
-        supabase.from('users').select('id, full_name, city, state, country').in('id', [...requesterIds, ...professionalIds]),
-        supabase.from('profiles_job_seeker').select('user_id, skills, experience_years, preferred_role').in('user_id', requesterIds),
-        supabase.from('profiles_professional').select('user_id, company_name').in('user_id', professionalIds),
-      ])
-
-      const userMap = new Map<string, { id: string; full_name: string; city: string | null; state: string | null; country: string | null }>()
-      for (const u of usersRes.data ?? []) userMap.set(u.id, u)
-
-      const seekerMap = new Map<string, { user_id: string; skills: string[]; experience_years: number; preferred_role: string | null }>()
-      for (const sp of seekerProfilesRes.data ?? []) seekerMap.set(sp.user_id, sp)
-
-      const profMap = new Map<string, { user_id: string; company_name: string }>()
-      for (const pp of profProfilesRes.data ?? []) profMap.set(pp.user_id, pp)
-
-      const statusMap: Record<string, string> = {
-        pending: 'Applied',
-        accepted: 'Screened',
-        rejected: 'Applied',
-        expired: 'Applied',
+      for (const r of referrals) {
+        if (r.requester_id) { requesterIds.add(r.requester_id); allUserIds.add(r.requester_id) }
+        if (r.professional_id) { professionalIds.add(r.professional_id); allUserIds.add(r.professional_id) }
       }
+    }
 
+    // Open-to-work user IDs — add all, deduplication handled when building results
+    const openToWorkUserIds = new Set<string>()
+    if (openSeekers && openSeekers.length > 0) {
+      for (const sp of openSeekers) {
+        openToWorkUserIds.add(sp.user_id)
+        allUserIds.add(sp.user_id)
+      }
+    }
+
+    // Wave 2: all lookups in parallel (no dependency between them)
+    const [usersRes, seekerProfilesRes, profProfilesRes] = await Promise.all([
+      allUserIds.size > 0
+        ? supabase.from('users').select('id, full_name, city, state, country').in('id', [...allUserIds])
+        : Promise.resolve({ data: [] }),
+      requesterIds.size > 0
+        ? supabase.from('profiles_job_seeker').select('user_id, skills, experience_years, preferred_role').in('user_id', [...requesterIds])
+        : Promise.resolve({ data: [] }),
+      professionalIds.size > 0
+        ? supabase.from('profiles_professional').select('user_id, company_name').in('user_id', [...professionalIds])
+        : Promise.resolve({ data: [] }),
+    ])
+
+    const userMap = new Map<string, { id: string; full_name: string; city: string | null; state: string | null; country: string | null }>()
+    for (const u of usersRes.data ?? []) userMap.set(u.id, u)
+
+    const seekerMap = new Map<string, { user_id: string; skills: string[]; experience_years: number; preferred_role: string | null }>()
+    for (const sp of seekerProfilesRes.data ?? []) seekerMap.set(sp.user_id, sp)
+
+    const profMap = new Map<string, { user_id: string; company_name: string }>()
+    for (const pp of profProfilesRes.data ?? []) profMap.set(pp.user_id, pp)
+
+    const statusMap: Record<string, string> = {
+      pending: 'Applied',
+      accepted: 'Screened',
+      rejected: 'Applied',
+      expired: 'Applied',
+    }
+
+    if (!refError && referrals && referrals.length > 0) {
       for (const [index, row] of referrals.entries()) {
         const requester = userMap.get(row.requester_id)
         const seekerProfile = seekerMap.get(row.requester_id)
@@ -625,114 +739,34 @@ export async function fetchCandidates(userId?: string): Promise<
       }
     }
 
-    // 2) Open-to-work job seekers NOT already in referral list
-    const referralUserIds = new Set(
-      referralCandidates.map((c) => c.id)
-    )
-
-    const { data: openSeekers } = await supabase
-      .from('profiles_job_seeker')
-      .select('user_id, skills, experience_years, preferred_role, headline, is_open_to_work')
-      .eq('is_open_to_work', true)
-
+    // Open-to-work candidates — user data already fetched in Wave 2
     const openToWorkCandidates: typeof referralCandidates = []
-
     if (openSeekers && openSeekers.length > 0) {
-      const newUserIds = openSeekers
-        .filter((sp) => !referralUserIds.has(sp.user_id))
-        .map((sp) => sp.user_id)
-
-      if (newUserIds.length > 0) {
-        const { data: openUsers } = await supabase
-          .from('users')
-          .select('id, full_name, city, state, country')
-          .in('id', newUserIds)
-          .eq('status', 'active')
-
-        const openUserMap = new Map<string, typeof openUsers extends (infer U)[] | null ? U : never>()
-        for (const u of openUsers ?? []) openUserMap.set(u.id, u)
-
-        let idx = 0
-        for (const sp of openSeekers) {
-          if (referralUserIds.has(sp.user_id)) continue
-          const u = openUserMap.get(sp.user_id)
-          if (!u) continue
-          openToWorkCandidates.push({
-            id: sp.user_id,
-            name: u.full_name ?? '',
-            role: sp.preferred_role ?? sp.headline ?? 'Job Seeker',
-            company: '',
-            stage: 'Open',
-            rating: 0,
-            source: 'Open to work',
-            gradient: GRADIENTS[(referralCandidates.length + idx) % GRADIENTS.length],
-            skills: sp.skills ?? [],
-            location: buildLocation(u.city, u.state, u.country),
-            exp: sp.experience_years ?? 0,
-          })
-          idx++
-        }
+      const referralUserIds = new Set(referralCandidates.map(c => c.id))
+      let idx = 0
+      for (const sp of openSeekers) {
+        if (referralUserIds.has(sp.user_id)) continue
+        const u = userMap.get(sp.user_id)
+        if (!u || !u.full_name) continue
+        openToWorkCandidates.push({
+          id: sp.user_id,
+          name: u.full_name ?? '',
+          role: sp.preferred_role ?? sp.headline ?? 'Job Seeker',
+          company: '',
+          stage: 'Open',
+          rating: 0,
+          source: 'Open to work',
+          gradient: GRADIENTS[(referralCandidates.length + idx) % GRADIENTS.length],
+          skills: sp.skills ?? [],
+          location: buildLocation(u.city, u.state, u.country),
+          exp: sp.experience_years ?? 0,
+        })
+        idx++
       }
     }
 
     const all = [...referralCandidates, ...openToWorkCandidates]
-    if (userId) return all.filter((c) => c.id !== userId && c.name !== '')
     return all.filter((c) => c.name !== '')
-  } catch {
-    return []
-  }
-}
-
-// ── Open-to-Work Job Seekers (discovery for recruiters & professionals) ──
-
-export type OpenToWorkSeeker = {
-  id: string
-  name: string
-  role: string
-  skills: string[]
-  location: string
-  exp: number
-  headline: string
-  gradient: string
-}
-
-export async function fetchOpenToWorkSeekers(): Promise<OpenToWorkSeeker[]> {
-  try {
-    const { data: seekerProfiles, error: seekerError } = await supabase
-      .from('profiles_job_seeker')
-      .select('user_id, skills, experience_years, preferred_role, headline, is_open_to_work')
-      .eq('is_open_to_work', true)
-
-    if (seekerError || !seekerProfiles || seekerProfiles.length === 0) return []
-
-    const userIds = seekerProfiles.map((sp) => sp.user_id)
-
-    const { data: users, error: usersError } = await supabase
-      .from('users')
-      .select('id, full_name, city, state, country, status')
-      .in('id', userIds)
-      .eq('status', 'active')
-
-    if (usersError || !users) return []
-
-    const userMap = new Map<string, typeof users[number]>()
-    for (const u of users) userMap.set(u.id, u)
-
-    return seekerProfiles
-      .filter((sp) => userMap.has(sp.user_id))
-      .map((sp, index) => {
-        const u = userMap.get(sp.user_id)!
-        return {
-          id: sp.user_id,
-          name: u.full_name ?? '',
-          role: sp.preferred_role ?? sp.headline ?? 'Job Seeker',
-          skills: sp.skills ?? [],
-          location: buildLocation(u.city, u.state, u.country),
-          exp: sp.experience_years ?? 0,
-          headline: sp.headline ?? '',
-          gradient: GRADIENTS[index % GRADIENTS.length],
-        }
-      })
   } catch {
     return []
   }
@@ -794,23 +828,32 @@ export async function updateJobSeekerProfile(
       .from('profiles_job_seeker')
       .select('user_id')
       .eq('user_id', userId)
-      .maybeSingle()
+          .maybeSingle()
 
     if (existing) {
       const { error } = await supabase
         .from('profiles_job_seeker')
         .update(updates)
         .eq('user_id', userId)
-      if (error) console.error('Update job seeker profile error:', error)
-      return !error
+        .select()
+      if (error) {
+        console.error('Update job seeker profile error:', error)
+        throw new Error(`Failed to update job seeker profile: ${error.message}`)
+      }
+      return true
     } else {
       const { error } = await supabase
         .from('profiles_job_seeker')
         .insert({ user_id: userId, ...updates })
-      if (error) console.error('Insert job seeker profile error:', error)
-      return !error
+        .select()
+      if (error) {
+        console.error('Insert job seeker profile error:', error)
+        throw new Error(`Failed to create job seeker profile: ${error.message}`)
+      }
+      return true
     }
-  } catch {
+  } catch (err) {
+    if (err instanceof Error) throw err
     return false
   }
 }
@@ -844,16 +887,23 @@ export async function updateProfessionalProfile(
         .from('profiles_professional')
         .update(updates)
         .eq('user_id', userId)
-      if (error) console.error('Update professional profile error:', error)
-      return !error
+      if (error) {
+        console.error('Update professional profile error:', error)
+        throw new Error(`Failed to update professional profile: ${error.message}`)
+      }
+      return true
     } else {
       const { error } = await supabase
         .from('profiles_professional')
         .insert({ user_id: userId, ...updates })
-      if (error) console.error('Insert professional profile error:', error)
-      return !error
+      if (error) {
+        console.error('Insert professional profile error:', error)
+        throw new Error(`Failed to create professional profile: ${error.message}`)
+      }
+      return true
     }
-  } catch {
+  } catch (err) {
+    if (err instanceof Error) throw err
     return false
   }
 }
@@ -876,9 +926,33 @@ export async function updateRecruiterProfile(
       .from('profiles_recruiter')
       .upsert({ user_id: userId, ...updates }, { onConflict: 'user_id' })
 
-    return !error
-  } catch {
+    if (error) {
+      console.error('Update recruiter profile error:', error)
+      throw new Error(`Failed to update recruiter profile: ${error.message}`)
+    }
+    return true
+  } catch (err) {
+    if (err instanceof Error) throw err
     return false
+  }
+}
+
+// ── Dedicated toggle upsert (bypasses RLS via SECURITY DEFINER) ───
+export async function upsertProfessionalField(userId: string, field: string, value: unknown): Promise<void> {
+  const { error: rpcError } = await supabase.rpc('upsert_professional_toggle', {
+    p_user_id: userId,
+    p_field: field,
+    p_value: value,
+  })
+  if (!rpcError) return
+
+  console.warn(`RPC failed for ${field}, falling back to direct update:`, rpcError.message)
+  const { error: updateError } = await supabase
+    .from('profiles_professional')
+    .upsert({ user_id: userId, [field]: value }, { onConflict: 'user_id' })
+  if (updateError) {
+    console.error(`DIRECT UPDATE FAILED: profiles_professional.${field}`, updateError.message, updateError.details, updateError.hint)
+    throw new Error(`Failed to save ${field}: ${updateError.message}`)
   }
 }
 
@@ -1218,7 +1292,7 @@ export async function fetchAnnouncements(): Promise<Announcement[]> {
   try {
     const { data, error } = await supabase
       .from('announcements')
-      .select('*')
+      .select('id, title, body, type, active, created_by, created_at, expires_at, target_role')
       .order('created_at', { ascending: false })
     if (error || !data) return []
     return data as Announcement[]
@@ -1270,53 +1344,6 @@ export async function toggleAnnouncement(id: string, active: boolean): Promise<b
   }
 }
 
-// ── Admin: Referrals Management ───────────────────────────────
-
-export interface AdminReferral {
-  id: string
-  requester_name: string
-  requester_email: string
-  professional_name: string
-  professional_email: string
-  job_title: string
-  status: string
-  note: string | null
-  created_at: string
-}
-
-export async function fetchAllReferrals(): Promise<AdminReferral[]> {
-  try {
-    const { data: refs, error } = await supabase
-      .from('referrals')
-      .select('id, job_title, status, note, created_at, requester_id, professional_id')
-      .order('created_at', { ascending: false })
-    if (error || !refs || refs.length === 0) return []
-
-    const userIds = [...new Set([...refs.map((r) => r.requester_id), ...refs.map((r) => r.professional_id)])]
-    const { data: users } = await supabase
-      .from('users')
-      .select('id, full_name, email')
-      .in('id', userIds)
-
-    const userMap = new Map<string, { full_name: string; email: string }>()
-    ;(users || []).forEach((u) => userMap.set(u.id, { full_name: u.full_name, email: u.email }))
-
-    return refs.map((r) => ({
-      id: r.id,
-      requester_name: userMap.get(r.requester_id)?.full_name || 'Unknown',
-      requester_email: userMap.get(r.requester_id)?.email || '',
-      professional_name: userMap.get(r.professional_id)?.full_name || 'Unknown',
-      professional_email: userMap.get(r.professional_id)?.email || '',
-      job_title: r.job_title,
-      status: r.status,
-      note: r.note,
-      created_at: r.created_at,
-    }))
-  } catch {
-    return []
-  }
-}
-
 // ── Admin: Reports with User Names ────────────────────────────
 
 export interface ReportWithUsers extends Report {
@@ -1330,7 +1357,7 @@ export async function fetchReportsWithUsers(): Promise<ReportWithUsers[]> {
   try {
     const { data: reports, error } = await supabase
       .from('reports')
-      .select('*')
+      .select('id, reporter_id, target_id, reason, description, status, created_at, resolved_at')
       .in('status', ['open', 'under_review'])
       .order('created_at', { ascending: false })
     if (error || !reports) return []
@@ -1451,37 +1478,29 @@ export async function fetchAuditLogs(limit = 50): Promise<AuditLogEntry[]> {
   try {
     const { data: logs, error } = await supabase
       .from('admin_logs')
-      .select('*')
+      .select('id, admin_id, action, target_id, details, created_at')
       .order('created_at', { ascending: false })
       .limit(limit)
     if (error || !logs) return []
 
     const adminIds = [...new Set(logs.map((l) => l.admin_id))]
-    const { data: admins } = await supabase
+    const targetIds = [...new Set(logs.filter((l) => l.target_id).map((l) => l.target_id!))]
+    const allIds = [...new Set([...adminIds, ...targetIds])]
+    const { data: allUsers } = await supabase
       .from('users')
       .select('id, full_name')
-      .in('id', adminIds)
+      .in('id', allIds)
 
-    const adminMap = new Map<string, string>()
-    ;(admins || []).forEach((a) => adminMap.set(a.id, a.full_name || 'Admin'))
-
-    const targetIds = [...new Set(logs.filter((l) => l.target_id).map((l) => l.target_id!))]
-    let targetMap = new Map<string, string>()
-    if (targetIds.length > 0) {
-      const { data: targets } = await supabase
-        .from('users')
-        .select('id, full_name')
-        .in('id', targetIds)
-      ;(targets || []).forEach((t) => targetMap.set(t.id, t.full_name || 'Unknown'))
-    }
+    const userMap = new Map<string, string>()
+    for (const u of allUsers ?? []) userMap.set(u.id, u.full_name)
 
     return logs.map((l) => ({
       id: l.id,
       admin_id: l.admin_id,
-      admin_name: adminMap.get(l.admin_id) || 'Admin',
+      admin_name: userMap.get(l.admin_id) || 'Admin',
       action: l.action,
       target_id: l.target_id,
-      target_name: l.target_id ? (targetMap.get(l.target_id) || 'Unknown') : '',
+      target_name: l.target_id ? (userMap.get(l.target_id) || 'Unknown') : '',
       details: l.details,
       created_at: l.created_at,
     }))
@@ -1581,7 +1600,7 @@ export async function fetchUserDetail(userId: string): Promise<AdminUserDetail |
     if (user.role === 'professional') {
       const { data: pro } = await supabase
         .from('profiles_professional')
-        .select('*')
+        .select('bio, job_title, company_name, department, years_experience, skills, open_for_referrals')
         .eq('user_id', userId)
         .single()
       if (pro) {
@@ -1596,7 +1615,7 @@ export async function fetchUserDetail(userId: string): Promise<AdminUserDetail |
     } else if (user.role === 'job_seeker') {
       const { data: js } = await supabase
         .from('profiles_job_seeker')
-        .select('*')
+        .select('headline, skills, experience, education')
         .eq('user_id', userId)
         .single()
       if (js) {
@@ -1608,7 +1627,7 @@ export async function fetchUserDetail(userId: string): Promise<AdminUserDetail |
     } else if (user.role === 'recruiter') {
       const { data: rec } = await supabase
         .from('profiles_recruiter')
-        .select('*')
+        .select('company_description, company_name, job_title, hiring_department')
         .eq('user_id', userId)
         .single()
       if (rec) {

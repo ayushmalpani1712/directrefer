@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { GAvatar, SectionHeader, StatCard } from '@/components/ui-kit'
+import { DashboardSkeleton, ListSkeleton } from '@/components/ui/skeleton'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { GRADIENTS } from '@/data/mock'
@@ -240,7 +241,7 @@ export default function Admin() {
   }, [tab, settingsTab, loadUsers, loadSettings, loadAnnouncements, loadFlagged, loadAuditLogs, loadSystemHealth])
 
   if (loading) {
-    return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+    return <DashboardSkeleton />
   }
 
   // ── Handlers ──
@@ -1220,7 +1221,7 @@ function VerificationReviewTab() {
   const reviewed = requests.filter((r) => r.status !== 'pending')
 
   if (loading) {
-    return <div className="flex items-center justify-center py-24"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+    return <ListSkeleton count={5} />
   }
 
   return (

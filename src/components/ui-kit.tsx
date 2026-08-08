@@ -48,7 +48,6 @@ const STATUS_STYLES: Record<ReferralStatus, { label: string; cls: string; dot: s
   pending: { label: 'Pending', cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25', dot: 'bg-amber-500' },
   accepted: { label: 'Accepted', cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25', dot: 'bg-emerald-500' },
   rejected: { label: 'Declined', cls: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25', dot: 'bg-rose-500' },
-  offered: { label: 'Offer', cls: 'bg-primary/10 text-primary border-primary/25', dot: 'bg-primary' },
   hired: { label: 'Hired', cls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25', dot: 'bg-violet-500' },
 }
 

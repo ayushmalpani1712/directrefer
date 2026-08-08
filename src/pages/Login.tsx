@@ -41,7 +41,12 @@ export default function Login() {
     setLoading(true)
     try {
       if (isSignUp) {
-        const { error } = await signUp(email, password, {
+        if (password.length < 6) {
+          toast.error('Password must be at least 6 characters')
+          setLoading(false)
+          return
+        }
+        const { error, needsVerification } = await signUp(email, password, {
           full_name: fullName || email.split('@')[0],
           role: selected,
         })
@@ -50,28 +55,33 @@ export default function Login() {
           setLoading(false)
           return
         }
-        toast.success('Account created! You can now sign in.')
-        setIsSignUp(false)
+        if (needsVerification) {
+          toast.success('Account created! Check your email to verify, then sign in.')
+          setIsSignUp(false)
+        } else {
+          toast.success('Account created! Taking you to your dashboard...')
+          // Use selected role directly — no extra getUser() call needed
+          navigate(ROLE_ROUTE[selected] || '/job-seeker')
+        }
       } else {
         const { error } = await signIn(email, password)
         if (error) {
-          toast.error(error)
+          const msg = error.toLowerCase()
+          if (msg.includes('invalid login') || msg.includes('invalid credentials') || msg.includes('wrong password')) {
+            toast.error('Invalid email or password. Please try again.')
+          } else if (msg.includes('email not confirmed')) {
+            toast.error('Please verify your email first. Check your inbox.')
+          } else {
+            toast.error(error)
+          }
           setLoading(false)
           return
         }
-        // Read role from DB and navigate to role-specific route
-        const { data: { user: authUser } } = await supabase.auth.getUser()
-        if (authUser) {
-          const { data: userRow } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', authUser.id)
-            .single()
-          const dbRole = (userRow?.role as Role) || 'student'
-          navigate(ROLE_ROUTE[dbRole] || '/job-seeker')
-        } else {
-          navigate('/job-seeker')
-        }
+        // Read role from local session (no network call — avoids getUser roundtrip)
+        const { data: { session } } = await supabase.auth.getSession()
+        const rawRole = (session?.user?.user_metadata?.role as string) || 'job_seeker'
+        const mappedRole: Role = rawRole === 'job_seeker' ? 'student' : (rawRole as Role)
+        navigate(ROLE_ROUTE[mappedRole] || '/job-seeker')
       }
     } catch {
       toast.error('Something went wrong. Please try again.')
@@ -223,6 +233,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
                 className={cn(
                   'absolute right-3 top-1/2 -translate-y-1/2 transition-colors duration-200',
                   dark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600',

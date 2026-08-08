@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useNavigate, useLocation } from 'react-router'
+import { useNavigate } from 'react-router'
 import {
   Briefcase, ShieldCheck, User, Users,
 } from 'lucide-react'
@@ -12,7 +12,7 @@ import {
 import { GAvatar } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { ROLE_META, ROLE_ROUTE, getRoleFromPath, type Role } from '@/data/mock'
+import { ROLE_META, ROLE_ROUTE, type Role } from '@/data/mock'
 import { cn } from '@/lib/utils'
 
 const ROLE_ICONS: Record<Role, typeof User> = {
@@ -23,18 +23,16 @@ const ROLE_ICONS: Record<Role, typeof User> = {
 }
 
 export function WorkspaceSwitcher() {
-  const { setRole, isAdmin, student, logout } = useApp()
+  const { role: ctxRole, setRole, isAdmin, student, logout } = useApp()
   const { signOut } = useAuth()
   const navigate = useNavigate()
-  const { pathname } = useLocation()
-  const urlRole = getRoleFromPath(pathname)
 
   const workspaceRoles: Role[] = useMemo(() =>
     isAdmin ? ['student', 'professional', 'recruiter', 'admin'] : ['student', 'professional', 'recruiter'],
   [isAdmin])
 
   const handleSwitch = (r: Role) => {
-    if (r === urlRole) return
+    if (r === ctxRole) return
 
     setRole(r)
     navigate(ROLE_ROUTE[r])
@@ -46,16 +44,16 @@ export function WorkspaceSwitcher() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 rounded-full p-0.5 pr-1 transition-colors hover:bg-muted">
-            <GAvatar name={student.name} gradient={student.gradient} className="h-8 w-8 text-xs" ring />
+            <GAvatar name={student?.name ?? 'U'} gradient={student?.gradient ?? 0} className="h-8 w-8 text-xs" ring />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-72">
           <div className="flex items-center gap-3 px-3 py-2.5">
-            <GAvatar name={student.name} gradient={student.gradient} className="h-10 w-10 text-sm" />
+            <GAvatar name={student?.name ?? 'U'} gradient={student?.gradient ?? 0} className="h-10 w-10 text-sm" />
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold">{student.name}</div>
+              <div className="truncate text-sm font-semibold">{student?.name ?? 'User'}</div>
               <div className="truncate text-xs text-muted-foreground">
-                {student.headline || ROLE_META[urlRole].label}
+                {student.headline || ROLE_META[ctxRole].label}
               </div>
             </div>
           </div>
@@ -65,7 +63,7 @@ export function WorkspaceSwitcher() {
           </DropdownMenuLabel>
           {workspaceRoles.map((r) => {
             const Icon = ROLE_ICONS[r]
-            const isActive = urlRole === r
+            const isActive = ctxRole === r
             const isSuperAdmin = r === 'admin'
             return (
               <DropdownMenuItem
@@ -95,7 +93,16 @@ export function WorkspaceSwitcher() {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="text-rose-500 focus:text-rose-500"
-            onSelect={async () => { logout(); await signOut(); navigate('/login') }}
+            onSelect={async () => {
+              try {
+                logout()
+                await signOut()
+                navigate('/login')
+              } catch (err) {
+                console.error('Sign out failed:', err)
+                toast.error('Sign out failed. Please try again.')
+              }
+            }}
           >
             Sign out
           </DropdownMenuItem>
