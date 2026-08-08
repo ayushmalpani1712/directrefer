@@ -416,6 +416,14 @@ export async function findOrCreateConversation(userId1: string, userId2: string)
       .single()
 
     if (error || !data) {
+      // Race condition: another concurrent call may have inserted first.
+      // Retry the lookup to catch the duplicate.
+      const { data: retry } = await supabase
+        .from('conversations')
+        .select('id')
+        .or(`and(user_a_id.eq.${userId1},user_b_id.eq.${userId2}),and(user_a_id.eq.${userId2},user_b_id.eq.${userId1})`)
+        .maybeSingle()
+      if (retry) return retry.id
       console.error('Failed to create conversation:', error)
       return null
     }

@@ -227,8 +227,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // ── Load real data from Supabase when user is authenticated ──
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      // User signed out — clear all state to prevent stale data bleed
+      setConversations([])
+      setProfessionals([])
+      setRequests([])
+      setRequestTimestamps([])
+      setBookmarks([])
+      setNotifications([])
+      setJobs([])
+      setCandidates([])
+      setSavedCandidates([])
+      return
+    }
     const currentUser = user
+
+    // Clear all mutable state immediately on user change to prevent
+    // stale data from a previous account bleeding into the new session.
+    setConversations([])
+    setProfessionals([])
+    setRequests([])
+    setRequestTimestamps([])
+    setBookmarks([])
+    setNotifications([])
+    setJobs([])
+    setCandidates([])
+    setSavedCandidates([])
 
     async function loadRealData() {
       const userId = currentUser.id
@@ -290,7 +314,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (profs.status === 'fulfilled' && profs.value.length > 0) setProfessionals(profs.value)
       if (refs.status === 'fulfilled') setRequests(refs.value)
-      if (convs.status === 'fulfilled' && convs.value.length > 0) setConversations(convs.value)
+      if (convs.status === 'fulfilled') setConversations(convs.value)
       if (cands.status === 'fulfilled' && cands.value.length > 0) setCandidates(cands.value)
 
       // Non-critical — load after first paint (deferred)
@@ -391,22 +415,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
             kind: (msg.kind === 'file' ? 'file' : 'text') as 'text' | 'file',
           }
 
-          setConversations((prev) =>
-            prev.map((c) =>
-              c.id === msg.conversation_id
-                ? {
-                    ...c,
-                    lastMessage: msg.content ?? c.lastMessage,
-                    time: formatRelativeTime(msg.created_at),
-                    unread: c.unread + 1,
-                    messages: [...c.messages, newMessage],
-                  }
-                : c
-            )
-          )
+          setConversations((prev) => {
+            const existing = prev.find((c) => c.id === msg.conversation_id)
+            if (existing) {
+              // Conversation exists — append message
+              return prev.map((c) =>
+                c.id === msg.conversation_id
+                  ? {
+                      ...c,
+                      lastMessage: msg.content ?? c.lastMessage,
+                      time: formatRelativeTime(msg.created_at),
+                      unread: c.unread + 1,
+                      messages: [...c.messages, newMessage],
+                    }
+                  : c
+              )
+            }
+            // Conversation not in state yet — fetch it and prepend
+            fetchConversations(currentUser.id).then((convs) => setConversations(convs)).catch(() => {})
+            return prev
+          })
 
           if (msg.content) {
-            notifyNewMessage('Someone', msg.content)
+            // Resolve sender name from conversations state
+            const convName = currentConvsRef.current.find((c) => c.id === msg.conversation_id)?.name
+            notifyNewMessage(convName || 'Someone', msg.content)
           }
         }
       )
@@ -940,6 +973,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Auto-reminder: send reminder emails for pending referrals older than 3 days (once per session)
   const reminderSentRef = useRef(false)
+  const currentConvsRef = useRef<Conversation[]>([])
+  currentConvsRef.current = conversations
   useEffect(() => {
     if (!user || requests.length === 0 || reminderSentRef.current) return
     reminderSentRef.current = true
@@ -1015,8 +1050,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     )
     // Persist to Supabase
     if (user) {
-      dbSendMessage(conversationId, user.id, text, kind, fileUrl, fileName).then(() => {
-        // Message sent successfully
+      dbSendMessage(conversationId, user.id, text, kind, fileUrl, fileName).then((realMsg) => {
+        // Replace the temporary mm- ID with the real DB UUID so the message
+        // survives page refreshes and matches realtime payloads.
+        if (realMsg?.id) {
+          setConversations((prev) =>
+            prev.map((c) =>
+              c.id === conversationId
+                ? { ...c, messages: c.messages.map((m) => m.id === newMsg.id ? { ...m, id: realMsg.id } : m) }
+                : c
+            )
+          )
+        }
       }).catch((err) => {
         console.error('Failed to send message:', err)
         // Rollback: remove phantom message and restore previous lastMessage
