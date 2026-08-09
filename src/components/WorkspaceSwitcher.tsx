@@ -46,7 +46,7 @@ export function WorkspaceSwitcher() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 rounded-full p-1 pr-1.5 transition-colors hover:bg-muted">
+          <button className="flex h-14 items-center transition-colors hover:bg-muted px-1.5">
             <GAvatar name={student?.name ?? 'U'} gradient={student?.gradient ?? 0} className="h-9 w-9 text-xs" ring />
           </button>
         </DropdownMenuTrigger>
