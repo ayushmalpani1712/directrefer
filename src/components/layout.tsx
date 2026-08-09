@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes'
 import {
   Bell, Bookmark, Briefcase, CheckCheck, ChevronRight, CircleHelp, Command,
   FileText, FileUp, Home, LayoutDashboard, Mail, MessageSquare, Moon,
-  Plus, Search, Settings, Shield, Sparkles, Sun, User, Users, Zap, Inbox, LineChart, Activity,
+  Plus, Search, Settings, Shield, Sparkles, Sun, User, Users, Zap, Inbox, LineChart, Activity, BarChart3,
   type LucideIcon,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -464,7 +464,15 @@ function FAB() {
 
       ]
     }
-    if (urlRole === 'professional' || urlRole === 'admin') {
+    if (urlRole === 'admin') {
+      return [
+        { icon: BarChart3, label: 'Dashboard', run: () => navigate('/admin/dashboard') },
+        { icon: Users, label: 'Manage workspaces', run: () => navigate('/admin/workspaces') },
+        { icon: MessageSquare, label: 'Messages', run: () => navigate('/admin/messages') },
+        { icon: Settings, label: 'Settings', run: () => navigate('/admin/settings') },
+      ]
+    }
+    if (urlRole === 'professional') {
       return [
         { icon: CheckCheck, label: 'Review pending requests', run: () => navigate('/professional/referrals') },
         { icon: Briefcase, label: 'Find job seekers', run: () => navigate('/professional/talent') },

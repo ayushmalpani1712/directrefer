@@ -713,10 +713,10 @@ export default function Admin() {
               {filteredUsers
                 .filter(u => workspaceTab === 'job-seekers' ? u.role === 'student' : workspaceTab === 'professionals' ? u.role === 'professional' : u.role === 'recruiter')
                 .map((u) => (
-                <motion.div key={u.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <motion.div key={u.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} layout>
                   <Card className="shadow-soft">
-                  <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4">
-                      <GAvatar name={u.name} gradient={u.gradient} className="h-10 w-10 text-xs" />
+                    <CardContent className="flex items-center gap-4 p-4">
+                      <GAvatar name={u.name} gradient={u.gradient} className="h-10 w-10 shrink-0 text-xs" />
                       <div className="min-w-0 flex-1">
                         {editingUserId === u.id ? (
                           <div className="flex items-center gap-2">
@@ -731,10 +731,10 @@ export default function Admin() {
                         ) : (
                           <>
                             <div className="truncate text-sm font-semibold">{u.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {u.email} · <span className="capitalize">{u.role}</span>
-                              {u.company_name && ` · ${u.company_name}`}
-                              {u.job_title && ` · ${u.job_title}`}
+                            <div className="truncate text-xs text-muted-foreground">
+                              {u.email}
+                              {u.company_name && <> · {u.company_name}</>}
+                              {u.job_title && <> · {u.job_title}</>}
                             </div>
                             <div className="text-[11px] text-muted-foreground">
                               Joined {u.created_at ? new Date(u.created_at).toLocaleDateString() : '?'} · Last active {u.lastActivity}
@@ -742,11 +742,11 @@ export default function Admin() {
                           </>
                         )}
                       </div>
-                      {u.status === 'suspended' && <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/25"><Ban className="mr-1 h-3 w-3" />Suspended</Badge>}
-                      {u.daysInactive >= retentionDays && u.status !== 'suspended' && (
-                        <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/25"><AlertTriangle className="mr-1 h-3 w-3" />Inactive</Badge>
-                      )}
-                      <div className="flex items-center gap-1">
+                      <div className="flex shrink-0 items-center gap-1">
+                        {u.status === 'suspended' && <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/25"><Ban className="mr-1 h-3 w-3" />Suspended</Badge>}
+                        {u.daysInactive >= retentionDays && u.status !== 'suspended' && (
+                          <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/25"><AlertTriangle className="mr-1 h-3 w-3" />Inactive</Badge>
+                        )}
                         {editingUserId === u.id ? (
                           <>
                             <Button variant="ghost" size="sm" onClick={saveEditUser} className="text-emerald-600">Save</Button>
