@@ -20,6 +20,14 @@ import {
 
 // ── Helpers ─────────────────────────────────────────────────────
 
+// Map frontend Role type to DB users.role enum values
+const ROLE_TO_DB: Record<string, string> = {
+  student: 'job_seeker',
+  professional: 'professional',
+  recruiter: 'recruiter',
+  admin: 'admin',
+}
+
 function daysSince(iso: string): number {
   const ms = Date.now() - new Date(iso).getTime()
   return Math.floor(ms / 86_400_000)
@@ -306,6 +314,7 @@ export async function updateReferralStatus(
 
 export async function fetchConversations(userId: string, roleContext?: string): Promise<Conversation[]> {
   try {
+    const dbRole = roleContext ? (ROLE_TO_DB[roleContext] || roleContext) : undefined
     let query = supabase
       .from('conversations')
       .select(`
@@ -320,8 +329,8 @@ export async function fetchConversations(userId: string, roleContext?: string): 
       .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`)
       .order('updated_at', { ascending: false })
 
-    if (roleContext) {
-      query = query.eq('role_context', roleContext)
+    if (dbRole) {
+      query = query.eq('role_context', dbRole)
     }
 
     const { data: convRows, error: convError } = await query
@@ -403,13 +412,14 @@ export async function fetchConversations(userId: string, roleContext?: string): 
   }
 }
 
-export async function findOrCreateConversation(userId1: string, userId2: string, roleContext: string = 'student'): Promise<string | null> {
+export async function findOrCreateConversation(userId1: string, userId2: string, roleContext: string = 'job_seeker'): Promise<string | null> {
   try {
+    const dbRole = ROLE_TO_DB[roleContext] || roleContext
     // Check if conversation already exists for this role context (either direction)
     const { data: existing } = await supabase
       .from('conversations')
       .select('id')
-      .eq('role_context', roleContext)
+      .eq('role_context', dbRole)
       .or(`and(user_a_id.eq.${userId1},user_b_id.eq.${userId2}),and(user_a_id.eq.${userId2},user_b_id.eq.${userId1})`)
       .maybeSingle()
 
@@ -419,7 +429,7 @@ export async function findOrCreateConversation(userId1: string, userId2: string,
     const [a, b] = userId1 < userId2 ? [userId1, userId2] : [userId2, userId1]
     const { data, error } = await supabase
       .from('conversations')
-      .insert({ user_a_id: a, user_b_id: b, role_context: roleContext })
+      .insert({ user_a_id: a, user_b_id: b, role_context: dbRole })
       .select('id')
       .single()
 
@@ -429,7 +439,7 @@ export async function findOrCreateConversation(userId1: string, userId2: string,
       const { data: retry } = await supabase
         .from('conversations')
         .select('id')
-        .eq('role_context', roleContext)
+        .eq('role_context', dbRole)
         .or(`and(user_a_id.eq.${userId1},user_b_id.eq.${userId2}),and(user_a_id.eq.${userId2},user_b_id.eq.${userId1})`)
         .maybeSingle()
       if (retry) return retry.id
