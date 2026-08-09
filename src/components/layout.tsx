@@ -272,7 +272,7 @@ function NotificationsMenu() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[380px] max-w-[calc(100vw-2rem)] p-0">
+      <DropdownMenuContent align="end" sideOffset={0} className="w-[380px] max-w-[calc(100vw-2rem)] p-0">
         <div className="flex items-center justify-between px-4 py-3">
           <DropdownMenuLabel className="p-0 text-sm font-semibold">Notifications</DropdownMenuLabel>
           <Button variant="ghost" size="sm" className="h-9 text-xs text-primary" onClick={() => { markAllNotificationsRead(); setItems(items.map((n) => ({ ...n, read: true }))) }}>
@@ -329,7 +329,7 @@ function MessagesMenu() {
           {unread > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[360px] max-w-[calc(100vw-2rem)] p-0">
+      <DropdownMenuContent align="end" sideOffset={0} className="w-[360px] max-w-[calc(100vw-2rem)] p-0">
         <div className="px-4 py-3">
           <DropdownMenuLabel className="p-0 text-sm font-semibold">Messages</DropdownMenuLabel>
         </div>
