@@ -288,14 +288,9 @@ export default function Settings() {
               {sessions.map((s) => (
                 <div key={s.id} className="flex items-center justify-between rounded-lg border border-border px-3.5 py-2.5 text-sm">
                   <span className="flex items-center gap-2"><Laptop className="h-4 w-4 text-muted-foreground" /> {s.device}</span>
-                  {s.isCurrent ? <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10">This device</Badge> : <Button variant="ghost" size="sm" className="h-7 text-xs text-rose-500" onClick={async () => {
-                    try {
-                      await supabase.auth.signOut()
-                      setSessions((prev) => prev.filter((sess) => sess.id !== s.id))
-                      toast.success('Signed out from other session')
-                    } catch {
-                      toast.error('Failed to revoke session. Try changing your password instead.')
-                    }
+                  {s.isCurrent ? <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10">This device</Badge> : <Button variant="ghost" size="sm" className="h-7 text-xs text-rose-500" onClick={() => {
+                    toast.info('To revoke all other sessions, change your password below. All sessions will be invalidated.')
+                    setActiveTab('security')
                   }}>Revoke</Button>}
                 </div>
               ))}

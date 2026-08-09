@@ -48,7 +48,7 @@ const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
 function LazyErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary>
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}>
         {children}
       </Suspense>
     </ErrorBoundary>
@@ -129,21 +129,28 @@ function RequireRole({ allowed, children }: { allowed: Role[]; children: React.R
 }
 
 function RecoveryHandler() {
-  const [isRecovery, setIsRecovery] = useState(false)
+  const [handleType, setHandleType] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     const hash = window.location.hash
     if (hash && hash.includes('type=recovery')) {
-      setIsRecovery(true)
+      setHandleType('recovery')
+    } else if (hash && hash.includes('type=magiclink')) {
+      setHandleType('magiclink')
     }
   }, [])
 
   useEffect(() => {
-    if (isRecovery) {
+    if (handleType === 'recovery') {
       navigate('/reset-password', { replace: true })
+    } else if (handleType === 'magiclink') {
+      // Magic link session is already set by Supabase JS client
+      window.history.replaceState(null, '', window.location.pathname)
+      // The session is already set, AppProvider will detect it and redirect
+      navigate('/dashboard', { replace: true })
     }
-  }, [isRecovery, navigate])
+  }, [handleType, navigate])
 
   return null
 }
@@ -220,11 +227,32 @@ export default function App() {
                   <Route path="/professional/messages" element={<Messages />} />
                   <Route path="/recruiter/messages" element={<Messages />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
+                  <Route path="/job-seeker/notifications" element={<NotificationsPage />} />
+                  <Route path="/professional/notifications" element={<NotificationsPage />} />
+                  <Route path="/recruiter/notifications" element={<NotificationsPage />} />
+                  <Route path="/admin/notifications" element={<NotificationsPage />} />
                   <Route path="/bookmarks" element={<RequireRole allowed={['student']}><BookmarksPage /></RequireRole>} />
-                  <Route path="/activity" element={<RequireRole allowed={['student', 'professional']}><ActivityPage /></RequireRole>} />
-                  <Route path="/analytics" element={<RequireRole allowed={['student', 'professional']}><Analytics /></RequireRole>} />
+                  <Route path="/job-seeker/bookmarks" element={<RequireRole allowed={['student']}><BookmarksPage /></RequireRole>} />
+                  <Route path="/activity" element={<ActivityPage />} />
+                  <Route path="/job-seeker/activity" element={<ActivityPage />} />
+                  <Route path="/professional/activity" element={<ActivityPage />} />
+                  <Route path="/recruiter/activity" element={<ActivityPage />} />
+                  <Route path="/admin/activity" element={<ActivityPage />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/job-seeker/analytics" element={<Analytics />} />
+                  <Route path="/professional/analytics" element={<Analytics />} />
+                  <Route path="/recruiter/analytics" element={<Analytics />} />
+                  <Route path="/admin/analytics" element={<Analytics />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/job-seeker/settings" element={<Settings />} />
+                  <Route path="/professional/settings" element={<Settings />} />
+                  <Route path="/recruiter/settings" element={<Settings />} />
+                  <Route path="/admin/settings" element={<Settings />} />
                   <Route path="/help" element={<Help />} />
+                  <Route path="/job-seeker/help" element={<Help />} />
+                  <Route path="/professional/help" element={<Help />} />
+                  <Route path="/recruiter/help" element={<Help />} />
+                  <Route path="/admin/help" element={<Help />} />
 
                   <Route path="*" element={<NotFound />} />
                 </Route>

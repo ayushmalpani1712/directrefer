@@ -235,7 +235,7 @@ export default function Messages() {
       setActiveId(convId)
       setSearchParams({}, { replace: true })
     }
-  }, [])
+  }, [searchParams, setSearchParams])
 
   useEffect(() => {
     if (!activeId && conversations.length > 0) {

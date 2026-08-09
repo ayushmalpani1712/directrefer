@@ -296,8 +296,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         location: locationParts || prev.location,
       }))
 
-      // All critical data in parallel — student profile included
-      const studentProfilePromise = (mappedRole === 'student' || mappedRole === 'admin')
+      // All critical data in parallel — profile included based on role
+      const profilePromise = (mappedRole === 'student' || mappedRole === 'admin')
         ? (async () => {
             await supabase
               .from('profiles_job_seeker')
@@ -309,14 +309,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
               .single()
             return data
           })()
-        : Promise.resolve(null)
+        : mappedRole === 'professional'
+          ? (async () => {
+              await supabase
+                .from('profiles_professional')
+                .upsert({ user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true })
+              return null
+            })()
+          : mappedRole === 'recruiter'
+            ? (async () => {
+                await supabase
+                  .from('profiles_recruiter')
+                  .upsert({ user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true })
+                return null
+              })()
+            : Promise.resolve(null)
 
       const [profs, refs, convs, cands, profileData] = await Promise.allSettled([
         fetchProfessionals(userId),
         fetchReferrals(userId),
         fetchConversations(userId, mappedRole),
         dbFetchCandidates(userId),
-        studentProfilePromise,
+        profilePromise,
       ])
 
       if (profs.status === 'fulfilled' && profs.value.length > 0) setProfessionals(profs.value)
@@ -861,10 +875,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return false
     setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, openForReferrals: value } : p))
     try {
-      const { error } = await supabase
-        .from('profiles_professional')
-        .upsert({ user_id: user.id, open_for_referrals: value }, { onConflict: 'user_id' })
-      if (error) throw error
+      await dbUpsertProfessionalField(user.id, 'open_for_referrals', value)
       return true
     } catch (err) {
       console.error('TOGGLE PERSIST FAILED (open_for_referrals):', err)
@@ -1343,7 +1354,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     demoMode,
     toggleDemoMode,
-    visibleProfessionals: demoMode ? professionals : professionals.filter((p) => !p.email?.endsWith('@demo.com')),
+    visibleProfessionals: (demoMode ? professionals : professionals.filter((p) => !p.email?.endsWith('@demo.com'))).filter((p) => p.id !== user?.id),
     getUserOnlineStatus,
     npsOpen,
     setNpsOpen,

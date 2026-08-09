@@ -90,7 +90,7 @@ export function WorkspaceSwitcher() {
             )
           })}
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => navigate('/settings')}>
+          <DropdownMenuItem onSelect={() => navigate(`${ROLE_ROUTE[urlRole]}/settings`)}>
             Settings
           </DropdownMenuItem>
           <DropdownMenuSeparator />

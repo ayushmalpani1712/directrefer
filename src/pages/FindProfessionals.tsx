@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { Switch } from '@/components/ui/switch'
 import { SkeletonGrid } from '@/components/ui/skeleton'
 import { EmptyState, GAvatar } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
@@ -26,10 +25,9 @@ interface Filters {
   companies: string[]
   skills: string[]
   locations: string[]
-  availableOnly: boolean
 }
 
-const EMPTY_FILTERS: Filters = { q: '', companies: [], skills: [], locations: [], availableOnly: false }
+const EMPTY_FILTERS: Filters = { q: '', companies: [], skills: [], locations: [] }
 
 function toggle(list: string[], v: string) {
   return list.includes(v) ? list.filter((x) => x !== v) : [...list, v]
@@ -141,7 +139,7 @@ function FilterSheet({ f, setF, companies, allSkills, allLocations }: { f: Filte
     skillSearch ? allSkills.filter(s => s.toLowerCase().includes(skillSearch.toLowerCase())).length : allSkills.length
   , [allSkills, skillSearch])
 
-  const hasActiveFilters = f.companies.length > 0 || f.skills.length > 0 || f.locations.length > 0 || f.availableOnly
+  const hasActiveFilters = f.companies.length > 0 || f.skills.length > 0 || f.locations.length > 0
 
   return (
     <div className="flex flex-col h-full">
@@ -262,18 +260,6 @@ function FilterSheet({ f, setF, companies, allSkills, allLocations }: { f: Filte
             )}
           </FilterSection>
 
-          <Separator className="my-1" />
-
-          {/* Availability */}
-          <FilterSection title="Availability" count={f.availableOnly ? 1 : 0}>
-            <div className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/50 transition-colors">
-              <span className="text-sm text-muted-foreground">Open for referrals only</span>
-              <Switch
-                checked={f.availableOnly}
-                onCheckedChange={(checked) => setF((p) => ({ ...p, availableOnly: checked }))}
-              />
-            </div>
-          </FilterSection>
         </div>
       </ScrollArea>
 
@@ -286,7 +272,7 @@ function FilterSheet({ f, setF, companies, allSkills, allLocations }: { f: Filte
           onClick={() => setF(() => EMPTY_FILTERS)}
           disabled={!hasActiveFilters}
         >
-          {hasActiveFilters ? `Clear all (${f.companies.length + f.skills.length + f.locations.length + (f.availableOnly ? 1 : 0)})` : 'No active filters'}
+          {hasActiveFilters ? `Clear all (${f.companies.length + f.skills.length + f.locations.length})` : 'No active filters'}
         </Button>
       </div>
     </div>
@@ -320,7 +306,7 @@ export default function FindProfessionals() {
       if (f.companies.length && !f.companies.includes(p.company)) return false
       if (f.skills.length && !f.skills.some((s) => p.skills.includes(s))) return false
       if (f.locations.length && !f.locations.includes(p.location)) return false
-      if (f.availableOnly && !p.openForReferrals) return false
+      if (!p.openForReferrals) return false
       return true
     })
     const by: Record<SortKey, (a: Professional, b: Professional) => number> = {
@@ -333,7 +319,7 @@ export default function FindProfessionals() {
     return list.sort(by[sort])
   }, [f, sort, professionals])
 
-  const activeCount = f.companies.length + f.skills.length + f.locations.length + (f.availableOnly ? 1 : 0)
+  const activeCount = f.companies.length + f.skills.length + f.locations.length
 
   return (
     <div className="space-y-6">

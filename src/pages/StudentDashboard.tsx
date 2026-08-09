@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import {
   ArrowRight, Briefcase, CheckCircle2, ChevronRight, Circle,
   Clock, FileUp, Flame, GraduationCap, MapPin, Send, ShieldCheck, Target, TrendingUp, Users,
@@ -17,6 +17,7 @@ import { useAuth } from '@/context/AuthContext'
 import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
 import { EmptyChart } from '@/components/analytics/EmptyChart'
 import { useFilteredStudentWeekly, hasData } from '@/hooks/useAnalytics'
+import { ROLE_ROUTE, getRoleFromPath } from '@/data/mock'
 
 const RATE_LIMIT = 3
 
@@ -45,6 +46,8 @@ export default function StudentDashboard() {
   const { visibleProfessionals: professionals, student, bookmarks, referralsSentToday, requests, activity, loading } = useApp()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const prefix = ROLE_ROUTE[getRoleFromPath(pathname)]
   const [range, setRange] = useState<DateRange>(() => {
     const { from, to } = getPresetRange('6m')
     return { preset: '6m', from, to }
@@ -137,7 +140,7 @@ export default function StudentDashboard() {
         {/* Left column */}
         <div className="flex flex-col gap-5 lg:col-span-2">
           {/* Application momentum chart */}
-          <Link to="/analytics" className="block">
+          <Link to={`${prefix}/analytics`} className="block">
             <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
               <CardHeader className="pb-2">
                 <div>
@@ -152,6 +155,7 @@ export default function StudentDashboard() {
               </CardHeader>
               <CardContent className="pt-0">
                 {hasData(studentWeekly) ? (
+                  <div className="h-[220px]">
                   <LazyResponsiveContainer width="100%" height={220}>
                     <LazyAreaChart data={studentWeekly} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                       <defs>
@@ -172,6 +176,7 @@ export default function StudentDashboard() {
                       <LazyArea type="monotone" dataKey="responses" stroke="#22C55E" strokeWidth={2} fill="url(#gInt)" name="Referrals accepted" />
                     </LazyAreaChart>
                   </LazyResponsiveContainer>
+                  </div>
                 ) : <EmptyChart />}
               </CardContent>
             </Card>
@@ -244,6 +249,11 @@ export default function StudentDashboard() {
                             </div>
                             <div className="mt-0.5 text-xs text-muted-foreground">{p.designation}</div>
                             <div className="text-xs text-muted-foreground/60">{p.company}</div>
+                            {p.openForReferrals && (
+                              <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-emerald-600">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Available
+                              </span>
+                            )}
                           </div>
                           <div className="mt-2.5 flex flex-col items-center gap-1 text-xs text-muted-foreground/80">
                             <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {p.location}</span>
@@ -316,7 +326,7 @@ export default function StudentDashboard() {
 
           {/* Saved professionals */}
           {saved.length > 0 && (
-            <Link to="/bookmarks" className="block">
+            <Link to={`${prefix}/bookmarks`} className="block">
               <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-[15px] font-semibold">Saved professionals</CardTitle>
@@ -342,7 +352,7 @@ export default function StudentDashboard() {
           )}
 
           {/* Recent activity */}
-          <Link to="/activity" className="block flex-1">
+          <Link to={`${prefix}/activity`} className="block flex-1">
             <Card className="flex h-full flex-col shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
               <CardHeader className="pb-2">
                 <CardTitle className="text-[15px] font-semibold">Recent activity</CardTitle>

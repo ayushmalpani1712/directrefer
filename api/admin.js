@@ -107,6 +107,12 @@ export default async function handler(req, res) {
   // parts: ['api', 'admin', ...]
 
   try {
+    // Parse body once for methods that need it (POST, PATCH)
+    let body = {};
+    if (req.method === 'POST' || req.method === 'PATCH') {
+      body = await parseBody(req);
+    }
+
     // Users
     if (parts[2] === 'users' && parts.length === 3 && req.method === 'GET') {
       const params = Object.fromEntries(new URL(req.url, 'http://localhost').searchParams);
@@ -117,10 +123,10 @@ export default async function handler(req, res) {
       });
     }
     if (parts[2] === 'users' && parts[4] === 'role' && req.method === 'PATCH') {
-      return await updateUserRole(req, res, parts[3], await parseBody(req));
+      return await updateUserRole(req, res, parts[3], body);
     }
     if (parts[2] === 'users' && parts[4] === 'status' && req.method === 'PATCH') {
-      return await updateUserStatus(req, res, parts[3], await parseBody(req));
+      return await updateUserStatus(req, res, parts[3], body);
     }
     if (parts[2] === 'users' && parts.length === 4 && req.method === 'DELETE') {
       return await deleteUser(req, res, parts[3]);
@@ -136,7 +142,7 @@ export default async function handler(req, res) {
       });
     }
     if (parts[2] === 'jobs' && parts[4] === 'status' && req.method === 'PATCH') {
-      return await updateJobStatus(req, res, parts[3], await parseBody(req));
+      return await updateJobStatus(req, res, parts[3], body);
     }
     if (parts[2] === 'jobs' && parts.length === 4 && req.method === 'DELETE') {
       return await deleteAdminJob(req, res, parts[3]);

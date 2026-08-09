@@ -91,11 +91,11 @@ export async function fetchProfessionals(currentUserId?: string): Promise<Profes
         ? supabase
             .from('profiles_professional')
             .select('user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url')
-            .or(`open_for_referrals.eq.true,is_open_to_work.eq.true,user_id.eq.${currentUserId}`)
+            .or(`open_for_referrals.eq.true,user_id.eq.${currentUserId}`)
         : supabase
             .from('profiles_professional')
             .select('user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url')
-            .or('open_for_referrals.eq.true,is_open_to_work.eq.true'),
+            .eq('open_for_referrals', true),
     ])
 
     if (allProfilesRes.error || !allProfilesRes.data) return []
@@ -1423,25 +1423,31 @@ export async function fetchAllUsersFull(): Promise<AdminUserFull[]> {
   try {
     const { data: users, error } = await supabase
       .from('users')
-      .select('id, full_name, email, role, created_at, last_login_at, city, state, status')
+      .select('id, full_name, email, role, created_at, status')
       .order('created_at', { ascending: false })
     if (error || !users) return []
 
     const userIds = users.map((u) => u.id)
+    if (userIds.length === 0) return []
+
+    const profileMap = new Map<string, { company_name: string | null; job_title: string | null }>()
 
     const [proRes, recRes] = await Promise.all([
-      supabase.from('profiles_professional').select('user_id, company_name, job_title').in('user_id', userIds),
-      supabase.from('profiles_recruiter').select('user_id, company_name, job_title').in('user_id', userIds),
+      supabase.from('profiles_professional').select('user_id, company_name, job_title').in('user_id', userIds).then(r => ({ ...r, table: 'professional' })),
+      supabase.from('profiles_recruiter').select('user_id, company_name, job_title').in('user_id', userIds).then(r => ({ ...r, table: 'recruiter' })),
     ])
 
-    const profileMap = new Map<string, { company_name: string; job_title: string }>()
+    for (const res of [proRes, recRes]) {
+      if (res.error) console.warn(`Admin workspace fetch ${res.table} profiles:`, res.error.message)
+    }
+
     ;(proRes.data || []).forEach((p) => profileMap.set(p.user_id, { company_name: p.company_name, job_title: p.job_title }))
     ;(recRes.data || []).forEach((p) => profileMap.set(p.user_id, { company_name: p.company_name, job_title: p.job_title }))
 
     return users.map((u, i) => {
       const profile = profileMap.get(u.id)
-      const lastLogin = u.last_login_at || u.created_at || new Date().toISOString()
-      const daysInactive = Math.floor((Date.now() - new Date(lastLogin).getTime()) / 86_400_000)
+      const createdDate = u.created_at || new Date().toISOString()
+      const daysInactive = Math.floor((Date.now() - new Date(createdDate).getTime()) / 86_400_000)
       const roleMap: Record<string, string> = {
         job_seeker: 'student',
         professional: 'professional',
@@ -1454,7 +1460,7 @@ export async function fetchAllUsersFull(): Promise<AdminUserFull[]> {
         email: u.email || '',
         role: roleMap[u.role] || u.role,
         company: profile?.company_name || null,
-        lastActive: lastLogin,
+        lastActive: createdDate,
         daysInactive,
         lastActivity: daysInactive < 1 ? 'Today' : `${daysInactive}d ago`,
         gradient: GRADIENTS[i % GRADIENTS.length],
@@ -1586,7 +1592,6 @@ export interface AdminUserDetail {
   industry?: string
   years_exp?: number
   skills?: string[]
-  open_for_referrals?: boolean
   experience?: { title: string; org: string; period: string; desc: string }[]
   education?: { school: string; degree: string; period: string; detail: string }[]
 }
@@ -1595,7 +1600,7 @@ export async function fetchUserDetail(userId: string): Promise<AdminUserDetail |
   try {
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, full_name, email, role, city, state, country, status, last_login_at, created_at, verified, linkedin, avatar_url')
+      .select('id, full_name, email, role, city, state, country, status, created_at, verified, linkedin, avatar_url')
       .eq('id', userId)
       .single()
     if (error || !user) return null
@@ -1620,7 +1625,7 @@ export async function fetchUserDetail(userId: string): Promise<AdminUserDetail |
       linkedin: user.linkedin,
       avatar_url: user.avatar_url,
       created_at: user.created_at,
-      last_login_at: user.last_login_at,
+      last_login_at: null,
     }
 
     // Fetch role-specific profile
@@ -1637,7 +1642,6 @@ export async function fetchUserDetail(userId: string): Promise<AdminUserDetail |
         base.industry = pro.department
         base.years_exp = pro.years_experience
         base.skills = pro.skills
-        base.open_for_referrals = pro.open_for_referrals
       }
     } else if (user.role === 'job_seeker') {
       const { data: js } = await supabase
@@ -1821,3 +1825,5 @@ export async function fetchSystemHealth(): Promise<SystemHealth> {
     return fallback
   }
 }
+
+// ── Admin: Audit Log ──────────────────────────────────────────

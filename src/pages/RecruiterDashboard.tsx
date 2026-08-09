@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import {
   ArrowRight, Briefcase, CheckCheck, FileText,
   Plus, Search, Star, UserCheck, Users,
@@ -15,6 +15,7 @@ import { useAuth } from '@/context/AuthContext'
 import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
 import { EmptyChart } from '@/components/analytics/EmptyChart'
 import { useFilteredRecruiterWeekly, hasData } from '@/hooks/useAnalytics'
+import { ROLE_ROUTE, getRoleFromPath } from '@/data/mock'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
@@ -37,7 +38,8 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
 export default function RecruiterDashboard() {
   const { jobs, candidates, savedCandidates, activity, loading } = useApp()
   const { user } = useAuth()
-  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const prefix = ROLE_ROUTE[getRoleFromPath(pathname)]
   const [recruiterCompany, setRecruiterCompany] = useState({
     name: '', industry: '', size: '',
     website: '', description: '',
@@ -186,11 +188,11 @@ export default function RecruiterDashboard() {
         <StatCard icon={Briefcase} label="Open jobs" value={jobs.filter((j) => j.stage === 'Active').length} delta={0} delay={0.05} href="/recruiter/jobs" />
         <StatCard icon={Users} label="Total applicants" value={totalApplicants} delta={0} delay={0.1} href="/recruiter/jobs" />
         <StatCard icon={UserCheck} label="In review" value={inReview} delta={0} delay={0.15} href="/recruiter/talent" />
-        <StatCard icon={CheckCheck} label="Hires this quarter" value={jobs.filter((j) => j.stage === 'Active').reduce((a, j) => a + (j.pipeline.find((s) => s.stage === 'Offer')?.count ?? 0), 0)} delta={0} delay={0.2} href="/analytics" />
+        <StatCard icon={CheckCheck} label="Hires this quarter" value={jobs.filter((j) => j.stage === 'Active').reduce((a, j) => a + (j.pipeline.find((s) => s.stage === 'Hired')?.count ?? 0), 0)} delta={0} delay={0.2} href={`${prefix}/analytics`} />
       </div>
 
       {/* Discover Job Seekers */}
-      <Link to="/recruiter/talent" className="block">
+      <Link to={`${prefix}/talent`} className="block">
       <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
         <CardHeader className="">
           <CardTitle className="text-[15px] font-semibold">Discover Job Seekers</CardTitle>
@@ -198,7 +200,7 @@ export default function RecruiterDashboard() {
         </CardHeader>
         <CardContent className="space-y-3 pt-2">
           {candidates.filter((c) => c.source === 'Open to work' && c.id !== user?.id).slice(0, 4).map((c) => (
-            <div key={c.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/20 cursor-pointer" onClick={() => navigate(`/job-seekers/${c.id}`)}>
+            <Link to={`/job-seekers/${c.id}`} key={c.id} onClick={(e) => e.stopPropagation()} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/20">
               <GAvatar name={c.name} gradient={c.gradient} className="h-9 w-9 text-xs" />
               <div className="min-w-0 flex-1">
                 <div className="text-[14px] font-semibold text-foreground">{c.name}</div>
@@ -208,7 +210,7 @@ export default function RecruiterDashboard() {
                 </div>
               </div>
               <Search className="h-4 w-4 text-muted-foreground" />
-            </div>
+            </Link>
           ))}
           {candidates.filter((c) => c.source === 'Open to work' && c.id !== user?.id).length === 0 && (
             <p className="py-2 text-center text-[13px] text-muted-foreground">No open-to-work seekers yet. Check back soon.</p>
@@ -221,13 +223,14 @@ export default function RecruiterDashboard() {
         <div className="flex flex-col gap-6 lg:col-span-2">
           {/* Funnel + weekly */}
           <div className="grid gap-6 md:grid-cols-2 items-stretch">
-            <Link to="/analytics" className="block h-full">
+            <Link to={`${prefix}/analytics`} className="block h-full">
             <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15 h-full">
               <CardHeader className="">
                 <CardTitle className="text-[15px] font-semibold">Hiring funnel</CardTitle>
                 <p className="text-[13px] text-muted-foreground">All active jobs · Q3</p>
               </CardHeader>
               <CardContent>
+                <div className="h-[230px]">
                 <LazyResponsiveContainer width="100%" height={230}>
                   <LazyFunnelChart>
                     <LazyTooltip content={<ChartTooltip />} />
@@ -237,10 +240,11 @@ export default function RecruiterDashboard() {
                     </LazyFunnel>
                   </LazyFunnelChart>
                 </LazyResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
             </Link>
-            <Link to="/analytics" className="block h-full">
+            <Link to={`${prefix}/analytics`} className="block h-full">
             <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15 h-full">
               <CardHeader className="">
                 <CardTitle className="text-[15px] font-semibold">Applications & hires</CardTitle>
@@ -248,6 +252,7 @@ export default function RecruiterDashboard() {
               </CardHeader>
               <CardContent className="pt-2">
                 {hasData(recruiterWeekly) ? (
+                <div className="h-[220px]">
                 <LazyResponsiveContainer width="100%" height={220}>
                   <LazyBarChart data={recruiterWeekly} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                     <LazyCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
@@ -258,6 +263,7 @@ export default function RecruiterDashboard() {
                     <LazyBar dataKey="hires" radius={[4, 4, 0, 0]} fill="#22C55E" name="Hires" />
                   </LazyBarChart>
                 </LazyResponsiveContainer>
+                </div>
                 ) : <EmptyChart />}
               </CardContent>
             </Card>
@@ -297,7 +303,7 @@ export default function RecruiterDashboard() {
         {/* Right column */}
         <div className="flex flex-col gap-6">
           {/* Saved candidates */}
-          <Link to="/recruiter/talent" className="block">
+          <Link to={`${prefix}/talent`} className="block">
           <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
             <CardHeader className="">
               <CardTitle className="flex items-center gap-2 text-base"><Star className="h-4 w-4 text-primary" /> Saved candidates</CardTitle>
@@ -305,7 +311,7 @@ export default function RecruiterDashboard() {
             </CardHeader>
             <CardContent className="space-y-2.5 pt-2">
               {saved.map((c) => (
-                <Link to="/recruiter/talent" key={c.id} className="flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted/20">
+                <Link to={`/job-seekers/${c.id}`} key={c.id} className="flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted/20">
                   <GAvatar name={c.name} gradient={c.gradient} className="h-8 w-8 text-[10px]" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[14px] font-medium text-foreground">{c.name}</div>
@@ -319,7 +325,7 @@ export default function RecruiterDashboard() {
           </Link>
 
           {/* Recent activity */}
-          <Link to="/analytics" className="block flex-1">
+          <Link to={`${prefix}/analytics`} className="block flex-1">
           <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15 h-full">
             <CardHeader className="">              <CardTitle className="flex items-center gap-2 text-base"><FileText className="h-4 w-4 text-primary" /> Recent activity</CardTitle></CardHeader>
             <CardContent className="space-y-3.5 pt-2">

@@ -270,7 +270,7 @@ export default function ProfessionalProfile() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm leading-relaxed text-muted-foreground">{p.bio}</p>
+                <p className="min-h-[2.5rem] text-sm leading-relaxed text-muted-foreground">{p.bio}</p>
               )}
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {[

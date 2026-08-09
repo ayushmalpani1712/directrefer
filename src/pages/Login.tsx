@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/context/AuthContext'
 import { ROLE_META, ROLE_ROUTE, type Role } from '@/data/mock'
-import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
@@ -77,11 +76,8 @@ export default function Login() {
           setLoading(false)
           return
         }
-        // Read role from local session (no network call — avoids getUser roundtrip)
-        const { data: { session } } = await supabase.auth.getSession()
-        const rawRole = (session?.user?.user_metadata?.role as string) || 'job_seeker'
-        const mappedRole: Role = rawRole === 'job_seeker' ? 'student' : (rawRole as Role)
-        navigate(ROLE_ROUTE[mappedRole] || '/job-seeker')
+        // Use selected role for workspace routing
+        navigate(ROLE_ROUTE[selected] || '/job-seeker')
       }
     } catch {
       toast.error('Something went wrong. Please try again.')
@@ -251,8 +247,7 @@ export default function Login() {
             )}
           </div>
 
-          {/* ── Role Selector (sign-up only) ───────────────── */}
-          {isSignUp && (
+          {/* ── Role Selector (sign-in & sign-up) ──────────── */}
           <div className="space-y-2.5 pt-1">
             <Label className={cn('text-xs font-medium', dark ? 'text-slate-300' : 'text-slate-600')}>I am a…</Label>
             <div className="grid gap-2">
@@ -307,7 +302,6 @@ export default function Login() {
               })}
             </div>
           </div>
-          )}
 
           {/* ── Submit Button ────────────────────────────── */}
           <motion.div
@@ -333,7 +327,7 @@ export default function Login() {
                 ) : (
                   <Zap className="mr-2 h-4 w-4" />
                 )}
-                {loading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}
+                {loading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}{!loading ? ` as ${ROLE_META[selected].label}` : ''}
               </span>
             </Button>
           </motion.div>

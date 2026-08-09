@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import {
   ArrowRight, CheckCheck, ChevronRight, Clock, Inbox,
   MessageSquare, Search, TrendingUp, XCircle,
@@ -16,7 +16,7 @@ import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/
 import { EmptyChart } from '@/components/analytics/EmptyChart'
 import { useFilteredProMonthly, useFilteredProResponseTime, hasData } from '@/hooks/useAnalytics'
 import type { Professional } from '@/data/mock'
-import { getMessagesPath } from '@/data/mock'
+import { getMessagesPath, ROLE_ROUTE, getRoleFromPath } from '@/data/mock'
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color?: string }>; label?: string }) {
   if (!active || !payload?.length) return null
@@ -36,6 +36,8 @@ export default function ProfessionalDashboard() {
   const { professionals, conversations, requests, setRequestStatus, student, candidates, loading, startConversation, role } = useApp()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const prefix = ROLE_ROUTE[getRoleFromPath(pathname)]
   const [range, setRange] = useState<DateRange>(() => {
     const { from, to } = getPresetRange('6m')
     return { preset: '6m', from, to }
@@ -117,7 +119,7 @@ export default function ProfessionalDashboard() {
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">
           {/* Analytics */}
-          <Link to="/analytics" className="block">
+          <Link to={`${prefix}/analytics`} className="block">
           <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
             <CardHeader className="">
               <div>
@@ -128,6 +130,7 @@ export default function ProfessionalDashboard() {
             </CardHeader>
             <CardContent className="pt-2">
               {hasData(proMonthly) ? (
+              <div className="h-[220px]">
               <LazyResponsiveContainer width="100%" height={220}>
                 <LazyAreaChart data={proMonthly} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                   <defs>
@@ -144,6 +147,7 @@ export default function ProfessionalDashboard() {
                   <LazyArea type="monotone" dataKey="accepted" stroke="#22C55E" strokeWidth={2} fill="transparent" name="Accepted" />
                 </LazyAreaChart>
               </LazyResponsiveContainer>
+              </div>
               ) : <EmptyChart />}
             </CardContent>
           </Card>
@@ -217,13 +221,14 @@ export default function ProfessionalDashboard() {
           </Link>
 
           {/* Response time */}
-          <Link to="/analytics" className="block flex-1">
+          <Link to={`${prefix}/analytics`} className="block flex-1">
           <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15 h-full">
             <CardHeader className="">
               <CardTitle className="flex items-center gap-2 text-base"><Clock className="h-4 w-4 text-primary" /> Response time this week</CardTitle>
             </CardHeader>
             <CardContent className="pt-2">
               {hasData(proResponseTime) ? (
+              <div className="h-[160px]">
               <LazyResponsiveContainer width="100%" height={160}>
                 <LazyBarChart data={proResponseTime} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
                   <LazyCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
@@ -233,7 +238,8 @@ export default function ProfessionalDashboard() {
                   <LazyBar dataKey="hours" radius={[5, 5, 0, 0]} fill="#4F7CFF" name="Hours to reply" />
                 </LazyBarChart>
               </LazyResponsiveContainer>
-              ) : <EmptyChart />}
+              </div>
+              ) : <EmptyChart className="h-[160px]" />}
             </CardContent>
           </Card>
           </Link>

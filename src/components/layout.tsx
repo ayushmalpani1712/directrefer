@@ -53,7 +53,7 @@ export function Logo({ compact }: { compact?: boolean }) {
 // ── Nav config ──────────────────────────────────────────────
 interface NavItem { label: string; href: string; icon: LucideIcon; badge?: string }
 
-function navFor(role: Role, unread: number, pendingCount: number): { group: string; items: NavItem[] }[] {
+function navFor(role: Role, unread: number, pendingCount: number, prefix: string): { group: string; items: NavItem[] }[] {
   const common: { group: string; items: NavItem[] }[] = []
   if (role === 'admin') {
     common.push({
@@ -68,9 +68,9 @@ function navFor(role: Role, unread: number, pendingCount: number): { group: stri
     common.push({
       group: 'Network',
       items: [
-        { label: 'Notifications', href: '/notifications', icon: Bell },
-        { label: 'Activity', href: '/activity', icon: Activity },
-        { label: 'Analytics', href: '/analytics', icon: LineChart },
+        { label: 'Notifications', href: `${prefix}/notifications`, icon: Bell },
+        { label: 'Activity', href: `${prefix}/activity`, icon: Activity },
+        { label: 'Analytics', href: `${prefix}/analytics`, icon: LineChart },
       ],
     })
     return common
@@ -112,10 +112,10 @@ function navFor(role: Role, unread: number, pendingCount: number): { group: stri
     group: 'Network',
     items: [
       { label: 'Messages', href: getMessagesPath(role), icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
-      { label: 'Notifications', href: '/notifications', icon: Bell },
-      ...(role === 'student' ? [{ label: 'Bookmarks', href: '/bookmarks', icon: Bookmark }] : []),
-      { label: 'Activity', href: '/activity', icon: Activity },
-      { label: 'Analytics', href: '/analytics', icon: LineChart },
+      { label: 'Notifications', href: `${prefix}/notifications`, icon: Bell },
+      ...(role === 'student' ? [{ label: 'Bookmarks', href: `${prefix}/bookmarks`, icon: Bookmark }] : []),
+      { label: 'Activity', href: `${prefix}/activity`, icon: Activity },
+      { label: 'Analytics', href: `${prefix}/analytics`, icon: LineChart },
     ],
   })
   return common
@@ -129,7 +129,8 @@ function AppSidebar() {
   const unread = conversations.reduce((a, c) => a + c.unread, 0)
   const pendingCount = requests.filter((r) => r.status === 'pending').length
   const urlRole = getRoleFromPath(pathname) || role
-  const groups = navFor(urlRole, unread, pendingCount)
+  const prefix = ROLE_ROUTE[urlRole]
+  const groups = navFor(urlRole, unread, pendingCount, prefix)
   const user = student
 
   useEffect(() => { setOpenMobile(false) }, [setOpenMobile])
@@ -188,7 +189,7 @@ function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Settings">
-              <Link to="/settings" className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', pathname === '/settings' && 'bg-primary/10 text-primary')}>
+              <Link to={`${prefix}/settings`} className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', (pathname === `${prefix}/settings` || pathname === '/settings') && 'bg-primary/10 text-primary')}>
                 <Settings className="h-[18px] w-[18px]" /> <span>Settings</span>
               </Link>
             </SidebarMenuButton>
@@ -204,7 +205,7 @@ function AppSidebar() {
           )}
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Help & Support">
-              <Link to="/help" className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', pathname === '/help' && 'bg-primary/10 text-primary')}>
+              <Link to={`${prefix}/help`} className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', (pathname === `${prefix}/help` || pathname === '/help') && 'bg-primary/10 text-primary')}>
                 <CircleHelp className="h-[18px] w-[18px]" /> <span>Help & Support</span>
               </Link>
             </SidebarMenuButton>
@@ -254,6 +255,8 @@ const NOTIF_ICON: Record<string, { icon: LucideIcon; cls: string }> = {
 function NotificationsMenu() {
   const navigate = useNavigate()
   const { notifications, markNotificationRead, markAllNotificationsRead } = useApp()
+  const { pathname } = useLocation()
+  const prefix = ROLE_ROUTE[getRoleFromPath(pathname) || 'student']
   const [items, setItems] = useState(notifications)
   useEffect(() => { setItems(notifications) }, [notifications])
   const unread = items.filter((n) => !n.read).length
@@ -284,7 +287,7 @@ function NotificationsMenu() {
               <DropdownMenuItem
                 key={n.id}
                 className="flex cursor-pointer items-start gap-3 px-4 py-3 focus:bg-muted/60"
-                onClick={() => { markNotificationRead(n.id); setItems(items.map((x) => (x.id === n.id ? { ...x, read: true } : x))); navigate('/notifications') }}
+                onClick={() => { markNotificationRead(n.id); setItems(items.map((x) => (x.id === n.id ? { ...x, read: true } : x))); navigate(`${prefix}/notifications`) }}
               >
                 <div className={cn('mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full', cfg.cls)}>
                   <cfg.icon className="h-4 w-4" />
@@ -302,7 +305,7 @@ function NotificationsMenu() {
           })}
         </ScrollArea>
         <Separator />
-        <Button variant="ghost" className="w-full rounded-none text-sm text-primary" onClick={() => navigate('/notifications')}>
+        <Button variant="ghost" className="w-full rounded-none text-sm text-primary" onClick={() => navigate(`${prefix}/notifications`)}>
           View all notifications
         </Button>
       </DropdownMenuContent>
@@ -367,7 +370,7 @@ const CRUMB_LABELS: Record<string, string> = {
   help: 'Help & Support', 'request-referral': 'Request Referral', company: 'Company Profile',
   users: 'Users', flagged: 'Flagged', verification: 'Verification', announcements: 'Announcements',
   flags: 'Feature Flags', audit: 'Audit Log', professional: 'Professional', recruiter: 'Recruiter',
-  admin: 'Admin',
+  admin: 'Admin', 'browse-jobs': 'Browse Jobs', workspaces: 'Workspaces',
 }
 
 function Breadcrumbs() {
@@ -409,13 +412,13 @@ function FAB() {
         { icon: Plus, label: 'Request referral', run: () => navigate('/job-seeker/request-referral') },
         { icon: Users, label: 'Find professionals', run: () => navigate('/job-seeker/professionals') },
         { icon: FileUp, label: 'Upload resume', run: () => navigate('/job-seeker/profile') },
-        { icon: Sparkles, label: 'View analytics', run: () => navigate('/analytics') },
+        { icon: Sparkles, label: 'View analytics', run: () => navigate('/job-seeker/analytics') },
 
       ]
     }
     if (urlRole === 'admin') {
       return [
-        { icon: BarChart3, label: 'Dashboard', run: () => navigate('/admin/dashboard') },
+        { icon: BarChart3, label: 'Dashboard', run: () => navigate('/admin/overview') },
         { icon: Users, label: 'Manage workspaces', run: () => navigate('/admin/workspaces') },
         { icon: MessageSquare, label: 'Messages', run: () => navigate('/admin/messages') },
         { icon: Settings, label: 'Settings', run: () => navigate('/admin/settings') },
@@ -426,12 +429,13 @@ function FAB() {
         { icon: CheckCheck, label: 'Review pending requests', run: () => navigate('/professional/referrals') },
         { icon: Briefcase, label: 'Find job seekers', run: () => navigate('/professional/talent') },
         { icon: Plus, label: 'Update profile', run: () => navigate('/professional/profile') },
+        { icon: Sparkles, label: 'View analytics', run: () => navigate('/professional/analytics') },
       ]
     }
     return [
       { icon: Plus, label: 'Post a job', run: () => navigate('/recruiter/jobs') },
       { icon: Users, label: 'Search talent', run: () => navigate('/recruiter/talent') },
-      { icon: FileText, label: 'View analytics', run: () => navigate('/analytics') },
+      { icon: Sparkles, label: 'View analytics', run: () => navigate('/recruiter/analytics') },
     ]
   }, [urlRole, navigate])
 

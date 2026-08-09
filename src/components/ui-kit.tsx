@@ -74,12 +74,14 @@ export function StatCard({
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Icon className="h-[18px] w-[18px]" />
             </div>
+            <div className="min-h-[22px] min-w-[60px]">
             {delta !== undefined && (
               <span className={cn('inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-medium', delta >= 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500')}>
                 {delta >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                 {Math.abs(delta)}%
               </span>
             )}
+            </div>
           </div>
           <div className="mt-3 truncate text-[34px] font-bold leading-none tracking-tight text-foreground">{value}</div>
           <div className="mt-1.5 truncate text-[14px] text-muted-foreground">{label}{deltaLabel ? <span className="text-muted-foreground/50"> · {deltaLabel}</span> : null}</div>

@@ -2,12 +2,11 @@ import { Link } from 'react-router'
 import { motion } from 'framer-motion'
 import { Compass, Home, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/context/AuthContext'
-import { ROLE_ROUTE, type Role } from '@/data/mock'
+import { useApp } from '@/context/AppContext'
+import { ROLE_ROUTE } from '@/data/mock'
 
 export default function NotFound() {
-  const { user } = useAuth()
-  const role: Role = (user?.user_metadata?.role as Role) || 'student'
+  const { role } = useApp()
   const base = ROLE_ROUTE[role]
 
   return (

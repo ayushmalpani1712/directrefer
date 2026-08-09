@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { motion } from 'framer-motion'
 import {
   Activity as ActivityIcon, Bell, Bookmark as BookmarkIcon, BookmarkCheck, CheckCheck,
@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState, SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
+import { ROLE_ROUTE, getRoleFromPath } from '@/data/mock'
 import { cn } from '@/lib/utils'
 import { ProfessionalCard } from '@/pages/FindProfessionals'
 import { ListSkeleton } from '@/components/ui/skeleton'
@@ -25,6 +26,8 @@ const ICONS: Record<string, { icon: typeof Bell; cls: string }> = {
 
 export function NotificationsPage() {
   const { notifications, markNotificationRead, markAllNotificationsRead, loading } = useApp()
+  const { pathname } = useLocation()
+  const prefix = ROLE_ROUTE[getRoleFromPath(pathname) || 'student']
   const [filter, setFilter] = useState('all')
   const shown = filter === 'all' ? notifications : filter === 'unread' ? notifications.filter((n) => !n.read) : notifications.filter((n) => n.type === filter)
 
@@ -36,7 +39,7 @@ export function NotificationsPage() {
         <SectionHeader title="Notifications" subtitle={`${notifications.filter((n) => !n.read).length} unread`} />
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => markAllNotificationsRead()}><CheckCheck className="mr-1.5 h-3.5 w-3.5" /> Mark all read</Button>
-          <Button variant="ghost" size="icon" asChild><Link to="/settings"><Settings2 className="h-4.5 w-4.5" /></Link></Button>
+          <Button variant="ghost" size="icon" asChild><Link to={`${prefix}/settings`}><Settings2 className="h-4.5 w-4.5" /></Link></Button>
         </div>
       </div>
 

@@ -29,8 +29,7 @@ import {
   fetchPlatformSettings, updatePlatformSetting,
   fetchAnnouncements, createAnnouncement, deleteAnnouncement, toggleAnnouncement,
   fetchAuditLogs, logAdminAction, fetchSystemHealth,
-  fetchUserDetail, updateUserProfileAdmin,
-
+  fetchUserDetail,
   dismissReportAndBanUser,
   type AdminUserFull, type PlatformAnalytics, type ReportWithUsers,
   type Announcement, type AuditLogEntry, type SystemHealth,
@@ -423,19 +422,12 @@ export default function Admin() {
   const saveMasterEditor = async () => {
     if (!masterEditorUser) return
     setMasterSaving(true)
-    const ok = await updateUserProfileAdmin(masterEditorUser.id, {
-      full_name: masterEditName,
-      role: masterEditRole,
-      verified: masterEditVerified,
-      status: masterEditStatus,
-      city: masterEditCity,
-      linkedin: masterEditLinkedin,
-      bio: masterEditBio,
-    })
+
+    const ok = await updateUserRole(masterEditorUser.id, masterEditRole as 'student' | 'professional' | 'recruiter' | 'admin')
+
     if (ok) {
       toast.success('User profile updated')
-      logAdminAction('updated_user_profile', masterEditorUser.id, { fields: 'full_profile' })
-      // Refresh user list
+      logAdminAction('updated_user_profile', masterEditorUser.id, { fields: 'role' })
       const users = await fetchAllUsersFull()
       setAllUsers(users)
       setSuspendedIds(new Set(users.filter((u) => u.status === 'suspended').map((u) => u.id)))
@@ -699,6 +691,14 @@ export default function Admin() {
                 <Download className="mr-1 h-3.5 w-3.5" />Export
               </Button>
             )}
+            {/* Bulk Admin Actions */}
+            <div className="flex items-center gap-1 ml-auto">
+              {inactiveUsers.length > 0 && (
+                <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
+                  <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete {inactiveUsers.length} Inactive
+                </Button>
+              )}
+            </div>
           </div>
 
            <div className="text-sm text-muted-foreground">
@@ -1142,6 +1142,10 @@ export default function Admin() {
                 {masterEditorUser.company_name && <div>Company: {masterEditorUser.company_name}</div>}
                 {masterEditorUser.designation && <div>Title: {masterEditorUser.designation}</div>}
               </div>
+            </div>
+
+            {/* Admin Quick Actions */}
+            <div className="flex flex-wrap gap-2">
             </div>
           </div>
         ) : null}

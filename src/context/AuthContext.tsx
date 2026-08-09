@@ -22,15 +22,16 @@ interface AuthState {
 
 const AuthCtx = createContext<AuthState | null>(null)
 
+function cleanError(msg: string): string {
+  return msg.replace(/\s*\{\}\s*$/, '').replace(/Invalid login credentials/gi, 'Invalid email or password').trim()
+}
+
 async function ensureUserRow(user: User) {
   const meta = user.user_metadata
   const role = (meta?.role as string) || 'job_seeker'
-  // Only create/update users row for students — admin/professional/recruiter rows are managed via admin dashboard
-  if (role !== 'job_seeker' && role !== 'student') return
   const fullName = meta?.full_name || meta?.name || user.email?.split('@')[0] || 'User'
   const provider = user.app_metadata?.provider || 'email'
 
-  // Single upsert — eliminates the SELECT → INSERT/UPDATE waterfall
   await supabase.from('users').upsert({
     id: user.id,
     email: user.email || '',
@@ -144,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: { data: dbMeta },
     })
     if (error) {
-      const msg = error.message
+      const msg = cleanError(error.message)
       if (msg.includes('already registered')) return { error: 'An account with this email already exists. Please sign in.' }
       if (msg.includes('valid email')) return { error: 'Please enter a valid email address.' }
       return { error: msg }
@@ -164,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return { error: error.message }
+    if (error) return { error: cleanError(error.message) }
 
     setNeedsVerification(false)
     setEmailVerified(true)
@@ -185,7 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       },
     })
-    if (error) return { error: error.message }
+    if (error) return { error: cleanError(error.message) }
     return {}
   }, [])
 
@@ -196,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
-    if (error) return { error: error.message }
+    if (error) return { error: cleanError(error.message) }
     return {}
   }, [])
 

@@ -1,8 +1,9 @@
 import { BarChart3 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-export function EmptyChart({ message = 'No data available for the selected period' }: { message?: string }) {
+export function EmptyChart({ message = 'No data available for the selected period', className }: { message?: string; className?: string }) {
   return (
-    <div className="flex h-[220px] flex-col items-center justify-center gap-3 text-center">
+    <div className={cn('flex h-[220px] flex-col items-center justify-center gap-3 text-center', className)}>
       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/50">
         <BarChart3 className="h-5 w-5 text-muted-foreground" />
       </div>
