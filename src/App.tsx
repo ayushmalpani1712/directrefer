@@ -10,7 +10,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { HeadManager } from '@/components/HeadManager'
 import { OnboardingOverlay } from '@/components/OnboardingOverlay'
 import { NPSSurveyModal } from '@/components/NPSSurveyModal'
-import { ROLE_ROUTE, ROLE_MESSAGES_ROUTE, type Role } from '@/data/mock'
+import { ROLE_ROUTE, ROLE_MESSAGES_ROUTE, getRoleFromPath, type Role } from '@/data/mock'
 
 const Landing = lazy(() => import('@/pages/Landing'))
 const Login = lazy(() => import('@/pages/Login'))
@@ -56,19 +56,22 @@ function LazyErrorBoundary({ children }: { children: React.ReactNode }) {
 }
 
 function DashboardRedirect() {
-  const { role } = useApp()
+  const { role, roleLoaded } = useApp()
+  if (!roleLoaded) return null
   return <Navigate to={ROLE_ROUTE[role]} replace />
 }
 
 function MessagesRedirect() {
-  const { role } = useApp()
+  const { role, roleLoaded } = useApp()
+  if (!roleLoaded) return null
   return <Navigate to={ROLE_MESSAGES_ROUTE[role]} replace />
 }
 
 function Profile() {
-  const { role } = useApp()
-  if (role === 'professional' || role === 'admin') return <ProfessionalProfile />
-  if (role === 'recruiter') return <RecruiterProfile />
+  const { pathname } = useLocation()
+  const urlRole = getRoleFromPath(pathname)
+  if (urlRole === 'professional') return <ProfessionalProfile />
+  if (urlRole === 'recruiter') return <RecruiterProfile />
   return <StudentProfile />
 }
 
@@ -108,12 +111,17 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 function RequireRole({ allowed, children }: { allowed: Role[]; children: React.ReactNode }) {
-  const { role } = useApp()
+  const { role, roleLoaded } = useApp()
+
+  if (!roleLoaded) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
   if (role === 'admin') {
-    // Admin bypass — but redirect away from student/professional/recruiter workspace routes
-    const { pathname } = useLocation()
-    const isNonAdminWorkspace = pathname.startsWith('/job-seeker') || pathname.startsWith('/professional') || pathname.startsWith('/recruiter')
-    if (isNonAdminWorkspace) return <Navigate to="/admin" replace />
     return <>{children}</>
   }
   if (!allowed.includes(role)) return <Navigate to={ROLE_ROUTE[role]} replace />

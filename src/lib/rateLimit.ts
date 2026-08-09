@@ -1,5 +1,3 @@
-import { supabase } from '@/lib/supabase'
-
 interface RateLimitEntry {
   count: number
   resetAt: number
@@ -29,23 +27,13 @@ export function checkRateLimit(key: string, max: number, windowMs: number): bool
 
 /**
  * Server-side rate limit check via Supabase RPC.
- * Call this in addition to client-side check for real enforcement.
- * Returns true if allowed, false if rate limited.
+ * Currently disabled — the rate_limit_check RPC has not been deployed yet.
+ * Client-side checkRateLimit() above handles enforcement.
  */
 export async function checkServerRateLimit(
-  action: string,
-  maxPerMinute = 10,
-  maxPerHour = 100,
+  _action: string,
+  _maxPerMinute = 10,
+  _maxPerHour = 100,
 ): Promise<boolean> {
-  try {
-    const { data, error } = await supabase.rpc('rate_limit_check', {
-      p_action: action,
-      p_max_per_minute: maxPerMinute,
-      p_max_per_hour: maxPerHour,
-    })
-    if (error) return true // fail open — don't block on RPC errors
-    return (data as { allowed?: boolean })?.allowed !== false
-  } catch {
-    return true // fail open
-  }
+  return true
 }

@@ -1,5 +1,4 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { useNavigate, useLocation } from 'react-router'
 import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import {
@@ -97,6 +96,7 @@ export interface Candidate {
 interface AppState {
   role: Role
   setRole: (r: Role) => void
+  roleLoaded: boolean
   isAdmin: boolean
   authed: boolean
   loading: boolean
@@ -177,25 +177,15 @@ const Ctx = createContext<AppState | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  const navigate = useNavigate()
-  const { pathname } = useLocation()
   const [role, setRole] = useState<Role>('student')
   const [isAdmin, setIsAdmin] = useState(false)
   const [authed, setAuthed] = useState(false)
   const [loading, setLoading] = useState(true)
   const [demoMode, setDemoMode] = useState(false)
   const [npsOpen, setNpsOpen] = useState(false)
-  const initialRoleLoaded = useRef(false)
+  const [roleLoaded, setRoleLoaded] = useState(false)
   const roleRef = useRef<Role>(role)
   useEffect(() => { roleRef.current = role }, [role])
-
-  // Redirect admins away from non-admin workspace routes
-  useEffect(() => {
-    if (role === 'admin' && initialRoleLoaded.current) {
-      const isNonAdminWorkspace = pathname.startsWith('/job-seeker') || pathname.startsWith('/professional') || pathname.startsWith('/recruiter')
-      if (isNonAdminWorkspace) navigate('/admin', { replace: true })
-    }
-  }, [role, pathname, navigate])
 
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [student, setStudent] = useState<StudentProfile>({
@@ -251,6 +241,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setJobs([])
       setCandidates([])
       setSavedCandidates([])
+      setRole('student')
+      setIsAdmin(false)
+      setAuthed(false)
+      setRoleLoaded(false)
       return
     }
     const currentUser = user
@@ -284,10 +278,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         userRole = (meta?.role as string) || 'job_seeker'
       }
       const mappedRole: Role = userRole === 'job_seeker' ? 'student' : (userRole as Role)
-      if (!initialRoleLoaded.current) {
+      if (!roleLoaded) {
         setRole(mappedRole)
         setIsAdmin(userRole === 'admin')
-        initialRoleLoaded.current = true
+        setRoleLoaded(true)
       }
       setAuthed(true)
 
@@ -484,9 +478,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Re-fetch conversations when workspace role changes
   useEffect(() => {
-    if (!user || !initialRoleLoaded.current) return
+    if (!user || !roleLoaded) return
     fetchConversations(user.id, role).then((convs) => setConversations(convs)).catch(() => {})
-  }, [user, role])
+  }, [user, role, roleLoaded])
 
   const referralsSentToday = useMemo(() => {
     const now = Date.now()
@@ -1242,7 +1236,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setAuthed(false)
     setIsAdmin(false)
     setDemoMode(false)
-    initialRoleLoaded.current = false
+    setRoleLoaded(false)
+    setRole('student')
     reminderSentRef.current = false
     setProfessionals([])
     setRequests([])
@@ -1278,6 +1273,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppState>(() => ({
     role,
     setRole,
+    roleLoaded,
     isAdmin,
     authed,
     loading,
@@ -1352,7 +1348,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     npsOpen,
     setNpsOpen,
   }), [
-    role, authed, loading, logout, isAdmin, professionals, updateProfessional, updateRecruiter,
+    role, roleLoaded, authed, loading, logout, isAdmin, professionals, updateProfessional, updateRecruiter,
     student, updateStudent, addStudentCertification, removeStudentCertification, addStudentAchievement, removeStudentAchievement, addStudentProject, removeStudentProject, addStudentSkill, removeStudentSkill, addStudentExperience, removeStudentExperience, addStudentEducation, removeStudentEducation, setStudentResume, removeStudentResume,
     bookmarks, toggleBookmark, savedCandidates, toggleCandidate,
     requests, addRequest, setRequestStatus, advancePipelineStage, referralsSentToday, canSendReferral, nextReferralReset,

@@ -128,7 +128,8 @@ function AppSidebar() {
   const { pathname } = useLocation()
   const unread = conversations.reduce((a, c) => a + c.unread, 0)
   const pendingCount = requests.filter((r) => r.status === 'pending').length
-  const groups = navFor(role, unread, pendingCount)
+  const urlRole = getRoleFromPath(pathname) || role
+  const groups = navFor(urlRole, unread, pendingCount)
   const user = student
 
   useEffect(() => { setOpenMobile(false) }, [setOpenMobile])
@@ -214,7 +215,7 @@ function AppSidebar() {
             <GAvatar name={user.name} gradient={user.gradient} className="h-8 w-8 text-xs" />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-semibold">{user.name}</div>
-              <div className="truncate text-[11px] text-muted-foreground">{ROLE_META[role].label}</div>
+              <div className="truncate text-[11px] text-muted-foreground">{ROLE_META[urlRole].label}</div>
             </div>
           </div>
         )}
@@ -312,9 +313,11 @@ function NotificationsMenu() {
 // ── Messages menu ───────────────────────────────────────────
 function MessagesMenu() {
   const navigate = useNavigate()
-  const { conversations, role } = useApp()
+  const { conversations } = useApp()
+  const { pathname } = useLocation()
+  const urlRole = getRoleFromPath(pathname) || 'student'
   const unread = conversations.reduce((a, c) => a + c.unread, 0)
-  const messagesPath = getMessagesPath(role)
+  const messagesPath = getMessagesPath(urlRole)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -369,12 +372,13 @@ const CRUMB_LABELS: Record<string, string> = {
 
 function Breadcrumbs() {
   const { pathname } = useLocation()
-  const { visibleProfessionals, role } = useApp()
+  const { visibleProfessionals } = useApp()
+  const urlRole = getRoleFromPath(pathname) || 'student'
   const segs = pathname.split('/').filter(Boolean)
   if (segs.length === 0) return null
   return (
     <nav className="mb-4 flex items-center gap-1 overflow-x-auto text-sm text-muted-foreground [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <Link to={ROLE_ROUTE[role]} className="shrink-0 hover:text-foreground"><Home className="h-3.5 w-3.5" /></Link>
+      <Link to={ROLE_ROUTE[urlRole]} className="shrink-0 hover:text-foreground"><Home className="h-3.5 w-3.5" /></Link>
       {segs.map((s, i) => {
         const href = '/' + segs.slice(0, i + 1).join('/')
         const label = CRUMB_LABELS[s] ?? visibleProfessionals.find((p) => p.id === s)?.name ?? s
@@ -453,7 +457,8 @@ function FAB() {
 
 // ── Topbar ──────────────────────────────────────────────────
 function Topbar() {
-  const { role } = useApp()
+  const { pathname } = useLocation()
+  const urlRole = getRoleFromPath(pathname) || 'student'
   return (
     <header className="glass sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border px-4">
       <SidebarTrigger className="md:hidden h-11 w-11 shrink-0" />
@@ -474,7 +479,7 @@ function Topbar() {
         </kbd>
       </button>
       <Badge variant="outline" className="hidden border-primary/40 bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary sm:inline-flex">
-        {ROLE_META[role].label}
+        {ROLE_META[urlRole].label}
       </Badge>
       <div className="flex-1 sm:hidden" />
       <div className="ml-auto flex items-center gap-0">
@@ -490,7 +495,7 @@ function Topbar() {
 
 // ── Shell ───────────────────────────────────────────────────
 function AnimatedOutlet() {
-  return <Outlet />
+  return <div className="flex flex-1 flex-col min-h-0"><Outlet /></div>
 }
 
 export default function AppShell() {
@@ -500,13 +505,13 @@ export default function AppShell() {
         Skip to content
       </a>
       <AppSidebar aria-label="Main navigation" />
-      <SidebarInset className="bg-background">
+      <SidebarInset className="bg-background flex flex-col">
         <Topbar />
-        <main id="main-content" className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8" role="main">
+        <main id="main-content" className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 overflow-hidden" role="main">
           <Breadcrumbs />
           <AnimatedOutlet />
         </main>
-        <footer className="border-t border-border min-w-0 px-4 py-5 text-center text-[11px] leading-relaxed text-muted-foreground sm:text-xs" role="contentinfo" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
+        <footer className="border-t border-border min-w-0 shrink-0 px-4 py-5 text-center text-[11px] leading-relaxed text-muted-foreground sm:text-xs" role="contentinfo" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
           <span className="mx-auto block max-w-3xl overflow-hidden text-ellipsis whitespace-nowrap sm:whitespace-normal">Direct Refer · Built for job seekers, professionals and recruiters · {new Date().getFullYear()}</span>
         </footer>
         <FAB />

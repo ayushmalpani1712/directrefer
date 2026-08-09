@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import {
   Briefcase, ShieldCheck, User, Users,
 } from 'lucide-react'
@@ -12,7 +12,7 @@ import {
 import { GAvatar } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { ROLE_META, ROLE_ROUTE, type Role } from '@/data/mock'
+import { ROLE_META, ROLE_ROUTE, getRoleFromPath, type Role } from '@/data/mock'
 import { cn } from '@/lib/utils'
 
 const ROLE_ICONS: Record<Role, typeof User> = {
@@ -23,16 +23,18 @@ const ROLE_ICONS: Record<Role, typeof User> = {
 }
 
 export function WorkspaceSwitcher() {
-  const { role: ctxRole, setRole, isAdmin, student, logout } = useApp()
+  const { setRole, isAdmin, student, logout } = useApp()
   const { signOut } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const urlRole = getRoleFromPath(pathname)
 
   const workspaceRoles: Role[] = useMemo(() =>
     isAdmin ? ['student', 'professional', 'recruiter', 'admin'] : ['student', 'professional', 'recruiter'],
   [isAdmin])
 
   const handleSwitch = (r: Role) => {
-    if (r === ctxRole) return
+    if (r === urlRole) return
 
     setRole(r)
     // replace: true drops ?conversation=... and prevents back-nav to stale workspace
@@ -54,7 +56,7 @@ export function WorkspaceSwitcher() {
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold">{student?.name ?? 'User'}</div>
               <div className="truncate text-xs text-muted-foreground">
-                {student.headline || ROLE_META[ctxRole].label}
+                {student.headline || ROLE_META[urlRole].label}
               </div>
             </div>
           </div>
@@ -64,7 +66,7 @@ export function WorkspaceSwitcher() {
           </DropdownMenuLabel>
           {workspaceRoles.map((r) => {
             const Icon = ROLE_ICONS[r]
-            const isActive = ctxRole === r
+            const isActive = urlRole === r
             const isSuperAdmin = r === 'admin'
             return (
               <DropdownMenuItem

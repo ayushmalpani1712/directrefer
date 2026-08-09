@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { Link, useLocation, useSearchParams } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, CheckCheck, Download, FileText, Image, MoreVertical, Paperclip, Pin, Search, Send,
@@ -11,12 +11,15 @@ import { EmptyState, GAvatar } from '@/components/ui-kit'
 import { MessageIllustration } from '@/components/illustrations'
 import { toast } from 'sonner'
 import { useApp } from '@/context/AppContext'
+import { useAuth } from '@/context/AuthContext'
 import { checkRateLimit, checkServerRateLimit } from '@/lib/rateLimit'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { cn } from '@/lib/utils'
 import { MessagesSkeleton } from '@/components/ui/skeleton'
 import ResumePreview from '@/components/ResumePreview'
 import { supabase } from '@/lib/supabase'
+import { getRoleFromPath, type Role, type Conversation } from '@/data/mock'
+import { fetchConversations } from '@/lib/db'
 
 interface FileInfo {
   type: string
@@ -199,7 +202,10 @@ function FileAttachment({ fileInfo, isMe }: { fileInfo: FileInfo; isMe: boolean 
 
 export default function Messages() {
   const loading = usePageLoading(400)
-  const { conversations, sendMessage, markConversationRead, role, student } = useApp()
+  const { sendMessage, markConversationRead, student } = useApp()
+  const { user } = useAuth()
+  const { pathname } = useLocation()
+  const urlRole: Role = getRoleFromPath(pathname)
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeId, setActiveId] = useState('')
   const [draft, setDraft] = useState('')
@@ -207,6 +213,16 @@ export default function Messages() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [conversations, setConversations] = useState<Conversation[]>([])
+
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+    fetchConversations(user.id, urlRole).then((convs) => {
+      if (!cancelled) setConversations(convs)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [user?.id, urlRole])
 
   const active = conversations.find((c) => c.id === activeId)
   const sorted = [...conversations]
@@ -237,13 +253,13 @@ export default function Messages() {
 
   if (conversations.length === 0 && !loading) {
     return (
-      <div className="flex h-[calc(100vh-13rem)] min-h-[480px] items-center justify-center rounded-2xl border border-border bg-card">
+      <div className="flex h-full min-h-[400px] items-center justify-center rounded-2xl border border-border bg-card">
         <EmptyState
           illustration={<MessageIllustration />}
           title="Start a conversation"
           description="No messages yet. Once you send or receive a referral request, you'll be able to chat directly with professionals and recruiters here."
-          primaryCtaLabel={role === 'student' ? 'Browse professionals' : role === 'professional' ? 'Discover talent' : 'Browse talent'}
-          primaryCtaHref={role === 'student' ? '/job-seeker/professionals' : role === 'professional' ? '/professional/talent' : '/recruiter/talent'}
+          primaryCtaLabel={urlRole === 'student' ? 'Browse professionals' : urlRole === 'professional' ? 'Discover talent' : 'Browse talent'}
+          primaryCtaHref={urlRole === 'student' ? '/job-seeker/professionals' : urlRole === 'professional' ? '/professional/talent' : '/recruiter/talent'}
         />
       </div>
     )
@@ -278,41 +294,26 @@ export default function Messages() {
       const path = `chat/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`
 
       const { data, error } = await supabase.storage
-        .from('chat-files')
+        .from('resumes')
         .upload(path, file, {
           contentType: file.type || 'application/octet-stream',
           upsert: false,
         })
 
       if (error) {
-        console.warn('chat-files bucket upload failed, trying resumes bucket:', error.message)
-        const { data: retryData, error: retryError } = await supabase.storage
-          .from('resumes')
-          .upload(path, file, {
-            contentType: file.type || 'application/octet-stream',
-            upsert: false,
-          })
-
-        if (retryError) {
-          console.warn('resumes bucket also failed:', retryError.message)
-          send('file', file.name, undefined, file.name)
-          toast.success('File shared (text only — storage not configured)')
-          setUploading(false)
-          return
-        }
-
-        const { data: urlData } = supabase.storage.from('resumes').getPublicUrl(retryData.path)
-        send('file', file.name, urlData.publicUrl, file.name)
+        console.warn('Storage upload failed:', error.message)
+        send('file', file.name, undefined, file.name)
+        toast.error('File upload failed — please try again')
         setUploading(false)
         return
       }
 
-      const { data: urlData } = supabase.storage.from('chat-files').getPublicUrl(data.path)
+      const { data: urlData } = supabase.storage.from('resumes').getPublicUrl(data.path)
       send('file', file.name, urlData.publicUrl, file.name)
     } catch (err) {
       console.error('File upload failed:', err)
       send('file', file.name, undefined, file.name)
-      toast.success('File shared (text only — upload failed)')
+      toast.error('File upload failed — please try again')
     } finally {
       setUploading(false)
     }
@@ -321,7 +322,7 @@ export default function Messages() {
   const profilePath = getProfilePath(active?.otherUserRole, active?.otherUserId)
 
   return (
-    <div className="flex h-[calc(100vh-13rem)] min-h-[480px] overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="flex h-full min-h-[400px] overflow-hidden rounded-2xl border border-border bg-card">
       {/* Conversation list */}
       <aside className={cn('w-full flex-col border-r border-border sm:flex sm:w-80', activeId && 'hidden sm:flex')}>
         <div className="border-b border-border p-4">
@@ -360,7 +361,7 @@ export default function Messages() {
       </aside>
 
       {/* Chat pane */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {!active ? (
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
             {conversations.length === 0 ? 'No conversations yet' : 'Select a conversation'}
@@ -436,7 +437,7 @@ export default function Messages() {
         </ScrollArea>
 
         {/* Composer */}
-        <div className="border-t border-border p-3.5">
+        <div className="shrink-0 border-t border-border p-3.5">
           <div className="flex items-center gap-2">
             <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls,.png,.jpg,.jpeg,.gif,.webp" />
             <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => fileInputRef.current?.click()} disabled={uploading} title="Send file">

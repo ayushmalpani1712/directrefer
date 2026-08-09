@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
-import { Download, ExternalLink, FileText, X } from 'lucide-react'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { Download, ExternalLink, FileText, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { supabase } from '@/lib/supabase'
 
 interface ResumePreviewProps {
   url: string
@@ -10,95 +11,81 @@ interface ResumePreviewProps {
   onOpenChange: (open: boolean) => void
 }
 
-type PreviewState = 'loading' | 'ready' | 'error'
+function parseSupabaseStorageUrl(url: string): { bucket: string; path: string } | null {
+  const match = url.match(/\/storage\/v\d+\/object\/(?:public|sign)\/([^/]+)\/(.+?)(?:\?.*)?$/)
+  if (match) return { bucket: match[1], path: match[2] }
+  return null
+}
+
+async function resolveUrl(url: string): Promise<string> {
+  const parsed = parseSupabaseStorageUrl(url)
+  if (parsed) {
+    const { data, error } = await supabase.storage
+      .from(parsed.bucket)
+      .createSignedUrl(parsed.path, 3600)
+    if (error || !data?.signedUrl) throw new Error(error?.message || 'Failed to get signed URL')
+    return data.signedUrl
+  }
+  return url
+}
+
+async function fetchBlobUrl(url: string): Promise<string> {
+  const signedUrl = await resolveUrl(url)
+  const res = await fetch(signedUrl)
+  if (!res.ok) throw new Error(`Fetch failed: ${res.status}`)
+  const blob = await res.blob()
+  return URL.createObjectURL(blob)
+}
 
 export default function ResumePreview({ url, fileName, open, onOpenChange }: ResumePreviewProps) {
-  const [state, setState] = useState<PreviewState>('loading')
-  const canvasContainerRef = useRef<HTMLDivElement>(null)
-  const prevBlobRef = useRef<string | null>(null)
+  const [blobUrl, setBlobUrl] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
+  const blobUrlRef = useRef('')
 
   useEffect(() => {
     if (!open || !url) {
-      setState('loading')
+      setBlobUrl('')
+      setIsLoading(true)
+      setHasError(false)
       return
     }
+
     let cancelled = false
 
-    setState('loading')
+    setIsLoading(true)
+    setHasError(false)
+    setBlobUrl('')
 
-    async function renderPdf() {
-      try {
-        const { default: pdfjsLib } = await import('pdfjs-dist')
-        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-          'pdfjs-dist/build/pdf.worker.min.mjs',
-          import.meta.url,
-        ).href
-
-        const res = await fetch(url)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const arrayBuffer = await res.arrayBuffer()
-        if (cancelled) return
-
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-        if (cancelled) return
-
-        const container = canvasContainerRef.current
-        if (!container) return
-        container.innerHTML = ''
-
-        const dpr = window.devicePixelRatio || 1
-        const maxWidth = container.clientWidth
-
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i)
-          if (cancelled) return
-
-          const viewport = page.getViewport({ scale: 1 })
-          const scale = (maxWidth / viewport.width) * dpr
-          const scaledViewport = page.getViewport({ scale })
-
-          const canvas = document.createElement('canvas')
-          canvas.width = scaledViewport.width
-          canvas.height = scaledViewport.height
-          canvas.style.width = `${scaledViewport.width / dpr}px`
-          canvas.style.height = `${scaledViewport.height / dpr}px`
-          canvas.className = 'block mx-auto mb-2'
-
-          const ctx = canvas.getContext('2d')!
-          await page.render({ canvasContext: ctx, viewport: scaledViewport, canvas }).promise
-          container.appendChild(canvas)
+    fetchBlobUrl(url)
+      .then((bUrl) => {
+        if (cancelled) {
+          URL.revokeObjectURL(bUrl)
+          return
         }
+        blobUrlRef.current = bUrl
+        setBlobUrl(bUrl)
+      })
+      .catch((err) => {
+        console.error('PDF load failed:', err)
+        if (!cancelled) {
+          setHasError(true)
+          setIsLoading(false)
+        }
+      })
 
-        if (!cancelled) setState('ready')
-      } catch (err) {
-        console.error('PDF render failed:', err)
-        if (!cancelled) setState('error')
+    return () => {
+      cancelled = true
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current)
+        blobUrlRef.current = ''
       }
     }
-
-    renderPdf()
-
-    return () => { cancelled = true }
   }, [open, url])
 
-  useEffect(() => {
-    return () => {
-      if (prevBlobRef.current) URL.revokeObjectURL(prevBlobRef.current)
-    }
-  }, [])
-
-  const handleDownload = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const a = document.createElement('a')
-    a.href = url
-    a.download = fileName || 'resume.pdf'
-    a.target = '_blank'
-    a.rel = 'noopener noreferrer'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-  }, [url, fileName])
+  const getSignedUrl = useCallback(async (): Promise<string> => {
+    return resolveUrl(url)
+  }, [url])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -117,7 +104,10 @@ export default function ResumePreview({ url, fileName, open, onOpenChange }: Res
               size="sm"
               variant="ghost"
               className="h-7 gap-1 text-xs"
-              onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
+              onClick={async () => {
+                const u = await getSignedUrl()
+                window.open(u, '_blank', 'noopener,noreferrer')
+              }}
             >
               <ExternalLink className="h-3 w-3" /> Open
             </Button>
@@ -125,7 +115,17 @@ export default function ResumePreview({ url, fileName, open, onOpenChange }: Res
               size="sm"
               variant="ghost"
               className="h-7 gap-1 text-xs"
-              onClick={handleDownload}
+              onClick={async () => {
+                const u = await getSignedUrl()
+                const a = document.createElement('a')
+                a.href = u
+                a.download = fileName || 'resume.pdf'
+                a.target = '_blank'
+                a.rel = 'noopener noreferrer'
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+              }}
             >
               <Download className="h-3 w-3" /> Download
             </Button>
@@ -134,29 +134,42 @@ export default function ResumePreview({ url, fileName, open, onOpenChange }: Res
             </Button>
           </div>
         </div>
-        <div className="relative flex-1 min-h-0 overflow-auto bg-muted">
-          {state === 'error' ? (
+
+        <div className="relative flex-1 min-h-0 overflow-hidden bg-muted">
+          {isLoading && !hasError && (
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-muted">
+              <div className="text-center">
+                <Loader2 className="mx-auto h-8 w-8 text-primary animate-spin" />
+                <p className="mt-3 text-sm text-muted-foreground">Loading preview...</p>
+              </div>
+            </div>
+          )}
+
+          {hasError && (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
                 <FileText className="mx-auto h-12 w-12 text-destructive/40" />
-                <p className="mt-3 text-sm font-medium text-foreground">Failed to load PDF document.</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  The file may be corrupt or too small to display.
-                </p>
-                <Button variant="outline" size="sm" className="mt-4" onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}>
+                <p className="mt-3 text-sm font-medium text-foreground">Unable to preview file</p>
+                <p className="mt-1 max-w-xs text-xs text-muted-foreground">Could not load the document for preview.</p>
+                <Button variant="outline" size="sm" className="mt-4" onClick={async () => {
+                  const u = await getSignedUrl()
+                  window.open(u, '_blank', 'noopener,noreferrer')
+                }}>
                   <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> Open in new tab
                 </Button>
               </div>
             </div>
-          ) : state === 'loading' ? (
-            <div className="flex h-full items-center justify-center">
-              <div className="text-center">
-                <FileText className="mx-auto h-12 w-12 text-muted-foreground/40" />
-                <p className="mt-3 text-sm text-muted-foreground">Loading preview...</p>
-              </div>
-            </div>
-          ) : (
-            <div ref={canvasContainerRef} className="py-4" />
+          )}
+
+          {blobUrl && !hasError && (
+            <iframe
+              src={blobUrl}
+              className="w-full h-full border-0"
+              style={{ minHeight: '100%' }}
+              title={fileName || 'PDF Preview'}
+              onLoad={() => setIsLoading(false)}
+              onError={() => setHasError(true)}
+            />
           )}
         </div>
       </DialogContent>
