@@ -21,6 +21,17 @@ export const ROLE_ROUTE: Record<Role, string> = {
   admin: '/admin',
 }
 
+export const ROLE_MESSAGES_ROUTE: Record<Role, string> = {
+  student: '/job-seeker/messages',
+  professional: '/professional/messages',
+  recruiter: '/recruiter/messages',
+  admin: '/messages',
+}
+
+export function getMessagesPath(role: Role): string {
+  return ROLE_MESSAGES_ROUTE[role]
+}
+
 export function getRoleFromPath(pathname: string): Role {
   if (pathname.startsWith('/admin')) return 'admin'
   if (pathname.startsWith('/recruiter')) return 'recruiter'

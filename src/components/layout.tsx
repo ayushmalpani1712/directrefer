@@ -33,6 +33,7 @@ import {
   ROLE_META,
   ROLE_ROUTE,
   getRoleFromPath,
+  getMessagesPath,
   type Role,
 } from '@/data/mock'
 import { cn } from '@/lib/utils'
@@ -62,7 +63,7 @@ function navFor(role: Role, unread: number, pendingCount: number): { group: stri
       items: [
         { label: 'Dashboard', href: '/admin/overview', icon: LayoutDashboard },
         { label: 'Workspaces', href: '/admin/workspaces', icon: Users },
-        { label: 'Messages', href: '/messages', icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
+        { label: 'Messages', href: getMessagesPath('admin'), icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
         { label: 'Settings', href: '/admin/settings', icon: Settings },
       ],
     })
@@ -112,7 +113,7 @@ function navFor(role: Role, unread: number, pendingCount: number): { group: stri
   common.push({
     group: 'Network',
     items: [
-      { label: 'Messages', href: '/messages', icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
+      { label: 'Messages', href: getMessagesPath(role), icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
       { label: 'Notifications', href: '/notifications', icon: Bell },
       ...(role === 'student' ? [{ label: 'Bookmarks', href: '/bookmarks', icon: Bookmark }] : []),
       { label: 'Activity', href: '/activity', icon: Activity },
@@ -313,8 +314,9 @@ function NotificationsMenu() {
 // ── Messages menu ───────────────────────────────────────────
 function MessagesMenu() {
   const navigate = useNavigate()
-  const { conversations } = useApp()
+  const { conversations, role } = useApp()
   const unread = conversations.reduce((a, c) => a + c.unread, 0)
+  const messagesPath = getMessagesPath(role)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -329,7 +331,7 @@ function MessagesMenu() {
         </div>
         <Separator />
         {conversations.slice(0, 4).map((c) => (
-          <DropdownMenuItem key={c.id} className="flex cursor-pointer items-center gap-3 px-4 py-3" onClick={() => navigate('/messages')}>
+          <DropdownMenuItem key={c.id} className="flex cursor-pointer items-center gap-3 px-4 py-3" onClick={() => navigate(`${messagesPath}?conversation=${c.id}`)}>
             <div className="relative">
               <GAvatar name={c.name} gradient={c.gradient} className="h-9 w-9 text-xs" />
               {c.online && <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-popover bg-emerald-500" />}
@@ -347,7 +349,7 @@ function MessagesMenu() {
           </DropdownMenuItem>
         ))}
         <Separator />
-        <Button variant="ghost" className="w-full rounded-none text-sm text-primary" onClick={() => navigate('/messages')}>
+        <Button variant="ghost" className="w-full rounded-none text-sm text-primary" onClick={() => navigate(messagesPath)}>
           Open messages
         </Button>
       </DropdownMenuContent>

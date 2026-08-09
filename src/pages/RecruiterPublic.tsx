@@ -12,6 +12,7 @@ import { Chip, CompanyChip, ReportDialog, Stars } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
+import { getMessagesPath } from '@/data/mock'
 import NotFound from '@/pages/NotFound'
 
 interface RecruiterData {
@@ -29,7 +30,7 @@ export default function RecruiterPublic() {
   const { id } = useParams()
   const navigate = useNavigate()
   const loading = usePageLoading(400)
-  const { jobs, startConversation } = useApp()
+  const { jobs, startConversation, role } = useApp()
   const [recruiter, setRecruiter] = useState<RecruiterData | null>(null)
   const [loadingData, setLoadingData] = useState(true)
 
@@ -126,7 +127,7 @@ export default function RecruiterPublic() {
               <div className="flex gap-2">
                 <Button variant="outline" className="rounded-full" onClick={async () => {
                   const convId = await startConversation(id ?? '')
-                  if (convId) navigate(`/messages?conversation=${convId}`)
+                  if (convId) navigate(`${getMessagesPath(role)}?conversation=${convId}`)
                 }}>
                   <Send className="mr-1.5 h-4 w-4" /> Contact Recruiter
                 </Button>

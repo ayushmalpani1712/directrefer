@@ -11,7 +11,7 @@ import { InboxIllustration } from '@/components/illustrations'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import type { ReferralStatus, PipelineStage } from '@/data/mock'
-import { PIPELINE_STAGES } from '@/data/mock'
+import { PIPELINE_STAGES, getMessagesPath } from '@/data/mock'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { useNavigate } from 'react-router'
 import { cn } from '@/lib/utils'
@@ -87,7 +87,7 @@ function ShareOnLinkedIn({ role, professionalName }: { student: string; role: st
 
 export default function ReferralInbox() {
   const loading = usePageLoading(400)
-  const { requests, setRequestStatus, professionals, student, startConversation } = useApp()
+  const { requests, setRequestStatus, professionals, student, startConversation, role } = useApp()
   const { user } = useAuth()
   const [tab, setTab] = useState<ReferralStatus | 'all'>('pending')
   const [q, setQ] = useState('')
@@ -177,7 +177,7 @@ export default function ReferralInbox() {
                           </Button>
                         </>
                       ) : (
-                        <Button size="sm" variant="outline" className="rounded-lg" disabled={!r.requesterId} onClick={async () => { if (!r.requesterId) return; const convId = await startConversation(r.requesterId); if (convId) navigate(`/messages?conversation=${convId}`) }}>
+                        <Button size="sm" variant="outline" className="rounded-lg" disabled={!r.requesterId} onClick={async () => { if (!r.requesterId) return; const convId = await startConversation(r.requesterId); if (convId) navigate(`${getMessagesPath(role)}?conversation=${convId}`) }}>
                           <MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message
                         </Button>
                       )}

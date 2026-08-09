@@ -12,10 +12,11 @@ import { Chip, EmptyState, GAvatar, SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
+import { getMessagesPath } from '@/data/mock'
 
 export default function TalentSearch() {
   const loading = usePageLoading(400)
-  const { candidates, savedCandidates, toggleCandidate, addRequest, visibleProfessionals: professionals, startConversation } = useApp()
+  const { candidates, savedCandidates, toggleCandidate, addRequest, visibleProfessionals: professionals, startConversation, role } = useApp()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [q, setQ] = useState('')
@@ -118,7 +119,7 @@ export default function TalentSearch() {
                         }}>
                           <UserPlus className="mr-1.5 h-3.5 w-3.5" /> {c.id === user?.id ? 'You' : 'Invite'}
                         </Button>
-                        <Button size="sm" variant="outline" className="rounded-lg" disabled={c.id === user?.id} onClick={async (e) => { e.stopPropagation(); const convId = await startConversation(c.id); if (convId) navigate(`/messages?conversation=${convId}`) }}>
+                        <Button size="sm" variant="outline" className="rounded-lg" disabled={c.id === user?.id} onClick={async (e) => { e.stopPropagation(); const convId = await startConversation(c.id); if (convId) navigate(`${getMessagesPath(role)}?conversation=${convId}`) }}>
                           <MessageSquare className="h-3.5 w-3.5" />
                         </Button>
                       </div>

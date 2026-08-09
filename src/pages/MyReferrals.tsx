@@ -10,7 +10,7 @@ import { LinkedInShareButton } from '@/components/LinkedInShareButton'
 import { ReferralIllustration } from '@/components/illustrations'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { type ReferralStatus, PIPELINE_STAGES, type PipelineStage } from '@/data/mock'
+import { type ReferralStatus, PIPELINE_STAGES, type PipelineStage, getMessagesPath } from '@/data/mock'
 import { cn } from '@/lib/utils'
 import { exportReferralsCSV } from '@/lib/export'
 import { toast } from 'sonner'
@@ -115,7 +115,7 @@ function PipelineTracker({ stage, status }: { stage: PipelineStage; status: Refe
 }
 
 export default function MyReferrals() {
-  const { requests, professionals, loading, startConversation } = useApp()
+  const { requests, professionals, loading, startConversation, role } = useApp()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [tab, setTab] = useState<'all' | ReferralStatus>('all')
@@ -195,7 +195,7 @@ export default function MyReferrals() {
                         {r.status === 'accepted' && (
                           <LinkedInShareButton role={r.role} company={p.company} professionalName={p.name} size="sm" showCopy={false} />
                         )}
-                        <Button variant="outline" size="sm" className="rounded-full" onClick={async () => { const convId = await startConversation(p.id); if (convId) navigate(`/messages?conversation=${convId}`) }}><MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message</Button>
+                        <Button variant="outline" size="sm" className="rounded-full" onClick={async () => { const convId = await startConversation(p.id); if (convId) navigate(`${getMessagesPath(role)}?conversation=${convId}`) }}><MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message</Button>
                       </div>
                     </div>
 

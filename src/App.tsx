@@ -10,7 +10,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { HeadManager } from '@/components/HeadManager'
 import { OnboardingOverlay } from '@/components/OnboardingOverlay'
 import { NPSSurveyModal } from '@/components/NPSSurveyModal'
-import { ROLE_ROUTE, type Role } from '@/data/mock'
+import { ROLE_ROUTE, ROLE_MESSAGES_ROUTE, type Role } from '@/data/mock'
 
 const Landing = lazy(() => import('@/pages/Landing'))
 const Login = lazy(() => import('@/pages/Login'))
@@ -58,6 +58,11 @@ function LazyErrorBoundary({ children }: { children: React.ReactNode }) {
 function DashboardRedirect() {
   const { role } = useApp()
   return <Navigate to={ROLE_ROUTE[role]} replace />
+}
+
+function MessagesRedirect() {
+  const { role } = useApp()
+  return <Navigate to={ROLE_MESSAGES_ROUTE[role]} replace />
 }
 
 function Profile() {
@@ -195,7 +200,10 @@ export default function App() {
                   <Route path="/admin/:tab" element={<RequireRole allowed={['admin']}><Admin /></RequireRole>} />
 
                   {/* ── Shared routes (all authenticated roles) ── */}
-                  <Route path="/messages" element={<Messages />} />
+                  <Route path="/messages" element={<MessagesRedirect />} />
+                  <Route path="/job-seeker/messages" element={<Messages />} />
+                  <Route path="/professional/messages" element={<Messages />} />
+                  <Route path="/recruiter/messages" element={<Messages />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
                   <Route path="/bookmarks" element={<RequireRole allowed={['student']}><BookmarksPage /></RequireRole>} />
                   <Route path="/activity" element={<RequireRole allowed={['student', 'professional']}><ActivityPage /></RequireRole>} />

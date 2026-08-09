@@ -15,6 +15,7 @@ import { CompanyChip, GAvatar, ReportDialog } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
+import { getMessagesPath } from '@/data/mock'
 import NotFound from '@/pages/NotFound'
 
 interface PublicProfessional {
@@ -144,7 +145,7 @@ export default function ProfessionalPublic() {
                 </Button>
                 <Button variant="outline" className="rounded-full" onClick={async () => {
                   const convId = await app.startConversation(pro.id)
-                  if (convId) navigate(`/messages?conversation=${convId}`)
+                  if (convId) navigate(`${getMessagesPath(app.role)}?conversation=${convId}`)
                 }}><MessageSquare className="mr-1.5 h-4 w-4" /> Message</Button>
                 <Button variant="outline" size="icon" className="rounded-full" onClick={() => { toggleBookmark?.(pro.id); toast(saved ? 'Removed from bookmarks' : 'Saved to bookmarks') }}>
                   {saved ? <BookmarkCheck className="h-4.5 w-4.5 text-primary" /> : <Bookmark className="h-4.5 w-4.5" />}

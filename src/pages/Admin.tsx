@@ -18,7 +18,7 @@ import { GAvatar, SectionHeader, StatCard } from '@/components/ui-kit'
 import { DashboardSkeleton, ListSkeleton } from '@/components/ui/skeleton'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
-import { GRADIENTS } from '@/data/mock'
+import { GRADIENTS, getMessagesPath } from '@/data/mock'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
@@ -766,7 +766,7 @@ export default function Admin() {
                 <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground/50" />
                 <h3 className="mt-4 text-lg font-semibold">Messages Center</h3>
                 <p className="mt-2 text-sm text-muted-foreground">Access the full messaging interface to communicate with users.</p>
-                <Button className="mt-4" onClick={() => navigate('/messages')}>
+                <Button className="mt-4" onClick={() => navigate(getMessagesPath(role))}>
                   <MessageSquare className="mr-2 h-4 w-4" /> Open Messages
                 </Button>
               </div>

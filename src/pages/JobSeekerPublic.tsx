@@ -14,7 +14,7 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { GRADIENTS } from '@/data/mock'
+import { GRADIENTS, getMessagesPath } from '@/data/mock'
 import NotFound from '@/pages/NotFound'
 
 interface PublicJobSeeker {
@@ -32,7 +32,7 @@ export default function JobSeekerPublic() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { addRequest, visibleProfessionals: professionals, startConversation } = useApp()
+  const { addRequest, visibleProfessionals: professionals, startConversation, role } = useApp()
   const loading = usePageLoading(400)
   const [seeker, setSeeker] = useState<PublicJobSeeker | null>(null)
   const [loadingData, setLoadingData] = useState(true)
@@ -170,7 +170,7 @@ export default function JobSeekerPublic() {
                     </Button>
                     <Button variant="outline" className="rounded-full" onClick={async () => {
                       const convId = await startConversation(seeker.id)
-                      if (convId) navigate(`/messages?conversation=${convId}`)
+                      if (convId) navigate(`${getMessagesPath(role)}?conversation=${convId}`)
                     }}>
                       <MessageSquare className="mr-1.5 h-4 w-4" /> Message
                     </Button>
