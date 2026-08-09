@@ -50,7 +50,7 @@ export function WorkspaceSwitcher() {
             <GAvatar name={student?.name ?? 'U'} gradient={student?.gradient ?? 0} className="h-9 w-9 text-xs" ring />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-72">
+        <DropdownMenuContent align="end" sideOffset={0} className="w-72">
           <div className="flex items-center gap-3 px-3 py-2.5">
             <GAvatar name={student?.name ?? 'U'} gradient={student?.gradient ?? 0} className="h-10 w-10 text-sm" />
             <div className="min-w-0">
