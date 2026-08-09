@@ -25,7 +25,7 @@ export const ROLE_MESSAGES_ROUTE: Record<Role, string> = {
   student: '/job-seeker/messages',
   professional: '/professional/messages',
   recruiter: '/recruiter/messages',
-  admin: '/messages',
+  admin: '/admin/messages',
 }
 
 export function getMessagesPath(role: Role): string {

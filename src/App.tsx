@@ -198,6 +198,7 @@ export default function App() {
                   {/* ── Admin routes (tab-driven) ── */}
                   <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
                   <Route path="/admin/:tab" element={<RequireRole allowed={['admin']}><Admin /></RequireRole>} />
+                  <Route path="/admin/messages" element={<RequireRole allowed={['admin']}><Messages /></RequireRole>} />
 
                   {/* ── Shared routes (all authenticated roles) ── */}
                   <Route path="/messages" element={<MessagesRedirect />} />
