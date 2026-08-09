@@ -166,7 +166,7 @@ export default function RecruiterProfile() {
                         <input
                           value={editWebsite}
                           onChange={(e) => setEditWebsite(e.target.value)}
-                          className="bg-transparent border-b border-primary/50 outline-none w-36 text-xs text-primary placeholder:text-muted-foreground/40"
+                          className="bg-transparent border-b border-primary/50 outline-none w-full sm:w-36 text-xs text-primary placeholder:text-muted-foreground/40"
                           placeholder="e.g. acme.com"
                         />
                       ) : c.website ? (
@@ -179,7 +179,7 @@ export default function RecruiterProfile() {
                         <input
                           value={editLinkedin}
                           onChange={(e) => setEditLinkedin(e.target.value)}
-                          className="bg-transparent border-b border-[#0A66C2]/50 outline-none w-44 text-xs text-[#0A66C2] placeholder:text-muted-foreground/40"
+                          className="bg-transparent border-b border-[#0A66C2]/50 outline-none w-full sm:w-44 text-xs text-[#0A66C2] placeholder:text-muted-foreground/40"
                           placeholder="e.g. linkedin.com/company/acme"
                         />
                       ) : c.linkedin ? (

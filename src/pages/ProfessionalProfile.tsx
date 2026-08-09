@@ -318,7 +318,7 @@ export default function ProfessionalProfile() {
                           value={editingPositionValue}
                           onChange={(e) => setEditingPositionValue(e.target.value)}
                           placeholder="Position title"
-                          className="h-7 w-40 rounded-lg border border-border bg-background px-2 text-xs outline-none focus:ring-1 focus:ring-primary"
+                          className="h-7 w-full sm:w-40 rounded-lg border border-border bg-background px-2 text-xs outline-none focus:ring-1 focus:ring-primary"
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && editingPositionValue.trim()) {
@@ -354,7 +354,7 @@ export default function ProfessionalProfile() {
                         value={newPosition}
                         onChange={(e) => setNewPosition(e.target.value)}
                         placeholder="Position title"
-                        className="h-7 w-40 rounded-lg border border-border bg-background px-2 text-xs outline-none focus:ring-1 focus:ring-primary"
+                        className="h-7 w-full sm:w-40 rounded-lg border border-border bg-background px-2 text-xs outline-none focus:ring-1 focus:ring-primary"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && newPosition.trim()) {
@@ -421,7 +421,7 @@ export default function ProfessionalProfile() {
                       value={newSkill}
                       onChange={(e) => setNewSkill(e.target.value)}
                       placeholder="Skill name"
-                      className="h-7 w-32 rounded-lg border border-border bg-background px-2 text-xs outline-none focus:ring-1 focus:ring-primary"
+                      className="h-7 w-full sm:w-32 rounded-lg border border-border bg-background px-2 text-xs outline-none focus:ring-1 focus:ring-primary"
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && newSkill.trim()) {

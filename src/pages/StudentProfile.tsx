@@ -493,7 +493,7 @@ export default function StudentProfile() {
                   )}
                 </div>
               </div>
-              <div className="flex gap-2 sm:pb-1">
+              <div className="flex flex-wrap gap-2 sm:pb-1">
                 {s.resumeFile?.url ? (
                   <Button variant="outline" className="rounded-full" onClick={() => setShowResumePreview(true)}><FileText className="mr-1.5 h-4 w-4" /> Resume</Button>
                 ) : (

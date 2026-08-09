@@ -232,7 +232,7 @@ function ThemeToggle() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setTheme(dark ? 'light' : 'dark')}>
+        <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full" onClick={() => setTheme(dark ? 'light' : 'dark')}>
           {dark ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
         </Button>
       </TooltipTrigger>
@@ -260,7 +260,7 @@ function NotificationsMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full">
+        <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-full">
           <Bell className="h-4.5 w-4.5" />
           {unread > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
@@ -272,7 +272,7 @@ function NotificationsMenu() {
       <DropdownMenuContent align="end" className="w-[380px] max-w-[calc(100vw-2rem)] p-0">
         <div className="flex items-center justify-between px-4 py-3">
           <DropdownMenuLabel className="p-0 text-sm font-semibold">Notifications</DropdownMenuLabel>
-          <Button variant="ghost" size="sm" className="h-7 text-xs text-primary" onClick={() => { markAllNotificationsRead(); setItems(items.map((n) => ({ ...n, read: true }))) }}>
+          <Button variant="ghost" size="sm" className="h-9 text-xs text-primary" onClick={() => { markAllNotificationsRead(); setItems(items.map((n) => ({ ...n, read: true }))) }}>
             Mark all read
           </Button>
         </div>
@@ -318,7 +318,7 @@ function MessagesMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full">
+        <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-full">
           <MessageSquare className="h-4.5 w-4.5" />
           {unread > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />}
         </Button>
@@ -426,19 +426,19 @@ function Breadcrumbs() {
   const segs = pathname.split('/').filter(Boolean)
   if (segs.length === 0) return null
   return (
-    <nav className="mb-4 flex items-center gap-1 text-sm text-muted-foreground">
-      <Link to={ROLE_ROUTE[role]} className="hover:text-foreground"><Home className="h-3.5 w-3.5" /></Link>
+    <nav className="mb-4 flex items-center gap-1 overflow-x-auto text-sm text-muted-foreground [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <Link to={ROLE_ROUTE[role]} className="shrink-0 hover:text-foreground"><Home className="h-3.5 w-3.5" /></Link>
       {segs.map((s, i) => {
         const href = '/' + segs.slice(0, i + 1).join('/')
         const label = CRUMB_LABELS[s] ?? visibleProfessionals.find((p) => p.id === s)?.name ?? s
         const last = i === segs.length - 1
         return (
-          <span key={href} className="flex items-center gap-1">
+          <span key={href} className="flex shrink-0 items-center gap-1">
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
             {last ? (
-              <span className="font-medium text-foreground">{label}</span>
+              <span className="whitespace-nowrap font-medium text-foreground">{label}</span>
             ) : (
-              <Link to={href} className="hover:text-foreground">{label}</Link>
+              <Link to={href} className="whitespace-nowrap hover:text-foreground">{label}</Link>
             )}
           </span>
         )
@@ -501,7 +501,7 @@ function Topbar() {
   const { role } = useApp()
   return (
     <header className="glass sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border px-4">
-      <SidebarTrigger className="md:hidden h-9 w-9 shrink-0" />
+      <SidebarTrigger className="md:hidden h-11 w-11 shrink-0" />
       <button
         onClick={() => {
           const e = new KeyboardEvent('keydown', { key: 'k', bubbles: true, cancelable: true })

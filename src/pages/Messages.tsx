@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  CheckCheck, Download, FileText, Image, MoreVertical, Paperclip, Pin, Search, Send,
+  ArrowLeft, CheckCheck, Download, FileText, Image, MoreVertical, Paperclip, Pin, Search, Send,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -127,7 +127,7 @@ function FileAttachment({ fileInfo, isMe }: { fileInfo: FileInfo; isMe: boolean 
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            'block overflow-hidden rounded-2xl border transition-all hover:shadow-md max-w-[280px]',
+            'block overflow-hidden rounded-2xl border transition-all hover:shadow-md max-w-[70vw] sm:max-w-[280px]',
             isMe ? 'border-primary/30' : 'border-border'
           )}
         >
@@ -158,7 +158,7 @@ function FileAttachment({ fileInfo, isMe }: { fileInfo: FileInfo; isMe: boolean 
       <button
         onClick={handlePreviewClick}
         className={cn(
-          'flex items-center gap-3 rounded-2xl border p-3 text-left transition-all max-w-[300px]',
+          'flex items-center gap-3 rounded-2xl border p-3 text-left transition-all max-w-[85vw] sm:max-w-[300px]',
           hasUrl ? 'hover:scale-[1.01] hover:shadow-md cursor-pointer' : 'cursor-default opacity-80',
           isMe ? 'border-primary/30 bg-primary/10 hover:bg-primary/15' : 'border-border bg-muted/60 hover:bg-muted/80'
         )}
@@ -183,7 +183,7 @@ function FileAttachment({ fileInfo, isMe }: { fileInfo: FileInfo; isMe: boolean 
             tabIndex={0}
             onClick={handleDownload}
             onKeyDown={(e) => { if (e.key === 'Enter') handleDownload(e as unknown as React.MouseEvent) }}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-primary/15 transition-colors"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-primary/15 transition-colors"
             title="Download"
           >
             <Download className="h-4 w-4 text-muted-foreground" />
@@ -368,7 +368,9 @@ export default function Messages() {
         ) : (<>
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-          <button className="text-muted-foreground sm:hidden" onClick={() => setActiveId('')}>←</button>
+          <button className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted sm:hidden" onClick={() => setActiveId('')} aria-label="Back to conversations">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
           {profilePath ? (
             <Link to={profilePath}>
               <GAvatar name={active.name} gradient={active.gradient} className="h-9 w-9 text-xs cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all" />
@@ -386,7 +388,7 @@ export default function Messages() {
               {active.online ? <><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Online · {active.subtitle}</> : `Away · ${active.subtitle}`}
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={async () => { try { await navigator.clipboard.writeText(active.messages.map(m => {
+          <Button variant="ghost" size="icon" className="h-11 w-11" onClick={async () => { try { await navigator.clipboard.writeText(active.messages.map(m => {
             const fi = m.kind === 'file' ? parseFileContent(m.text) : null
             return `${m.from === 'me' ? 'You' : active.name}: ${fi ? `📎 ${fi.name}` : m.text}`
           }).join('\n')); toast.success('Chat copied to clipboard') } catch { toast.error('Failed to copy') } }}><MoreVertical className="h-4 w-4" /></Button>

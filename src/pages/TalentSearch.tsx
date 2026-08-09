@@ -86,8 +86,8 @@ export default function TalentSearch() {
                             <div className="text-xs text-muted-foreground">{c.role} · {c.exp}y exp</div>
                           </div>
                         </div>
-                        <button onClick={(e) => { e.stopPropagation(); toggleCandidate(c.id); toast(saved ? 'Removed from saved' : 'Candidate saved') }} className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-primary">
-                          {saved ? <BookmarkCheck className="h-4.5 w-4.5 text-primary" /> : <Bookmark className="h-4.5 w-4.5" />}
+                        <button onClick={(e) => { e.stopPropagation(); toggleCandidate(c.id); toast(saved ? 'Removed from saved' : 'Candidate saved') }} className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-primary">
+                          {saved ? <BookmarkCheck className="h-5 w-5 text-primary" /> : <Bookmark className="h-5 w-5" />}
                         </button>
                       </div>
                       <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">

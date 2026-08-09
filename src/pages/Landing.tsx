@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
   ArrowRight, BarChart3, Bookmark, Briefcase, CheckCircle2, ChevronRight, Command,
-  FileText, GraduationCap, MessageSquare, Moon, Send, ShieldCheck, Sparkles, Star, TrendingUp, Users, Zap,
+  FileText, GraduationCap, Menu, MessageSquare, Moon, Send, ShieldCheck, Sparkles, Star, TrendingUp, Users, X, Zap,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -143,6 +144,7 @@ function scrollTo(id: string) {
 export default function Landing() {
   const { visibleProfessionals: professionals } = useApp()
   const { user } = useAuth()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
       {/* Nav */}
@@ -167,8 +169,28 @@ export default function Landing() {
                 </Button>
               </>
             )}
+            <button
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+        {/* Mobile menu dropdown */}
+        {mobileMenuOpen && (
+          <div className="border-t border-border/50 bg-background px-4 pb-4 pt-2 md:hidden">
+            <nav className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
+              <button onClick={() => { scrollTo('roles'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-2.5 text-left hover:bg-muted hover:text-foreground">Who it's for</button>
+              <button onClick={() => { scrollTo('features'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-2.5 text-left hover:bg-muted hover:text-foreground">Features</button>
+              <button onClick={() => { scrollTo('network'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-2.5 text-left hover:bg-muted hover:text-foreground">Network</button>
+              {!user && (
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2.5 hover:bg-muted hover:text-foreground">Sign in</Link>
+              )}
+            </nav>
+          </div>
+        )}
       </header>
 
       {/* Hero */}
