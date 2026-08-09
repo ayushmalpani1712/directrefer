@@ -183,6 +183,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [demoMode, setDemoMode] = useState(false)
   const [npsOpen, setNpsOpen] = useState(false)
   const initialRoleLoaded = useRef(false)
+  const roleRef = useRef<Role>(role)
+  useEffect(() => { roleRef.current = role }, [role])
 
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [student, setStudent] = useState<StudentProfile>({
@@ -307,7 +309,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const [profs, refs, convs, cands, profileData] = await Promise.allSettled([
         fetchProfessionals(userId),
         fetchReferrals(userId),
-        fetchConversations(userId),
+        fetchConversations(userId, mappedRole),
         dbFetchCandidates(userId),
         studentProfilePromise,
       ])
@@ -432,7 +434,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               )
             }
             // Conversation not in state yet — fetch it and prepend
-            fetchConversations(currentUser.id).then((convs) => setConversations(convs)).catch(() => {})
+            fetchConversations(currentUser.id, roleRef.current).then((convs) => setConversations(convs)).catch(() => {})
             return prev
           })
 
@@ -468,6 +470,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       supabase.removeChannel(refChannel)
     }
   }, [user?.id])
+
+  // Re-fetch conversations when workspace role changes
+  useEffect(() => {
+    if (!user || !initialRoleLoaded.current) return
+    fetchConversations(user.id, role).then((convs) => setConversations(convs)).catch(() => {})
+  }, [user, role])
 
   const referralsSentToday = useMemo(() => {
     const now = Date.now()
@@ -1097,13 +1105,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const startConversation = useCallback(async (targetUserId: string): Promise<string | null> => {
     if (!user) return null
-    const convId = await dbFindOrCreateConversation(user.id, targetUserId)
+    const activeRole = roleRef.current
+    const convId = await dbFindOrCreateConversation(user.id, targetUserId, activeRole)
     if (!convId) {
       toast.error('Failed to start conversation')
       return null
     }
     // Refresh conversations list so the new conversation appears
-    const updatedConvs = await fetchConversations(user.id)
+    const updatedConvs = await fetchConversations(user.id, activeRole)
     setConversations(updatedConvs)
     return convId
   }, [user])
