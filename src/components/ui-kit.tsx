@@ -1,6 +1,5 @@
 import { type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { motion } from 'framer-motion'
 import { ArrowDownRight, ArrowUpRight, Star, type LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -164,12 +163,9 @@ export function EmptyState({
   ) : null
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+    <div
       className={cn(
-        'flex flex-col items-center justify-center rounded-2xl py-16 text-center',
+        'flex flex-col items-center justify-center rounded-2xl py-16 text-center animate-in fade-in slide-in-from-bottom-3 duration-400 fill-mode-both',
         bordered && 'border border-dashed border-border/60',
       )}
     >
@@ -192,7 +188,7 @@ export function EmptyState({
           {secondaryButton}
         </div>
       )}
-    </motion.div>
+    </div>
   )
 }
 
@@ -204,13 +200,11 @@ export function ProgressRing({ value, size = 64, stroke = 5, label }: { value: n
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={stroke} className="fill-none stroke-muted" />
-        <motion.circle
+        <circle
           cx={size / 2} cy={size / 2} r={r} strokeWidth={stroke} strokeLinecap="round"
-          className="fill-none stroke-primary"
+          className="fill-none stroke-primary transition-[stroke-dashoffset] duration-1000 ease-out"
           strokeDasharray={c}
-          initial={{ strokeDashoffset: c }}
-          animate={{ strokeDashoffset: c - (c * value) / 100 }}
-          transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
+          strokeDashoffset={c - (c * value) / 100}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">

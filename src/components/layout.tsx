@@ -11,9 +11,6 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
-  CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator,
-} from '@/components/ui/command'
-import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -29,6 +26,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { GAvatar } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher'
+import { LazyCommandPalette } from '@/components/CommandPaletteWrapper'
 import {
   ROLE_META,
   ROLE_ROUTE,
@@ -357,59 +355,6 @@ function MessagesMenu() {
   )
 }
 
-// ── Command palette ─────────────────────────────────────────
-function CommandPalette() {
-  const [open, setOpen] = useState(false)
-  const navigate = useNavigate()
-  const { role, visibleProfessionals, requests } = useApp()
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        setOpen((o) => !o)
-      }
-    }
-    document.addEventListener('keydown', down)
-    return () => document.removeEventListener('keydown', down)
-  }, [])
-
-  const go = (href: string) => { setOpen(false); navigate(href) }
-  const pendingCount = requests.filter((r) => r.status === 'pending').length
-  const groups = navFor(role, 0, pendingCount)
-
-  return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Search people, pages, actions…" />
-      <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
-        {groups.map((g) => (
-          <CommandGroup key={g.group}>
-            {g.items.map((i) => (
-              <CommandItem key={i.href} onSelect={() => go(i.href)}>
-                <i.icon className="mr-2 h-4 w-4" /> {i.label}
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        ))}
-        <CommandSeparator />
-        <CommandGroup>
-          {visibleProfessionals.slice(0, 6).map((p) => (
-            <CommandItem key={p.id} onSelect={() => go(`/professionals/${p.id}`)}>
-              <Search className="mr-2 h-4 w-4" /> {p.name} <span className="ml-2 text-xs text-muted-foreground">{p.designation} · {p.company}</span>
-            </CommandItem>
-          ))}
-        </CommandGroup>
-        <CommandSeparator />
-        <CommandGroup>
-          <CommandItem onSelect={() => go('/job-seeker/request-referral')}><Plus className="mr-2 h-4 w-4" /> Request a referral</CommandItem>
-          <CommandItem onSelect={() => go('/settings')}><Sun className="mr-2 h-4 w-4" /> Change theme</CommandItem>
-          <CommandItem onSelect={() => go('/help')}><CircleHelp className="mr-2 h-4 w-4" /> Get help</CommandItem>
-        </CommandGroup>
-      </CommandList>
-    </CommandDialog>
-  )
-}
-
 // ── Breadcrumbs ─────────────────────────────────────────────
 const CRUMB_LABELS: Record<string, string> = {
   'job-seeker': 'Job Seeker', dashboard: 'Dashboard', professionals: 'Find Professionals', applications: 'My Referrals',
@@ -566,7 +511,7 @@ export default function AppShell() {
         </footer>
         <FAB />
       </SidebarInset>
-      <CommandPalette />
+      <LazyCommandPalette />
     </SidebarProvider>
   )
 }
