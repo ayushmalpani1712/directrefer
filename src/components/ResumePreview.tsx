@@ -123,13 +123,23 @@ export default function ResumePreview({ url, fileName, open, onOpenChange }: Res
               </div>
             </div>
           ) : (
-            <iframe
-              src={`${previewUrl}#toolbar=0&navpanes=0`}
-              className="h-full w-full border-0"
+            <object
+              data={previewUrl}
+              type="application/pdf"
+              className="h-full w-full"
               title={fileName || 'Resume preview'}
-              sandbox="allow-same-origin"
               onError={handleIframeError}
-            />
+            >
+              <div className="flex h-full items-center justify-center">
+                <div className="text-center">
+                  <FileText className="mx-auto h-12 w-12 text-muted-foreground/40" />
+                  <p className="mt-3 text-sm text-muted-foreground">PDF preview not available</p>
+                  <Button variant="outline" size="sm" className="mt-4" onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}>
+                    <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> Open in new tab
+                  </Button>
+                </div>
+              </div>
+            </object>
           )}
         </div>
       </DialogContent>
