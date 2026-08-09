@@ -20,12 +20,12 @@ import {
 
 // ── Helpers ─────────────────────────────────────────────────────
 
-// Map frontend Role type to DB users.role enum values
+// Map frontend Role type to DB role_context values
 const ROLE_TO_DB: Record<string, string> = {
-  student: 'job_seeker',
-  professional: 'professional',
-  recruiter: 'recruiter',
-  admin: 'admin',
+  student: 'JOB_SEEKER',
+  professional: 'PROFESSIONAL',
+  recruiter: 'RECRUITER',
+  admin: 'ADMIN',
 }
 
 function daysSince(iso: string): number {

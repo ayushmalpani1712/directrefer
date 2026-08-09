@@ -35,7 +35,8 @@ export function WorkspaceSwitcher() {
     if (r === ctxRole) return
 
     setRole(r)
-    navigate(ROLE_ROUTE[r])
+    // replace: true drops ?conversation=... and prevents back-nav to stale workspace
+    navigate(ROLE_ROUTE[r], { replace: true })
     toast.success(`Switched to ${ROLE_META[r].label} workspace`)
   }
 
