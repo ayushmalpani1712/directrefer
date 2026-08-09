@@ -13,41 +13,72 @@ interface ResumePreviewProps {
 type PreviewState = 'loading' | 'ready' | 'error'
 
 export default function ResumePreview({ url, fileName, open, onOpenChange }: ResumePreviewProps) {
-  const [blobUrl, setBlobUrl] = useState<string | null>(null)
   const [state, setState] = useState<PreviewState>('loading')
+  const canvasContainerRef = useRef<HTMLDivElement>(null)
   const prevBlobRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!open || !url) {
-      setBlobUrl(null)
       setState('loading')
       return
     }
     let cancelled = false
 
     setState('loading')
-    fetch(url)
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const blob = await res.blob()
-        if (cancelled) return
-        if (blob.size < 100) {
-          setState('error')
-          return
-        }
-        const created = URL.createObjectURL(blob)
-        if (prevBlobRef.current) URL.revokeObjectURL(prevBlobRef.current)
-        prevBlobRef.current = created
-        setBlobUrl(created)
-        setState('ready')
-      })
-      .catch(() => {
-        if (!cancelled) setState('error')
-      })
 
-    return () => {
-      cancelled = true
+    async function renderPdf() {
+      try {
+        const { default: pdfjsLib } = await import('pdfjs-dist')
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+          'pdfjs-dist/build/pdf.worker.min.mjs',
+          import.meta.url,
+        ).href
+
+        const res = await fetch(url)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const arrayBuffer = await res.arrayBuffer()
+        if (cancelled) return
+
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+        if (cancelled) return
+
+        const container = canvasContainerRef.current
+        if (!container) return
+        container.innerHTML = ''
+
+        const dpr = window.devicePixelRatio || 1
+        const maxWidth = container.clientWidth
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i)
+          if (cancelled) return
+
+          const viewport = page.getViewport({ scale: 1 })
+          const scale = (maxWidth / viewport.width) * dpr
+          const scaledViewport = page.getViewport({ scale })
+
+          const canvas = document.createElement('canvas')
+          canvas.width = scaledViewport.width
+          canvas.height = scaledViewport.height
+          canvas.style.width = `${scaledViewport.width / dpr}px`
+          canvas.style.height = `${scaledViewport.height / dpr}px`
+          canvas.className = 'block mx-auto mb-2'
+
+          const ctx = canvas.getContext('2d')!
+          await page.render({ canvasContext: ctx, viewport: scaledViewport, canvas }).promise
+          container.appendChild(canvas)
+        }
+
+        if (!cancelled) setState('ready')
+      } catch (err) {
+        console.error('PDF render failed:', err)
+        if (!cancelled) setState('error')
+      }
     }
+
+    renderPdf()
+
+    return () => { cancelled = true }
   }, [open, url])
 
   useEffect(() => {
@@ -56,11 +87,18 @@ export default function ResumePreview({ url, fileName, open, onOpenChange }: Res
     }
   }, [])
 
-  const previewUrl = blobUrl || url
-
-  const handleIframeError = useCallback(() => {
-    setState('error')
-  }, [])
+  const handleDownload = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName || 'resume.pdf'
+    a.target = '_blank'
+    a.rel = 'noopener noreferrer'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }, [url, fileName])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -87,12 +125,7 @@ export default function ResumePreview({ url, fileName, open, onOpenChange }: Res
               size="sm"
               variant="ghost"
               className="h-7 gap-1 text-xs"
-              onClick={() => {
-                const a = document.createElement('a')
-                a.href = url
-                a.download = fileName || 'resume.pdf'
-                a.click()
-              }}
+              onClick={handleDownload}
             >
               <Download className="h-3 w-3" /> Download
             </Button>
@@ -101,7 +134,7 @@ export default function ResumePreview({ url, fileName, open, onOpenChange }: Res
             </Button>
           </div>
         </div>
-        <div className="relative flex-1 min-h-0 bg-muted">
+        <div className="relative flex-1 min-h-0 overflow-auto bg-muted">
           {state === 'error' ? (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
@@ -123,23 +156,7 @@ export default function ResumePreview({ url, fileName, open, onOpenChange }: Res
               </div>
             </div>
           ) : (
-            <object
-              data={previewUrl}
-              type="application/pdf"
-              className="h-full w-full"
-              title={fileName || 'Resume preview'}
-              onError={handleIframeError}
-            >
-              <div className="flex h-full items-center justify-center">
-                <div className="text-center">
-                  <FileText className="mx-auto h-12 w-12 text-muted-foreground/40" />
-                  <p className="mt-3 text-sm text-muted-foreground">PDF preview not available</p>
-                  <Button variant="outline" size="sm" className="mt-4" onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}>
-                    <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> Open in new tab
-                  </Button>
-                </div>
-              </div>
-            </object>
+            <div ref={canvasContainerRef} className="py-4" />
           )}
         </div>
       </DialogContent>
