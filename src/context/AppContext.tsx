@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useNavigate, useLocation } from 'react-router'
 import { toast } from 'sonner'
 import { useAuth } from '@/context/AuthContext'
 import {
@@ -176,6 +177,8 @@ const Ctx = createContext<AppState | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [role, setRole] = useState<Role>('student')
   const [isAdmin, setIsAdmin] = useState(false)
   const [authed, setAuthed] = useState(false)
@@ -185,6 +188,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const initialRoleLoaded = useRef(false)
   const roleRef = useRef<Role>(role)
   useEffect(() => { roleRef.current = role }, [role])
+
+  // Redirect admins away from non-admin workspace routes
+  useEffect(() => {
+    if (role === 'admin' && initialRoleLoaded.current) {
+      const isNonAdminWorkspace = pathname.startsWith('/job-seeker') || pathname.startsWith('/professional') || pathname.startsWith('/recruiter')
+      if (isNonAdminWorkspace) navigate('/admin', { replace: true })
+    }
+  }, [role, pathname, navigate])
 
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [student, setStudent] = useState<StudentProfile>({

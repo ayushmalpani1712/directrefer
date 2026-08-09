@@ -6,6 +6,7 @@ import {
   Shield, Trash2, Users, Eye, Settings, Pencil, Sparkles,
   RefreshCw, History, Search, Megaphone, Flag, BarChart3,
   Globe, MessageSquare, Briefcase, Plus, Send, ToggleLeft, ExternalLink, Wrench, Loader2, BadgeCheck,
+  UserSquare,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -38,7 +39,7 @@ import {
 import { exportUsersCSV } from '@/lib/export'
 
 type Tab = 'overview' | 'workspaces' | 'messages' | 'settings'
-type WorkspaceTab = 'job-seekers' | 'professionals'
+type WorkspaceTab = 'job-seekers' | 'professionals' | 'recruiters'
 type SettingsTab = 'feature-flags' | 'rate-limits' | 'auto-deletion' | 'announcements' | 'verification' | 'audit-log'
 
 const VALID_TABS: Tab[] = ['overview', 'workspaces', 'messages', 'settings']
@@ -505,7 +506,7 @@ export default function Admin() {
       )}
 
       {tab === 'workspaces' && (
-        <SectionHeader title="Workspaces" subtitle="Manage job seekers and professionals" />
+        <SectionHeader title="Workspaces" subtitle="Manage job seekers, professionals, and recruiters" />
       )}
 
       {tab === 'messages' && (
@@ -654,6 +655,21 @@ export default function Admin() {
                 {allUsers.filter(u => u.role === 'professional').length}
               </Badge>
             </button>
+            <button
+              onClick={() => setWorkspaceTab('recruiters')}
+              className={cn(
+                'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all',
+                workspaceTab === 'recruiters'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <UserSquare className="mr-2 inline h-4 w-4" />
+              Recruiters
+              <Badge variant="outline" className="ml-2 text-xs">
+                {allUsers.filter(u => u.role === 'recruiter').length}
+              </Badge>
+            </button>
           </div>
 
           {/* Unified Search & Filters */}
@@ -685,17 +701,17 @@ export default function Admin() {
             )}
           </div>
 
-          <div className="text-sm text-muted-foreground">
-            {usersLoading ? 'Loading...' : `Showing ${filteredUsers.filter(u => workspaceTab === 'job-seekers' ? u.role === 'student' : u.role === 'professional').length} ${workspaceTab === 'job-seekers' ? 'job seekers' : 'professionals'}`}
+           <div className="text-sm text-muted-foreground">
+            {usersLoading ? 'Loading...' : `Showing ${filteredUsers.filter(u => workspaceTab === 'job-seekers' ? u.role === 'student' : workspaceTab === 'professionals' ? u.role === 'professional' : u.role === 'recruiter').length} ${workspaceTab === 'job-seekers' ? 'job seekers' : workspaceTab === 'professionals' ? 'professionals' : 'recruiters'}`}
           </div>
 
           {/* User List */}
-          {filteredUsers.filter(u => workspaceTab === 'job-seekers' ? u.role === 'student' : u.role === 'professional').length === 0 ? (
+          {filteredUsers.filter(u => workspaceTab === 'job-seekers' ? u.role === 'student' : workspaceTab === 'professionals' ? u.role === 'professional' : u.role === 'recruiter').length === 0 ? (
             <Card className="shadow-soft"><CardContent className="flex items-center justify-center p-8"><p className="text-sm text-muted-foreground">{usersLoading ? 'Loading users...' : 'No users found'}</p></CardContent></Card>
           ) : (
             <div className="space-y-2">
               {filteredUsers
-                .filter(u => workspaceTab === 'job-seekers' ? u.role === 'student' : u.role === 'professional')
+                .filter(u => workspaceTab === 'job-seekers' ? u.role === 'student' : workspaceTab === 'professionals' ? u.role === 'professional' : u.role === 'recruiter')
                 .map((u) => (
                 <motion.div key={u.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <Card className="shadow-soft">

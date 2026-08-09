@@ -109,7 +109,13 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
 function RequireRole({ allowed, children }: { allowed: Role[]; children: React.ReactNode }) {
   const { role } = useApp()
-  if (role === 'admin') return <>{children}</>
+  if (role === 'admin') {
+    // Admin bypass — but redirect away from student/professional/recruiter workspace routes
+    const { pathname } = useLocation()
+    const isNonAdminWorkspace = pathname.startsWith('/job-seeker') || pathname.startsWith('/professional') || pathname.startsWith('/recruiter')
+    if (isNonAdminWorkspace) return <Navigate to="/admin" replace />
+    return <>{children}</>
+  }
   if (!allowed.includes(role)) return <Navigate to={ROLE_ROUTE[role]} replace />
   return <>{children}</>
 }
