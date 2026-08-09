@@ -217,7 +217,6 @@ export default function Messages() {
     const convId = searchParams.get('conversation')
     if (convId) {
       setActiveId(convId)
-      setSearchParams({}, { replace: true })
     }
   }, [])
 
@@ -226,6 +225,15 @@ export default function Messages() {
       setActiveId(conversations[0].id)
     }
   }, [conversations, activeId])
+
+  // Sync activeId to URL so the conversation is deep-linkable
+  useEffect(() => {
+    if (activeId) {
+      setSearchParams({ conversation: activeId }, { replace: true })
+    } else {
+      setSearchParams({}, { replace: true })
+    }
+  }, [activeId, setSearchParams])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
