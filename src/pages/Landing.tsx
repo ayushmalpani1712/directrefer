@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
   ArrowRight, BarChart3, Bookmark, Briefcase, CheckCircle2, ChevronRight, Command,
-  FileText, GraduationCap, Menu, MessageSquare, Moon, Send, ShieldCheck, Sparkles, Star, TrendingUp, Users, X, Zap,
+  FileText, GraduationCap, Linkedin, Mail, Menu, MessageSquare, Moon, Send, ShieldCheck, Sparkles, Star, TrendingUp, Users, X, Zap,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -401,6 +401,38 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Founder Note */}
+      <section className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+        <div className="mx-auto max-w-3xl">
+          <motion.div {...fadeUp}>
+            <div className="rounded-2xl border border-border bg-card p-6 sm:p-10 shadow-soft">
+              <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left">
+                <div className="shrink-0">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#4F7CFF] to-[#7C5CFF] text-2xl font-bold text-white shadow-glow">
+                    AM
+                  </div>
+                </div>
+                <div className="mt-5 sm:mt-0 sm:ml-6">
+                  <div className="text-xs font-bold uppercase tracking-widest text-primary">Built by the founder</div>
+                  <h3 className="mt-2 font-display text-xl font-bold text-foreground">Ayush Malpani</h3>
+                  <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
+                    I built Direct Refer because I was tired of cold-applying into the void. Referrals changed my career trajectory — and I want to make that accessible to everyone. This platform exists to help job seekers connect with verified insiders who can open doors.
+                  </p>
+                  <div className="mt-4 flex items-center justify-center gap-3 sm:justify-start">
+                    <a href="https://linkedin.com/in/ayushmalpani" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground">
+                      <Linkedin className="h-4 w-4" /> LinkedIn
+                    </a>
+                    <a href="mailto:hello@directrefer.in" className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground">
+                      <Mail className="h-4 w-4" /> Contact
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="relative overflow-hidden border-t border-border/50 px-4 py-14 text-center sm:px-6 sm:py-20 lg:px-8">
         <div className="absolute left-1/2 top-1/2 -z-10 h-[380px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary opacity-[0.04]" />
@@ -420,20 +452,33 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="border-t border-border/50 px-4 py-8 sm:px-6 sm:py-10 lg:px-8" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
-        <div className="mx-auto flex max-w-7xl min-w-0 flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-          <Logo />
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-[14px] text-muted-foreground">
-            <button onClick={() => scrollTo('features')} className="hover:text-foreground">Features</button>
-            <button onClick={() => scrollTo('network')} className="hover:text-foreground">Network</button>
-            <Link to="/help" className="hover:text-foreground">Support</Link>
-            {user ? (
-              <Link to="/dashboard" className="hover:text-foreground">Dashboard</Link>
-            ) : (
-              <Link to="/login" className="hover:text-foreground">Sign in</Link>
-            )}
+        <div className="mx-auto max-w-7xl min-w-0">
+          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row sm:items-start sm:text-left">
+            <div className="flex flex-col items-center gap-3 sm:items-start">
+              <Logo />
+              <p className="max-w-xs text-center text-xs text-muted-foreground sm:text-left">The referral platform that connects job seekers with verified professionals.</p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-[14px] text-muted-foreground">
+              <button onClick={() => scrollTo('features')} className="hover:text-foreground">Features</button>
+              <button onClick={() => scrollTo('network')} className="hover:text-foreground">Network</button>
+              <Link to="/help" className="hover:text-foreground">Support</Link>
+              {user ? (
+                <Link to="/dashboard" className="hover:text-foreground">Dashboard</Link>
+              ) : (
+                <Link to="/login" className="hover:text-foreground">Sign in</Link>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <a href="https://linkedin.com/in/ayushmalpani" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground" aria-label="LinkedIn">
+                <Linkedin className="h-4 w-4" />
+              </a>
+              <a href="mailto:hello@directrefer.in" className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground" aria-label="Email">
+                <Mail className="h-4 w-4" />
+              </a>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 text-xs sm:text-[13px] text-muted-foreground">
-            <FileText className="h-3.5 w-3.5" /> © {new Date().getFullYear()} Direct Refer, Inc.
+          <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/70 sm:justify-start">
+            <FileText className="h-3.5 w-3.5" /> © {new Date().getFullYear()} Direct Refer, Inc. All rights reserved.
           </div>
         </div>
       </footer>

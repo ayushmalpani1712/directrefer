@@ -516,7 +516,7 @@ export default function AppShell() {
           <AnimatedOutlet />
         </main>
         <footer className="border-t border-border min-w-0 shrink-0 px-4 py-5 text-center text-[11px] leading-relaxed text-muted-foreground sm:text-xs" role="contentinfo" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
-          <span className="mx-auto block max-w-3xl overflow-hidden text-ellipsis whitespace-nowrap sm:whitespace-normal">Direct Refer · Built for job seekers, professionals and recruiters · {new Date().getFullYear()}</span>
+          <span className="mx-auto block max-w-3xl overflow-hidden text-ellipsis whitespace-nowrap sm:whitespace-normal">Direct Refer · Built for job seekers, professionals and recruiters · {new Date().getFullYear()} · <a href="https://linkedin.com/in/ayushmalpani" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">Ayush Malpani</a></span>
         </footer>
         <FAB />
       </SidebarInset>
