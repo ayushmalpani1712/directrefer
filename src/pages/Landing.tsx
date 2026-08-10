@@ -63,9 +63,9 @@ function HeroMock() {
       initial={{ opacity: 0, y: 40, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
-      className="relative mx-auto mt-16 max-w-5xl px-0 sm:px-4"
+      className="relative mx-auto mt-16 max-w-4xl px-0 sm:px-4"
     >
-          <div className="absolute -inset-x-4 sm:-inset-x-8 -top-10 bottom-0 -z-10 rounded-[2rem] bg-primary opacity-[0.03]" />
+      <div className="absolute -inset-x-4 sm:-inset-x-8 -top-10 bottom-0 -z-10 rounded-[2rem] bg-primary opacity-[0.03]" />
       <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#151A21]">
         <div className="flex items-center gap-2 border-b border-[rgba(255,255,255,0.04)] bg-[rgba(255,255,255,0.02)] px-4 py-2.5">
           <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
@@ -75,26 +75,31 @@ function HeroMock() {
             www.directrefer.in/dashboard
           </div>
         </div>
-          <div className="grid gap-3 p-3 sm:gap-4 sm:p-4 md:grid-cols-3 md:p-6">
-          <div className="space-y-4 md:col-span-2">
-            <div className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[rgba(59,95,229,0.06)] p-5">
+        <div className="p-4 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
               <div className="text-sm text-[#9CA3AF]">Good morning,</div>
-              <div className="font-display text-base sm:text-xl font-bold text-foreground">Alex — 2 referrals moved this week</div>
-              <div className="mt-3 flex gap-2">
-                <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-[#4ADE80] hover:bg-[rgba(74,222,128,0.1)] text-[10px] sm:text-xs">Accepted · Stripe</Badge>
-                <Badge className="border border-[rgba(59,95,229,0.2)] bg-[rgba(59,95,229,0.1)] text-primary hover:bg-[rgba(59,95,229,0.1)] text-[10px] sm:text-xs">Applied · Google</Badge>
+              <div className="font-display text-lg sm:text-xl font-bold text-foreground">Alex</div>
+            </div>
+            <div className="flex gap-3">
+              <div className="text-center">
+                <div className="font-display text-xl sm:text-2xl font-bold text-primary">12</div>
+                <div className="text-[10px] sm:text-xs text-[#9CA3AF]">Referrals sent</div>
+              </div>
+              <div className="h-10 w-px bg-[rgba(255,255,255,0.06)]" />
+              <div className="text-center">
+                <div className="font-display text-xl sm:text-2xl font-bold text-[#4ADE80]">78</div>
+                <div className="text-[10px] sm:text-xs text-[#9CA3AF]">Profile score</div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {[['12', 'Referrals sent'], ['78', 'Profile score']].map(([v, l]) => (
-                <div key={l} className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#1A2028] p-4">
-                  <div className="font-display text-xl sm:text-2xl font-bold text-primary">{v}</div>
-                  <div className="mt-1 text-xs text-[#9CA3AF]">{l}</div>
-                </div>
-              ))}
-            </div>
+          </div>
+          <div className="flex gap-2">
+            <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-[#4ADE80] hover:bg-[rgba(74,222,128,0.1)] text-[10px] sm:text-xs">Accepted · Stripe</Badge>
+            <Badge className="border border-[rgba(59,95,229,0.2)] bg-[rgba(59,95,229,0.1)] text-primary hover:bg-[rgba(59,95,229,0.1)] text-[10px] sm:text-xs">Applied · Google</Badge>
+          </div>
+          <div className="space-y-3">
             {pros.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#151A21] p-3.5">
+              <div key={p.id} className="flex items-center gap-3 rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#1A2028] p-3.5 transition-colors hover:border-[rgba(59,95,229,0.2)]">
                 <GAvatar name={p.name} gradient={p.gradient} className="h-10 w-10 text-xs" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 text-xs sm:text-[14px] font-semibold text-foreground">
@@ -102,34 +107,13 @@ function HeroMock() {
                   </div>
                   <div className="truncate text-xs text-[#9CA3AF]">{p.designation} · {p.company}</div>
                 </div>
+                <div className="flex items-center gap-2 text-[11px] text-[#9CA3AF]">
+                  <span className="flex items-center gap-0.5"><Star className="h-3 w-3 fill-[#FBBF24] text-[#FBBF24]" />{p.rating}</span>
+                  <span>{p.referralsCompleted} referrals</span>
+                </div>
                 <Button size="sm" variant="outline" className="rounded-full border-[rgba(255,255,255,0.06)] text-xs text-foreground hover:bg-[rgba(255,255,255,0.04)]" onClick={() => navigate(user ? '/dashboard' : '/login')}>{user ? 'View' : 'Request'}</Button>
               </div>
             ))}
-          </div>
-          <div className="hidden space-y-4 md:block">
-            <div className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#1A2028] p-4">
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Response rate</div>
-              <div className="mt-3 flex items-end gap-1.5">
-                {[40, 65, 45, 80, 55, 90, 70, 95, 60, 85, 75, 100].map((h, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ height: 0 }}
-                    animate={{ height: `${h * 0.9}px` }}
-                    transition={{ delay: 0.6 + i * 0.05, duration: 0.4 }}
-                    className="w-full rounded-sm bg-primary"
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#1A2028] p-4">
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">Upcoming</div>
-              {['Google · Technical R2', 'Stripe · HM Screen'].map((t, i) => (
-                <div key={t} className="mt-3 flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(59,95,229,0.1)] text-xs font-bold text-primary">{21 + i * 3}</div>
-                  <div className="text-xs font-medium text-foreground">{t}</div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>
