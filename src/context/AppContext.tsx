@@ -15,29 +15,10 @@ import {
 import { supabase, advanceReferralPipeline as dbAdvancePipeline } from '@/lib/supabase'
 import { sendReferralStatusEmail, sendReminderEmail } from '@/lib/email'
 import { notifyNewMessage, notifyReferralUpdate, requestNotificationPermission } from '@/lib/notifications'
-import {
-  fetchProfessionals,
-  fetchReferrals,
-  createReferral as dbCreateReferral,
-  updateReferralStatus as dbUpdateReferralStatus,
-  fetchConversations,
-  sendMessage as dbSendMessage,
-  fetchJobs as dbFetchJobs,
-  fetchBookmarks as dbFetchBookmarks,
-  fetchNotifications as dbFetchNotifications,
-  markNotificationRead as dbMarkRead,
-  markAllNotificationsRead as dbMarkAllRead,
-  updateUserProfile as dbUpdateUserProfile,
-  updateJobSeekerProfile as dbUpdateJobSeekerProfile,
-  updateProfessionalProfile as dbUpdateProProf,
-  updateRecruiterProfile as dbUpdateRecruiterProf,
-  toggleBookmark as dbToggleBookmark,
-  updateJob as dbUpdateJob,
-  fetchCandidates as dbFetchCandidates,
-  findOrCreateConversation as dbFindOrCreateConversation,
-  upsertProfessionalField as dbUpsertProfessionalField,
-  formatRelativeTime,
-} from '@/lib/db'
+
+async function loadDb() {
+  return await import('@/lib/db')
+}
 
 const RATE_LIMIT = 3
 const RATE_WINDOW_MS = 24 * 60 * 60 * 1000
@@ -224,7 +205,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refreshCandidates = useCallback(async () => {
     if (!user) return
     try {
-      const cands = await dbFetchCandidates(user.id)
+      const { fetchCandidates } = await loadDb()
+      const cands = await fetchCandidates(user.id)
       setCandidates(cands)
     } catch { /* ignore */ }
   }, [user])
@@ -265,6 +247,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async function loadRealData() {
       const userId = currentUser.id
       const meta = currentUser.user_metadata
+      const { fetchProfessionals, fetchReferrals, fetchConversations, fetchCandidates, fetchBookmarks, fetchNotifications, fetchJobs } = await loadDb()
 
       // Read role from users table (single query, no redundant getUser — session already valid)
       let userRole = 'job_seeker'
@@ -330,7 +313,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         fetchProfessionals(userId),
         fetchReferrals(userId),
         fetchConversations(userId, mappedRole),
-        dbFetchCandidates(userId),
+        fetchCandidates(userId),
         profilePromise,
       ])
 
@@ -341,9 +324,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Non-critical — load after first paint (deferred)
       Promise.allSettled([
-        dbFetchBookmarks(userId),
-        dbFetchNotifications(userId),
-        dbFetchJobs(),
+        fetchBookmarks(userId),
+        fetchNotifications(userId),
+        fetchJobs(),
       ]).then(([bms, notifs, jbs]) => {
         if (bms.status === 'fulfilled') setBookmarks(bms.value)
         if (notifs.status === 'fulfilled' && notifs.value.length > 0) setNotifications(notifs.value)
@@ -401,7 +384,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${currentUser.id}` },
-        (payload) => {
+        async (payload) => {
+          const { formatRelativeTime } = await loadDb()
           const row = payload.new as { id: string; type: string; title: string; description: string | null; read: boolean; created_at: string }
           setNotifications((prev) => [
             {
@@ -424,7 +408,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `sender_id=neq.${currentUser.id}` },
-        (payload) => {
+        async (payload) => {
+          const { formatRelativeTime, fetchConversations } = await loadDb()
           const msg = payload.new as { id: string; conversation_id?: string; sender_id?: string; content?: string; created_at: string; kind?: string }
           if (!msg.conversation_id || !msg.sender_id) return
 
@@ -473,7 +458,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'referrals', filter: `requester_id=eq.${currentUser.id}` },
-        (payload) => {
+        async (payload) => {
+          const { fetchReferrals } = await loadDb()
           const ref = payload.new as { status?: string; requester_id?: string; job_title?: string }
           fetchReferrals(currentUser.id).then((refs) => setRequests(refs)).catch((err) => { console.error('Failed to refresh referrals:', err); toast.error('Failed to refresh referrals') })
           // Show browser notification on status change
@@ -494,7 +480,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Re-fetch conversations when workspace role changes
   useEffect(() => {
     if (!user || !roleLoaded) return
-    fetchConversations(user.id, role).then((convs) => setConversations(convs)).catch(() => {})
+    ;(async () => {
+      const { fetchConversations } = await loadDb()
+      fetchConversations(user.id, role).then((convs) => setConversations(convs)).catch(() => {})
+    })()
   }, [user, role, roleLoaded])
 
   const referralsSentToday = useMemo(() => {
@@ -517,7 +506,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`
   }, [requestTimestamps])
 
-  const updateProfessional = useCallback((id: string, patch: Partial<Professional>) => {
+  const updateProfessional = useCallback(async (id: string, patch: Partial<Professional>) => {
+    const { updateUserProfile, updateProfessionalProfile } = await loadDb()
     // Snapshot previous state for rollback
     const prevProfessionals = professionals
     setProfessionals((prev) => {
@@ -570,7 +560,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (parts.length >= 2) { userPatch.city = parts[0]; userPatch.state = parts[1] }
       }
       if (patch.linkedinUrl !== undefined) userPatch.linkedin = patch.linkedinUrl
-      if (Object.keys(userPatch).length > 0) dbUpdateUserProfile(id, userPatch).catch((err) => {
+      if (Object.keys(userPatch).length > 0) updateUserProfile(id, userPatch).catch((err) => {
         console.error('Failed to update user profile:', err)
         setProfessionals(prevProfessionals) // Rollback
         toast.error('Failed to save changes. Please try again.')
@@ -590,7 +580,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (patch.openPositions) profilePatch.open_positions = JSON.stringify(patch.openPositions)
       if (patch.githubUrl !== undefined) profilePatch.github_url = patch.githubUrl
       if (Object.keys(profilePatch).length > 0) {
-        dbUpdateProProf(id, profilePatch).catch((err) => {
+        updateProfessionalProfile(id, profilePatch).catch((err) => {
           console.error('Failed to update professional profile:', err)
           setProfessionals(prevProfessionals) // Rollback
           toast.error('Failed to save changes. Please try again.')
@@ -600,9 +590,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user, professionals])
 
   const updateRecruiter = useCallback(async (patch: Record<string, unknown>) => {
+    const { updateRecruiterProfile } = await loadDb()
     if (user) {
       try {
-        await dbUpdateRecruiterProf(user.id, patch)
+        await updateRecruiterProfile(user.id, patch)
       } catch (err) {
         console.error('Failed to update recruiter profile:', err)
         toast.error('Something went wrong. Please try again.')
@@ -611,7 +602,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user])
 
-  const updateStudent = useCallback((patch: Partial<StudentProfile>) => {
+  const updateStudent = useCallback(async (patch: Partial<StudentProfile>) => {
+    const { updateUserProfile, updateJobSeekerProfile } = await loadDb()
     // Snapshot previous state for rollback
     const prev = studentSnapshotRef.current
     setStudent((s) => {
@@ -627,7 +619,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (parts.length >= 2) { userPatch.city = parts[0]; userPatch.state = parts[1] }
         else if (parts.length === 1) { userPatch.city = parts[0] }
       }
-      if (Object.keys(userPatch).length > 0) dbUpdateUserProfile(user.id, userPatch).catch((err) => {
+      if (Object.keys(userPatch).length > 0) updateUserProfile(user.id, userPatch).catch((err) => {
         console.error('Failed to update student profile:', err)
         setStudent(prev)
         studentSnapshotRef.current = prev
@@ -659,7 +651,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (patch.certifications !== undefined) profilePatch.certifications = JSON.stringify(patch.certifications)
       if (patch.achievements !== undefined) profilePatch.achievements = JSON.stringify(patch.achievements)
       if (patch.projects !== undefined) profilePatch.projects = JSON.stringify(patch.projects)
-      if (Object.keys(profilePatch).length > 0) dbUpdateJobSeekerProfile(user.id, profilePatch).catch((err) => {
+      if (Object.keys(profilePatch).length > 0) updateJobSeekerProfile(user.id, profilePatch).catch((err) => {
         console.error('Failed to update job seeker profile:', err)
         setStudent(prev)
         studentSnapshotRef.current = prev
@@ -668,87 +660,96 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user, student])
 
-  const addStudentCertification = useCallback((cert: string) => {
+  const addStudentCertification = useCallback(async (cert: string) => {
+    const { updateJobSeekerProfile } = await loadDb()
     const prev = studentSnapshotRef.current
     setStudent((p) => {
       const next = { ...p, certifications: [...p.certifications, cert] }
       studentSnapshotRef.current = next
       return next
     })
-    if (user) dbUpdateJobSeekerProfile(user.id, { certifications: JSON.stringify([...student.certifications, cert]) }).catch((err) => { console.error('Failed to save certification:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { certifications: JSON.stringify([...student.certifications, cert]) }).catch((err) => { console.error('Failed to save certification:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.certifications])
 
-  const addStudentAchievement = useCallback((ach: string) => {
+  const addStudentAchievement = useCallback(async (ach: string) => {
+    const { updateJobSeekerProfile } = await loadDb()
     const prev = studentSnapshotRef.current
     setStudent((p) => {
       const next = { ...p, achievements: [...p.achievements, ach] }
       studentSnapshotRef.current = next
       return next
     })
-    if (user) dbUpdateJobSeekerProfile(user.id, { achievements: JSON.stringify([...student.achievements, ach]) }).catch((err) => { console.error('Failed to save achievement:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { achievements: JSON.stringify([...student.achievements, ach]) }).catch((err) => { console.error('Failed to save achievement:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.achievements])
 
-  const addStudentProject = useCallback((proj: { name: string; desc: string; tags: string[] }) => {
+  const addStudentProject = useCallback(async (proj: { name: string; desc: string; tags: string[] }) => {
+    const { updateJobSeekerProfile } = await loadDb()
     const prev = studentSnapshotRef.current
     setStudent((p) => {
       const next = { ...p, projects: [...p.projects, proj] }
       studentSnapshotRef.current = next
       return next
     })
-    if (user) dbUpdateJobSeekerProfile(user.id, { projects: JSON.stringify([...student.projects, proj]) }).catch((err) => { console.error('Failed to save project:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { projects: JSON.stringify([...student.projects, proj]) }).catch((err) => { console.error('Failed to save project:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.projects])
 
-  const addStudentSkill = useCallback((skill: string) => {
+  const addStudentSkill = useCallback(async (skill: string) => {
+    const { updateJobSeekerProfile } = await loadDb()
     const prev = studentSnapshotRef.current
     setStudent((p) => {
       const next = { ...p, skills: [...p.skills, skill] }
       studentSnapshotRef.current = next
       return next
     })
-    if (user) dbUpdateJobSeekerProfile(user.id, { skills: [...student.skills, skill] }).catch((err) => { console.error('Failed to save skill:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { skills: [...student.skills, skill] }).catch((err) => { console.error('Failed to save skill:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.skills])
 
-  const removeStudentSkill = useCallback((skill: string) => {
+  const removeStudentSkill = useCallback(async (skill: string) => {
+    const { updateJobSeekerProfile } = await loadDb()
     const prev = studentSnapshotRef.current
     setStudent((p) => {
       const next = { ...p, skills: p.skills.filter((s) => s !== skill) }
       studentSnapshotRef.current = next
       return next
     })
-    if (user) dbUpdateJobSeekerProfile(user.id, { skills: student.skills.filter((s) => s !== skill) }).catch((err) => { console.error('Failed to remove skill:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { skills: student.skills.filter((s) => s !== skill) }).catch((err) => { console.error('Failed to remove skill:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.skills])
 
-  const removeStudentCertification = useCallback((cert: string) => {
+  const removeStudentCertification = useCallback(async (cert: string) => {
+    const { updateJobSeekerProfile } = await loadDb()
     const prev = studentSnapshotRef.current
     setStudent((p) => {
       const next = { ...p, certifications: p.certifications.filter((c) => c !== cert) }
       studentSnapshotRef.current = next
       return next
     })
-    if (user) dbUpdateJobSeekerProfile(user.id, { certifications: JSON.stringify(student.certifications.filter((c) => c !== cert)) }).catch((err) => { console.error('Failed to remove certification:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { certifications: JSON.stringify(student.certifications.filter((c) => c !== cert)) }).catch((err) => { console.error('Failed to remove certification:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.certifications])
 
-  const removeStudentAchievement = useCallback((ach: string) => {
+  const removeStudentAchievement = useCallback(async (ach: string) => {
+    const { updateJobSeekerProfile } = await loadDb()
     const prev = studentSnapshotRef.current
     setStudent((p) => {
       const next = { ...p, achievements: p.achievements.filter((a) => a !== ach) }
       studentSnapshotRef.current = next
       return next
     })
-    if (user) dbUpdateJobSeekerProfile(user.id, { achievements: JSON.stringify(student.achievements.filter((a) => a !== ach)) }).catch((err) => { console.error('Failed to remove achievement:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { achievements: JSON.stringify(student.achievements.filter((a) => a !== ach)) }).catch((err) => { console.error('Failed to remove achievement:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.achievements])
 
-  const removeStudentProject = useCallback((name: string) => {
+  const removeStudentProject = useCallback(async (name: string) => {
+    const { updateJobSeekerProfile } = await loadDb()
     const prev = studentSnapshotRef.current
     setStudent((p) => {
       const next = { ...p, projects: p.projects.filter((pr) => pr.name !== name) }
       studentSnapshotRef.current = next
       return next
     })
-    if (user) dbUpdateJobSeekerProfile(user.id, { projects: JSON.stringify(student.projects.filter((p) => p.name !== name)) }).catch((err) => { console.error('Failed to remove project:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { projects: JSON.stringify(student.projects.filter((p) => p.name !== name)) }).catch((err) => { console.error('Failed to remove project:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.projects])
 
-  const addStudentExperience = useCallback((exp: { title: string; org: string; period: string; desc: string }) => {
+  const addStudentExperience = useCallback(async (exp: { title: string; org: string; period: string; desc: string }) => {
+    const { updateJobSeekerProfile } = await loadDb()
     const prev = studentSnapshotRef.current
     setStudent((p) => {
       const next = { ...p, experience: [...p.experience, exp] }
@@ -757,11 +758,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
     if (user) {
       const updatedExp = [...student.experience, exp]
-      dbUpdateJobSeekerProfile(user.id, { experience_years: updatedExp.length, experience: JSON.stringify(updatedExp) }).catch((err) => { console.error('Failed to save experience:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+      updateJobSeekerProfile(user.id, { experience_years: updatedExp.length, experience: JSON.stringify(updatedExp) }).catch((err) => { console.error('Failed to save experience:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
     }
   }, [user, student.experience])
 
-  const removeStudentExperience = useCallback((index: number) => {
+  const removeStudentExperience = useCallback(async (index: number) => {
+    const { updateJobSeekerProfile } = await loadDb()
     const prev = studentSnapshotRef.current
     setStudent((p) => {
       const next = { ...p, experience: p.experience.filter((_, i) => i !== index) }
@@ -770,11 +772,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
     if (user) {
       const updatedExp = student.experience.filter((_, i) => i !== index)
-      dbUpdateJobSeekerProfile(user.id, { experience_years: updatedExp.length, experience: JSON.stringify(updatedExp) }).catch((err) => { console.error('Failed to save experience:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+      updateJobSeekerProfile(user.id, { experience_years: updatedExp.length, experience: JSON.stringify(updatedExp) }).catch((err) => { console.error('Failed to save experience:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
     }
   }, [user, student.experience])
 
-  const addStudentEducation = useCallback((edu: { school: string; degree: string; period: string; detail: string }) => {
+  const addStudentEducation = useCallback(async (edu: { school: string; degree: string; period: string; detail: string }) => {
+    const { updateJobSeekerProfile } = await loadDb()
     const prev = studentSnapshotRef.current
     setStudent((p) => {
       const next = { ...p, education: [...p.education, edu] }
@@ -783,11 +786,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
     if (user) {
       const next = [...student.education, edu]
-      dbUpdateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || edu.school, qualification: next[0]?.degree || edu.degree }).catch((err) => { console.error('Failed to save education:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+      updateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || edu.school, qualification: next[0]?.degree || edu.degree }).catch((err) => { console.error('Failed to save education:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
     }
   }, [user, student.education])
 
-  const removeStudentEducation = useCallback((index: number) => {
+  const removeStudentEducation = useCallback(async (index: number) => {
+    const { updateJobSeekerProfile } = await loadDb()
     const prev = studentSnapshotRef.current
     setStudent((p) => {
       const next = { ...p, education: p.education.filter((_, i) => i !== index) }
@@ -796,18 +800,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
     if (user) {
       const next = student.education.filter((_, i) => i !== index)
-      dbUpdateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || undefined, qualification: next[0]?.degree || undefined }).catch((err) => { console.error('Failed to save education:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+      updateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || undefined, qualification: next[0]?.degree || undefined }).catch((err) => { console.error('Failed to save education:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
     }
   }, [user, student.education])
 
-  const removeStudentResume = useCallback(() => {
+  const removeStudentResume = useCallback(async () => {
+    const { updateJobSeekerProfile } = await loadDb()
     setStudent((prev) => {
       const { resumeFile: _, ...rest } = prev
       return rest
     })
     if (user) {
       const resumePatch: Record<string, unknown> = { resume_url: undefined, resume_name: undefined, resume_size_bytes: undefined, resume_uploaded_at: undefined }
-      dbUpdateJobSeekerProfile(user.id, resumePatch).catch((err) => {
+      updateJobSeekerProfile(user.id, resumePatch).catch((err) => {
         console.error('Failed to remove resume from DB:', err)
         toast.error('Failed to remove resume')
       })
@@ -818,10 +823,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setStudent((prev) => ({ ...prev, resumeFile: file }))
   }, [])
 
-  const toggleBookmark = useCallback((id: string) => {
+  const toggleBookmark = useCallback(async (id: string) => {
+    const { toggleBookmark: toggleBookmarkDb } = await loadDb()
     const wasBookmarked = bookmarks.includes(id)
     setBookmarks((b) => (b.includes(id) ? b.filter((x) => x !== id) : [...b, id]))
-    if (user) dbToggleBookmark(user.id, id).catch((err) => {
+    if (user) toggleBookmarkDb(user.id, id).catch((err) => {
       console.error('Failed to toggle bookmark:', err)
       toast.error('Something went wrong. Please try again.')
       setBookmarks((b) => (wasBookmarked ? [...b, id] : b.filter((x) => x !== id)))
@@ -873,10 +879,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const toggleProfessionalOpenForReferrals = useCallback(async (value: boolean): Promise<boolean> => {
+    const { upsertProfessionalField } = await loadDb()
     if (!user) return false
     setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, openForReferrals: value } : p))
     try {
-      await dbUpsertProfessionalField(user.id, 'open_for_referrals', value)
+      await upsertProfessionalField(user.id, 'open_for_referrals', value)
       return true
     } catch (err) {
       console.error('TOGGLE PERSIST FAILED (open_for_referrals):', err)
@@ -887,10 +894,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const toggleProfessionalOpenToWork = useCallback(async (value: boolean): Promise<boolean> => {
+    const { upsertProfessionalField } = await loadDb()
     if (!user) return false
     setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, isOpenToWork: value } : p))
     try {
-      await dbUpsertProfessionalField(user.id, 'is_open_to_work', value)
+      await upsertProfessionalField(user.id, 'is_open_to_work', value)
       return true
     } catch (err) {
       console.error('TOGGLE PERSIST FAILED (professional is_open_to_work):', err)
@@ -900,11 +908,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user])
 
-  const addRequest = useCallback((r: ReferralRequest) => {
+  const addRequest = useCallback(async (r: ReferralRequest) => {
+    const { createReferral, formatRelativeTime } = await loadDb()
     setRequests((prev) => [r, ...prev])
     setRequestTimestamps((prev) => [...prev, Date.now()])
     if (user && r.professionalId) {
-      dbCreateReferral({
+      createReferral({
         requester_id: user.id,
         professional_id: r.professionalId,
         job_title: r.role,
@@ -946,7 +955,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user, student.name])
 
-  const setRequestStatus = useCallback((id: string, status: ReferralRequest['status']) => {
+  const setRequestStatus = useCallback(async (id: string, status: ReferralRequest['status']) => {
+    const { updateReferralStatus, formatRelativeTime } = await loadDb()
     // Read the current request BEFORE updating state (avoids fragile side-effect pattern)
     const req = requests.find((r) => r.id === id)
     setRequests((prev) => prev.map((r) => {
@@ -959,7 +969,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return updated
     }))
     if (req && (status === 'accepted' || status === 'rejected')) {
-      dbUpdateReferralStatus(id, status as 'accepted' | 'rejected').catch((err) => {
+      updateReferralStatus(id, status as 'accepted' | 'rejected').catch((err) => {
         console.error('Failed to update referral status:', err)
         toast.error('Something went wrong. Please try again.')
       })
@@ -1048,7 +1058,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [requests])
 
-  const sendMessage = useCallback((conversationId: string, text: string, kind: 'text' | 'file' = 'text', fileUrl?: string, fileName?: string) => {
+  const sendMessage = useCallback(async (conversationId: string, text: string, kind: 'text' | 'file' = 'text', fileUrl?: string, fileName?: string) => {
+    const { sendMessage: sendMessageDb } = await loadDb()
     const displayText = kind === 'file' && fileName ? `📎 ${fileName}` : text
     const storedContent = kind === 'file' && fileUrl
       ? JSON.stringify({ type: 'file', name: fileName || 'File', url: fileUrl })
@@ -1075,7 +1086,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     )
     // Persist to Supabase
     if (user) {
-      dbSendMessage(conversationId, user.id, text, kind, fileUrl, fileName).then((realMsg) => {
+      sendMessageDb(conversationId, user.id, text, kind, fileUrl, fileName).then((realMsg) => {
         // Replace the temporary mm- ID with the real DB UUID so the message
         // survives page refreshes and matches realtime payloads.
         if (realMsg?.id) {
@@ -1121,9 +1132,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const startConversation = useCallback(async (targetUserId: string): Promise<string | null> => {
+    const { findOrCreateConversation, fetchConversations } = await loadDb()
     if (!user) return null
     const activeRole = roleRef.current
-    const convId = await dbFindOrCreateConversation(user.id, targetUserId, activeRole)
+    const convId = await findOrCreateConversation(user.id, targetUserId, activeRole)
     if (!convId) {
       toast.error('Failed to start conversation')
       return null
@@ -1134,19 +1146,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return convId
   }, [user])
 
-  const markNotificationRead = useCallback((id: string) => {
+  const markNotificationRead = useCallback(async (id: string) => {
+    const { markNotificationRead: markNotificationReadDb } = await loadDb()
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     )
-    dbMarkRead(id).catch((err) => {
+    markNotificationReadDb(id).catch((err) => {
       console.error('Failed to mark notification read:', err)
       toast.error('Something went wrong. Please try again.')
     })
   }, [])
 
-  const markAllNotificationsRead = useCallback(() => {
+  const markAllNotificationsRead = useCallback(async () => {
+    const { markAllNotificationsRead: markAllNotificationsReadDb } = await loadDb()
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-    if (user) dbMarkAllRead(user.id).catch((err) => {
+    if (user) markAllNotificationsReadDb(user.id).catch((err) => {
       console.error('Failed to mark all notifications read:', err)
       toast.error('Something went wrong. Please try again.')
     })
@@ -1157,7 +1171,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [notifications]
   )
 
-  const updateJob = useCallback((id: string, patch: Partial<Job>) => {
+  const updateJob = useCallback(async (id: string, patch: Partial<Job>) => {
+    const { updateJob: updateJobDb } = await loadDb()
     setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, ...patch } : j)))
     const dbPatch: Record<string, unknown> = {}
     if (patch.title) dbPatch.title = patch.title
@@ -1167,7 +1182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const stageMap: Record<string, string> = { Active: 'active', Paused: 'paused', Draft: 'draft' }
       dbPatch.stage = stageMap[patch.stage] ?? patch.stage
     }
-    if (Object.keys(dbPatch).length > 0) dbUpdateJob(id, dbPatch).catch((err) => {
+    if (Object.keys(dbPatch).length > 0) updateJobDb(id, dbPatch).catch((err) => {
       console.error('Failed to update job:', err)
       toast.error('Something went wrong. Please try again.')
     })
