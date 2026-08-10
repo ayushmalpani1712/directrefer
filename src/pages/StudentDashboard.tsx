@@ -17,7 +17,7 @@ import { useAuth } from '@/context/AuthContext'
 import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
 import { EmptyChart } from '@/components/analytics/EmptyChart'
 import { useFilteredStudentWeekly, hasData } from '@/hooks/useAnalytics'
-import { ROLE_ROUTE, getRoleFromPath } from '@/data/mock'
+import { ROLE_ROUTE, getRoleFromPath, profileUrl } from '@/data/mock'
 
 const RATE_LIMIT = 3
 
@@ -202,7 +202,7 @@ export default function StudentDashboard() {
                       const p = professionals.find((x) => x.id === r.professionalId)
                       if (!p) return null
                       return (
-                        <Link to={`/professionals/${p.id}`} key={r.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/15 hover:bg-card">
+                        <Link to={profileUrl('professional', p.id, p.slug)} key={r.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/15 hover:bg-card">
                           <GAvatar name={p.name} gradient={p.gradient} className="h-9 w-9 text-[10px]" />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ export default function StudentDashboard() {
               <div className="grid flex-1 gap-4 sm:grid-cols-3">
                 {recommended.map((p) => (
                   <div key={p.id} className="h-full">
-                    <Link to={`/professionals/${p.id}`} className="block h-full">
+                    <Link to={profileUrl('professional', p.id, p.slug)} className="block h-full">
                       <Card className="group h-full cursor-pointer transition-all duration-200 hover:border-primary/15 hover:bg-card">
                         <CardContent className="flex h-full flex-col p-5 text-center">
                           <div className="flex justify-center">
@@ -334,7 +334,7 @@ export default function StudentDashboard() {
                 <CardContent className="pt-0">
                   <div className="space-y-2">
                     {saved.slice(0, 4).map((p) => (
-                      <Link to={`/professionals/${p.id}`} key={p.id} className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/15">
+                      <Link to={profileUrl('professional', p.id, p.slug)} key={p.id} className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/15">
                         <GAvatar name={p.name} gradient={p.gradient} className="h-8 w-8 text-[10px]" />
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-sm font-medium text-foreground">{p.name}</div>

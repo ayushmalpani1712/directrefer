@@ -14,11 +14,11 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { GRADIENTS, getMessagesPath } from '@/data/mock'
+import { GRADIENTS, profileUrl, getMessagesPath } from '@/data/mock'
 import NotFound from '@/pages/NotFound'
 
 interface PublicJobSeeker {
-  id: string; name: string; headline: string; location: string
+  id: string; slug?: string; name: string; headline: string; location: string
   openToWork: boolean; gradient: string; skills: string[]
   experienceYears: number; preferredRole: string
   experience: { title: string; org: string; period: string; desc: string }[]
@@ -28,8 +28,15 @@ interface PublicJobSeeker {
   links: { linkedin: string; github: string; website: string }
 }
 
+async function resolveUserId(paramId: string): Promise<string | null> {
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (UUID_RE.test(paramId)) return paramId
+  const { data } = await supabase.from('users').select('id').eq('slug', paramId).single()
+  return data?.id ?? null
+}
+
 export default function JobSeekerPublic() {
-  const { id } = useParams()
+  const { id: paramId } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const { addRequest, visibleProfessionals: professionals, startConversation, role } = useApp()
@@ -38,21 +45,23 @@ export default function JobSeekerPublic() {
   const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
-    if (!id) return
+    if (!paramId) return
     const fetchSeeker = async () => {
       setLoadingData(true)
       try {
+        const userId = await resolveUserId(paramId)
+        if (!userId) { setLoadingData(false); return }
         const { data: profileData } = await supabase
           .from('profiles_job_seeker')
           .select('*')
-          .eq('user_id', id)
+          .eq('user_id', userId)
           .single()
         if (!profileData) { setLoadingData(false); return }
 
         const { data: userData } = await supabase
           .from('users')
-          .select('full_name, city, state, country')
-          .eq('id', id)
+          .select('full_name, city, state, country, slug')
+          .eq('id', userId)
           .single()
 
         const safeJson = <T,>(val: unknown): T[] => {
@@ -64,10 +73,11 @@ export default function JobSeekerPublic() {
         const city = userData?.city ?? ''
         const state = userData?.state ?? ''
         const locationParts = [city, state].filter(Boolean)
-        const gradientIndex = id ? id.charCodeAt(0) % GRADIENTS.length : 0
+        const gradientIndex = userId ? userId.charCodeAt(0) % GRADIENTS.length : 0
 
         setSeeker({
-          id,
+          id: userId,
+          slug: userData?.slug || undefined,
           name: userData?.full_name || 'Job Seeker',
           headline: profileData.headline || profileData.preferred_role || 'Job Seeker',
           location: locationParts.join(', ') || 'Remote',

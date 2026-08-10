@@ -104,7 +104,7 @@ export async function fetchProfessionals(currentUserId?: string): Promise<Profes
 
     const usersRes = await supabase
       .from('users')
-      .select('id, full_name, email, mobile, city, state, country, verified, created_at, linkedin')
+      .select('id, full_name, email, mobile, city, state, country, verified, created_at, linkedin, slug')
       .in('id', userIds)
 
     if (usersRes.error || !usersRes.data) return []
@@ -148,6 +148,7 @@ export async function fetchProfessionals(currentUserId?: string): Promise<Profes
 
       return {
         id: row.id,
+        slug: row.slug || undefined,
         name: row.full_name,
         designation: profile?.job_title ?? '',
         company: profile?.company_name ?? '',
@@ -1413,6 +1414,7 @@ export async function fetchReportsWithUsers(): Promise<ReportWithUsers[]> {
 // ── Admin: Users with Profiles ────────────────────────────────
 
 export interface AdminUserFull extends AdminUser {
+  slug?: string
   company_name: string | null
   job_title: string | null
   status: string
@@ -1423,7 +1425,7 @@ export async function fetchAllUsersFull(): Promise<AdminUserFull[]> {
   try {
     const { data: users, error } = await supabase
       .from('users')
-      .select('id, full_name, email, role, created_at, status')
+      .select('id, full_name, email, role, created_at, status, slug')
       .order('created_at', { ascending: false })
     if (error || !users) return []
 
@@ -1456,6 +1458,7 @@ export async function fetchAllUsersFull(): Promise<AdminUserFull[]> {
       }
       return {
         id: u.id,
+        slug: u.slug || undefined,
         name: u.full_name || 'Unknown',
         email: u.email || '',
         role: roleMap[u.role] || u.role,

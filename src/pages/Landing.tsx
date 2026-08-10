@@ -12,6 +12,7 @@ import { GAvatar } from '@/components/ui-kit'
 import { Logo } from '@/components/layout'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
+import { profileUrl } from '@/data/mock'
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -309,7 +310,7 @@ export default function Landing() {
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {professionals.slice(0, 4).map((p, i) => (
               <motion.div key={p.id} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.08 }}>
-                <Link to={`/professionals/${p.id}`}>
+                <Link to={profileUrl('professional', p.id, p.slug)}>
                   <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
                     <CardContent className="p-5">
                       <div className="flex items-center gap-3">

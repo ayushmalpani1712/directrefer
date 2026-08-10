@@ -12,11 +12,11 @@ import { Chip, CompanyChip, ReportDialog, Stars } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { getMessagesPath } from '@/data/mock'
+import { profileUrl, getMessagesPath } from '@/data/mock'
 import NotFound from '@/pages/NotFound'
 
 interface RecruiterData {
-  user: { id: string; full_name: string; email: string; avatar_url?: string; linkedin?: string }
+  user: { id: string; slug?: string; full_name: string; email: string; avatar_url?: string; linkedin?: string }
   company_name: string
   hiring_department: string
   company_size: string
@@ -26,8 +26,15 @@ interface RecruiterData {
   office_locations: string[]
 }
 
+async function resolveUserId(paramId: string): Promise<string | null> {
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (UUID_RE.test(paramId)) return paramId
+  const { data } = await supabase.from('users').select('id').eq('slug', paramId).single()
+  return data?.id ?? null
+}
+
 export default function RecruiterPublic() {
-  const { id } = useParams()
+  const { id: paramId } = useParams()
   const navigate = useNavigate()
   const loading = usePageLoading(400)
   const { jobs, startConversation, role } = useApp()
@@ -35,14 +42,16 @@ export default function RecruiterPublic() {
   const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
-    if (!id) return
+    if (!paramId) return
     const load = async () => {
       setLoadingData(true)
       try {
+        const userId = await resolveUserId(paramId)
+        if (!userId) { setLoadingData(false); return }
         const { data: profile } = await supabase
           .from('profiles_recruiter')
           .select('*')
-          .eq('user_id', id)
+          .eq('user_id', userId)
           .single()
         if (!profile) {
           setLoadingData(false)
@@ -50,8 +59,8 @@ export default function RecruiterPublic() {
         }
         const { data: userData } = await supabase
           .from('users')
-          .select('*')
-          .eq('id', id)
+          .select('*, slug')
+          .eq('id', userId)
           .single()
         if (!userData) {
           setLoadingData(false)

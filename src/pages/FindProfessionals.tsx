@@ -14,7 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { SkeletonGrid } from '@/components/ui/skeleton'
 import { EmptyState, GAvatar } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
-import { type Professional } from '@/data/mock'
+import { type Professional, profileUrl } from '@/data/mock'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { cn } from '@/lib/utils'
 
@@ -44,7 +44,7 @@ export function ProfessionalCard({ p, index }: { p: Professional; index: number 
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25, delay: Math.min(index * 0.04, 0.2) }}
     >
-      <Link to={`/professionals/${p.id}`} className="group flex h-full flex-col rounded-2xl border border-border bg-card p-5 transition-shadow hover:shadow-md hover:border-primary/20">
+      <Link to={profileUrl('professional', p.id, p.slug)} className="group flex h-full flex-col rounded-2xl border border-border bg-card p-5 transition-shadow hover:shadow-md hover:border-primary/20">
         {/* Top row: Avatar + Bookmark */}
         <div className="flex items-start justify-between">
           <GAvatar name={p.name} gradient={p.gradient} className="h-12 w-12 text-sm" />

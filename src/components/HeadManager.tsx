@@ -42,12 +42,20 @@ export function HeadManager() {
     }
 
     const companyId = companyMatch[1]
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const resolvedId = UUID_RE.test(companyId) ? companyId : null
     const fetchCompany = async () => {
       try {
+        let userId = resolvedId
+        if (!userId) {
+          const { data: slugUser } = await supabase.from('users').select('id').eq('slug', companyId).single()
+          userId = slugUser?.id
+        }
+        if (!userId) return
         const { data: profile } = await supabase
           .from('profiles_recruiter')
           .select('company_name, company_description, hiring_department, company_size')
-          .eq('user_id', companyId)
+          .eq('user_id', userId)
           .single()
 
         if (profile) {
@@ -71,7 +79,8 @@ export function HeadManager() {
   const dynamicMeta = (() => {
     const proMatch = pathname.match(/^\/professionals\/(.+)$/)
     if (proMatch) {
-      const pro = visibleProfessionals.find((p) => p.id === proMatch[1])
+      const param = proMatch[1]
+      const pro = visibleProfessionals.find((p) => p.id === param || p.slug === param)
       if (pro) return { title: `${pro.name} — ${pro.designation} at ${pro.company}`, description: `${pro.name} is a verified ${pro.designation} at ${pro.company} with ${pro.yearsExp}+ years of experience. Request a referral, view skills, and connect on Direct Refer.` }
     }
     const companyMatch = pathname.match(/^\/company\/(.+)$/)

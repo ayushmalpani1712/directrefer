@@ -10,7 +10,7 @@ import { LinkedInShareButton } from '@/components/LinkedInShareButton'
 import { ReferralIllustration } from '@/components/illustrations'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { type ReferralStatus, PIPELINE_STAGES, type PipelineStage, getMessagesPath } from '@/data/mock'
+import { type ReferralStatus, PIPELINE_STAGES, type PipelineStage, getMessagesPath, profileUrl } from '@/data/mock'
 import { cn } from '@/lib/utils'
 import { exportReferralsCSV } from '@/lib/export'
 import { toast } from 'sonner'
@@ -180,7 +180,7 @@ export default function MyReferrals() {
                 <Card className="shadow-soft transition-colors hover:border-primary/20">
                   <CardContent className="p-5">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                      <Link to={`/professionals/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3.5 group">
+                      <Link to={profileUrl('professional', p.id, p.slug)} className="flex min-w-0 flex-1 items-center gap-3.5 group">
                         <GAvatar name={p.name} gradient={p.gradient} className="h-12 w-12 text-sm" />
                         <div className="min-w-0">
                           <div className="truncate text-sm font-semibold group-hover:text-primary transition-colors">{r.role}</div>

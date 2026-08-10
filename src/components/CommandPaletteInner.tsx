@@ -9,7 +9,7 @@ import { useApp } from '@/context/AppContext'
 // Re-declare navFor here to avoid circular imports — it's a pure function of role
 // Actually, we import it from layout which is already loaded
 // We need to avoid importing the whole layout module, so let's inline the nav items
-import { ROLE_ROUTE, getMessagesPath, type Role } from '@/data/mock'
+import { ROLE_ROUTE, getMessagesPath, profileUrl, type Role } from '@/data/mock'
 
 interface NavItem { label: string; icon: typeof Search; href: string }
 interface NavGroup { group: string; items: NavItem[] }
@@ -88,7 +88,7 @@ export default function CommandPaletteInner() {
         <CommandSeparator />
         <CommandGroup>
           {visibleProfessionals.slice(0, 6).map((p) => (
-            <CommandItem key={p.id} onSelect={() => go(`/professionals/${p.id}`)}>
+            <CommandItem key={p.id} onSelect={() => go(profileUrl('professional', p.id, p.slug))}>
               <Search className="mr-2 h-4 w-4" /> {p.name} <span className="ml-2 text-xs text-muted-foreground">{p.designation} · {p.company}</span>
             </CommandItem>
           ))}

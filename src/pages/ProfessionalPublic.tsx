@@ -15,11 +15,11 @@ import { CompanyChip, GAvatar, ReportDialog } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { getMessagesPath } from '@/data/mock'
+import { profileUrl, getMessagesPath } from '@/data/mock'
 import NotFound from '@/pages/NotFound'
 
 interface PublicProfessional {
-  id: string; name: string; designation: string; company: string; location: string
+  id: string; slug?: string; name: string; designation: string; company: string; location: string
   yearsExp: number; verified: boolean; gradient: string; bio: string; skills: string[]
   openPositions: string[]; openForReferrals: boolean; maxPerMonth: number
   usedThisMonth: number; referralDuration: string; avgReplyHours: number
@@ -27,8 +27,15 @@ interface PublicProfessional {
   email: string; phone: string; whatsapp: string
 }
 
+async function resolveUserId(paramId: string): Promise<string | null> {
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (UUID_RE.test(paramId)) return paramId
+  const { data } = await supabase.from('users').select('id').eq('slug', paramId).single()
+  return data?.id ?? null
+}
+
 export default function ProfessionalPublic() {
-  const { id } = useParams()
+  const { id: paramId } = useParams()
   const navigate = useNavigate()
   const app = useApp()
   const { bookmarks, toggleBookmark, requests, student } = app ?? {}
@@ -37,26 +44,29 @@ export default function ProfessionalPublic() {
   const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
-    if (!id) return
+    if (!paramId) return
     const fetchPro = async () => {
       setLoadingData(true)
       try {
+        const userId = await resolveUserId(paramId)
+        if (!userId) { setLoadingData(false); return }
         const { data } = await supabase
           .from('profiles_professional')
           .select('*')
-          .eq('user_id', id)
+          .eq('user_id', userId)
           .single()
         if (!data) { setLoadingData(false); return }
         const { data: userData } = await supabase
           .from('users')
-          .select('full_name, email, city, state, country, linkedin')
-          .eq('id', id)
+          .select('full_name, email, city, state, country, linkedin, slug')
+          .eq('id', userId)
           .single()
         const locationParts = [userData?.city, userData?.state].filter(Boolean).join(', ')
         const GRADIENTS = ['from-[#3B5FE5] to-[#8B8FD4]', 'from-[#4F7CFF] to-[#7C5CFF]', 'from-[#6366F1] to-[#8B5CF6]', 'from-[#0EA5E9] to-[#6366F1]']
-        const gradientIndex = id ? id.charCodeAt(0) % GRADIENTS.length : 0
+        const gradientIndex = userId ? userId.charCodeAt(0) % GRADIENTS.length : 0
         setPro({
-          id,
+          id: userId,
+          slug: userData?.slug || undefined,
           name: userData?.full_name || 'Professional',
           designation: data.job_title || 'Professional',
           company: data.company_name || 'Company',

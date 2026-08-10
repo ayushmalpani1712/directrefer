@@ -42,6 +42,7 @@ export function getRoleFromPath(pathname: string): Role {
 
 export interface Professional {
   id: string
+  slug?: string
   name: string
   designation: string
   company: string
@@ -151,6 +152,13 @@ export interface AppNotification {
 
 export function initials(name: string) {
   return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+}
+
+export function profileUrl(role: string, id: string, slug?: string): string {
+  const identifier = slug || id
+  if (role === 'professional') return `/professionals/${identifier}`
+  if (role === 'recruiter') return `/company/${identifier}`
+  return `/job-seekers/${identifier}`
 }
 
 
