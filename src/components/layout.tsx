@@ -61,7 +61,6 @@ function navFor(role: Role, unread: number, pendingCount: number, prefix: string
       items: [
         { label: 'Dashboard', href: '/admin/overview', icon: LayoutDashboard },
         { label: 'Workspaces', href: '/admin/workspaces', icon: Users },
-        { label: 'Messages', href: getMessagesPath('admin'), icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
         { label: 'Settings', href: '/admin/settings', icon: Settings },
       ],
     })
@@ -111,7 +110,6 @@ function navFor(role: Role, unread: number, pendingCount: number, prefix: string
   common.push({
     group: 'Network',
     items: [
-      { label: 'Messages', href: getMessagesPath(role), icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
       { label: 'Notifications', href: `${prefix}/notifications`, icon: Bell },
       ...(role === 'student' ? [{ label: 'Bookmarks', href: `${prefix}/bookmarks`, icon: Bookmark }] : []),
       { label: 'Activity', href: `${prefix}/activity`, icon: Activity },
@@ -488,7 +486,6 @@ function Topbar() {
       <div className="flex-1 sm:hidden" />
       <div className="ml-auto flex items-center gap-0">
         <ThemeToggle />
-        <MessagesMenu />
         <NotificationsMenu />
         <Separator orientation="vertical" className="mx-1 hidden h-5 sm:mx-2 sm:block" />
         <WorkspaceSwitcher />
