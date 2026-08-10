@@ -29,8 +29,7 @@ export default function CookiePolicy() {
             <p>Direct Refer uses cookies sparingly and only for essential purposes:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li><strong>Authentication Cookies:</strong> Keep you signed in and maintain your session. These are strictly necessary for the Service to function.</li>
-              <li><strong>Preference Cookies:</strong> Store your theme (dark/light mode), sidebar state, and workspace preferences.</li>
-              <li><strong>Security Cookies:</strong> Help protect against cross-site request forgery (CSRF) and other attacks.</li>
+              <li><strong>Preference Cookies:</strong> Store your sidebar open/collapsed state. These are optional and only set after you accept via the cookie consent banner.</li>
             </ul>
           </section>
 
@@ -57,7 +56,10 @@ export default function CookiePolicy() {
           <section className="space-y-3">
             <h2 className="text-lg font-semibold text-foreground">5. Managing Cookies</h2>
             <p>
-              You can control cookies through your browser settings. Disabling essential cookies may prevent the Service from functioning properly (e.g., you may not be able to stay signed in).
+              On your first visit, a cookie consent banner will appear at the bottom of the page. You can accept or reject preference cookies. Your choice is stored locally in your browser and respected on future visits.
+            </p>
+            <p>
+              You can also control cookies through your browser settings. Disabling essential cookies may prevent the Service from functioning properly (e.g., you may not be able to stay signed in).
             </p>
             <p>
               Most browsers allow you to:
@@ -71,14 +73,21 @@ export default function CookiePolicy() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-foreground">6. Changes to This Policy</h2>
+            <h2 className="text-lg font-semibold text-foreground">6. Local Storage</h2>
+            <p>
+              In addition to cookies, Direct Refer uses browser local storage to save your theme preference, notification settings, form drafts, and onboarding state. Local storage is not transmitted over the network and is stored entirely on your device.
+            </p>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold text-foreground">7. Changes to This Policy</h2>
             <p>
               We may update this Cookie Policy from time to time. Changes will be posted on this page with an updated revision date.
             </p>
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-foreground">7. Contact</h2>
+            <h2 className="text-lg font-semibold text-foreground">8. Contact</h2>
             <p>
               Questions about our cookie usage? Contact us at <a href="mailto:hello@directrefer.in" className="text-primary hover:underline">hello@directrefer.in</a>.
             </p>

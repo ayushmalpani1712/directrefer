@@ -12,6 +12,7 @@ import { ROLE_ROUTE, ROLE_MESSAGES_ROUTE, getRoleFromPath, type Role } from '@/d
 const AppShell = lazy(() => import('@/components/layout'))
 const OnboardingOverlay = lazy(() => import('@/components/OnboardingOverlay').then(m => ({ default: m.OnboardingOverlay })))
 const NPSSurveyModal = lazy(() => import('@/components/NPSSurveyModal').then(m => ({ default: m.NPSSurveyModal })))
+const CookieConsentBanner = lazy(() => import('@/components/CookieConsentBanner').then(m => ({ default: m.CookieConsentBanner })))
 
 const Landing = lazy(() => import('@/pages/Landing'))
 const Login = lazy(() => import('@/pages/Login'))
@@ -287,6 +288,7 @@ export default function App() {
             </ErrorBoundary>
             <Toaster richColors position="bottom-right" />
             <NPSModal />
+            <Suspense fallback={null}><CookieConsentBanner /></Suspense>
           </AppProvider>
         </AuthProvider>
       </TooltipProvider>
