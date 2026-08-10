@@ -1333,7 +1333,7 @@ export async function fetchAnnouncements(): Promise<Announcement[]> {
   try {
     const { data, error } = await supabase
       .from('announcements')
-      .select('id, title, body, type, active, created_by, created_at, expires_at, target_role')
+      .select('*')
       .order('created_at', { ascending: false })
     if (error || !data) return []
     return data as Announcement[]
