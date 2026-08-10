@@ -53,7 +53,7 @@ export function Logo({ compact }: { compact?: boolean }) {
 // ── Nav config ──────────────────────────────────────────────
 interface NavItem { label: string; href: string; icon: LucideIcon; badge?: string }
 
-function navFor(role: Role, unread: number, pendingCount: number, prefix: string): { group: string; items: NavItem[] }[] {
+function navFor(role: Role, pendingCount: number, prefix: string): { group: string; items: NavItem[] }[] {
   const common: { group: string; items: NavItem[] }[] = []
   if (role === 'admin') {
     common.push({
@@ -121,14 +121,13 @@ function navFor(role: Role, unread: number, pendingCount: number, prefix: string
 
 // ── Sidebar ─────────────────────────────────────────────────
 function AppSidebar() {
-  const { role, student, conversations, requests } = useApp()
+  const { role, student, requests } = useApp()
   const { state, setOpenMobile } = useSidebar()
   const { pathname } = useLocation()
-  const unread = conversations.reduce((a, c) => a + c.unread, 0)
   const pendingCount = requests.filter((r) => r.status === 'pending').length
   const urlRole = getRoleFromPath(pathname) || role
   const prefix = ROLE_ROUTE[urlRole]
-  const groups = navFor(urlRole, unread, pendingCount, prefix)
+  const groups = navFor(urlRole, pendingCount, prefix)
   const user = student
 
   useEffect(() => { setOpenMobile(false) }, [setOpenMobile])
@@ -305,54 +304,6 @@ function NotificationsMenu() {
         <Separator />
         <Button variant="ghost" className="w-full rounded-none text-sm text-primary" onClick={() => navigate(`${prefix}/notifications`)}>
           View all notifications
-        </Button>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-// ── Messages menu ───────────────────────────────────────────
-function MessagesMenu() {
-  const navigate = useNavigate()
-  const { conversations } = useApp()
-  const { pathname } = useLocation()
-  const urlRole = getRoleFromPath(pathname) || 'student'
-  const unread = conversations.reduce((a, c) => a + c.unread, 0)
-  const messagesPath = getMessagesPath(urlRole)
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-full">
-          <MessageSquare className="h-4.5 w-4.5" />
-          {unread > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={0} className="w-[360px] max-w-[calc(100vw-2rem)] p-0">
-        <div className="px-4 py-3">
-          <DropdownMenuLabel className="p-0 text-sm font-semibold">Messages</DropdownMenuLabel>
-        </div>
-        <Separator />
-        {conversations.slice(0, 4).map((c) => (
-          <DropdownMenuItem key={c.id} className="flex cursor-pointer items-center gap-3 px-4 py-3" onClick={() => navigate(`${messagesPath}?conversation=${c.id}`)}>
-            <div className="relative">
-              <GAvatar name={c.name} gradient={c.gradient} className="h-9 w-9 text-xs" />
-              {c.online && <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-popover bg-emerald-500" />}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <span className="truncate text-sm font-medium">{c.name}</span>
-                <span className="text-[11px] text-muted-foreground">{c.time}</span>
-              </div>
-              <p className="truncate text-xs text-muted-foreground">{c.lastMessage}</p>
-            </div>
-            {c.unread > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">{c.unread}</span>
-            )}
-          </DropdownMenuItem>
-        ))}
-        <Separator />
-        <Button variant="ghost" className="w-full rounded-none text-sm text-primary" onClick={() => navigate(messagesPath)}>
-          Open messages
         </Button>
       </DropdownMenuContent>
     </DropdownMenu>
