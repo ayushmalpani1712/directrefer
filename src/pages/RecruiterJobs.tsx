@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { ListSkeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
+import { profileUrl } from '@/data/mock'
 
 const STAGE_COLORS: Record<string, string> = {
   Applied: 'border-t-slate-400',
@@ -106,7 +107,7 @@ export function BrowseJobsView() {
                 <CardContent className="flex flex-col p-5">
                   <div className="flex items-start gap-3">
                     {j.recruiterId ? (
-                      <Link to={`/company/${j.recruiterId}`}>
+                      <Link to={profileUrl('recruiter', j.recruiterId ?? '', j.recruiterSlug)}>
                         <CompanyChip name={recruiterNames[j.recruiterId ?? ''] ?? 'Co'} className="h-10 w-10 rounded-xl text-xs hover:ring-2 hover:ring-primary/30 transition-all" />
                       </Link>
                     ) : (

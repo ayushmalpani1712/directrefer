@@ -132,6 +132,7 @@ export interface Job {
   postedDaysAgo: number
   pipeline: { stage: string; count: number }[]
   recruiterId?: string
+  recruiterSlug?: string
 }
 
 export interface Message { id: string; from: 'me' | 'them'; text: string; time: string; read: boolean; kind?: 'text' | 'file' }
@@ -140,6 +141,7 @@ export interface Conversation {
   unread: number; pinned: boolean; online: boolean; gradient: string; messages: Message[]
   otherUserId?: string
   otherUserRole?: string
+  otherUserSlug?: string
 }
 
 export type NotificationType = 'accepted' | 'rejected' | 'message' | 'view' | 'reminder' | 'system'

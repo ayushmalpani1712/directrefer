@@ -16,7 +16,7 @@ import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/
 import { EmptyChart } from '@/components/analytics/EmptyChart'
 import { useFilteredProMonthly, useFilteredProResponseTime, hasData } from '@/hooks/useAnalytics'
 import type { Professional } from '@/data/mock'
-import { getMessagesPath, ROLE_ROUTE, getRoleFromPath } from '@/data/mock'
+import { getMessagesPath, ROLE_ROUTE, getRoleFromPath, profileUrl } from '@/data/mock'
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color?: string }>; label?: string }) {
   if (!active || !payload?.length) return null
@@ -201,7 +201,7 @@ export default function ProfessionalDashboard() {
             </CardHeader>
             <CardContent className="space-y-3 pt-2">
               {candidates.filter((c) => c.source === 'Open to work' && c.id !== user?.id).slice(0, 4).map((c) => (
-                <div key={c.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/20 cursor-pointer" onClick={() => navigate(`/job-seekers/${c.id}`)}>
+                <div key={c.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/20 cursor-pointer" onClick={() => navigate(profileUrl('job-seeker', c.id, c.slug))}>
                   <GAvatar name={c.name} gradient={c.gradient} className="h-9 w-9 text-xs" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[14px] font-semibold text-foreground">{c.name}</div>

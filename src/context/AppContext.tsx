@@ -81,6 +81,7 @@ export interface StudentProfile {
 
 export interface Candidate {
   id: string
+  slug?: string
   name: string
   role: string
   company: string
@@ -218,7 +219,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
-  const [candidates, setCandidates] = useState<{ id: string; name: string; role: string; company: string; stage: string; rating: number; source: string; gradient: string; skills: string[]; location: string; exp: number }[]>([])
+  const [candidates, setCandidates] = useState<{ id: string; slug?: string; name: string; role: string; company: string; stage: string; rating: number; source: string; gradient: string; skills: string[]; location: string; exp: number }[]>([])
 
   const refreshCandidates = useCallback(async () => {
     if (!user) return

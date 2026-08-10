@@ -15,7 +15,7 @@ import { useAuth } from '@/context/AuthContext'
 import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
 import { EmptyChart } from '@/components/analytics/EmptyChart'
 import { useFilteredRecruiterWeekly, hasData } from '@/hooks/useAnalytics'
-import { ROLE_ROUTE, getRoleFromPath } from '@/data/mock'
+import { ROLE_ROUTE, getRoleFromPath, profileUrl } from '@/data/mock'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
@@ -200,7 +200,7 @@ export default function RecruiterDashboard() {
         </CardHeader>
         <CardContent className="space-y-3 pt-2">
           {candidates.filter((c) => c.source === 'Open to work' && c.id !== user?.id).slice(0, 4).map((c) => (
-            <Link to={`/job-seekers/${c.id}`} key={c.id} onClick={(e) => e.stopPropagation()} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/20">
+            <Link to={profileUrl('job-seeker', c.id, c.slug)} key={c.id} onClick={(e) => e.stopPropagation()} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/20">
               <GAvatar name={c.name} gradient={c.gradient} className="h-9 w-9 text-xs" />
               <div className="min-w-0 flex-1">
                 <div className="text-[14px] font-semibold text-foreground">{c.name}</div>
@@ -311,7 +311,7 @@ export default function RecruiterDashboard() {
             </CardHeader>
             <CardContent className="space-y-2.5 pt-2">
               {saved.map((c) => (
-                <Link to={`/job-seekers/${c.id}`} key={c.id} className="flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted/20">
+                <Link to={profileUrl('job-seeker', c.id, c.slug)} key={c.id} className="flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted/20">
                   <GAvatar name={c.name} gradient={c.gradient} className="h-8 w-8 text-[10px]" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[14px] font-medium text-foreground">{c.name}</div>

@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils'
 import { MessagesSkeleton } from '@/components/ui/skeleton'
 import ResumePreview from '@/components/ResumePreview'
 import { supabase } from '@/lib/supabase'
-import { getRoleFromPath, type Role, type Conversation } from '@/data/mock'
+import { getRoleFromPath, profileUrl, type Role, type Conversation } from '@/data/mock'
 import { fetchConversations } from '@/lib/db'
 
 interface FileInfo {
@@ -63,11 +63,9 @@ function getFileColor(name: string): string {
   return 'text-primary bg-primary/10'
 }
 
-function getProfilePath(role?: string, userId?: string): string | null {
+function getProfilePath(role?: string, userId?: string, slug?: string): string | null {
   if (!userId) return null
-  if (role === 'professional') return `/professionals/${userId}`
-  if (role === 'recruiter') return `/company/${userId}`
-  return `/job-seekers/${userId}`
+  return profileUrl(role ?? '', userId, slug)
 }
 
 function linkify(text: string): (string | React.JSX.Element)[] {
@@ -319,7 +317,7 @@ export default function Messages() {
     }
   }
 
-  const profilePath = getProfilePath(active?.otherUserRole, active?.otherUserId)
+  const profilePath = getProfilePath(active?.otherUserRole, active?.otherUserId, active?.otherUserSlug)
 
   return (
     <div className="flex h-full min-h-[400px] overflow-hidden rounded-2xl border border-border bg-card">

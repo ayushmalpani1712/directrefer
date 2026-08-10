@@ -324,8 +324,8 @@ export async function fetchConversations(userId: string, roleContext?: string): 
         user_b_id,
         role_context,
         updated_at,
-        user_a:users!conversations_user_a_id_fkey(id, full_name, avatar_url, role),
-        user_b:users!conversations_user_b_id_fkey(id, full_name, avatar_url, role)
+        user_a:users!conversations_user_a_id_fkey(id, full_name, avatar_url, role, slug),
+        user_b:users!conversations_user_b_id_fkey(id, full_name, avatar_url, role, slug)
       `)
       .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`)
       .order('updated_at', { ascending: false })
@@ -358,8 +358,8 @@ export async function fetchConversations(userId: string, roleContext?: string): 
     const conversations: Conversation[] = []
 
     for (const conv of convRows) {
-      const userA = Array.isArray(conv.user_a) ? conv.user_a[0] : conv.user_a as { id: string; full_name: string; avatar_url: string | null; role: string } | null
-      const userB = Array.isArray(conv.user_b) ? conv.user_b[0] : conv.user_b as { id: string; full_name: string; avatar_url: string | null; role: string } | null
+      const userA = Array.isArray(conv.user_a) ? conv.user_a[0] : conv.user_a as { id: string; full_name: string; avatar_url: string | null; role: string; slug?: string | null } | null
+      const userB = Array.isArray(conv.user_b) ? conv.user_b[0] : conv.user_b as { id: string; full_name: string; avatar_url: string | null; role: string; slug?: string | null } | null
 
       const otherUser = userA?.id === userId ? userB : userA
       if (!otherUser) continue
@@ -403,6 +403,7 @@ export async function fetchConversations(userId: string, roleContext?: string): 
         messages,
         otherUserId: otherUser.id,
         otherUserRole: otherUser.role,
+        otherUserSlug: otherUser.slug ?? undefined,
       })
     }
 
@@ -511,6 +512,13 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
 
     if (error || !data) return []
 
+    const recruiterIds = [...new Set(data.map((r) => r.recruiter_id).filter(Boolean))]
+    const { data: recruiterUsers } = recruiterIds.length > 0
+      ? await supabase.from('users').select('id, slug, full_name').in('id', recruiterIds)
+      : { data: [] }
+    const recruiterSlugMap = new Map<string, { slug?: string | null; full_name?: string | null }>()
+    for (const u of (recruiterUsers ?? [])) recruiterSlugMap.set(u.id, u)
+
     // Fetch pipeline counts for all jobs
     const jobIds = data.map((r) => r.id)
     const { data: pipelineRows } = await supabase
@@ -528,6 +536,7 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
 
     return data.map((row) => {
       const counts = pipelineByJob.get(row.id) ?? {}
+      const rUser = row.recruiter_id ? recruiterSlugMap.get(row.recruiter_id) : undefined
       return {
         id: row.id,
         title: row.title,
@@ -546,6 +555,7 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
         postedDaysAgo: daysSince(row.posted_at),
         pipeline: Object.entries(counts).map(([stage, count]) => ({ stage, count })),
         recruiterId: row.recruiter_id,
+        recruiterSlug: rUser?.slug ?? undefined,
       }
     })
   } catch (err) {
@@ -657,6 +667,7 @@ export async function markAllNotificationsRead(userId: string): Promise<boolean>
 export async function fetchCandidates(_userId?: string): Promise<
   {
     id: string
+    slug?: string
     name: string
     role: string
     company: string
@@ -686,7 +697,7 @@ export async function fetchCandidates(_userId?: string): Promise<
     const { data: openSeekers } = openSeekersResult
 
     const referralCandidates: {
-      id: string; name: string; role: string; company: string; stage: string;
+      id: string; slug?: string; name: string; role: string; company: string; stage: string;
       rating: number; source: string; gradient: string; skills: string[];
       location: string; exp: number
     }[] = []
@@ -715,7 +726,7 @@ export async function fetchCandidates(_userId?: string): Promise<
     // Wave 2: all lookups in parallel (no dependency between them)
     const [usersRes, seekerProfilesRes, profProfilesRes] = await Promise.all([
       allUserIds.size > 0
-        ? supabase.from('users').select('id, full_name, city, state, country').in('id', [...allUserIds])
+        ? supabase.from('users').select('id, full_name, city, state, country, slug').in('id', [...allUserIds])
         : Promise.resolve({ data: [] }),
       requesterIds.size > 0
         ? supabase.from('profiles_job_seeker').select('user_id, skills, experience_years, preferred_role').in('user_id', [...requesterIds])
@@ -725,7 +736,7 @@ export async function fetchCandidates(_userId?: string): Promise<
         : Promise.resolve({ data: [] }),
     ])
 
-    const userMap = new Map<string, { id: string; full_name: string; city: string | null; state: string | null; country: string | null }>()
+    const userMap = new Map<string, { id: string; full_name: string; city: string | null; state: string | null; country: string | null; slug?: string | null }>()
     for (const u of usersRes.data ?? []) userMap.set(u.id, u)
 
     const seekerMap = new Map<string, { user_id: string; skills: string[]; experience_years: number; preferred_role: string | null }>()
@@ -749,6 +760,7 @@ export async function fetchCandidates(_userId?: string): Promise<
 
         referralCandidates.push({
           id: row.id,
+          slug: requester?.slug ?? undefined,
           name: requester?.full_name ?? '',
           role: seekerProfile?.preferred_role ?? row.job_title,
           company: profCompany?.company_name ?? '',
@@ -778,6 +790,7 @@ export async function fetchCandidates(_userId?: string): Promise<
         if (!u || !u.full_name) continue
         openToWorkCandidates.push({
           id: sp.user_id,
+          slug: u.slug ?? undefined,
           name: u.full_name ?? '',
           role: sp.preferred_role ?? sp.headline ?? 'Job Seeker',
           company: '',

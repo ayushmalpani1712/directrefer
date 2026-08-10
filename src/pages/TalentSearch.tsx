@@ -12,7 +12,7 @@ import { Chip, EmptyState, GAvatar, SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
-import { getMessagesPath } from '@/data/mock'
+import { getMessagesPath, profileUrl } from '@/data/mock'
 
 export default function TalentSearch() {
   const loading = usePageLoading(400)
@@ -79,7 +79,7 @@ export default function TalentSearch() {
               const saved = savedCandidates.includes(c.id)
               return (
                 <motion.div key={c.id} layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ delay: Math.min(i * 0.04, 0.3) }}>
-                  <Card className="shadow-soft h-full cursor-pointer transition-all duration-200 hover:border-primary/15" onClick={() => navigate(`/job-seekers/${c.id}`)}>
+                  <Card className="shadow-soft h-full cursor-pointer transition-all duration-200 hover:border-primary/15" onClick={() => navigate(profileUrl('job-seeker', c.id, c.slug))}>
                     <CardContent className="p-5">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
