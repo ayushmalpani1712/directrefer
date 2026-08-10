@@ -68,32 +68,7 @@
   <body>
     <noscript>You need to enable JavaScript to run Direct Refer.</noscript>
     <div id="root" style="overflow-x: hidden;"></div>
-    <script>
-      // Force-unregister stale service workers and clear old caches
-      (function() {
-        var SW_VERSION = 'directrefer-v5';
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(function(regs) {
-            var needsReload = false;
-            regs.forEach(function(r) {
-              // Unregister any SW whose script URL doesn't match current or is stale
-              r.unregister();
-              needsReload = true;
-            });
-            // Clear old cache versions
-            if ('caches' in window) {
-              caches.keys().then(function(names) {
-                names.forEach(function(n) {
-                  if (n !== 'directrefer-assets-v2') {
-                    caches.delete(n);
-                  }
-                });
-              });
-            }
-          });
-        }
-      })();
-    </script>
+    <script src="/sw-cleanup.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
