@@ -15,7 +15,7 @@
     --secondary: 262 83% 71%;
     --secondary-foreground: 0 0% 100%;
     --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted-foreground: 220 9% 40%;
     --accent: 262 83% 71%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
@@ -207,4 +207,28 @@
   body {
     padding-bottom: env(safe-area-inset-bottom);
   }
+}
+
+/* Lightweight fade-in animation (replaces framer-motion for static pages) */
+.fade-in-hidden {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.fade-in-hidden.fade-in-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hero entrance animations (no JS needed) */
+@keyframes hero-fade-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hero-anim-1 { animation: hero-fade-in 0.5s ease-out 0s both; }
+.hero-anim-2 { animation: hero-fade-in 0.5s ease-out 0.08s both; }
+.hero-anim-3 { animation: hero-fade-in 0.5s ease-out 0.16s both; }
+.hero-anim-4 { animation: hero-fade-in 0.5s ease-out 0.24s both; }
+.hero-mock-anim {
+  animation: hero-fade-in 0.7s ease-out 0.25s both;
 }

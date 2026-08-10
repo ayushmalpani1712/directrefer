@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { motion } from 'framer-motion'
 import {
   ArrowRight, BarChart3, Bookmark, Briefcase, CheckCircle2, ChevronRight, Command,
   FileText, GraduationCap, Linkedin, Mail, Menu, MessageSquare, Moon, Send, ShieldCheck, Sparkles, Star, TrendingUp, Users, X, Zap,
@@ -10,16 +9,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { GAvatar } from '@/components/ui-kit'
 import { Logo } from '@/components/layout'
+import { FadeIn } from '@/components/FadeIn'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { profileUrl } from '@/data/mock'
-
-const fadeUp = {
-  initial: { opacity: 0, y: 24 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-80px' },
-  transition: { duration: 0.55, ease: 'easeOut' as const },
-}
 
 const ROLES = [
   {
@@ -60,12 +53,7 @@ function HeroMock() {
   const navigate = useNavigate()
   const pros = visibleProfessionals.slice(0, 3)
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
-      className="relative mx-auto mt-16 max-w-4xl px-0 sm:px-4"
-    >
+    <div className="hero-mock-anim relative mx-auto mt-16 max-w-4xl px-0 sm:px-4">
       <div className="absolute -inset-x-4 sm:-inset-x-8 -top-10 bottom-0 -z-10 rounded-[2rem] bg-primary opacity-[0.03]" />
       <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#151A21]">
         <div className="flex items-center gap-2 border-b border-[rgba(255,255,255,0.04)] bg-[rgba(255,255,255,0.02)] px-4 py-2.5">
@@ -118,7 +106,7 @@ function HeroMock() {
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
@@ -178,37 +166,29 @@ export default function Landing() {
         )}
       </header>
 
+      <main id="main-content">
       {/* Hero */}
       <section className="relative overflow-hidden px-4 pb-14 pt-12 sm:px-6 sm:pb-24 sm:pt-20 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div className="hero-anim-1">
             <Badge variant="outline" className="gap-1.5 rounded-full border-[rgba(59,95,229,0.3)] bg-[rgba(59,95,229,0.08)] px-3 py-1 text-xs font-medium text-primary">
               <Sparkles className="h-3 w-3" /> Referrals, reimagined
             </Badge>
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.08 }}
-            className="font-display mt-6 text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-4xl lg:text-6xl"
-          >
+          </div>
+          <h1 className="hero-anim-2 font-display mt-6 text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-4xl lg:text-6xl">
             Get referred.<br />Get <span className="text-gradient">hired.</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.16 }}
-            className="mx-auto mt-5 max-w-xl text-base sm:text-lg text-muted-foreground"
-          >
+          </h1>
+          <p className="hero-anim-3 mx-auto mt-5 max-w-xl text-base sm:text-lg text-muted-foreground">
             Direct Refer connects job seekers with verified professionals who can refer them at top companies — and gives recruiters a warmer pipeline.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.24 }}
-            className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
-          >
+          </p>
+          <div className="hero-anim-4 mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button size="lg" className="rounded-full bg-primary px-6 sm:px-7 shadow-glow text-sm sm:text-base" asChild>
               <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : 'Start free'} <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
             <Button size="lg" variant="outline" className="rounded-full px-6 sm:px-7 text-sm sm:text-base" onClick={() => scrollTo('network')}>
               Explore the network <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
-          </motion.div>
+          </div>
         </div>
         <HeroMock />
       </section>
@@ -216,10 +196,10 @@ export default function Landing() {
       {/* Why referrals */}
       <section className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <motion.div {...fadeUp} className="mx-auto max-w-2xl text-center">
+          <FadeIn className="mx-auto max-w-2xl text-center">
             <h2 className="font-display text-2xl sm:text-[30px] lg:text-[34px] font-bold tracking-tight">Why referrals change everything</h2>
             <p className="mt-3 text-muted-foreground">The data is clear — referred candidates win.</p>
-          </motion.div>
+          </FadeIn>
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { icon: TrendingUp, stat: '13×', label: 'More likely to be hired than job board applicants', color: 'text-[#4ADE80]' },
@@ -227,7 +207,7 @@ export default function Landing() {
               { icon: Users, stat: '46%', label: 'Higher retention rate after one year of employment', color: 'text-amber-500' },
               { icon: BarChart3, stat: '2.6×', label: 'Higher offer acceptance rate for referred candidates', color: 'text-rose-500' },
             ].map((item, i) => (
-              <motion.div key={item.label} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.08 }}>
+              <FadeIn key={item.label} delay={i * 0.08}>
                 <div className="rounded-xl border border-border bg-card p-6 text-center shadow-soft transition-all duration-200 hover:border-primary/15">
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(59,95,229,0.08)]">
                     <item.icon className={`h-5 w-5 ${item.color}`} />
@@ -235,7 +215,7 @@ export default function Landing() {
                   <div className="mt-4 font-display text-2xl sm:text-3xl font-extrabold text-foreground">{item.stat}</div>
                   <p className="mt-2 text-xs sm:text-[13px] leading-relaxed text-muted-foreground">{item.label}</p>
                 </div>
-              </motion.div>
+              </FadeIn>
             ))}
           </div>
           <p className="mt-6 text-center text-xs text-muted-foreground/60">Sources: Jobvite, Employee Referrals Benchmark Report, SHRM</p>
@@ -245,13 +225,13 @@ export default function Landing() {
       {/* Roles */}
       <section id="roles" className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <motion.div {...fadeUp} className="mx-auto max-w-2xl text-center">
+          <FadeIn className="mx-auto max-w-2xl text-center">
             <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">One platform, three superpowers</h2>
             <p className="mt-3 text-muted-foreground">Every role gets its own dashboard, navigation and workflow — purpose-built, not one-size-fits-all.</p>
-          </motion.div>
+          </FadeIn>
           <div className="mt-12 grid gap-5 md:grid-cols-3">
             {ROLES.map((r, i) => (
-              <motion.div key={r.title} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.1 }}>
+              <FadeIn key={r.title} delay={i * 0.1}>
                 <Card className="h-full shadow-soft transition-all duration-200 hover:border-primary/15">
                   <CardContent className="p-6">
                     <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[rgba(59,95,229,0.08)] text-primary">
@@ -268,7 +248,7 @@ export default function Landing() {
                     </ul>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -277,19 +257,19 @@ export default function Landing() {
       {/* Features */}
       <section id="features" className="border-t border-border/50 bg-muted/5 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <motion.div {...fadeUp} className="mx-auto max-w-2xl text-center">
+          <FadeIn className="mx-auto max-w-2xl text-center">
             <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">Designed like the tools you love</h2>
             <p className="mt-3 text-muted-foreground">The polish of Linear, the warmth of Airbnb, the speed of Vercel — applied to your career.</p>
-          </motion.div>
+          </FadeIn>
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f, i) => (
-              <motion.div key={f.title} {...fadeUp} transition={{ ...fadeUp.transition, delay: (i % 3) * 0.08 }}>
+              <FadeIn key={f.title} delay={(i % 3) * 0.08}>
                 <div className="h-full rounded-xl border border-[rgba(255,255,255,0.06)] bg-card p-5 shadow-soft transition-all duration-200 hover:border-primary/15">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgba(59,95,229,0.08)] text-primary"><f.icon className="h-4.5 w-4.5" /></div>
                   <h3 className="mt-3.5 text-sm sm:text-base font-semibold text-foreground">{f.title}</h3>
                   <p className="mt-1 text-xs sm:text-[14px] text-muted-foreground">{f.desc}</p>
                 </div>
-              </motion.div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -298,7 +278,7 @@ export default function Landing() {
       {/* Network */}
       <section id="network" className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <motion.div {...fadeUp} className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+          <FadeIn className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">A network that opens doors</h2>
               <p className="mt-3 max-w-xl text-muted-foreground">Verified professionals from the companies you actually want to work at.</p>
@@ -306,10 +286,10 @@ export default function Landing() {
             <Button variant="outline" className="rounded-full" asChild>
               <Link to={user ? '/dashboard' : '/login'}>Browse all professionals <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
             </Button>
-          </motion.div>
+          </FadeIn>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {professionals.slice(0, 4).map((p, i) => (
-              <motion.div key={p.id} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.08 }}>
+              <FadeIn key={p.id} delay={i * 0.08}>
                 <Link to={profileUrl('professional', p.id, p.slug)}>
                   <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
                     <CardContent className="p-5">
@@ -328,7 +308,7 @@ export default function Landing() {
                     </CardContent>
                   </Card>
                 </Link>
-              </motion.div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -337,24 +317,24 @@ export default function Landing() {
       {/* How it works */}
       <section className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <motion.div {...fadeUp} className="mx-auto max-w-2xl text-center">
+          <FadeIn className="mx-auto max-w-2xl text-center">
             <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">How it works</h2>
             <p className="mt-3 text-muted-foreground">Three simple steps to your next referral.</p>
-          </motion.div>
+          </FadeIn>
           <div className="mt-12 grid gap-8 sm:grid-cols-3">
             {[
               { step: '1', title: 'Find a professional', desc: 'Browse verified professionals from your target companies.', icon: Users },
               { step: '2', title: 'Send a request', desc: 'Write a personalized note and attach your resume.', icon: Send },
               { step: '3', title: 'Track & get hired', desc: 'Follow your referral through every stage of the pipeline.', icon: TrendingUp },
             ].map((s, i) => (
-              <motion.div key={s.step} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.12 }} className="text-center">
+              <FadeIn key={s.step} delay={i * 0.12} className="text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-glow">
                   <s.icon className="h-6 w-6" />
                 </div>
                 <div className="mt-4 text-xs font-bold uppercase tracking-widest text-primary">Step {s.step}</div>
                 <h3 className="mt-2 text-base sm:text-[18px] font-semibold text-foreground">{s.title}</h3>
                 <p className="mt-2 text-xs sm:text-[14px] text-muted-foreground">{s.desc}</p>
-              </motion.div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -363,10 +343,10 @@ export default function Landing() {
       {/* FAQ */}
       <section className="border-t border-border/50 bg-muted/5 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-3xl">
-          <motion.div {...fadeUp} className="text-center">
+          <FadeIn className="text-center">
             <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">Frequently asked questions</h2>
             <p className="mt-3 text-muted-foreground">Everything you need to know about Direct Refer.</p>
-          </motion.div>
+          </FadeIn>
           <div className="mt-12 space-y-4">
             {[
               { q: 'Is Direct Refer free for job seekers?', a: 'Yes. Creating an account, browsing professionals, and sending referral requests are completely free. You only pay if you choose a premium plan for advanced features.' },
@@ -375,12 +355,12 @@ export default function Landing() {
               { q: 'Can recruiters use the platform too?', a: 'Absolutely. Recruiters get a dedicated workspace to post jobs, search referral-warmed talent, manage a hiring pipeline, and track funnel analytics — all in one place.' },
               { q: 'How is this different from LinkedIn?', a: 'Direct Refer focuses specifically on the referral workflow. Instead of cold-applying, you connect with verified insiders who can refer you directly — dramatically improving your chances of landing an interview.' },
             ].map((item, i) => (
-              <motion.div key={item.q} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.06 }}>
+              <FadeIn key={item.q} delay={i * 0.06}>
                 <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
                   <h3 className="text-sm sm:text-[15px] font-semibold text-foreground">{item.q}</h3>
                   <p className="mt-2 text-xs sm:text-[14px] leading-relaxed text-muted-foreground">{item.a}</p>
                 </div>
-              </motion.div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -389,7 +369,7 @@ export default function Landing() {
       {/* Founder Note */}
       <section className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-3xl">
-          <motion.div {...fadeUp}>
+          <FadeIn>
             <div className="rounded-2xl border border-border bg-card p-6 sm:p-10 shadow-soft">
               <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left">
                 <div className="shrink-0">
@@ -414,14 +394,14 @@ export default function Landing() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </FadeIn>
         </div>
       </section>
 
       {/* CTA */}
       <section className="relative overflow-hidden border-t border-border/50 px-4 py-14 text-center sm:px-6 sm:py-20 lg:px-8">
         <div className="absolute left-1/2 top-1/2 -z-10 h-[380px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary opacity-[0.04]" />
-        <motion.div {...fadeUp}>
+        <FadeIn>
           <h2 className="font-display text-2xl sm:text-3xl lg:text-5xl font-bold tracking-tight text-foreground">Your next role is one<br /><span className="text-primary">referral away</span></h2>
           <p className="mx-auto mt-4 max-w-md text-muted-foreground">Join professionals and job seekers on Direct Refer.</p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
@@ -432,8 +412,10 @@ export default function Landing() {
               <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : "I'm a professional — join now"}</Link>
             </Button>
           </div>
-        </motion.div>
+        </FadeIn>
       </section>
+
+      </main>
 
       {/* Footer */}
       <footer className="border-t border-border/50 px-4 py-8 sm:px-6 sm:py-10 lg:px-8" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
@@ -455,7 +437,7 @@ export default function Landing() {
 
             {/* Product */}
             <div className="flex flex-col items-center gap-2 sm:items-start">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Product</h4>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Product</p>
               <button onClick={() => scrollTo('features')} className="text-sm text-muted-foreground hover:text-foreground">Features</button>
               <button onClick={() => scrollTo('network')} className="text-sm text-muted-foreground hover:text-foreground">Network</button>
               <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground">About</Link>
@@ -464,7 +446,7 @@ export default function Landing() {
 
             {/* Legal */}
             <div className="flex flex-col items-center gap-2 sm:items-start">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Legal</h4>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Legal</p>
               <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground">Privacy Policy</Link>
               <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground">Terms of Service</Link>
               <Link to="/cookies" className="text-sm text-muted-foreground hover:text-foreground">Cookie Policy</Link>
@@ -472,7 +454,7 @@ export default function Landing() {
 
             {/* Account */}
             <div className="flex flex-col items-center gap-2 sm:items-start">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Account</h4>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Account</p>
               {user ? (
                 <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">Dashboard</Link>
               ) : (

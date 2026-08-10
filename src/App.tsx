@@ -5,12 +5,13 @@ import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { AppProvider, useApp } from '@/context/AppContext'
-import AppShell from '@/components/layout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { HeadManager } from '@/components/HeadManager'
-import { OnboardingOverlay } from '@/components/OnboardingOverlay'
-import { NPSSurveyModal } from '@/components/NPSSurveyModal'
 import { ROLE_ROUTE, ROLE_MESSAGES_ROUTE, getRoleFromPath, type Role } from '@/data/mock'
+
+const AppShell = lazy(() => import('@/components/layout'))
+const OnboardingOverlay = lazy(() => import('@/components/OnboardingOverlay').then(m => ({ default: m.OnboardingOverlay })))
+const NPSSurveyModal = lazy(() => import('@/components/NPSSurveyModal').then(m => ({ default: m.NPSSurveyModal })))
 
 const Landing = lazy(() => import('@/pages/Landing'))
 const Login = lazy(() => import('@/pages/Login'))
@@ -170,7 +171,7 @@ function RecoveryHandler() {
 function NPSModal() {
   const { npsOpen, setNpsOpen } = useApp()
   const { user } = useAuth()
-  return <NPSSurveyModal open={npsOpen} onOpenChange={setNpsOpen} userId={user?.id} />
+  return <Suspense fallback={null}><NPSSurveyModal open={npsOpen} onOpenChange={setNpsOpen} userId={user?.id} /></Suspense>
 }
 
 export default function App() {
@@ -181,7 +182,7 @@ export default function App() {
           <AppProvider>
             <ErrorBoundary>
               <HeadManager />
-              <OnboardingOverlay />
+              <Suspense fallback={null}><OnboardingOverlay /></Suspense>
               <RecoveryHandler />
               <LazyErrorBoundary>
               <Routes>
@@ -207,7 +208,7 @@ export default function App() {
                 <Route path="/company/:id" element={<RecruiterPublic />} />
 
                 {/* ── Protected routes (auth + layout) ── */}
-                <Route element={<RequireAuth><AppShell /></RequireAuth>}>
+                <Route element={<RequireAuth><Suspense fallback={<div className="flex min-h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}><AppShell /></Suspense></RequireAuth>}>
                   <Route path="/dashboard" element={<DashboardRedirect />} />
 
                   {/* ── Job Seeker routes ── */}
