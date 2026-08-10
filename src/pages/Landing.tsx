@@ -95,8 +95,8 @@ function HeroMock() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-[#4ADE80] hover:bg-[rgba(74,222,128,0.1)] text-[10px] sm:text-xs">Accepted · Stripe</Badge>
-            <Badge className="border border-[rgba(59,95,229,0.2)] bg-[rgba(59,95,229,0.1)] text-primary hover:bg-[rgba(59,95,229,0.1)] text-[10px] sm:text-xs">Applied · Google</Badge>
+            <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-[#4ADE80] hover:bg-[rgba(74,222,128,0.1)] text-[10px] sm:text-xs">Accepted · Flipkart</Badge>
+            <Badge className="border border-[rgba(59,95,229,0.2)] bg-[rgba(59,95,229,0.1)] text-primary hover:bg-[rgba(59,95,229,0.1)] text-[10px] sm:text-xs">Applied · Razorpay</Badge>
           </div>
           <div className="space-y-3">
             {pros.map((p) => (
