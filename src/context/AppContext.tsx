@@ -157,7 +157,7 @@ interface AppState {
   setJobs: React.Dispatch<React.SetStateAction<Job[]>>
   updateJob: (id: string, patch: Partial<Job>) => void
 
-  candidates: { id: string; name: string; role: string; company: string; stage: string; rating: number; source: string; gradient: string; skills: string[]; location: string; exp: number }[]
+  candidates: { id: string; slug?: string; name: string; role: string; company: string; stage: string; rating: number; source: string; gradient: string; skills: string[]; location: string; exp: number }[]
   refreshCandidates: () => Promise<void>
 
   myReferralCount: number
