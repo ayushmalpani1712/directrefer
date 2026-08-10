@@ -31,7 +31,6 @@ import {
   ROLE_META,
   ROLE_ROUTE,
   getRoleFromPath,
-  getMessagesPath,
   type Role,
 } from '@/data/mock'
 import { cn } from '@/lib/utils'
