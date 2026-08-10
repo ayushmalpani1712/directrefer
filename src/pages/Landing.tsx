@@ -68,7 +68,7 @@ function HeroMock() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-[#9CA3AF]">Good morning,</div>
-              <div className="font-display text-lg sm:text-xl font-bold text-foreground">Alex</div>
+              <div className="font-display text-lg sm:text-xl font-bold text-white">Alex</div>
             </div>
             <div className="flex gap-3">
               <div className="text-center">
@@ -91,7 +91,7 @@ function HeroMock() {
               <div key={p.id} className="flex items-center gap-3 rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#1A2028] p-3.5 transition-colors hover:border-[rgba(59,95,229,0.2)]">
                 <GAvatar name={p.name} gradient={p.gradient} className="h-10 w-10 text-xs" />
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 text-xs sm:text-[14px] font-semibold text-foreground">
+                  <div className="flex items-center gap-1.5 text-xs sm:text-[14px] font-semibold text-white">
                     {p.name} <ShieldCheck className="h-3.5 w-3.5 text-[#4ADE80]" />
                   </div>
                   <div className="truncate text-xs text-[#9CA3AF]">{p.designation} · {p.company}</div>
@@ -100,7 +100,7 @@ function HeroMock() {
                   <span className="flex items-center gap-0.5"><Star className="h-3 w-3 fill-[#FBBF24] text-[#FBBF24]" />{p.rating}</span>
                   <span>{p.referralsCompleted} referrals</span>
                 </div>
-                <Button size="sm" variant="outline" className="rounded-full border-[rgba(255,255,255,0.06)] text-xs text-foreground hover:bg-[rgba(255,255,255,0.04)]" onClick={() => navigate(user ? '/dashboard' : '/login')}>{user ? 'View' : 'Request'}</Button>
+                <Button size="sm" variant="outline" className="rounded-full border-[rgba(255,255,255,0.06)] text-xs text-white hover:bg-[rgba(255,255,255,0.04)]" onClick={() => navigate(user ? '/dashboard' : '/login')}>{user ? 'View' : 'Request'}</Button>
               </div>
             ))}
           </div>
