@@ -12,7 +12,7 @@ import { Chip, CompanyChip, ReportDialog, Stars } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { profileUrl, getMessagesPath } from '@/data/mock'
+import { getMessagesPath } from '@/data/mock'
 import NotFound from '@/pages/NotFound'
 
 interface RecruiterData {
@@ -82,7 +82,7 @@ export default function RecruiterPublic() {
       setLoadingData(false)
     }
     load()
-  }, [id])
+  }, [paramId])
 
   if (loading || loadingData) {
     return (
@@ -97,7 +97,7 @@ export default function RecruiterPublic() {
   if (!recruiter) return <NotFound />
 
   const c = recruiter
-  const activeJobs = jobs.filter((j) => j.stage === 'Active' && j.recruiterId === id)
+  const activeJobs = jobs.filter((j) => j.stage === 'Active' && j.recruiterId === recruiter?.user.id)
 
   return (
     <div className="space-y-6">
@@ -135,12 +135,12 @@ export default function RecruiterPublic() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" className="rounded-full" onClick={async () => {
-                  const convId = await startConversation(id ?? '')
+                  const convId = await startConversation(recruiter?.user.id ?? '')
                   if (convId) navigate(`${getMessagesPath(role)}?conversation=${convId}`)
                 }}>
                   <Send className="mr-1.5 h-4 w-4" /> Contact Recruiter
                 </Button>
-                <ReportDialog targetUserId={id ?? ''} targetUserName={c.company_name} />
+                <ReportDialog targetUserId={recruiter?.user.id ?? ''} targetUserName={c.company_name} />
               </div>
             </div>
           </CardContent>
@@ -169,7 +169,7 @@ export default function RecruiterPublic() {
                     <div className="text-sm font-semibold">{j.title}</div>
                     <div className="mt-0.5 text-xs text-muted-foreground">{j.location} &middot; {j.type} &middot; {j.salary}</div>
                   </div>
-                  <Link to={`/job-seeker/request-referral/${id}`}>
+                  <Link to={`/job-seeker/request-referral/${recruiter?.user.id}`}>
                     <Button size="sm" variant="outline" className="rounded-full text-xs">
                       <Send className="mr-1 h-3 w-3" /> Get Referral
                     </Button>

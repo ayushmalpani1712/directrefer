@@ -15,7 +15,7 @@ import { CompanyChip, GAvatar, ReportDialog } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { profileUrl, getMessagesPath } from '@/data/mock'
+import { getMessagesPath } from '@/data/mock'
 import NotFound from '@/pages/NotFound'
 
 interface PublicProfessional {
@@ -96,7 +96,7 @@ export default function ProfessionalPublic() {
       setLoadingData(false)
     }
     fetchPro()
-  }, [id])
+  }, [paramId])
 
   if (loading || loadingData) {
     return (

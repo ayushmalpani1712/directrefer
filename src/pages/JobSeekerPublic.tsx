@@ -14,7 +14,7 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { GRADIENTS, profileUrl, getMessagesPath } from '@/data/mock'
+import { GRADIENTS, getMessagesPath } from '@/data/mock'
 import NotFound from '@/pages/NotFound'
 
 interface PublicJobSeeker {
@@ -103,7 +103,7 @@ export default function JobSeekerPublic() {
       setLoadingData(false)
     }
     fetchSeeker()
-  }, [id])
+  }, [paramId])
 
   if (loading || loadingData) {
     return (
