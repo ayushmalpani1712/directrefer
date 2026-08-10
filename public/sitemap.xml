@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Main pages -->
   <url>
     <loc>https://www.directrefer.in/</loc>
     <lastmod>2026-08-10</lastmod>
@@ -9,33 +8,31 @@
   </url>
   <url>
     <loc>https://www.directrefer.in/login</loc>
-    <lastmod>2026-08-10</lastmod>
+    <lastmod>2026-08-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.directrefer.in/help</loc>
-    <lastmod>2026-08-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-
-  <!-- Legal & informational pages -->
-  <url>
     <loc>https://www.directrefer.in/about</loc>
-    <lastmod>2026-08-10</lastmod>
+    <lastmod>2026-08-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.directrefer.in/help</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.directrefer.in/privacy</loc>
-    <lastmod>2026-08-10</lastmod>
+    <lastmod>2026-08-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.directrefer.in/terms</loc>
-    <lastmod>2026-08-10</lastmod>
+    <lastmod>2026-08-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -47,9 +44,8 @@
   </url>
   <url>
     <loc>https://www.directrefer.in/contact</loc>
-    <lastmod>2026-08-10</lastmod>
+    <lastmod>2026-08-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
-
 </urlset>
