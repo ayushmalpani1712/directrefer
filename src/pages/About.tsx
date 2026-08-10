@@ -93,7 +93,7 @@ export default function About() {
             <div>
               <p className="font-semibold text-foreground">Ayush Malpani</p>
               <p className="text-sm text-muted-foreground">Founder & Developer</p>
-              <a href="https://linkedin.com/in/ayushmalpani" target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-sm text-primary hover:underline">
+              <a href="https://linkedin.com/in/direct-refer" target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-sm text-primary hover:underline">
                 <Linkedin className="h-3.5 w-3.5" /> LinkedIn
               </a>
             </div>

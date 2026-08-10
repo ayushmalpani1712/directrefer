@@ -525,7 +525,7 @@ export default function AppShell() {
             <Link to="/cookies" className="hover:text-foreground transition-colors">Cookies</Link>
             <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
             <span className="hidden sm:inline">·</span>
-            <a href="https://linkedin.com/in/ayushmalpani" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">Ayush Malpani</a>
+            <a href="https://linkedin.com/in/direct-refer" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">LinkedIn</a>
           </div>
         </footer>
         <FAB />

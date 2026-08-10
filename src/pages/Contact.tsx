@@ -34,9 +34,9 @@ export default function Contact() {
             </div>
             <h3 className="font-semibold text-foreground">LinkedIn</h3>
             <p className="text-sm text-muted-foreground">Connect with our founder for partnerships and press.</p>
-            <a href="https://linkedin.com/in/ayushmalpani" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
-              Ayush Malpani
-            </a>
+              <a href="https://linkedin.com/in/direct-refer" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+                Direct Refer
+              </a>
           </div>
 
           <div className="rounded-xl border border-border p-6 space-y-3">

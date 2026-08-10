@@ -404,7 +404,7 @@ export default function Landing() {
                     I built Direct Refer because I was tired of cold-applying into the void. Referrals changed my career trajectory — and I want to make that accessible to everyone. This platform exists to help job seekers connect with verified insiders who can open doors.
                   </p>
                   <div className="mt-4 flex items-center justify-center gap-3 sm:justify-start">
-                    <a href="https://linkedin.com/in/ayushmalpani" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground">
+                    <a href="https://linkedin.com/in/direct-refer" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground">
                       <Linkedin className="h-4 w-4" /> LinkedIn
                     </a>
                     <a href="mailto:hello@directrefer.in" className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground">
@@ -444,7 +444,7 @@ export default function Landing() {
               <Logo />
               <p className="max-w-xs text-center text-xs text-muted-foreground sm:text-left">The referral platform that connects job seekers with verified professionals.</p>
               <div className="flex items-center gap-3">
-                <a href="https://linkedin.com/in/ayushmalpani" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground" aria-label="LinkedIn">
+                <a href="https://linkedin.com/in/direct-refer" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground" aria-label="LinkedIn">
                   <Linkedin className="h-4 w-4" />
                 </a>
                 <a href="mailto:hello@directrefer.in" className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground" aria-label="Email">
