@@ -199,6 +199,7 @@ export default function App() {
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/help" element={<Help />} />
 
                 {/* ── Public profile pages (accessible by anyone) ── */}
                 <Route path="/job-seekers/:id" element={<JobSeekerPublic />} />
@@ -274,7 +275,6 @@ export default function App() {
                   <Route path="/job-seeker/settings" element={<Settings />} />
                   <Route path="/professional/settings" element={<Settings />} />
                   <Route path="/recruiter/settings" element={<Settings />} />
-                  <Route path="/help" element={<Help />} />
                   <Route path="/job-seeker/help" element={<Help />} />
                   <Route path="/professional/help" element={<Help />} />
                   <Route path="/recruiter/help" element={<Help />} />
