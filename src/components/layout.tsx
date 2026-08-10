@@ -60,7 +60,7 @@ function navFor(role: Role, unread: number, pendingCount: number, prefix: string
       group: 'Admin',
       items: [
         { label: 'Dashboard', href: '/admin/overview', icon: LayoutDashboard },
-        { label: 'Workspaces', href: '/admin/workspaces', icon: Users },
+        { label: 'Workspaces', href: '/admin/users', icon: Users },
         { label: 'Messages', href: getMessagesPath('admin'), icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
         { label: 'Settings', href: '/admin/settings', icon: Settings },
       ],
@@ -419,7 +419,7 @@ function FAB() {
     if (urlRole === 'admin') {
       return [
         { icon: BarChart3, label: 'Dashboard', run: () => navigate('/admin/overview') },
-        { icon: Users, label: 'Manage workspaces', run: () => navigate('/admin/workspaces') },
+        { icon: Users, label: 'Manage workspaces', run: () => navigate('/admin/users') },
         { icon: MessageSquare, label: 'Messages', run: () => navigate('/admin/messages') },
         { icon: Settings, label: 'Settings', run: () => navigate('/admin/settings') },
       ]
