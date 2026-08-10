@@ -349,8 +349,7 @@ export default function Landing() {
           </FadeIn>
           <div className="mt-12 space-y-4">
             {[
-              { q: 'Is Direct Refer free for job seekers?', a: 'Yes. Creating an account, browsing professionals, and sending referral requests are completely free. You only pay if you choose a premium plan for advanced features.' },
-              { q: 'How are professionals verified?', a: 'Professionals verify their identity and employment through LinkedIn and company email confirmation. Verified badges indicate confirmed employment at their listed company.' },
+              { q: 'Is Direct Refer free for job seekers?', a: 'Yes. Creating an account, browsing professionals, and sending referral requests are completely free.' },
               { q: 'What happens after I send a referral request?', a: 'The professional receives your request with your note and resume. They can accept, decline, or message you back. You get real-time updates as your referral moves through the pipeline.' },
               { q: 'Can recruiters use the platform too?', a: 'Absolutely. Recruiters get a dedicated workspace to post jobs, search referral-warmed talent, manage a hiring pipeline, and track funnel analytics — all in one place.' },
               { q: 'How is this different from LinkedIn?', a: 'Direct Refer focuses specifically on the referral workflow. Instead of cold-applying, you connect with verified insiders who can refer you directly — dramatically improving your chances of landing an interview.' },
