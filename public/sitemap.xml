@@ -52,11 +52,4 @@
     <priority>0.6</priority>
   </url>
 
-  <!-- Public directory pages -->
-  <url>
-    <loc>https://www.directrefer.in/professionals</loc>
-    <lastmod>2026-08-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
 </urlset>
