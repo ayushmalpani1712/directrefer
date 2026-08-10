@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router'
-import { LayoutDashboard, Users, ShieldCheck, BarChart3, Settings, History, Flag, BadgeCheck, MessageSquare } from 'lucide-react'
+import { LayoutDashboard, Users, ShieldCheck, BarChart3, Settings, History, Flag, BadgeCheck } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   Ban, CheckCircle2, Trash2, Search, Download, RefreshCw, Pencil,
-  AlertTriangle, Users, Shield, Eye, Send, Loader2, BadgeCheck, UserSquare,
+  Users, Eye, Loader2, BadgeCheck, UserSquare,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'

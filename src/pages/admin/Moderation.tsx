@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Flag, Ban, CheckCircle2, AlertTriangle, Trash2, Eye, ExternalLink, MessageSquare } from 'lucide-react'
+import { Flag, Ban, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'

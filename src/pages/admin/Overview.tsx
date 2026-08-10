@@ -1,17 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Users, Briefcase, Clock, MessageSquare, Flag, AlertTriangle, Megaphone, Shield, BarChart3, TrendingUp, Eye } from 'lucide-react'
+import { Users, Briefcase, MessageSquare, Flag, AlertTriangle, Megaphone } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { GAvatar, StatCard } from '@/components/ui-kit'
-import { useApp } from '@/context/AppContext'
-import { GRADIENTS } from '@/data/mock'
 import {
   fetchAllUsersFull,
   fetchPlatformAnalytics,
   fetchReportsWithUsers,
   fetchAnnouncements,
   fetchSystemHealth,
-  logAdminAction,
   type AdminUserFull,
   type PlatformAnalytics,
   type ReportWithUsers,
@@ -22,16 +19,13 @@ import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 
 export default function AdminOverview() {
-  const { role } = useApp()
   const [analytics, setAnalytics] = useState<PlatformAnalytics | null>(null)
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null)
   const [flaggedAccounts, setFlaggedAccounts] = useState<ReportWithUsers[]>([])
   const [allUsers, setAllUsers] = useState<AdminUserFull[]>([])
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
-  const [loading, setLoading] = useState(true)
 
   const loadData = useCallback(async () => {
-    setLoading(true)
     try {
       const [analyticsData, healthData, flaggedData, usersData, announcementsData] = await Promise.allSettled([
         fetchPlatformAnalytics(),
@@ -48,7 +42,6 @@ export default function AdminOverview() {
     } catch {
       toast.error('Failed to load dashboard data')
     }
-    setLoading(false)
   }, [])
 
   useEffect(() => { loadData() }, [loadData])

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { CheckCircle2, XCircle, Clock, Eye, Loader2, BadgeCheck, Shield, ExternalLink } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, Loader2, BadgeCheck, Shield, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
