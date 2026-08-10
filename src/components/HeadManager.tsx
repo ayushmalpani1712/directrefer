@@ -21,6 +21,11 @@ const PAGE_META: Record<string, { title: string; description: string }> = {
   '/help': { title: 'Help & Support', description: 'Answers, guides, and support for using Direct Refer.' },
   '/verify-email': { title: 'Verify Email', description: 'Verify your email address to access your account.' },
   '/forgot-password': { title: 'Forgot Password', description: 'Reset your Direct Refer password.' },
+  '/privacy': { title: 'Privacy Policy', description: 'How Direct Refer collects, uses, and protects your personal information. Read our privacy practices.' },
+  '/terms': { title: 'Terms of Service', description: 'The rules and guidelines governing your use of the Direct Refer platform.' },
+  '/cookies': { title: 'Cookie Policy', description: 'How Direct Refer uses cookies to provide and improve our service.' },
+  '/about': { title: 'About Us', description: 'Learn about Direct Refer — our mission to make job referrals accessible, fair, and transparent for everyone.' },
+  '/contact': { title: 'Contact Us', description: 'Get in touch with the Direct Refer team for support, partnerships, or feedback.' },
 }
 
 const SITE_NAME = 'Direct Refer'

@@ -438,31 +438,51 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t border-border/50 px-4 py-8 sm:px-6 sm:py-10 lg:px-8" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
         <div className="mx-auto max-w-7xl min-w-0">
-          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row sm:items-start sm:text-left">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Brand */}
             <div className="flex flex-col items-center gap-3 sm:items-start">
               <Logo />
               <p className="max-w-xs text-center text-xs text-muted-foreground sm:text-left">The referral platform that connects job seekers with verified professionals.</p>
+              <div className="flex items-center gap-3">
+                <a href="https://linkedin.com/in/ayushmalpani" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground" aria-label="LinkedIn">
+                  <Linkedin className="h-4 w-4" />
+                </a>
+                <a href="mailto:hello@directrefer.in" className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground" aria-label="Email">
+                  <Mail className="h-4 w-4" />
+                </a>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-[14px] text-muted-foreground">
-              <button onClick={() => scrollTo('features')} className="hover:text-foreground">Features</button>
-              <button onClick={() => scrollTo('network')} className="hover:text-foreground">Network</button>
-              <Link to="/help" className="hover:text-foreground">Support</Link>
+
+            {/* Product */}
+            <div className="flex flex-col items-center gap-2 sm:items-start">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Product</h4>
+              <button onClick={() => scrollTo('features')} className="text-sm text-muted-foreground hover:text-foreground">Features</button>
+              <button onClick={() => scrollTo('network')} className="text-sm text-muted-foreground hover:text-foreground">Network</button>
+              <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground">About</Link>
+              <Link to="/help" className="text-sm text-muted-foreground hover:text-foreground">Help & Support</Link>
+            </div>
+
+            {/* Legal */}
+            <div className="flex flex-col items-center gap-2 sm:items-start">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Legal</h4>
+              <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground">Privacy Policy</Link>
+              <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground">Terms of Service</Link>
+              <Link to="/cookies" className="text-sm text-muted-foreground hover:text-foreground">Cookie Policy</Link>
+            </div>
+
+            {/* Account */}
+            <div className="flex flex-col items-center gap-2 sm:items-start">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Account</h4>
               {user ? (
-                <Link to="/dashboard" className="hover:text-foreground">Dashboard</Link>
+                <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">Dashboard</Link>
               ) : (
-                <Link to="/login" className="hover:text-foreground">Sign in</Link>
+                <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">Sign in</Link>
               )}
-            </div>
-            <div className="flex items-center gap-3">
-              <a href="https://linkedin.com/in/ayushmalpani" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground" aria-label="LinkedIn">
-                <Linkedin className="h-4 w-4" />
-              </a>
-              <a href="mailto:hello@directrefer.in" className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground" aria-label="Email">
-                <Mail className="h-4 w-4" />
-              </a>
+              <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground">Contact Us</Link>
             </div>
           </div>
-          <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/70 sm:justify-start">
+
+          <div className="mt-8 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/70 sm:justify-start sm:border-t sm:border-border/50 sm:pt-6">
             <FileText className="h-3.5 w-3.5" /> © {new Date().getFullYear()} Direct Refer, Inc. All rights reserved.
           </div>
         </div>

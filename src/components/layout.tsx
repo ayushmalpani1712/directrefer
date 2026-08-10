@@ -515,8 +515,18 @@ export default function AppShell() {
           <Breadcrumbs />
           <AnimatedOutlet />
         </main>
-        <footer className="border-t border-border min-w-0 shrink-0 px-4 py-5 text-center text-[11px] leading-relaxed text-muted-foreground sm:text-xs" role="contentinfo" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
-          <span className="mx-auto block max-w-3xl overflow-hidden text-ellipsis whitespace-nowrap sm:whitespace-normal">Direct Refer · Built for job seekers, professionals and recruiters · {new Date().getFullYear()} · <a href="https://linkedin.com/in/ayushmalpani" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">Ayush Malpani</a></span>
+        <footer className="border-t border-border min-w-0 shrink-0 px-4 py-5 text-[11px] leading-relaxed text-muted-foreground sm:text-xs" role="contentinfo" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            <span>© {new Date().getFullYear()} Direct Refer</span>
+            <span className="hidden sm:inline">·</span>
+            <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
+            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link to="/cookies" className="hover:text-foreground transition-colors">Cookies</Link>
+            <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+            <span className="hidden sm:inline">·</span>
+            <a href="https://linkedin.com/in/ayushmalpani" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">Ayush Malpani</a>
+          </div>
         </footer>
         <FAB />
       </SidebarInset>

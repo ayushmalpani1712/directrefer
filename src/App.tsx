@@ -48,6 +48,11 @@ const BookmarksPage = lazy(() => import('@/pages/Network').then((m) => ({ defaul
 const ActivityPage = lazy(() => import('@/pages/Network').then((m) => ({ default: m.ActivityPage })))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 const AuthCallback = lazy(() => import('@/pages/AuthCallback'))
+const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'))
+const TermsOfService = lazy(() => import('@/pages/TermsOfService'))
+const CookiePolicy = lazy(() => import('@/pages/CookiePolicy'))
+const About = lazy(() => import('@/pages/About'))
+const Contact = lazy(() => import('@/pages/Contact'))
 const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'))
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
@@ -187,6 +192,13 @@ export default function App() {
                 <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
                 <Route path="/auth/callback" element={<PublicRoute><AuthCallback /></PublicRoute>} />
                 <Route path="/verify-email" element={<PublicRoute><VerifyEmail /></PublicRoute>} />
+
+                {/* ── Legal & informational pages ── */}
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/cookies" element={<CookiePolicy />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
 
                 {/* ── Public profile pages (accessible by anyone) ── */}
                 <Route path="/job-seekers/:id" element={<JobSeekerPublic />} />
