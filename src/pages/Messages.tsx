@@ -422,7 +422,9 @@ export default function Messages() {
                           </div>
                         )}
                         <div className={cn('mt-1 flex items-center gap-1 text-[10px] text-muted-foreground', m.from === 'me' && 'justify-end')}>
-                          {m.time} {m.from === 'me' && <CheckCheck className="h-3 w-3 text-sky-500" />}
+                          {m.time} {m.from === 'me' && (
+                            <CheckCheck className={cn('h-3 w-3', m.is_read ? 'text-sky-500' : 'text-muted-foreground')} />
+                          )}
                         </div>
                       </div>
                     </div>

@@ -418,7 +418,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             from: 'them',
             text: msg.content ?? '',
             time: formatRelativeTime(msg.created_at),
-            read: false,
+            is_read: false,
             kind: (msg.kind === 'file' ? 'file' : 'text') as 'text' | 'file',
           }
 
@@ -1070,7 +1070,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       from: 'me',
       text: storedContent,
       time: 'Just now',
-      read: true,
+      is_read: false,
       kind,
     }
     // Capture previous lastMessage for rollback
@@ -1115,15 +1115,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const markConversationRead = useCallback((id: string) => {
     setConversations((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, unread: 0 } : c))
+      prev.map((c) => (c.id === id ? { ...c, unread: 0, messages: c.messages.map((m) => m.from === 'them' ? { ...m, is_read: true, read_at: new Date().toISOString() } : m) } : c))
     )
     // Persist to DB - update messages read status
     if (user) {
       supabase.from('messages')
-        .update({ read: true })
+        .update({ is_read: true, read_at: new Date().toISOString() })
         .eq('conversation_id', id)
         .neq('sender_id', user.id)
-        .eq('read', false)
+        .eq('is_read', false)
         .then(() => {}, (err) => {
           console.error('Failed to mark conversation read:', err)
           toast.error('Something went wrong. Please try again.')

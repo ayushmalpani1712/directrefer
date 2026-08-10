@@ -135,7 +135,7 @@ export interface Job {
   recruiterSlug?: string
 }
 
-export interface Message { id: string; from: 'me' | 'them'; text: string; time: string; read: boolean; kind?: 'text' | 'file' }
+export interface Message { id: string; from: 'me' | 'them'; text: string; time: string; is_read: boolean; read_at?: string; kind?: 'text' | 'file' }
 export interface Conversation {
   id: string; name: string; subtitle: string; lastMessage: string; time: string
   unread: number; pinned: boolean; online: boolean; gradient: string; messages: Message[]

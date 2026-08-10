@@ -342,7 +342,7 @@ export async function fetchConversations(userId: string, roleContext?: string): 
     const convIds = convRows.map(c => c.id)
     const { data: allMsgRows } = await supabase
       .from('messages')
-      .select('id, conversation_id, sender_id, content, created_at, read, kind')
+      .select('id, conversation_id, sender_id, content, created_at, is_read, read_at, kind')
       .in('conversation_id', convIds)
       .order('created_at', { ascending: true })
 
@@ -371,7 +371,8 @@ export async function fetchConversations(userId: string, roleContext?: string): 
         from: msg.sender_id === userId ? 'me' : 'them',
         text: String(msg.content ?? ''),
         time: formatRelativeTime(String(msg.created_at)),
-        read: Boolean(msg.read),
+        is_read: Boolean(msg.is_read),
+        read_at: msg.read_at ? String(msg.read_at) : undefined,
         kind: (msg.kind as 'text' | 'file') ?? 'text',
       }))
 
@@ -387,7 +388,7 @@ export async function fetchConversations(userId: string, roleContext?: string): 
       }
 
       const unreadCount = messages.filter(
-        (m) => m.from === 'them' && !m.read
+        (m) => m.from === 'them' && !m.is_read
       ).length
 
       conversations.push({
@@ -486,7 +487,8 @@ export async function sendMessage(
       from: 'me',
       text: data.content,
       time: formatRelativeTime(data.created_at),
-      read: data.read,
+      is_read: Boolean(data.is_read),
+      read_at: data.read_at ? String(data.read_at) : undefined,
       kind: data.kind as 'text' | 'file',
     }
   } catch (err) {
