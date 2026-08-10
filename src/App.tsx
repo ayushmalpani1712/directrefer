@@ -36,6 +36,14 @@ const Analytics = lazy(() => import('@/pages/Analytics'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const Help = lazy(() => import('@/pages/Help'))
 const Admin = lazy(() => import('@/pages/Admin'))
+const AdminShell = lazy(() => import('@/pages/admin/AdminShell'))
+const AdminOverview = lazy(() => import('@/pages/admin/Overview'))
+const AdminUsers = lazy(() => import('@/pages/admin/Users'))
+const AdminApprovals = lazy(() => import('@/pages/admin/Approvals'))
+const AdminModeration = lazy(() => import('@/pages/admin/Moderation'))
+const AdminSettingsPage = lazy(() => import('@/pages/admin/Settings'))
+const AdminAnalyticsPage = lazy(() => import('@/pages/admin/Analytics'))
+const AdminAuditLog = lazy(() => import('@/pages/admin/AuditLog'))
 const NotificationsPage = lazy(() => import('@/pages/Network').then((m) => ({ default: m.NotificationsPage })))
 const BookmarksPage = lazy(() => import('@/pages/Network').then((m) => ({ default: m.BookmarksPage })))
 const ActivityPage = lazy(() => import('@/pages/Network').then((m) => ({ default: m.ActivityPage })))
@@ -216,10 +224,21 @@ export default function App() {
                   <Route path="/recruiter/jobs" element={<RequireRole allowed={['recruiter', 'admin']}><RecruiterJobs /></RequireRole>} />
                   <Route path="/recruiter/talent" element={<RequireRole allowed={['recruiter', 'admin']}><TalentSearch /></RequireRole>} />
 
-                  {/* ── Admin routes (tab-driven) ── */}
-                  <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
-                  <Route path="/admin/:tab" element={<RequireRole allowed={['admin']}><Admin /></RequireRole>} />
-                  <Route path="/admin/messages" element={<RequireRole allowed={['admin']}><Messages /></RequireRole>} />
+                  {/* ── Admin routes (modular) ── */}
+                  <Route path="/admin" element={<RequireRole allowed={['admin']}><AdminShell /></RequireRole>}>
+                    <Route index element={<Navigate to="overview" replace />} />
+                    <Route path="overview" element={<AdminOverview />} />
+                    <Route path="users" element={<AdminUsers />} />
+                    <Route path="approvals" element={<AdminApprovals />} />
+                    <Route path="moderation" element={<AdminModeration />} />
+                    <Route path="analytics" element={<AdminAnalyticsPage />} />
+                    <Route path="settings" element={<AdminSettingsPage />} />
+                    <Route path="audit-log" element={<AdminAuditLog />} />
+                    <Route path="messages" element={<Messages />} />
+                    <Route path="notifications" element={<NotificationsPage />} />
+                    <Route path="activity" element={<ActivityPage />} />
+                    <Route path="help" element={<Help />} />
+                  </Route>
 
                   {/* ── Shared routes (all authenticated roles) ── */}
                   <Route path="/messages" element={<MessagesRedirect />} />
@@ -230,29 +249,24 @@ export default function App() {
                   <Route path="/job-seeker/notifications" element={<NotificationsPage />} />
                   <Route path="/professional/notifications" element={<NotificationsPage />} />
                   <Route path="/recruiter/notifications" element={<NotificationsPage />} />
-                  <Route path="/admin/notifications" element={<NotificationsPage />} />
                   <Route path="/bookmarks" element={<RequireRole allowed={['student']}><BookmarksPage /></RequireRole>} />
                   <Route path="/job-seeker/bookmarks" element={<RequireRole allowed={['student']}><BookmarksPage /></RequireRole>} />
                   <Route path="/activity" element={<ActivityPage />} />
                   <Route path="/job-seeker/activity" element={<ActivityPage />} />
                   <Route path="/professional/activity" element={<ActivityPage />} />
                   <Route path="/recruiter/activity" element={<ActivityPage />} />
-                  <Route path="/admin/activity" element={<ActivityPage />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/job-seeker/analytics" element={<Analytics />} />
                   <Route path="/professional/analytics" element={<Analytics />} />
                   <Route path="/recruiter/analytics" element={<Analytics />} />
-                  <Route path="/admin/analytics" element={<Analytics />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/job-seeker/settings" element={<Settings />} />
                   <Route path="/professional/settings" element={<Settings />} />
                   <Route path="/recruiter/settings" element={<Settings />} />
-                  <Route path="/admin/settings" element={<Settings />} />
                   <Route path="/help" element={<Help />} />
                   <Route path="/job-seeker/help" element={<Help />} />
                   <Route path="/professional/help" element={<Help />} />
                   <Route path="/recruiter/help" element={<Help />} />
-                  <Route path="/admin/help" element={<Help />} />
 
                   <Route path="*" element={<NotFound />} />
                 </Route>
