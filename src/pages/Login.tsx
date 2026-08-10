@@ -55,11 +55,16 @@ export default function Login() {
           return
         }
         if (needsVerification) {
-          toast.success('Account created! Check your email to verify, then sign in.')
-          setIsSignUp(false)
+          const { error: signInError } = await signIn(email, password)
+          if (signInError) {
+            toast.success('Account created! Please check your email to verify your account, then sign in.')
+            setIsSignUp(false)
+          } else {
+            toast.success('Account created! Taking you to your dashboard...')
+            navigate(ROLE_ROUTE[selected] || '/job-seeker')
+          }
         } else {
           toast.success('Account created! Taking you to your dashboard...')
-          // Use selected role directly — no extra getUser() call needed
           navigate(ROLE_ROUTE[selected] || '/job-seeker')
         }
       } else {
