@@ -98,7 +98,7 @@ export default function ProfessionalDashboard() {
                 <GAvatar name={PRO_USER.name} gradient={ME.gradient} className="h-12 w-12 text-base" ring />
                 <div>
                   <div className="text-[13px] text-muted-foreground">{PRO_USER.designation} · {PRO_USER.company}</div>
-                  <h1 className="font-display text-[28px] font-bold leading-tight text-foreground">Welcome back, {(ME.name || 'User').split(' ')[0]}</h1>
+                  <h1 className="font-display text-xl sm:text-[28px] font-bold leading-tight text-foreground">Welcome back, {(ME.name || 'User').split(' ')[0]}</h1>
                 </div>
               </div>
             </div>

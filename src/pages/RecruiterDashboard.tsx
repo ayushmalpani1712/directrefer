@@ -163,7 +163,7 @@ export default function RecruiterDashboard() {
                 <GAvatar name={RECRUITER_USER.name} gradient={RECRUITER_USER.gradient} className="h-12 w-12 text-base" ring />
                 <div>
                   <div className="text-[13px] text-muted-foreground">{RECRUITER_USER.designation}</div>
-                  <h1 className="font-display text-[28px] font-bold leading-tight text-foreground">Hiring at {recruiterCompany.name}</h1>
+                  <h1 className="font-display text-xl sm:text-[28px] font-bold leading-tight text-foreground">Hiring at {recruiterCompany.name}</h1>
                   <div className="mt-1.5 flex flex-wrap gap-2">
                     <Badge className="border border-border bg-muted/30 text-muted-foreground hover:bg-muted/50">{recruiterCompany.hiringStats.activeJobs} active jobs</Badge>
                     <Badge className="border border-border bg-muted/30 text-muted-foreground hover:bg-muted/50">{recruiterCompany.hiringStats.offerAccept}% offer accept</Badge>
@@ -171,7 +171,7 @@ export default function RecruiterDashboard() {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button className="bg-gradient-to-r from-[#4F7CFF] to-[#7C5CFF] text-white shadow-sm hover:translate-y-[-1px]" asChild><Link to="/recruiter/jobs"><Plus className="mr-1.5 h-4 w-4" /> Post a job</Link></Button>
                 <Button variant="outline" className="border-border bg-transparent text-foreground hover:bg-muted/30" asChild><Link to="/recruiter/talent"><Search className="mr-1.5 h-4 w-4" /> Search talent</Link></Button>
               </div>

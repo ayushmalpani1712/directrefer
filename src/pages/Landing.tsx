@@ -82,7 +82,7 @@ function HeroMock() {
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-[#4ADE80] hover:bg-[rgba(74,222,128,0.1)] text-[10px] sm:text-xs">Accepted · Flipkart</Badge>
             <Badge className="border border-[rgba(59,95,229,0.2)] bg-[rgba(59,95,229,0.1)] text-primary hover:bg-[rgba(59,95,229,0.1)] text-[10px] sm:text-xs">Applied · Razorpay</Badge>
           </div>
@@ -98,9 +98,9 @@ function HeroMock() {
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-[#9CA3AF]">
                   <span className="flex items-center gap-0.5"><Star className="h-3 w-3 fill-[#FBBF24] text-[#FBBF24]" />{p.rating}</span>
-                  <span>{p.referralsCompleted} referrals</span>
+                  <span className="hidden sm:inline">{p.referralsCompleted} referrals</span>
                 </div>
-                <Button size="sm" variant="outline" className="rounded-full border-[rgba(255,255,255,0.06)] text-xs text-white hover:bg-[rgba(255,255,255,0.04)]" onClick={() => navigate(user ? '/dashboard' : '/login')}>{user ? 'View' : 'Request'}</Button>
+                <Button size="sm" variant="outline" className="shrink-0 rounded-full border-[rgba(255,255,255,0.06)] text-xs text-white hover:bg-[rgba(255,255,255,0.04)]" onClick={() => navigate(user ? '/dashboard' : '/login')}>{user ? 'View' : 'Request'}</Button>
               </div>
             ))}
           </div>

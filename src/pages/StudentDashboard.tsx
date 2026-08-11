@@ -81,7 +81,7 @@ export default function StudentDashboard() {
               <div className="text-[13px] text-muted-foreground">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} · Good morning
               </div>
-              <h1 className="font-display mt-0.5 text-[28px] font-bold leading-tight text-foreground">
+              <h1 className="font-display mt-0.5 text-xl sm:text-[28px] font-bold leading-tight text-foreground">
                 {(student.name || 'User').split(' ')[0]}, your referral pipeline is {myRequests.filter((r) => r.status === 'pending').length > 0 ? 'active' : 'ready to go'}
               </h1>
               <div className="mt-3 flex flex-wrap gap-2">
