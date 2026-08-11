@@ -320,7 +320,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
           // Write back to DB so other devices get the correct workspace
           const roleToWrite = readPersistedRole() || dbActiveWorkspace as Role || mappedRole
-          supabase.from('users').update({ active_workspace: roleToWrite }).eq('id', userId).then(() => {}).catch(() => {})
+          supabase.from('users').update({ active_workspace: roleToWrite }).eq('id', userId).then(
+            () => {},
+            () => {}
+          )
         }
         setIsAdmin(userRole === 'admin')
         setRoleLoaded(true)

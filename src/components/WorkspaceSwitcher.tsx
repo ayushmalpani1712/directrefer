@@ -40,7 +40,10 @@ export function WorkspaceSwitcher() {
     setRole(r)
     // Persist to DB so other devices/sessions get the correct workspace
     if (user) {
-      supabase.from('users').update({ active_workspace: r }).eq('id', user.id).then(() => {}).catch(() => {})
+      supabase.from('users').update({ active_workspace: r }).eq('id', user.id).then(
+        () => {},
+        () => {}
+      )
     }
     // replace: true drops ?conversation=... and prevents back-nav to stale workspace
     navigate(ROLE_ROUTE[r], { replace: true })
