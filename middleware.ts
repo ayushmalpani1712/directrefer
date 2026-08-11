@@ -10,7 +10,6 @@ export default function middleware(request: Request): Response {
   const path = url.pathname;
   const ua = request.headers.get('user-agent') || '';
 
-  // Skip non-HTML requests
   if (
     path.startsWith('/assets/') ||
     path.startsWith('/api/') ||
@@ -20,7 +19,6 @@ export default function middleware(request: Request): Response {
     return next();
   }
 
-  // Only intercept crawlers on known SEO routes
   const isCrawler = CRAWLER_RE.test(ua);
   const isSeoRoute = SEO_ROUTES.has(path) || /^\/professionals\/[^/]+$/.test(path);
 
@@ -28,7 +26,9 @@ export default function middleware(request: Request): Response {
     return rewrite(new URL(`/api/og?route=${encodeURIComponent(path.slice(1))}`, request.url));
   }
 
-  return next();
+  const response = next();
+  response.headers.set('Cache-Control', 'no-cache, must-revalidate');
+  return response;
 }
 
 export const config = {

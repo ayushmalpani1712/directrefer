@@ -112,7 +112,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRecruiterVerified(false)
         setActiveWorkspace('job_seeker')
       }
-      setLoading(false)
+
+      // Only transition loading→false on state-changing events.
+      // TOKEN_REFRESHED must NOT call setLoading(false) because it can fire
+      // before getSession() resolves, causing user=null + loading=false → redirect to /login.
+      if (event !== 'TOKEN_REFRESHED' && event !== 'INITIAL_SESSION') {
+        setLoading(false)
+      }
 
       if (event === 'SIGNED_IN') {
         const h = window.location.hash

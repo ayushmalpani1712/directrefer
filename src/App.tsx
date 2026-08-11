@@ -105,8 +105,10 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (user && authed && (PUBLIC_PATHS.has(pathname) || POST_AUTH_PATHS.has(pathname))) {
-    return <Navigate to={ROLE_ROUTE[role]} replace />
+  if (user && authed) {
+    if (PUBLIC_PATHS.has(pathname) || POST_AUTH_PATHS.has(pathname)) {
+      return <Navigate to={ROLE_ROUTE[role]} replace />
+    }
   }
 
   return <>{children}</>
@@ -134,8 +136,13 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
 function RequireRole({ allowed, children }: { allowed: Role[]; children: React.ReactNode }) {
   const { role, roleLoaded } = useApp()
+  const { pathname } = useLocation()
+  const urlRole = getRoleFromPath(pathname)
 
   if (!roleLoaded) {
+    if (urlRole && allowed.includes(urlRole)) {
+      return <>{children}</>
+    }
     return (
       <div className="flex h-full items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -144,6 +151,9 @@ function RequireRole({ allowed, children }: { allowed: Role[]; children: React.R
   }
 
   if (role === 'admin') {
+    return <>{children}</>
+  }
+  if (urlRole && allowed.includes(urlRole)) {
     return <>{children}</>
   }
   if (!allowed.includes(role)) return <Navigate to={ROLE_ROUTE[role]} replace />

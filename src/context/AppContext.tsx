@@ -11,10 +11,12 @@ import {
   type AppNotification,
   type Job,
   PIPELINE_STAGES,
+  getRoleFromPath,
 } from '@/data/mock'
 import { supabase, advanceReferralPipeline as dbAdvancePipeline } from '@/lib/supabase'
 import { sendReferralStatusEmail, sendReminderEmail } from '@/lib/email'
 import { notifyNewMessage, notifyReferralUpdate, requestNotificationPermission } from '@/lib/notifications'
+import { setWorkspaceCookie, getWorkspaceCookie } from '@/lib/utils'
 
 async function loadDb() {
   return await import('@/lib/db')
@@ -157,9 +159,30 @@ interface AppState {
 
 const Ctx = createContext<AppState | null>(null)
 
+function readPersistedRole(): Role | null {
+  const VALID_ROLES: Role[] = ['student', 'professional', 'recruiter', 'admin']
+  try {
+    const cookie = getWorkspaceCookie()
+    if (cookie && (VALID_ROLES as string[]).includes(cookie)) return cookie as Role
+  } catch { /* ignore */ }
+  try {
+    const stored = localStorage.getItem('dr_active_role')
+    if (stored && (VALID_ROLES as string[]).includes(stored)) {
+      setWorkspaceCookie(stored)
+      return stored as Role
+    }
+  } catch { /* ignore */ }
+  return null
+}
+
+function persistRole(r: Role) {
+  try { localStorage.setItem('dr_active_role', r) } catch { /* ignore */ }
+  setWorkspaceCookie(r)
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  const [role, setRole] = useState<Role>('student')
+  const [role, setRole] = useState<Role>(() => readPersistedRole() || 'student')
   const [isAdmin, setIsAdmin] = useState(false)
   const [authed, setAuthed] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -168,6 +191,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [roleLoaded, setRoleLoaded] = useState(false)
   const roleRef = useRef<Role>(role)
   useEffect(() => { roleRef.current = role }, [role])
+
+  // Persist active workspace role so page refreshes land on the correct workspace
+  useEffect(() => { persistRole(role) }, [role])
 
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [student, setStudent] = useState<StudentProfile>({
@@ -263,7 +289,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       const mappedRole: Role = userRole === 'job_seeker' ? 'student' : (userRole as Role)
       if (!roleLoaded) {
-        setRole(mappedRole)
+        const persisted = readPersistedRole()
+        if (persisted) {
+          setRole(persisted)
+        } else {
+          const urlRole = getRoleFromPath(window.location.pathname)
+          if (urlRole !== 'student') {
+            setRole(urlRole)
+          } else {
+            setRole(mappedRole)
+          }
+        }
         setIsAdmin(userRole === 'admin')
         setRoleLoaded(true)
       }
@@ -318,6 +354,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ])
 
       if (profs.status === 'fulfilled' && profs.value.length > 0) setProfessionals(profs.value)
+
+      // Ensure the current professional user is always in the array.
+      // fetchProfessionals runs in parallel with the profile upsert, so the user's
+      // row may not exist yet when the query executes.
+      if (mappedRole === 'professional') {
+        setProfessionals((prev) => {
+          if (prev.some((p) => p.id === userId)) return prev
+          return [...prev, {
+            id: userId,
+            name: displayName,
+            designation: '', company: '', industry: '', location: locationParts || '',
+            yearsExp: 0, skills: [], responseRate: 0, avgReplyHours: 0,
+            referralsCompleted: 0, rating: 0, reviews: 0, verified: false,
+            openForReferrals: false, isOpenToWork: false, maxPerMonth: 5,
+            usedThisMonth: 0, successRate: 0, followers: 0, joinedDaysAgo: 0,
+            activityScore: 0, referralPolicy: '', openPositions: [], bio: '',
+            badges: [], gradient: GRADIENTS[0], phone: '', whatsapp: '',
+            email: currentUser.email ?? '', hiringTimeline: [],
+            referralDuration: '', linkedinUrl: '', githubUrl: '',
+          }]
+        })
+      }
       if (refs.status === 'fulfilled') setRequests(refs.value)
       if (convs.status === 'fulfilled') setConversations(convs.value)
       if (cands.status === 'fulfilled' && cands.value.length > 0) setCandidates(cands.value)
@@ -880,7 +938,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toggleProfessionalOpenForReferrals = useCallback(async (value: boolean): Promise<boolean> => {
     if (!user) return false
-    setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, openForReferrals: value } : p))
+    setProfessionals((prev) => {
+      const idx = prev.findIndex((p) => p.id === user.id)
+      if (idx >= 0) return prev.map((p) => p.id === user.id ? { ...p, openForReferrals: value } : p)
+      // User not yet in array — create a minimal entry so the toggle reflects immediately
+      return [...prev, {
+        id: user.id,
+        name: user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'User',
+        designation: '', company: '', industry: '', location: '',
+        yearsExp: 0, skills: [], responseRate: 0, avgReplyHours: 0,
+        referralsCompleted: 0, rating: 0, reviews: 0, verified: false,
+        openForReferrals: value, isOpenToWork: false, maxPerMonth: 5,
+        usedThisMonth: 0, successRate: 0, followers: 0, joinedDaysAgo: 0,
+        activityScore: 0, referralPolicy: '', openPositions: [], bio: '',
+        badges: [], gradient: 'from-[#4F7CFF] to-[#7C5CFF]',
+        phone: '', whatsapp: '', email: user.email ?? '',
+        hiringTimeline: [], referralDuration: '', linkedinUrl: '', githubUrl: '',
+      }]
+    })
     try {
       const { upsertProfessionalField } = await loadDb()
       await upsertProfessionalField(user.id, 'open_for_referrals', value)
@@ -895,7 +970,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toggleProfessionalOpenToWork = useCallback(async (value: boolean): Promise<boolean> => {
     if (!user) return false
-    setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, isOpenToWork: value } : p))
+    setProfessionals((prev) => {
+      const idx = prev.findIndex((p) => p.id === user.id)
+      if (idx >= 0) return prev.map((p) => p.id === user.id ? { ...p, isOpenToWork: value } : p)
+      return [...prev, {
+        id: user.id,
+        name: user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'User',
+        designation: '', company: '', industry: '', location: '',
+        yearsExp: 0, skills: [], responseRate: 0, avgReplyHours: 0,
+        referralsCompleted: 0, rating: 0, reviews: 0, verified: false,
+        openForReferrals: true, isOpenToWork: value, maxPerMonth: 5,
+        usedThisMonth: 0, successRate: 0, followers: 0, joinedDaysAgo: 0,
+        activityScore: 0, referralPolicy: '', openPositions: [], bio: '',
+        badges: [], gradient: 'from-[#4F7CFF] to-[#7C5CFF]',
+        phone: '', whatsapp: '', email: user.email ?? '',
+        hiringTimeline: [], referralDuration: '', linkedinUrl: '', githubUrl: '',
+      }]
+    })
     try {
       const { upsertProfessionalField } = await loadDb()
       await upsertProfessionalField(user.id, 'is_open_to_work', value)
