@@ -879,10 +879,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const toggleProfessionalOpenForReferrals = useCallback(async (value: boolean): Promise<boolean> => {
-    const { upsertProfessionalField } = await loadDb()
     if (!user) return false
     setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, openForReferrals: value } : p))
     try {
+      const { upsertProfessionalField } = await loadDb()
       await upsertProfessionalField(user.id, 'open_for_referrals', value)
       return true
     } catch (err) {
@@ -894,10 +894,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const toggleProfessionalOpenToWork = useCallback(async (value: boolean): Promise<boolean> => {
-    const { upsertProfessionalField } = await loadDb()
     if (!user) return false
     setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, isOpenToWork: value } : p))
     try {
+      const { upsertProfessionalField } = await loadDb()
       await upsertProfessionalField(user.id, 'is_open_to_work', value)
       return true
     } catch (err) {
