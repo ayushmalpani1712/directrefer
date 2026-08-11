@@ -16,7 +16,7 @@ import {
 import { supabase, advanceReferralPipeline as dbAdvancePipeline } from '@/lib/supabase'
 import { sendReferralStatusEmail, sendReminderEmail } from '@/lib/email'
 import { notifyNewMessage, notifyReferralUpdate, requestNotificationPermission } from '@/lib/notifications'
-import { setWorkspaceCookie, getWorkspaceCookie } from '@/lib/utils'
+import { setWorkspaceCookie, getWorkspaceCookie, clearWorkspaceCookie } from '@/lib/utils'
 
 async function loadDb() {
   return await import('@/lib/db')
@@ -281,7 +281,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       let userRole = 'job_seeker'
       const { data: userRow } = await supabase
         .from('users')
-        .select('role, full_name, city, state, country')
+        .select('role, full_name, city, state, country, active_workspace')
         .eq('id', userId)
         .single()
       if (userRow?.role) {
@@ -290,19 +290,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
         userRole = (meta?.role as string) || 'job_seeker'
       }
       const mappedRole: Role = userRole === 'job_seeker' ? 'student' : (userRole as Role)
+
+      // Resolve active workspace role.
+      // Priority: DB active_workspace (authoritative) > cookie/localStorage > URL path > DB registration role
+      const DB_WORKSPACE_ROLES: Role[] = ['student', 'professional', 'recruiter', 'admin']
+      const dbActiveWorkspace = (userRow?.active_workspace as string) || null
+      const isValidDbWorkspace = dbActiveWorkspace && (DB_WORKSPACE_ROLES as string[]).includes(dbActiveWorkspace)
+
       if (!roleLoaded) {
-        const persisted = readPersistedRole()
-        if (persisted) {
-          setRole(persisted)
+        if (isValidDbWorkspace) {
+          // DB has a valid active workspace — use it (authoritative, works across devices)
+          const dbRole = dbActiveWorkspace as Role
+          setRole(dbRole)
+          persistRole(dbRole)
         } else {
-          const urlRole = getRoleFromPath(window.location.pathname)
-          if (urlRole !== 'student') {
-            setRole(urlRole)
-            persistRole(urlRole)
+          // No DB workspace yet — fall back to cookie/localStorage, then URL, then DB registration role
+          const persisted = readPersistedRole()
+          if (persisted) {
+            setRole(persisted)
           } else {
-            setRole(mappedRole)
-            persistRole(mappedRole)
+            const urlRole = getRoleFromPath(window.location.pathname)
+            if (urlRole !== 'student') {
+              setRole(urlRole)
+              persistRole(urlRole)
+            } else {
+              setRole(mappedRole)
+              persistRole(mappedRole)
+            }
           }
+          // Write back to DB so other devices get the correct workspace
+          const roleToWrite = readPersistedRole() || dbActiveWorkspace as Role || mappedRole
+          supabase.from('users').update({ active_workspace: roleToWrite }).eq('id', userId).then(() => {}).catch(() => {})
         }
         setIsAdmin(userRole === 'admin')
         setRoleLoaded(true)
@@ -1361,6 +1379,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setRoleLoaded(false)
     setRole('student')
     reminderSentRef.current = false
+    // Clear persisted workspace to prevent stale role leaking to next account
+    clearWorkspaceCookie()
+    try { localStorage.removeItem('dr_active_role') } catch { /* ignore */ }
     setProfessionals([])
     setRequests([])
     setRequestTimestamps([])

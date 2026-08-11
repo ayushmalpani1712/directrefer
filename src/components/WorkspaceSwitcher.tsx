@@ -14,6 +14,7 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { ROLE_META, ROLE_ROUTE, getRoleFromPath, type Role } from '@/data/mock'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 
 const ROLE_ICONS: Record<Role, typeof User> = {
   student: User,
@@ -24,7 +25,7 @@ const ROLE_ICONS: Record<Role, typeof User> = {
 
 export function WorkspaceSwitcher() {
   const { setRole, isAdmin, student, logout } = useApp()
-  const { signOut } = useAuth()
+  const { signOut, user } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const urlRole = getRoleFromPath(pathname)
@@ -37,6 +38,10 @@ export function WorkspaceSwitcher() {
     if (r === urlRole) return
 
     setRole(r)
+    // Persist to DB so other devices/sessions get the correct workspace
+    if (user) {
+      supabase.from('users').update({ active_workspace: r }).eq('id', user.id).then(() => {}).catch(() => {})
+    }
     // replace: true drops ?conversation=... and prevents back-nav to stale workspace
     navigate(ROLE_ROUTE[r], { replace: true })
     toast.success(`Switched to ${ROLE_META[r].label} workspace`)

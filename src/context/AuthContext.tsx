@@ -220,6 +220,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfessionalVerified(false)
     setRecruiterVerified(false)
     setActiveWorkspace('job_seeker')
+    // Clear persisted workspace to prevent stale role leaking to next account
+    try {
+      document.cookie = 'dr_active_workspace=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      localStorage.removeItem('dr_active_role')
+    } catch { /* ignore */ }
   }, [])
 
   const refreshWorkspaceStatus = useCallback(async () => {
