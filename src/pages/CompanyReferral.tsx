@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react'
 import { Link, useParams } from 'react-router'
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronRight, FileText, Shield, Users, Zap, Building2, MapPin, Briefcase, Star } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronRight, FileText } from 'lucide-react'
 import { Logo } from '@/components/layout'
-import { getCompanyBySlug, getRoleBySlug, getLocationBySlug, COMPANIES, ROLES } from '@/data/referral-seo'
+import { getCompanyBySlug, getRoleBySlug, getLocationBySlug, COMPANIES } from '@/data/referral-seo'
 
 function generateStructuredData(company: string, role?: string, location?: string) {
   const companyData = getCompanyBySlug(company)
@@ -18,8 +18,8 @@ function generateStructuredData(company: string, role?: string, location?: strin
     : `Get Referred at ${companyData?.name || company}`
 
   const description = companyData
-    ? `Connect with verified ${companyData.name} employees who can refer you for ${roleData?.label || 'open positions'}${locationData ? ` in ${locationData.label}` : ''}. Skip the resume black hole and get your application seen.`
-    : `Connect with verified professionals who can refer you at top companies.`
+    ? `Connect with ${companyData.name} employees who can refer you for ${roleData?.label || 'open positions'}${locationData ? ` in ${locationData.label}` : ''}.`
+    : `Connect with professionals who can refer you at top companies.`
 
   return {
     '@context': 'https://schema.org',
@@ -31,52 +31,6 @@ function generateStructuredData(company: string, role?: string, location?: strin
       '@type': 'Organization',
       name: 'Direct Refer',
       url: 'https://www.directrefer.in',
-    },
-    mainEntity: {
-      '@type': 'JobPosting',
-      title: roleData ? `${roleData.label} at ${companyData?.name || company}` : `Positions at ${companyData?.name || company}`,
-      description: description,
-      hiringOrganization: {
-        '@type': 'Organization',
-        name: companyData?.name || company,
-      },
-      jobLocation: locationData ? {
-        '@type': 'Place',
-        address: {
-          '@type': 'PostalAddress',
-          addressLocality: locationData.label,
-          addressCountry: locationData.country === 'India' ? 'IN' : locationData.country === 'USA' ? 'US' : locationData.country === 'UK' ? 'GB' : locationData.country,
-        },
-      } : undefined,
-    },
-    FAQPage: {
-      '@type': 'FAQPage',
-      mainEntity: [
-        {
-          '@type': 'Question',
-          name: `How do I get a referral at ${companyData?.name || company}?`,
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: `Sign up on Direct Refer, browse verified ${companyData?.name || company} employees, and send a referral request. Our platform connects you directly with professionals who can refer you internally.`,
-          },
-        },
-        {
-          '@type': 'Question',
-          name: `How much does a referral at ${companyData?.name || company} typically pay?`,
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: `${companyData?.name || company} referral bonuses typically range from ${companyData?.averageReferralBonus || '$3,000 - $7,000'}. Professionals are incentivized to refer qualified candidates.`,
-          },
-        },
-        {
-          '@type': 'Question',
-          name: `Is Direct Refer free for job seekers?`,
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Yes! Direct Refer is completely free for job seekers. Create your profile, browse professionals, and send referral requests at no cost.',
-          },
-        },
-      ],
     },
   }
 }
@@ -98,7 +52,7 @@ export default function CompanyReferral() {
 
   const description = useMemo(() => {
     if (!companyData) return ''
-    return `Connect with verified ${companyData.name} employees who can refer you for ${roleData?.label || 'open positions'}${locationData ? ` in ${locationData.label}` : ''}. Skip the resume black hole and get your application seen.`
+    return `Connect with ${companyData.name} employees who can refer you for ${roleData?.label || 'open positions'}${locationData ? ` in ${locationData.label}` : ''}.`
   }, [companyData, roleData, locationData])
 
   useEffect(() => {
@@ -142,8 +96,7 @@ export default function CompanyReferral() {
     )
   }
 
-  const relatedCompanies = COMPANIES.filter(c => c.slug !== company).slice(0, 6)
-  const relatedRoles = ROLES.slice(0, 6)
+  const relatedCompanies = COMPANIES.filter(c => c.slug !== company).slice(0, 9)
 
   return (
     <div className="min-h-screen bg-background">
@@ -193,9 +146,9 @@ export default function CompanyReferral() {
             <div>
               <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1"><Building2 className="h-4 w-4" /> {companyData.industry}</span>
-                <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {companyData.headquarters}</span>
-                {roleData && <span className="flex items-center gap-1"><Briefcase className="h-4 w-4" /> {roleData.label}</span>}
+                <span>{companyData.industry}</span>
+                <span>•</span>
+                <span>{companyData.headquarters}</span>
               </div>
             </div>
           </div>
@@ -216,118 +169,21 @@ export default function CompanyReferral() {
           </div>
         </div>
 
-        {/* How It Works */}
-        <section className="mb-12 space-y-6">
-          <h2 className="text-2xl font-bold">How to Get Referred at {companyData.name}</h2>
-          <div className="grid gap-6 sm:grid-cols-3">
-            <div className="rounded-xl border border-border p-5 space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold">1</div>
-              <h3 className="font-semibold">Create Your Profile</h3>
-              <p className="text-sm text-muted-foreground">Sign up for free and build your profile with skills, experience, and target roles at {companyData.name}.</p>
-            </div>
-            <div className="rounded-xl border border-border p-5 space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold">2</div>
-              <h3 className="font-semibold">Find Verified Referrers</h3>
-              <p className="text-sm text-muted-foreground">Browse {companyData.name} employees who are verified and willing to refer qualified candidates.</p>
-            </div>
-            <div className="rounded-xl border border-border p-5 space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold">3</div>
-              <h3 className="font-semibold">Request & Get Hired</h3>
-              <p className="text-sm text-muted-foreground">Send a referral request, track your pipeline, and get your application seen by the hiring team.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Why Use Direct Refer */}
-        <section className="mb-12 space-y-6">
-          <h2 className="text-2xl font-bold">Why Use Direct Refer for {companyData.name} Referrals</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex items-start gap-3 rounded-xl border border-border p-4">
-              <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0" />
-              <div>
-                <h3 className="font-medium">Direct Connection</h3>
-                <p className="text-sm text-muted-foreground">Connect directly with {companyData.name} employees who can refer you.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-xl border border-border p-4">
-              <Zap className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
-              <div>
-                <h3 className="font-medium">Track Your Progress</h3>
-                <p className="text-sm text-muted-foreground">Track your referral from request to hire in real-time.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-xl border border-border p-4">
-              <Shield className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
-              <div>
-                <h3 className="font-medium">Privacy First</h3>
-                <p className="text-sm text-muted-foreground">Contact details are only shared when both parties agree.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-xl border border-border p-4">
-              <Users className="h-5 w-5 text-violet-500 mt-0.5 shrink-0" />
-              <div>
-                <h3 className="font-medium">Free for Job Seekers</h3>
-                <p className="text-sm text-muted-foreground">Create your profile and send referral requests at no cost.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Referral Tips */}
-        {companyData.referralTips.length > 0 && (
-          <section className="mb-12 space-y-6">
-            <h2 className="text-2xl font-bold">Tips for Getting Referred at {companyData.name}</h2>
-            <div className="rounded-xl border border-border bg-muted/30 p-6">
-              <ul className="space-y-3">
-                {companyData.referralTips.map((tip, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <Star className="h-4 w-4 text-amber-500 mt-1 shrink-0" />
-                    <span className="text-sm text-muted-foreground">{tip}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        )}
-
-        {/* FAQ */}
-        <section className="mb-12 space-y-6">
-          <h2 className="text-2xl font-bold">Frequently Asked Questions</h2>
-          <div className="space-y-4">
-            <div className="rounded-xl border border-border p-5 space-y-2">
-              <h3 className="font-semibold">How do I get a referral at {companyData.name}?</h3>
-              <p className="text-sm text-muted-foreground">Sign up on Direct Refer, browse verified {companyData.name} employees, and send a referral request. Our platform connects you directly with professionals who can refer you internally.</p>
-            </div>
-            <div className="rounded-xl border border-border p-5 space-y-2">
-              <h3 className="font-semibold">How much does a referral at {companyData.name} typically pay?</h3>
-              <p className="text-sm text-muted-foreground">{companyData.name} referral bonuses typically range from {companyData.averageReferralBonus}. Professionals are incentivized to refer qualified candidates.</p>
-            </div>
-            <div className="rounded-xl border border-border p-5 space-y-2">
-              <h3 className="font-semibold">Is Direct Refer free for job seekers?</h3>
-              <p className="text-sm text-muted-foreground">Yes! Direct Refer is completely free for job seekers. Create your profile, browse professionals, and send referral requests at no cost.</p>
-            </div>
-            <div className="rounded-xl border border-border p-5 space-y-2">
-              <h3 className="font-semibold">How are {companyData.name} employees verified?</h3>
-              <p className="text-sm text-muted-foreground">We verify professionals through work email domains, LinkedIn verification, and ID confirmation. Every profile is reviewed before going live.</p>
-            </div>
-          </div>
-        </section>
-
         {/* CTA */}
-        <section className="mb-12 rounded-xl border border-border bg-gradient-to-br from-primary/5 to-primary/10 p-8 text-center space-y-4">
+        <section className="mb-12 rounded-xl border border-border bg-muted/30 p-8 text-center space-y-4">
           <h2 className="text-2xl font-bold">Ready to Get Referred at {companyData.name}?</h2>
-          <p className="text-muted-foreground max-w-lg mx-auto">Connect with {companyData.name} employees who can refer you for open positions.</p>
+          <p className="text-muted-foreground max-w-lg mx-auto">Sign up on Direct Refer and connect with {companyData.name} employees.</p>
           <Link
             to="/login"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
-            Get Started Free <ArrowRight className="h-4 w-4" />
+            Get Started <ArrowRight className="h-4 w-4" />
           </Link>
         </section>
 
         {/* Related Companies */}
         <section className="mb-12 space-y-6">
-          <h2 className="text-2xl font-bold">Referrals at Other Companies</h2>
+          <h2 className="text-2xl font-bold">Other Companies</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {relatedCompanies.map(c => (
               <Link
@@ -344,22 +200,6 @@ export default function CompanyReferral() {
             ))}
           </div>
         </section>
-
-        {/* Related Roles */}
-        <section className="mb-12 space-y-6">
-          <h2 className="text-2xl font-bold">Popular Roles</h2>
-          <div className="flex flex-wrap gap-2">
-            {relatedRoles.map(r => (
-              <Link
-                key={r.slug}
-                to={`/referral/${company}/${r.slug}`}
-                className="rounded-full border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-              >
-                {r.label}
-              </Link>
-            ))}
-          </div>
-        </section>
       </main>
 
       {/* Footer */}
@@ -368,7 +208,7 @@ export default function CompanyReferral() {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div className="flex flex-col items-center gap-3 sm:items-start">
               <Logo />
-              <p className="max-w-xs text-center text-xs text-muted-foreground sm:text-left">The referral platform that connects job seekers with verified professionals.</p>
+              <p className="max-w-xs text-center text-xs text-muted-foreground sm:text-left">The referral platform that connects job seekers with professionals.</p>
             </div>
             <div className="flex flex-col items-center gap-2 sm:items-start">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Product</p>
