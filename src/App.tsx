@@ -58,6 +58,7 @@ const Contact = lazy(() => import('@/pages/Contact'))
 const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'))
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
+const CompanyReferral = lazy(() => import('@/pages/CompanyReferral'))
 
 function LazyErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
@@ -225,6 +226,12 @@ export default function App() {
                 <Route path="/job-seekers/:id" element={<JobSeekerPublic />} />
                 <Route path="/professionals/:id" element={<ProfessionalPublic />} />
                 <Route path="/company/:id" element={<RecruiterPublic />} />
+
+                {/* ── Programmatic SEO referral pages ── */}
+                <Route path="/referral" element={<CompanyReferral />} />
+                <Route path="/referral/:company" element={<CompanyReferral />} />
+                <Route path="/referral/:company/:role" element={<CompanyReferral />} />
+                <Route path="/referral/:company/:role/:location" element={<CompanyReferral />} />
 
                 {/* ── Protected routes (auth + layout) ── */}
                 <Route element={<RequireAuth><Suspense fallback={<div className="flex min-h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}><AppShell /></Suspense></RequireAuth>}>
