@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react'
 import { Link, useParams } from 'react-router'
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronRight, FileText, Shield, Users, Zap, Building2, MapPin, Briefcase, Star } from 'lucide-react'
-import { Logo } from '@/components/ui/logo'
-import { getCompanyBySlug, getRoleBySlug, getLocationBySlug, COMPANIES, ROLES, LOCATIONS } from '@/data/referral-seo'
+import { Logo } from '@/components/layout'
+import { getCompanyBySlug, getRoleBySlug, getLocationBySlug, COMPANIES, ROLES } from '@/data/referral-seo'
 
 function generateStructuredData(company: string, role?: string, location?: string) {
   const companyData = getCompanyBySlug(company)
