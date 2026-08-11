@@ -216,22 +216,6 @@ export default function CompanyReferral() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="mb-12 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-border p-5 text-center space-y-1">
-            <div className="text-2xl font-bold text-primary">50+</div>
-            <div className="text-sm text-muted-foreground">Verified Referrers</div>
-          </div>
-          <div className="rounded-xl border border-border p-5 text-center space-y-1">
-            <div className="text-2xl font-bold text-primary">85%</div>
-            <div className="text-sm text-muted-foreground">Response Rate</div>
-          </div>
-          <div className="rounded-xl border border-border p-5 text-center space-y-1">
-            <div className="text-2xl font-bold text-primary">48h</div>
-            <div className="text-sm text-muted-foreground">Avg. Response Time</div>
-          </div>
-        </div>
-
         {/* How It Works */}
         <section className="mb-12 space-y-6">
           <h2 className="text-2xl font-bold">How to Get Referred at {companyData.name}</h2>
@@ -261,15 +245,15 @@ export default function CompanyReferral() {
             <div className="flex items-start gap-3 rounded-xl border border-border p-4">
               <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0" />
               <div>
-                <h3 className="font-medium">Verified Professionals</h3>
-                <p className="text-sm text-muted-foreground">Every referrer is verified through work email or ID. No fake profiles.</p>
+                <h3 className="font-medium">Direct Connection</h3>
+                <p className="text-sm text-muted-foreground">Connect directly with {companyData.name} employees who can refer you.</p>
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-xl border border-border p-4">
               <Zap className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
               <div>
-                <h3 className="font-medium">Fast Response</h3>
-                <p className="text-sm text-muted-foreground">Get responses within 48 hours on average. No waiting weeks.</p>
+                <h3 className="font-medium">Track Your Progress</h3>
+                <p className="text-sm text-muted-foreground">Track your referral from request to hire in real-time.</p>
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-xl border border-border p-4">
@@ -282,8 +266,8 @@ export default function CompanyReferral() {
             <div className="flex items-start gap-3 rounded-xl border border-border p-4">
               <Users className="h-5 w-5 text-violet-500 mt-0.5 shrink-0" />
               <div>
-                <h3 className="font-medium">Pipeline Tracking</h3>
-                <p className="text-sm text-muted-foreground">Track your referral from request to hire in real-time.</p>
+                <h3 className="font-medium">Free for Job Seekers</h3>
+                <p className="text-sm text-muted-foreground">Create your profile and send referral requests at no cost.</p>
               </div>
             </div>
           </div>
@@ -332,7 +316,7 @@ export default function CompanyReferral() {
         {/* CTA */}
         <section className="mb-12 rounded-xl border border-border bg-gradient-to-br from-primary/5 to-primary/10 p-8 text-center space-y-4">
           <h2 className="text-2xl font-bold">Ready to Get Referred at {companyData.name}?</h2>
-          <p className="text-muted-foreground max-w-lg mx-auto">Join thousands of job seekers who have landed their dream jobs through employee referrals.</p>
+          <p className="text-muted-foreground max-w-lg mx-auto">Connect with {companyData.name} employees who can refer you for open positions.</p>
           <Link
             to="/login"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
