@@ -38,11 +38,11 @@ export class ProfilePage {
     this.fullName = page.locator('h1').first();
     this.location = page.locator('[class*="text-xs"][class*="text-muted-foreground"]').first();
 
-    // Toggle selectors — match the label wrapper containing the Switch
-    this.openToWorkToggle = page.locator('label').filter({ hasText: /open to work/i }).locator('button[role="switch"]');
-    this.openForReferralsToggle = page.locator('label').filter({ hasText: /open for referrals/i }).locator('button[role="switch"]');
-    this.openToWorkLabel = page.locator('label').filter({ hasText: /open to work/i });
-    this.openForReferralsLabel = page.locator('label').filter({ hasText: /open for referrals/i });
+    // Toggle selectors — match the div wrapper containing the Switch + label text
+    this.openToWorkToggle = page.locator('div[role="presentation"]').filter({ hasText: /open to work/i }).locator('button[role="switch"]');
+    this.openForReferralsToggle = page.locator('div[role="presentation"]').filter({ hasText: /open for referrals/i }).locator('button[role="switch"]');
+    this.openToWorkLabel = page.locator('div[role="presentation"]').filter({ hasText: /open to work/i });
+    this.openForReferralsLabel = page.locator('div[role="presentation"]').filter({ hasText: /open for referrals/i });
 
     this.editButton = page.getByRole('button', { name: /edit profile/i });
     this.saveButton = page.getByRole('button', { name: /^save$/i });

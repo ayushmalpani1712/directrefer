@@ -995,9 +995,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toggleProfessionalOpenToWork = useCallback(async (value: boolean): Promise<boolean> => {
     if (!user) return false
+    let prevValue = false
     setProfessionals((prev) => {
       const idx = prev.findIndex((p) => p.id === user.id)
-      if (idx >= 0) return prev.map((p) => p.id === user.id ? { ...p, isOpenToWork: value } : p)
+      if (idx >= 0) {
+        prevValue = prev[idx].isOpenToWork
+        return prev.map((p) => p.id === user.id ? { ...p, isOpenToWork: value } : p)
+      }
       return [...prev, {
         id: user.id,
         name: user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'User',
@@ -1015,10 +1019,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const { upsertProfessionalField } = await loadDb()
       await upsertProfessionalField(user.id, 'is_open_to_work', value)
+      const { data: verify } = await supabase
+        .from('profiles_professional')
+        .select('is_open_to_work')
+        .eq('user_id', user.id)
+        .single()
+      if (verify?.is_open_to_work !== value) {
+        throw new Error('Toggle value did not persist in database')
+      }
       return true
     } catch (err) {
       console.error('TOGGLE PERSIST FAILED (professional is_open_to_work):', err)
-      setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, isOpenToWork: !value } : p))
+      setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, isOpenToWork: prevValue } : p))
       toast.error('Failed to update toggle. Please try again.')
       return false
     }
@@ -1513,4 +1525,16 @@ export function useApp() {
   const ctx = useContext(Ctx)
   if (!ctx) throw new Error('useApp must be used within AppProvider')
   return ctx
+}
+
+/** Selector hook — components using this only re-render when the selected slice changes. */
+export function useAppSelector<T>(selector: (state: AppState) => T): T {
+  const ctx = useContext(Ctx)
+  if (!ctx) throw new Error('useAppSelector must be used within AppProvider')
+  const selected = selector(ctx)
+  const ref = useRef(selected)
+  if (!Object.is(ref.current, selected)) {
+    ref.current = selected
+  }
+  return ref.current
 }

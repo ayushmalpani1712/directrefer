@@ -95,8 +95,7 @@
     border-radius: 4px;
   }
   a:focus-visible, button:focus-visible {
-    outline: 2px solid hsl(225 100% 65% / 0.8);
-    outline-offset: 2px;
+    outline-color: hsl(225 100% 65% / 0.8);
   }
 }
 

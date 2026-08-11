@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="arrowGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#a8b4d0"/>
+      <stop offset="100%" stop-color="#c8d0e8"/>
+    </linearGradient>
+  </defs>
+  <!-- Arrow behind the d -->
+  <g>
+    <!-- Arrow shaft - diagonal from bottom-left to upper-right -->
+    <path d="M 80 420 L 380 120" stroke="url(#arrowGrad)" stroke-width="56" stroke-linecap="round" fill="none"/>
+    <!-- Arrow head -->
+    <path d="M 310 80 L 420 80 L 420 190" stroke="url(#arrowGrad)" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  <!-- Letter d -->
+  <g>
+    <!-- Vertical stem of d -->
+    <path d="M 300 80 L 300 432 Q 300 480 260 480 L 240 480 Q 180 480 160 420 Q 140 360 140 300 Q 140 200 190 140 Q 230 80 300 80 Z" fill="#4361EE"/>
+    <!-- Bowl of d - inner cutout -->
+    <ellipse cx="220" cy="300" rx="70" ry="90" fill="#0a0a1a"/>
+  </g>
+</svg>

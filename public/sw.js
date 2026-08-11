@@ -1,4 +1,3 @@
-const CACHE_NAME = 'directrefer-v5'
 const ASSET_CACHE = 'directrefer-assets-v2'
 
 self.addEventListener('install', (event) => {
@@ -47,6 +46,14 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Everything else (HTML, API, etc.): always network, never cache
+  // HTML navigation: network-first with offline fallback
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/'))
+    )
+    return
+  }
+
+  // Everything else: always network
   event.respondWith(fetch(event.request))
 })
