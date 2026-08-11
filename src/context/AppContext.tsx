@@ -192,8 +192,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const roleRef = useRef<Role>(role)
   useEffect(() => { roleRef.current = role }, [role])
 
-  // Persist active workspace role so page refreshes land on the correct workspace
-  useEffect(() => { persistRole(role) }, [role])
+  // Persist active workspace role so page refreshes land on the correct workspace.
+  // Only persist AFTER roleLoaded to avoid writing the default 'student' to cookie
+  // before loadRealData has a chance to resolve the correct role from URL/DB.
+  useEffect(() => { if (roleLoaded) persistRole(role) }, [role, roleLoaded])
 
   const [professionals, setProfessionals] = useState<Professional[]>([])
   const [student, setStudent] = useState<StudentProfile>({
@@ -296,8 +298,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const urlRole = getRoleFromPath(window.location.pathname)
           if (urlRole !== 'student') {
             setRole(urlRole)
+            persistRole(urlRole)
           } else {
             setRole(mappedRole)
+            persistRole(mappedRole)
           }
         }
         setIsAdmin(userRole === 'admin')
