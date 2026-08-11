@@ -115,7 +115,7 @@ export function DateRangeSelector({ value, onChange, className }: { value: DateR
             </button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-auto p-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <div className="flex flex-col gap-1">
                 <span className="text-[11px] font-medium text-muted-foreground">From</span>
                 <Input
@@ -126,10 +126,11 @@ export function DateRangeSelector({ value, onChange, className }: { value: DateR
                     const newTo = fromDate > value.to ? fromDate : value.to
                     onChange({ ...value, from: fromDate, to: newTo })
                   }}
-                  className="h-8 w-[150px] rounded-lg text-xs"
+                  className="h-8 w-full sm:w-[150px] rounded-lg text-xs"
                 />
               </div>
-              <span className="mt-4 text-xs text-muted-foreground">to</span>
+              <span className="hidden sm:block mt-4 text-xs text-muted-foreground">to</span>
+              <span className="sm:hidden text-xs text-muted-foreground">to</span>
               <div className="flex flex-col gap-1">
                 <span className="text-[11px] font-medium text-muted-foreground">To</span>
                 <Input
@@ -140,7 +141,7 @@ export function DateRangeSelector({ value, onChange, className }: { value: DateR
                     const newFrom = toDate < value.from ? toDate : value.from
                     onChange({ ...value, to: toDate, from: newFrom })
                   }}
-                  className="h-8 w-[150px] rounded-lg text-xs"
+                  className="h-8 w-full sm:w-[150px] rounded-lg text-xs"
                 />
               </div>
             </div>

@@ -48,40 +48,66 @@ export default function AdminAuditLog() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="shadow-soft">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[700px] text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                    <th className="p-4">Admin</th>
-                    <th className="p-4">Action</th>
-                    <th className="p-4">Target</th>
-                    <th className="p-4">Details</th>
-                    <th className="p-4">Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {auditLogs.map((log) => (
-                    <tr key={log.id} className="border-b border-border/50 hover:bg-muted/30">
-                      <td className="p-4 font-medium">{log.admin_name}</td>
-                      <td className="p-4">
-                        <Badge variant="outline" className={`text-xs ${getActionBadgeColor(log.action)}`}>
-                          {log.action.replace(/_/g, ' ')}
-                        </Badge>
-                      </td>
-                      <td className="p-4 text-muted-foreground">{log.target_name || '—'}</td>
-                      <td className="p-4 text-xs text-muted-foreground">
-                        {log.details ? JSON.stringify(log.details) : '—'}
-                      </td>
-                      <td className="p-4 text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</td>
+        <>
+          {/* Mobile: card view */}
+          <div className="space-y-3 md:hidden">
+            {auditLogs.map((log) => (
+              <Card key={log.id} className="shadow-soft">
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{log.admin_name}</span>
+                    <span className="text-[11px] text-muted-foreground">{new Date(log.created_at).toLocaleString()}</span>
+                  </div>
+                  <Badge variant="outline" className={`text-xs ${getActionBadgeColor(log.action)}`}>
+                    {log.action.replace(/_/g, ' ')}
+                  </Badge>
+                  {log.target_name && (
+                    <div className="text-xs text-muted-foreground">Target: {log.target_name}</div>
+                  )}
+                  {log.details && (
+                    <div className="truncate text-[11px] text-muted-foreground">{JSON.stringify(log.details)}</div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop: table view */}
+          <Card className="shadow-soft hidden md:block">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                      <th className="p-4">Admin</th>
+                      <th className="p-4">Action</th>
+                      <th className="p-4">Target</th>
+                      <th className="p-4">Details</th>
+                      <th className="p-4">Time</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                  </thead>
+                  <tbody>
+                    {auditLogs.map((log) => (
+                      <tr key={log.id} className="border-b border-border/50 hover:bg-muted/30">
+                        <td className="p-4 font-medium">{log.admin_name}</td>
+                        <td className="p-4">
+                          <Badge variant="outline" className={`text-xs ${getActionBadgeColor(log.action)}`}>
+                            {log.action.replace(/_/g, ' ')}
+                          </Badge>
+                        </td>
+                        <td className="p-4 text-muted-foreground">{log.target_name || '—'}</td>
+                        <td className="p-4 text-xs text-muted-foreground">
+                          {log.details ? JSON.stringify(log.details) : '—'}
+                        </td>
+                        <td className="p-4 text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   )

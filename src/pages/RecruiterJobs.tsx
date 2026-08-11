@@ -80,7 +80,7 @@ export function BrowseJobsView() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search jobs by title or location..." className="pl-9" />
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {['all', 'full-time', 'part-time', 'contract'].map((t) => (
             <Button key={t} size="sm" variant={typeFilter === t ? 'default' : 'outline'} className="rounded-full text-xs capitalize" onClick={() => setTypeFilter(t)}>
               {t === 'all' ? 'All' : t}
@@ -223,6 +223,7 @@ function RecruiterJobsManager() {
   const [addingToStage, setAddingToStage] = useState<string | null>(null)
   const [addCandidateQuery, setAddCandidateQuery] = useState('')
   const [extraCandidates, setExtraCandidates] = useState<typeof candidates>([])
+  const [mobileStage, setMobileStage] = useState<string>(STAGES[0])
 
   const allCandidates = [...candidates, ...extraCandidates]
 
@@ -466,7 +467,106 @@ function RecruiterJobsManager() {
 
         {/* ── Pipeline kanban ── */}
         <TabsContent value="pipeline" className="mt-5">
-          <div className="grid gap-4 overflow-x-auto pb-2 md:grid-cols-4">
+          {/* Mobile: stage selector tabs */}
+          <div className="mb-4 md:hidden">
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {STAGES.map((stage) => {
+                const cands = allCandidates.filter((c) => candidateStages[c.id] === stage)
+                return (
+                  <button
+                    key={stage}
+                    onClick={() => setMobileStage(stage)}
+                    className={cn(
+                      'flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors',
+                      mobileStage === stage
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    )}
+                  >
+                    {stage}
+                    <Badge variant="outline" className={cn('ml-0.5 h-5 min-w-[20px] justify-center text-[10px]', mobileStage === stage && 'border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground')}>
+                      {cands.length}
+                    </Badge>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Mobile: single stage view */}
+          <div className="md:hidden">
+            {(() => {
+              const stage = mobileStage
+              const cands = allCandidates.filter((c) => candidateStages[c.id] === stage)
+              const isAdding = addingToStage === stage
+              const query = addCandidateQuery.toLowerCase()
+              const pool = professionals.filter((p) => {
+                if (candidateStages[p.id]) return false
+                if (query && !p.name.toLowerCase().includes(query) && !p.company.toLowerCase().includes(query) && !p.industry.toLowerCase().includes(query)) return false
+                return true
+              })
+              return (
+                <div className={cn('rounded-xl border border-border border-t-4 bg-muted/30 p-3', STAGE_COLORS[stage])}>
+                  <div className="mb-3 flex items-center justify-between px-1">
+                    <span className="text-sm font-semibold">{stage}</span>
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="outline" className="text-[10px]">{cands.length}</Badge>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-primary hover:bg-primary/10" onClick={() => { setAddingToStage(isAdding ? null : stage); setAddCandidateQuery('') }}>
+                        {isAdding ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                      </Button>
+                    </div>
+                  </div>
+                  {isAdding && (
+                    <div className="mb-3 space-y-2">
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Input value={addCandidateQuery} onChange={(e) => setAddCandidateQuery(e.target.value)} placeholder="Search professionals..." className="h-8 pl-8 text-xs" autoFocus />
+                      </div>
+                      <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-lg border border-border bg-background p-1.5">
+                        {pool.length === 0 && <p className="py-3 text-center text-[11px] text-muted-foreground">No available candidates</p>}
+                        {pool.slice(0, 8).map((p) => (
+                          <button key={p.id} className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-muted/50 transition-colors" onClick={() => addCandidateToStage(p, stage)}>
+                            <GAvatar name={p.name} gradient={p.gradient} className="h-7 w-7 text-[9px]" />
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-xs font-semibold">{p.name}</div>
+                              <div className="truncate text-[10px] text-muted-foreground">{p.designation} · {p.company}</div>
+                            </div>
+                            <Plus className="h-3.5 w-3.5 shrink-0 text-primary" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {cands.length === 0 ? (
+                    <p className="py-6 text-center text-xs text-muted-foreground">No candidates in this stage</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {cands.map((c) => {
+                        const next = nextStage(stage)
+                        return (
+                          <div key={c.id} className="flex items-center gap-2.5 rounded-lg border border-border bg-background p-2.5">
+                            <GAvatar name={c.name} gradient={c.gradient} className="h-8 w-8 text-[10px]" />
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-xs font-semibold">{c.name}</div>
+                              <div className="truncate text-[10px] text-muted-foreground">{c.role} · {c.company}</div>
+                            </div>
+                            {next && (
+                              <Button variant="ghost" size="sm" className="h-7 shrink-0 text-[10px] text-primary hover:bg-primary/10" onClick={() => advanceCandidate(c.id)}>
+                                Move to {next}
+                              </Button>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+          </div>
+
+          {/* Desktop: 4-column kanban */}
+          <div className="hidden md:grid md:grid-cols-4 md:gap-4">
             {(STAGES).map((stage) => {
               const cands = allCandidates.filter((c) => candidateStages[c.id] === stage)
               const isAdding = addingToStage === stage
@@ -477,7 +577,7 @@ function RecruiterJobsManager() {
                 return true
               })
               return (
-                <div key={stage} className={cn('min-w-[240px] rounded-xl border border-border border-t-4 bg-muted/30 p-3', STAGE_COLORS[stage])}>
+                <div key={stage} className={cn('rounded-xl border border-border border-t-4 bg-muted/30 p-3', STAGE_COLORS[stage])}>
                   <div className="mb-3 flex items-center justify-between px-1">
                     <span className="text-sm font-semibold">{stage}</span>
                     <div className="flex items-center gap-1.5">
