@@ -157,6 +157,7 @@ function FileAttachment({ fileInfo, isMe }: { fileInfo: FileInfo; isMe: boolean 
   return (
     <>
       <button
+        type="button"
         onClick={handlePreviewClick}
         className={cn(
           'flex items-center gap-3 rounded-2xl border p-3 text-left transition-all max-w-[85vw] sm:max-w-[300px]',
@@ -333,6 +334,7 @@ export default function Messages() {
         <ScrollArea className="flex-1">
           {sorted.map((c) => (
             <button
+              type="button"
               key={c.id}
               onClick={() => setActiveId(c.id)}
               className={cn('flex w-full items-center gap-3 border-b border-border/60 px-4 py-3.5 text-left transition-colors hover:bg-muted/50', activeId === c.id && 'bg-primary/[0.06]')}
@@ -367,7 +369,7 @@ export default function Messages() {
         ) : (<>
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-          <button className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted sm:hidden" onClick={() => setActiveId('')} aria-label="Back to conversations">
+          <button type="button" className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted sm:hidden" onClick={() => setActiveId('')} aria-label="Back to conversations">
             <ArrowLeft className="h-5 w-5" />
           </button>
           {profilePath ? (

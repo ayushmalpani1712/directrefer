@@ -511,12 +511,15 @@ export default function StudentProfile() {
             </div>
 
             <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
-              <label className={cn(
-                'flex items-center gap-2.5 rounded-full border px-4 py-2 transition-colors',
-                openToWork
-                  ? 'border-emerald-500/30 bg-emerald-500/5'
-                  : 'border-border bg-transparent'
-              )}>
+              <div
+                role="presentation"
+                className={cn(
+                  'flex items-center gap-2.5 rounded-full border px-4 py-2 transition-colors',
+                  openToWork
+                    ? 'border-emerald-500/30 bg-emerald-500/5'
+                    : 'border-border bg-transparent'
+                )}
+              >
                 <Switch
                   checked={openToWork}
                   onCheckedChange={async (v) => {
@@ -531,16 +534,16 @@ export default function StudentProfile() {
                     ? 'text-emerald-600 dark:text-emerald-400'
                     : 'text-muted-foreground'
                 )}>Open to work</span>
-              </label>
+              </div>
               {s.links.linkedin ? (
                 <a href={s.links.linkedin.startsWith('http') ? s.links.linkedin : `https://linkedin.com/in/${s.links.linkedin}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"><Linkedin className="h-4 w-4 text-[#0A66C2]" /> LinkedIn</a>
               ) : (
-                <button onClick={() => { setEditName(s.name); setEditHeadline(s.headline); setEditLocation(s.location); setEditLinkedin(s.links.linkedin); setEditGithub(s.links.github); setEditing(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"><Linkedin className="h-4 w-4" /> Add LinkedIn</button>
+                <button type="button" onClick={() => { setEditName(s.name); setEditHeadline(s.headline); setEditLocation(s.location); setEditLinkedin(s.links.linkedin); setEditGithub(s.links.github); setEditing(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"><Linkedin className="h-4 w-4" /> Add LinkedIn</button>
               )}
               {s.links.github ? (
                 <a href={s.links.github.startsWith('http') ? s.links.github : `https://github.com/${s.links.github}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"><Github className="h-4 w-4" /> GitHub</a>
               ) : (
-                <button onClick={() => { setEditName(s.name); setEditHeadline(s.headline); setEditLocation(s.location); setEditLinkedin(s.links.linkedin); setEditGithub(s.links.github); setEditing(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"><Github className="h-4 w-4" /> Add GitHub</button>
+                <button type="button" onClick={() => { setEditName(s.name); setEditHeadline(s.headline); setEditLocation(s.location); setEditLinkedin(s.links.linkedin); setEditGithub(s.links.github); setEditing(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"><Github className="h-4 w-4" /> Add GitHub</button>
               )}
               {s.links.website ? (
                 <a href={s.links.website.startsWith('http') ? s.links.website : `https://${s.links.website}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"><Globe className="h-4 w-4 text-primary" /> Website</a>

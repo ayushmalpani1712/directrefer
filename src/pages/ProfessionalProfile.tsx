@@ -206,12 +206,15 @@ export default function ProfessionalProfile() {
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 sm:mt-5 sm:gap-x-6 sm:gap-y-3">
-              <label className={cn(
-                'flex items-center gap-2.5 rounded-full border px-4 py-2 transition-colors',
-                open
-                  ? 'border-emerald-500/30 bg-emerald-500/5'
-                  : 'border-border bg-transparent'
-              )}>
+              <div
+                role="presentation"
+                className={cn(
+                  'flex items-center gap-2.5 rounded-full border px-4 py-2 transition-colors',
+                  open
+                    ? 'border-emerald-500/30 bg-emerald-500/5'
+                    : 'border-border bg-transparent'
+                )}
+              >
                 <Switch checked={open} onCheckedChange={async (v) => { setOpen(v); const ok = await toggleProfessionalOpenForReferrals(v); if (ok) toast.success(v ? 'Now accepting referral requests' : 'Referral requests paused') }} />
                 <span className={cn(
                   'text-sm font-medium',
@@ -219,13 +222,16 @@ export default function ProfessionalProfile() {
                     ? 'text-emerald-600 dark:text-emerald-400'
                     : 'text-muted-foreground'
                 )}>Open for referrals</span>
-              </label>
-              <label className={cn(
-                'flex items-center gap-2.5 rounded-full border px-4 py-2 transition-colors',
-                isOpenToWork
-                  ? 'border-emerald-500/30 bg-emerald-500/5'
-                  : 'border-border bg-transparent'
-              )}>
+              </div>
+              <div
+                role="presentation"
+                className={cn(
+                  'flex items-center gap-2.5 rounded-full border px-4 py-2 transition-colors',
+                  isOpenToWork
+                    ? 'border-emerald-500/30 bg-emerald-500/5'
+                    : 'border-border bg-transparent'
+                )}
+              >
                 <Switch
                   checked={isOpenToWork}
                   onCheckedChange={async (v) => { setIsOpenToWork(v); const ok = await toggleProfessionalOpenToWork(v); if (ok) toast.success(v ? 'You are now visible to recruiters' : 'Profile hidden from recruiters') }}
@@ -236,16 +242,16 @@ export default function ProfessionalProfile() {
                     ? 'text-emerald-600 dark:text-emerald-400'
                     : 'text-muted-foreground'
                 )}>Open to work</span>
-              </label>
+              </div>
               {p.linkedinUrl ? (
                 <a href={p.linkedinUrl.startsWith('http') ? p.linkedinUrl : `https://linkedin.com/in/${p.linkedinUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"><Linkedin className="h-4 w-4 text-[#0A66C2]" /> LinkedIn</a>
               ) : (
-                <button onClick={() => { setEditName(ME.name); setEditDesignation(ME.designation); setEditCompany(ME.company); setEditLocation(ME.location); setEditIndustry(ME.industry); setLinkedinUrl(ME.linkedinUrl); setGithubUrl(ME.githubUrl); setEditingHeader(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"><Linkedin className="h-4 w-4" /> Add LinkedIn</button>
+                <button type="button" onClick={() => { setEditName(ME.name); setEditDesignation(ME.designation); setEditCompany(ME.company); setEditLocation(ME.location); setEditIndustry(ME.industry); setLinkedinUrl(ME.linkedinUrl); setGithubUrl(ME.githubUrl); setEditingHeader(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"><Linkedin className="h-4 w-4" /> Add LinkedIn</button>
               )}
               {p.githubUrl ? (
                 <a href={p.githubUrl.startsWith('http') ? p.githubUrl : `https://github.com/${p.githubUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"><Github className="h-4 w-4" /> GitHub</a>
               ) : (
-                <button onClick={() => { setEditName(ME.name); setEditDesignation(ME.designation); setEditCompany(ME.company); setEditLocation(ME.location); setEditIndustry(ME.industry); setLinkedinUrl(ME.linkedinUrl); setGithubUrl(ME.githubUrl); setEditingHeader(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"><Github className="h-4 w-4" /> Add GitHub</button>
+                <button type="button" onClick={() => { setEditName(ME.name); setEditDesignation(ME.designation); setEditCompany(ME.company); setEditLocation(ME.location); setEditIndustry(ME.industry); setLinkedinUrl(ME.linkedinUrl); setGithubUrl(ME.githubUrl); setEditingHeader(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"><Github className="h-4 w-4" /> Add GitHub</button>
               )}
             </div>
           </CardContent>

@@ -358,6 +358,7 @@ export default function Login() {
           className="mt-4 grid grid-cols-2 gap-3"
         >
           <Button
+            type="button"
             variant="outline"
             onClick={handleGoogle}
             disabled={loading}
@@ -377,6 +378,7 @@ export default function Login() {
             Google
           </Button>
           <Button
+            type="button"
             variant="outline"
             onClick={handleLinkedIn}
             disabled={loading}
@@ -403,6 +405,7 @@ export default function Login() {
         >
           {isSignUp ? 'Already have an account?' : 'New to Direct Refer?'}{' '}
           <button
+            type="button"
             onClick={() => setIsSignUp(!isSignUp)}
             className={cn(
               'font-semibold transition-colors duration-200 hover:underline',

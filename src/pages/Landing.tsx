@@ -125,9 +125,9 @@ export default function Landing() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Logo />
           <nav className="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex">
-            <button onClick={() => scrollTo('roles')} className="hover:text-foreground">Who it's for</button>
-            <button onClick={() => scrollTo('features')} className="hover:text-foreground">Features</button>
-            <button onClick={() => scrollTo('network')} className="hover:text-foreground">Network</button>
+            <button type="button" onClick={() => scrollTo('roles')} className="hover:text-foreground">Who it's for</button>
+            <button type="button" onClick={() => scrollTo('features')} className="hover:text-foreground">Features</button>
+            <button type="button" onClick={() => scrollTo('network')} className="hover:text-foreground">Network</button>
           </nav>
           <div className="flex items-center gap-1.5 sm:gap-2">
             {user ? (
@@ -143,6 +143,7 @@ export default function Landing() {
               </>
             )}
             <button
+              type="button"
               className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
@@ -155,9 +156,9 @@ export default function Landing() {
         {mobileMenuOpen && (
           <div className="border-t border-border/50 bg-background px-4 pb-4 pt-2 md:hidden">
             <nav className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
-              <button onClick={() => { scrollTo('roles'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-2.5 text-left hover:bg-muted hover:text-foreground">Who it's for</button>
-              <button onClick={() => { scrollTo('features'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-2.5 text-left hover:bg-muted hover:text-foreground">Features</button>
-              <button onClick={() => { scrollTo('network'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-2.5 text-left hover:bg-muted hover:text-foreground">Network</button>
+              <button type="button" onClick={() => { scrollTo('roles'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-2.5 text-left hover:bg-muted hover:text-foreground">Who it's for</button>
+              <button type="button" onClick={() => { scrollTo('features'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-2.5 text-left hover:bg-muted hover:text-foreground">Features</button>
+              <button type="button" onClick={() => { scrollTo('network'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-2.5 text-left hover:bg-muted hover:text-foreground">Network</button>
               {!user && (
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2.5 hover:bg-muted hover:text-foreground">Sign in</Link>
               )}
