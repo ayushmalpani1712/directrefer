@@ -14,6 +14,28 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY — running in mock mode')
 }
 
+// Mobile-safe storage adapter: tries localStorage, falls back silently on error
+const mobileStorage: Storage = {
+  getItem(key: string) {
+    try { return localStorage.getItem(key) } catch { return null }
+  },
+  setItem(key: string, value: string) {
+    try { localStorage.setItem(key, value) } catch { /* quota or private mode */ }
+  },
+  removeItem(key: string) {
+    try { localStorage.removeItem(key) } catch { /* ignore */ }
+  },
+  clear() {
+    try { localStorage.clear() } catch { /* ignore */ }
+  },
+  get length() {
+    try { return localStorage.length } catch { return 0 }
+  },
+  key(index: number) {
+    try { return localStorage.key(index) } catch { return null }
+  },
+}
+
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder',
@@ -23,6 +45,7 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      storage: mobileStorage,
     },
   }
 )

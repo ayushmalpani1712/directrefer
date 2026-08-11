@@ -98,7 +98,11 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation()
 
   if (loading) {
-    return null
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   if (user && authed && (PUBLIC_PATHS.has(pathname) || POST_AUTH_PATHS.has(pathname))) {
@@ -113,7 +117,11 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   const { authed } = useApp()
 
   if (loading) {
-    return null
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   if (!user) return <Navigate to="/login" replace />
