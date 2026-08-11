@@ -86,7 +86,7 @@ function PipelineTracker({ stage, status }: { stage: PipelineStage; status: Refe
                       )}
                     </motion.div>
                     <span className={cn(
-                      'text-center text-[10px] font-medium leading-tight max-w-[60px]',
+                      'text-center text-[10px] sm:text-[11px] font-medium leading-tight max-w-[60px] sm:max-w-[70px] whitespace-normal',
                       isComplete && 'text-emerald-600 dark:text-emerald-400',
                       isCurrent && 'text-primary font-semibold',
                       isFuture && 'text-muted-foreground/50',

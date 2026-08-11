@@ -156,11 +156,11 @@ export default function Landing() {
         {mobileMenuOpen && (
           <div className="border-t border-border/50 bg-background px-4 pb-4 pt-2 md:hidden">
             <nav className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
-              <button type="button" onClick={() => { scrollTo('roles'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-2.5 text-left hover:bg-muted hover:text-foreground">Who it's for</button>
-              <button type="button" onClick={() => { scrollTo('features'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-2.5 text-left hover:bg-muted hover:text-foreground">Features</button>
-              <button type="button" onClick={() => { scrollTo('network'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-2.5 text-left hover:bg-muted hover:text-foreground">Network</button>
+              <button type="button" onClick={() => { scrollTo('roles'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Who it's for</button>
+              <button type="button" onClick={() => { scrollTo('features'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Features</button>
+              <button type="button" onClick={() => { scrollTo('network'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Network</button>
               {!user && (
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-2.5 hover:bg-muted hover:text-foreground">Sign in</Link>
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 min-h-[44px] flex items-center hover:bg-muted hover:text-foreground">Sign in</Link>
               )}
             </nav>
           </div>
