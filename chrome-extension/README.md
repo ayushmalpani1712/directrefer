@@ -2,6 +2,16 @@
 
 Get verified employee referrers at top Indian tech companies — right from LinkedIn and Naukri.
 
+## Prerequisites
+
+Run the SQL migration in Supabase SQL Editor to allow the extension to read referrer data:
+
+```
+fix-extension-rls.sql
+```
+
+This adds a public read policy for `profiles_professional` so the extension (using the anon key) can query referrers per company.
+
 ## Install (Developer Mode)
 
 1. Open `chrome://extensions`

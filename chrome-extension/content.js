@@ -73,11 +73,14 @@ function detectCompanyLinkedIn() {
   const selectors = [
     '.job-details-jobs-unified-top-card__company-name a',
     '.job-details-jobs-unified-top-card__company-name',
-    '.t-14.t-bold',
+    '.artdeco-entity-lockup__subtitle a',
     '.artdeco-entity-lockup__subtitle',
     '[data-test="job-details-company-name"]',
     '.jobs-unified-top-card__company-name a',
     '.jobs-unified-top-card__company-name',
+    '.job-details__company-details a',
+    '.job-details__company-details',
+    'section.artdeco-card .t-14.t-bold',
   ]
 
   for (const sel of selectors) {
@@ -88,8 +91,17 @@ function detectCompanyLinkedIn() {
     }
   }
 
+  const scripts = document.querySelectorAll('script[type="application/ld+json"]')
+  for (const s of scripts) {
+    try {
+      const json = JSON.parse(s.textContent)
+      if (json.hiringOrganization?.name) return json.hiringOrganization.name
+      if (json Organization?.name) return json Organization.name
+    } catch {}
+  }
+
   const title = document.title
-  const match = title.match(/(?:at|@)\s+(.+?)(?:\s+in|\s*[-|]|$)/i)
+  const match = title.match(/(?:at|@)\s+(.+?)(?:\s+in|\s+[-|]|$)/i)
   if (match) return match[1].trim()
 
   return null
@@ -102,8 +114,10 @@ function detectCompanyNaukri() {
     'a[title][class*="company"]',
     '.job-details .company-name',
     '.jd-emp-details .company-name',
+    '[data-test="company-name"]',
     '.styles_jd-header__companyName__GTEMT',
     'h2 a[title]',
+    '.jobHeader .company',
   ]
 
   for (const sel of selectors) {
@@ -114,51 +128,32 @@ function detectCompanyNaukri() {
     }
   }
 
+  const scripts = document.querySelectorAll('script[type="application/ld+json"]')
+  for (const s of scripts) {
+    try {
+      const json = JSON.parse(s.textContent)
+      if (json.hiringOrganization?.name) return json.hiringOrganization.name
+    } catch {}
+  }
+
   return null
 }
 
 function normalizeCompany(rawName) {
   if (!rawName) return null
-  const lower = rawName.toLowerCase().trim()
+  let name = rawName.trim()
+  const lower = name.toLowerCase()
 
   for (const [key, canonical] of Object.entries(COMPANY_SYNONYMS)) {
     if (lower.includes(key)) return canonical
   }
 
-  if (lower.endsWith(' india')) return rawName.trim()
-  if (!lower.includes('india') && !lower.includes('technologies') && !lower.includes('labs')) {
-    return rawName.trim()
-  }
+  if (lower.endsWith(' india')) name = name.slice(0, -6).trim()
 
-  return rawName.trim()
+  return name || null
 }
 
 async function fetchReferrers(companyName) {
-  try {
-    const { COMPANIES } = await import('./company-data.js')
-    const match = COMPANIES.find(c =>
-      c.name.toLowerCase() === companyName.toLowerCase()
-    )
-    if (!match) return null
-
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/profiles_professional?select=user_id,job_title,open_for_referrals&company_name=eq.${encodeURIComponent(companyName)}&open_for_referrals=eq.true`,
-      {
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-      }
-    )
-    if (!res.ok) return null
-    const data = await res.json()
-    return { company: companyName, count: data.length, referrers: data }
-  } catch {
-    return null
-  }
-}
-
-async function fetchReferrersFallback(companyName) {
   try {
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/profiles_professional?select=user_id,job_title,open_for_referrals&company_name=eq.${encodeURIComponent(companyName)}&open_for_referrals=eq.true`,
@@ -253,9 +248,12 @@ function onPageChange() {
     const platform = detectPlatform()
     if (!platform) return
 
-    chrome.storage?.local?.get('dr_hidden', (result) => {
-      if (result?.dr_hidden) return
+    const hidden = await new Promise((resolve) => {
+      chrome.storage?.local?.get('dr_hidden', (result) => {
+        resolve(result?.dr_hidden || false)
+      })
     })
+    if (hidden) return
 
     const rawCompany = platform === 'linkedin'
       ? detectCompanyLinkedIn()
@@ -266,7 +264,7 @@ function onPageChange() {
     if (!company || company === currentCompany) return
     currentCompany = company
 
-    const data = await fetchReferrersFallback(company)
+    const data = await fetchReferrers(company)
     if (data) createSidebar(data)
   }, 1500)
 }
