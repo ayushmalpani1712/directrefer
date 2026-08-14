@@ -117,6 +117,17 @@ export interface ReferralRequest {
   date: string
   note: string
   progress: number
+  candidate?: {
+    headline?: string
+    location?: string
+    skills?: string[]
+    experience?: { title: string; org: string; period: string; desc: string }[]
+    education?: { school: string; degree: string; period: string; detail: string }[]
+    noticePeriod?: string
+    workPreference?: string
+    whyFit?: string
+    college?: string
+  }
 }
 
 export interface Job {

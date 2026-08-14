@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Chip, EmptyState, GAvatar, SectionHeader, StatCard, StatusBadge } from '@/components/ui-kit'
+import { ReportDialog } from '@/components/ui-kit'
+import CandidateCard from '@/components/CandidateCard'
 import { InboxIllustration } from '@/components/illustrations'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
@@ -158,6 +160,7 @@ export default function ReferralInbox() {
                       </div>
                       <div className="mt-0.5 text-xs text-muted-foreground">{r.role} · {r.date}</div>
                       <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">"{r.note}"</p>
+                      <CandidateCard request={r} />
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {r.studentResumeUrl && <Chip>Resume attached</Chip>}
                         {r.note && <Chip>Note</Chip>}
@@ -173,7 +176,7 @@ export default function ReferralInbox() {
                             <CheckCheck className="mr-1.5 h-3.5 w-3.5" /> Accept
                           </Button>
                           <Button size="sm" variant="outline" className="rounded-lg" onClick={() => { setRequestStatus(r.id, 'rejected'); toast.success('Declined with feedback sent') }}>
-                            <XCircle className="mr-1.5 h-3.5 w-3.5" /> Decline
+                            <XCircle className="mr-1.5 h-3.5 w-3.5" /> Pass
                           </Button>
                         </>
                       ) : (
@@ -181,6 +184,7 @@ export default function ReferralInbox() {
                           <MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message
                         </Button>
                       )}
+                      {r.requesterId && <ReportDialog targetUserId={r.requesterId} targetUserName={r.student} />}
                       <Button size="sm" variant="ghost" className="rounded-lg" disabled={!r.studentResumeUrl} onClick={() => r.studentResumeUrl && setViewingResume({ url: r.studentResumeUrl, name: `${r.student}_Resume.pdf` })}>
                         <FileText className="mr-1.5 h-3.5 w-3.5" /> View resume
                       </Button>

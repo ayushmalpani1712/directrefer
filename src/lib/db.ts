@@ -227,24 +227,34 @@ export async function fetchReferrals(userId: string): Promise<ReferralRequest[]>
     if (error || !data) return []
 
     const requesterIds = [...new Set(data.map(r => r.requester_id).filter(Boolean))]
-    const { data: seekerProfiles } = await supabase
+    const baseSeekerSelect = 'user_id, resume_url, headline, skills, experience, education, preferred_role, college'
+    const seekerSelect = (await candidateFieldsSupported())
+      ? baseSeekerSelect + ', notice_period, work_preference, why_me'
+      : baseSeekerSelect
+    const { data: seekerProfiles } = (await supabase
       .from('profiles_job_seeker')
-      .select('user_id, resume_url')
-      .in('user_id', requesterIds)
+      .select(seekerSelect)
+      .in('user_id', requesterIds)) as { data: Record<string, unknown>[] | null; error: unknown }
 
-    const resumeMap = new Map<string, string>()
+    const seekerMap = new Map<string, Record<string, unknown>>()
     for (const sp of seekerProfiles ?? []) {
-      if (sp.resume_url) resumeMap.set(sp.user_id, sp.resume_url)
+      seekerMap.set(String(sp.user_id), sp)
     }
 
     return data.map((row) => {
       const requesterArr = row.requester as unknown as { full_name: string }[] | null
       const requester = requesterArr?.[0] ?? null
+      const sp = seekerMap.get(row.requester_id)
+      const safeJson = <T,>(val: unknown): T[] => {
+        if (Array.isArray(val)) return val as T[]
+        if (typeof val === 'string') { try { return JSON.parse(val) as T[] } catch { return [] } }
+        return []
+      }
       return {
         id: row.id,
         student: requester?.full_name ?? '',
         requesterId: row.requester_id,
-        studentResumeUrl: resumeMap.get(row.requester_id) ?? undefined,
+        studentResumeUrl: (sp?.resume_url as string) || undefined,
         professionalId: row.professional_id,
         role: row.job_title,
         status: mapReferralStatus(row.status),
@@ -255,6 +265,17 @@ export async function fetchReferrals(userId: string): Promise<ReferralRequest[]>
           year: 'numeric',
         }),
         note: row.note ?? '',
+        candidate: {
+          headline: (sp?.headline as string) || undefined,
+          location: undefined,
+          skills: Array.isArray(sp?.skills) ? (sp?.skills as string[]) : [],
+          experience: safeJson<{ title: string; org: string; period: string; desc: string }>(sp?.experience),
+          education: safeJson<{ school: string; degree: string; period: string; detail: string }>(sp?.education),
+          noticePeriod: (sp?.notice_period as string) || undefined,
+          workPreference: (sp?.work_preference as string) || undefined,
+          whyFit: (sp?.why_me as string) || undefined,
+          college: (sp?.college as string) || undefined,
+        },
         progress: row.progress,
       }
     })
