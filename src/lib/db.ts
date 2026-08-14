@@ -143,21 +143,23 @@ function buildLocation(
 
 export async function fetchProfessionals(currentUserId?: string): Promise<Professional[]> {
   try {
-    const [allProfilesRes, ] = await Promise.all([
-      currentUserId
-        ? supabase
-            .from('profiles_professional')
-            .select(`user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url${(await professionalCollegeSupported()) ? ', college' : ''}`)
-            .or(`open_for_referrals.eq.true,user_id.eq.${currentUserId}`)
-        : supabase
-            .from('profiles_professional')
-            .select(`user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url${(await professionalCollegeSupported()) ? ', college' : ''}`)
-            .eq('open_for_referrals', true),
-    ])
+    const baseProfessionalSelect = 'user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url'
+    const professionalSelect = (await professionalCollegeSupported())
+      ? baseProfessionalSelect + ', college'
+      : baseProfessionalSelect
+    const allProfilesRes = currentUserId
+      ? (await supabase
+          .from('profiles_professional')
+          .select(professionalSelect)
+          .or(`open_for_referrals.eq.true,user_id.eq.${currentUserId}`)) as { data: Record<string, unknown>[] | null; error: unknown }
+      : (await supabase
+          .from('profiles_professional')
+          .select(professionalSelect)
+          .eq('open_for_referrals', true)) as { data: Record<string, unknown>[] | null; error: unknown }
 
     if (allProfilesRes.error || !allProfilesRes.data) return []
 
-    const userIds = [...new Set(allProfilesRes.data.map((p) => p.user_id))]
+    const userIds = [...new Set(allProfilesRes.data.map((p) => String(p.user_id)))]
 
     const usersRes = await supabase
       .from('users')
@@ -166,9 +168,9 @@ export async function fetchProfessionals(currentUserId?: string): Promise<Profes
 
     if (usersRes.error || !usersRes.data) return []
 
-    const profileMap = new Map<string, typeof allProfilesRes.data[number]>()
+    const profileMap = new Map<string, Record<string, unknown>>()
     for (const p of allProfilesRes.data) {
-      profileMap.set(p.user_id, p)
+      profileMap.set(String(p.user_id), p)
     }
 
     return usersRes.data.map((row, index): Professional => {
