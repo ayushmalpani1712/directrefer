@@ -32,6 +32,10 @@ const STEPS = [
   { id: 6, label: 'Done', icon: PartyPopper },
 ]
 
+// Max concurrent pending referral requests a candidate can hold.
+// Slot is released when a request is accepted, declined or expired.
+const MAX_ACTIVE_REQUESTS = 5
+
 interface Draft {
   professionalId: string
   resumeName: string
@@ -49,7 +53,7 @@ const DEFAULT_MSG = (p?: Professional, s?: { name: string }) =>
 export default function RequestReferral() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { addRequest, visibleProfessionals: professionals, student } = useApp()
+  const { addRequest, visibleProfessionals: professionals, student, requests } = useApp()
   const { user } = useAuth()
   const loading = usePageLoading(350)
   const [step, setStep] = useState(1)
@@ -141,6 +145,11 @@ export default function RequestReferral() {
     }
     if (!await checkServerRateLimit('referral_request', 5, 60)) {
       toast.error('Rate limit exceeded. Please wait before sending more requests.')
+      return
+    }
+    const activeCount = requests?.filter((r) => r.status === 'pending').length ?? 0
+    if (activeCount >= MAX_ACTIVE_REQUESTS) {
+      toast.error(`You already have ${activeCount} pending referral requests. A slot frees up when one is accepted or declined.`)
       return
     }
     setSending(true)

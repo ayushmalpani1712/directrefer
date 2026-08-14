@@ -45,17 +45,6 @@ function generateSitemap(): string {
     }
   }
 
-  // Company + Location pages (top combinations)
-  for (const company of COMPANIES) {
-    for (const location of LOCATIONS.slice(0, 10)) {
-      urls.push(`  <url>
-    <loc>${BASE_URL}/referral/${company.slug}/software-engineer/${location.slug}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>`)
-    }
-  }
-
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.join('\n')}

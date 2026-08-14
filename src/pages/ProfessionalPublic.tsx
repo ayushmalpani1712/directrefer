@@ -58,7 +58,7 @@ export default function ProfessionalPublic() {
         if (!data) { setLoadingData(false); return }
         const { data: userData } = await supabase
           .from('users')
-          .select('full_name, email, city, state, country, linkedin, slug')
+          .select('full_name, email, mobile, city, state, country, linkedin, slug, verified, professional_verified, work_email_verified')
           .eq('id', userId)
           .single()
         const locationParts = [userData?.city, userData?.state].filter(Boolean).join(', ')
@@ -72,7 +72,7 @@ export default function ProfessionalPublic() {
           company: data.company_name || 'Company',
           location: locationParts || '',
           yearsExp: data.years_experience || 0,
-          verified: true,
+          verified: !!(userData?.verified || userData?.professional_verified || userData?.work_email_verified),
           gradient: GRADIENTS[gradientIndex],
           bio: data.bio || '',
           skills: Array.isArray(data.skills) ? data.skills : [],
@@ -87,8 +87,8 @@ export default function ProfessionalPublic() {
           linkedinUrl: userData?.linkedin || '',
           githubUrl: data.github_url || '',
           email: userData?.email || '',
-          phone: '',
-          whatsapp: '',
+          phone: userData?.mobile || '',
+          whatsapp: userData?.mobile || '',
         })
       } catch {
         setPro(null)
@@ -167,15 +167,21 @@ export default function ProfessionalPublic() {
             <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {pro.location}</span>
               <span className="flex items-center gap-1.5"><Briefcase className="h-4 w-4" /> {pro.yearsExp} years experience</span>
-              {pro.linkedinUrl ? (
-                <a href={pro.linkedinUrl.startsWith('http') ? pro.linkedinUrl : `https://linkedin.com/in/${pro.linkedinUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-primary hover:underline transition-colors"><Linkedin className="h-4 w-4" /> LinkedIn</a>
+              {hasAcceptedReferral ? (
+                <>
+                  {pro.linkedinUrl ? (
+                    <a href={pro.linkedinUrl.startsWith('http') ? pro.linkedinUrl : `https://linkedin.com/in/${pro.linkedinUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-primary hover:underline transition-colors"><Linkedin className="h-4 w-4" /> LinkedIn</a>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-muted-foreground/50"><Linkedin className="h-4 w-4" /> LinkedIn</span>
+                  )}
+                  {pro.githubUrl ? (
+                    <a href={pro.githubUrl.startsWith('http') ? pro.githubUrl : `https://github.com/${pro.githubUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-primary hover:underline transition-colors"><Globe className="h-4 w-4" /> Portfolio</a>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-muted-foreground/50"><Globe className="h-4 w-4" /> Portfolio</span>
+                  )}
+                </>
               ) : (
-                <span className="flex items-center gap-1.5 text-muted-foreground/50"><Linkedin className="h-4 w-4" /> LinkedIn</span>
-              )}
-              {pro.githubUrl ? (
-                <a href={pro.githubUrl.startsWith('http') ? pro.githubUrl : `https://github.com/${pro.githubUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-primary hover:underline transition-colors"><Globe className="h-4 w-4" /> Portfolio</a>
-              ) : (
-                <span className="flex items-center gap-1.5 text-muted-foreground/50"><Globe className="h-4 w-4" /> Portfolio</span>
+                <span className="flex items-center gap-1.5 text-muted-foreground/50"><Linkedin className="h-4 w-4" /> <Globe className="h-4 w-4" /> Profile links hidden until you're accepted</span>
               )}
             </div>
           </CardContent>
