@@ -28,6 +28,25 @@ const ROLE_TO_DB: Record<string, string> = {
   admin: 'ADMIN',
 }
 
+let candidateFieldsSupportedCache: boolean | null = null
+
+// Phase 2 candidate fields (notice_period / work_preference / why_me) were added by
+// database/06-phase2-candidate-fields.sql. Probe once whether the columns exist so the
+// app keeps working before that migration is applied. Falls back to "not supported".
+export async function candidateFieldsSupported(): Promise<boolean> {
+  if (candidateFieldsSupportedCache !== null) return candidateFieldsSupportedCache
+  try {
+    const { error } = await supabase
+      .from('profiles_job_seeker')
+      .select('notice_period, work_preference, why_me')
+      .limit(1)
+    candidateFieldsSupportedCache = !error
+  } catch {
+    candidateFieldsSupportedCache = false
+  }
+  return candidateFieldsSupportedCache
+}
+
 function daysSince(iso: string): number {
   const ms = Date.now() - new Date(iso).getTime()
   return Math.floor(ms / 86_400_000)

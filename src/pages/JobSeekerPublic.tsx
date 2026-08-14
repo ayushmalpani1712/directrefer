@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  ArrowLeft, Briefcase, ExternalLink, GraduationCap,
-  Globe, Github, MapPin, MessageSquare, Send, Star, Trophy,
+  ArrowLeft, Briefcase, Clock, ExternalLink, GraduationCap,
+  Globe, Github, MapPin, MessageSquare, Send, Sparkles, Star, Trophy,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -26,6 +26,7 @@ interface PublicJobSeeker {
   projects: { name: string; desc: string; tags: string[] }[]
   certifications: string[]; achievements: string[]
   links: { linkedin: string; github: string; website: string }
+  noticePeriod?: string; workPreference?: string; whyFit?: string
 }
 
 async function resolveUserId(paramId: string): Promise<string | null> {
@@ -96,6 +97,9 @@ export default function JobSeekerPublic() {
             github: profileData.github_url || '',
             website: profileData.website || '',
           },
+          noticePeriod: profileData.notice_period || undefined,
+          workPreference: profileData.work_preference || undefined,
+          whyFit: profileData.why_me || undefined,
         })
       } catch {
         setSeeker(null)
@@ -154,7 +158,22 @@ export default function JobSeekerPublic() {
                       <span className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
                         <Briefcase className="h-3 w-3" /> {seeker.experienceYears}y experience
                       </span>
+                      {seeker.noticePeriod && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" /> {seeker.noticePeriod}
+                        </span>
+                      )}
+                      {seeker.workPreference && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
+                          <Briefcase className="h-3 w-3" /> {seeker.workPreference}
+                        </span>
+                      )}
                     </div>
+                    {seeker.whyFit && (
+                      <p className="mt-3 max-w-xl rounded-xl border border-primary/20 bg-primary/[0.03] px-4 py-3 text-sm leading-relaxed text-muted-foreground">
+                        <Sparkles className="mr-1.5 inline h-3.5 w-3.5 text-primary" /> {seeker.whyFit}
+                      </p>
+                    )}
                   </div>
                 </div>
                 {!isOwnProfile && (

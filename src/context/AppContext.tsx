@@ -60,6 +60,9 @@ export interface StudentProfile {
   achievements: string[]
   links: { linkedin: string; github: string; website: string }
   resumeFile?: { name: string; size: string; date: string; url?: string }
+  noticePeriod?: string
+  workPreference?: string
+  whyFit?: string
 }
 
 export interface Candidate {
@@ -347,11 +350,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
             await supabase
               .from('profiles_job_seeker')
               .upsert({ user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true })
-            const { data } = await supabase
+            const { candidateFieldsSupported } = await loadDb()
+            const baseSelect = 'headline, is_open_to_work, certifications, achievements, projects, preferred_companies, preferred_role, skills, portfolio_url, github_url, website, experience, education, languages, resume_url, resume_name, resume_size_bytes, resume_uploaded_at'
+            const extraSelect = await candidateFieldsSupported()
+              ? ', notice_period, work_preference, why_me'
+              : ''
+            const { data } = (await supabase
               .from('profiles_job_seeker')
-              .select('headline, is_open_to_work, certifications, achievements, projects, preferred_companies, preferred_role, skills, portfolio_url, github_url, website, experience, education, languages, resume_url, resume_name, resume_size_bytes, resume_uploaded_at')
+              .select(baseSelect + extraSelect)
               .eq('user_id', userId)
-              .single()
+              .single()) as { data: Record<string, unknown> | null; error: unknown }
             return data
           })()
         : mappedRole === 'professional'
@@ -418,7 +426,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Apply student profile data if available
       if (profileData.status === 'fulfilled' && profileData.value) {
-        const pd = profileData.value
+        const pd = profileData.value as {
+          headline?: string
+          is_open_to_work?: boolean
+          certifications?: unknown
+          achievements?: unknown
+          projects?: unknown
+          preferred_companies?: string[]
+          preferred_role?: string
+          skills?: string[]
+          portfolio_url?: string
+          github_url?: string
+          website?: string
+          experience?: unknown
+          education?: unknown
+          languages?: unknown
+          resume_url?: string
+          resume_name?: string
+          resume_size_bytes?: number
+          resume_uploaded_at?: string
+          notice_period?: string
+          work_preference?: string
+          why_me?: string
+        }
         setStudent((prev) => ({
           ...prev,
           headline: pd.headline ?? prev.headline,
@@ -429,6 +459,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           preferredCompanies: pd.preferred_companies ?? prev.preferredCompanies,
           preferredRoles: pd.preferred_role ? pd.preferred_role.split(',').map((s: string) => s.trim()).filter(Boolean) : prev.preferredRoles,
           skills: pd.skills ?? prev.skills,
+          noticePeriod: pd.notice_period ?? prev.noticePeriod,
+          workPreference: pd.work_preference ?? prev.workPreference,
+          whyFit: pd.why_me ?? prev.whyFit,
           links: {
             linkedin: pd.portfolio_url ?? prev.links.linkedin,
             github: pd.github_url ?? prev.links.github,
@@ -734,12 +767,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (patch.certifications !== undefined) profilePatch.certifications = JSON.stringify(patch.certifications)
       if (patch.achievements !== undefined) profilePatch.achievements = JSON.stringify(patch.achievements)
       if (patch.projects !== undefined) profilePatch.projects = JSON.stringify(patch.projects)
-      if (Object.keys(profilePatch).length > 0) updateJobSeekerProfile(user.id, profilePatch).catch((err) => {
+      const profilePatchBase = { ...profilePatch } as Record<string, unknown>
+      if (Object.keys(profilePatch).length > 0) updateJobSeekerProfile(user.id, profilePatchBase).catch((err) => {
         console.error('Failed to update job seeker profile:', err)
         setStudent(prev)
         studentSnapshotRef.current = prev
         toast.error('Failed to save changes. Please try again.')
       })
+
+      // Phase 2 candidate fields — best-effort so older DBs (migration not applied yet)
+      // don't break the rest of the profile save.
+      if (patch.noticePeriod !== undefined || patch.workPreference !== undefined || patch.whyFit !== undefined) {
+        const { candidateFieldsSupported } = await loadDb()
+        const supported = await candidateFieldsSupported()
+        if (supported) {
+          const extra: Record<string, unknown> = {}
+          if (patch.noticePeriod !== undefined) extra.notice_period = patch.noticePeriod
+          if (patch.workPreference !== undefined) extra.work_preference = patch.workPreference
+          if (patch.whyFit !== undefined) extra.why_me = patch.whyFit
+          updateJobSeekerProfile(user.id, extra).catch((err) => {
+            console.error('Failed to save candidate fields:', err)
+          })
+        }
+      }
     }
   }, [user, student])
 
@@ -1340,8 +1390,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       (student.skills?.length ?? 0) > 0,
       !!student.headline,
       !!student.location,
+      !!student.noticePeriod,
+      !!student.whyFit,
     ]
-    return Math.round((checks.filter(Boolean).length / 6) * 100)
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100)
   }, [student])
 
   const activity = useMemo(() => {
@@ -1425,6 +1477,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       links: { linkedin: '', github: '', website: '' },
       openToWork: false,
       location: '',
+      noticePeriod: undefined,
+      workPreference: undefined,
+      whyFit: undefined,
     }))
   }, [])
 

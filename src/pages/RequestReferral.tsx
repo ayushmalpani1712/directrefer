@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  ArrowLeft, ArrowRight, Check, CheckCircle2, FileText, FileUp, Github, Globe, Link2, Linkedin, Loader2,
-  MessageSquare, PartyPopper, Save, Search, Send, ShieldCheck, User, UserX,
+  ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, FileText, FileUp, Github, Globe, Briefcase, Link2, Linkedin, Loader2,
+  MessageSquare, PartyPopper, Save, Search, Send, ShieldCheck, Sparkles, User, UserX,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { checkRateLimit, checkServerRateLimit } from '@/lib/rateLimit'
@@ -154,6 +154,13 @@ export default function RequestReferral() {
     }
     setSending(true)
     try {
+      const snapshotParts: string[] = []
+      if (student.noticePeriod) snapshotParts.push(`Notice: ${student.noticePeriod}`)
+      if (student.workPreference) snapshotParts.push(`Work: ${student.workPreference}`)
+      if (student.whyFit) snapshotParts.push(`Why fit: ${student.whyFit}`)
+      const structuredNote = snapshotParts.length > 0
+        ? `${draft.message}\n\n— Candidate snapshot —\n${snapshotParts.join('\n')}`
+        : draft.message
       addRequest({
         id: `r${Date.now()}`,
         student: student.name,
@@ -164,7 +171,7 @@ export default function RequestReferral() {
         status: 'pending',
         pipelineStage: 'request_sent',
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        note: draft.message,
+        note: structuredNote,
         progress: 15,
       })
       setStep(6)
@@ -428,6 +435,21 @@ export default function RequestReferral() {
                     </div>
                     <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">"{draft.message}"</p>
                   </div>
+                  {(student.noticePeriod || student.workPreference || student.whyFit) && (
+                    <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-4">
+                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Candidate snapshot</div>
+                      <div className="mt-1.5 flex flex-wrap gap-2">
+                        {student.noticePeriod && <Chip tone="primary"><Clock className="mr-1 h-3 w-3" /> {student.noticePeriod}</Chip>}
+                        {student.workPreference && <Chip tone="primary"><Briefcase className="mr-1 h-3 w-3" /> {student.workPreference}</Chip>}
+                        {student.whyFit && <Chip tone="primary"><Sparkles className="mr-1 h-3 w-3" /> Fit: {student.whyFit.length > 60 ? `${student.whyFit.slice(0, 60)}…` : student.whyFit}</Chip>}
+                      </div>
+                    </div>
+                  )}
+                  {!student.noticePeriod && (
+                    <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-4 text-sm text-amber-600 dark:text-amber-400">
+                      <b>Tip:</b> Add your notice period to your profile — referrers are far more likely to accept when they know when you can start. <button onClick={() => navigate('/job-seeker/profile')} className="font-semibold underline">Add now</button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

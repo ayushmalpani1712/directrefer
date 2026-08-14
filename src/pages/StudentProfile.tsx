@@ -78,6 +78,13 @@ export default function StudentProfile() {
     setEditLanguages((prev) => (prev === s.languages.join(', ') ? prev : s.languages.join(', ')))
   }, [s.preferredRoles, s.preferredCompanies, s.careerInterests, s.expectedSalary, s.languages])
 
+  // Sync job preference edit fields when DB data loads
+  useEffect(() => {
+    setEditNoticePeriod((prev) => (prev === (s.noticePeriod || '') ? prev : (s.noticePeriod || '')))
+    setEditWorkPreference((prev) => (prev === (s.workPreference || '') ? prev : (s.workPreference || '')))
+    setEditWhyFit((prev) => (prev === (s.whyFit || '') ? prev : (s.whyFit || '')))
+  }, [s.noticePeriod, s.workPreference, s.whyFit])
+
   const myRequests = requests.filter((r) => r.requesterId === user?.id)
 
   const [editing, setEditing] = useState(false)
@@ -152,6 +159,12 @@ export default function StudentProfile() {
   const [editExpectedSalary, setEditExpectedSalary] = useState(s.expectedSalary)
   const [editLanguages, setEditLanguages] = useState(s.languages.join(', '))
 
+  // Job preferences (Phase 2)
+  const [showJobPrefEdit, setShowJobPrefEdit] = useState(false)
+  const [editNoticePeriod, setEditNoticePeriod] = useState(s.noticePeriod || '')
+  const [editWorkPreference, setEditWorkPreference] = useState(s.workPreference || '')
+  const [editWhyFit, setEditWhyFit] = useState(s.whyFit || '')
+
   if (loading) {
     return (
       <ProfileSkeleton />
@@ -197,6 +210,23 @@ export default function StudentProfile() {
     setEditExpectedSalary(s.expectedSalary)
     setEditLanguages(s.languages.join(', '))
     setShowCareerEdit(false)
+  }
+
+  function handleSaveJobPrefs() {
+    updateStudent({
+      noticePeriod: editNoticePeriod.trim(),
+      workPreference: editWorkPreference.trim(),
+      whyFit: editWhyFit.trim(),
+    })
+    setShowJobPrefEdit(false)
+    toast.success('Job preferences updated')
+  }
+
+  function handleCancelJobPrefEdit() {
+    setEditNoticePeriod(s.noticePeriod || '')
+    setEditWorkPreference(s.workPreference || '')
+    setEditWhyFit(s.whyFit || '')
+    setShowJobPrefEdit(false)
   }
 
   // --- Experience ---
@@ -816,7 +846,7 @@ export default function StudentProfile() {
               <ProgressRing value={s.profileCompletion} size={64} />
               <div>
                 <div className="text-sm font-semibold">Profile strength</div>
-                <p className="mt-0.5 text-xs text-muted-foreground">Add 1 certification and 2 skills to hit 90%.</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Add your notice period and a short "why fit" pitch to reach 100%.</p>
                 <Button variant="link" size="sm" className="mt-0.5 h-auto p-0 text-xs text-primary" onClick={() => {
                   if (!s.headline || s.skills.length === 0) toast.success('Keep adding details to strengthen your profile!')
                   else toast.success('Your profile is looking great!')
@@ -914,6 +944,73 @@ export default function StudentProfile() {
                   <div className="flex items-start justify-between">
                     <span className="flex items-center gap-1.5 text-muted-foreground"><Languages className="h-4 w-4" /> Languages</span>
                     <span className="text-right font-medium">{s.languages.length > 0 ? s.languages.join(', ') : <span className="text-xs text-muted-foreground">Not set</span>}</span>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Job preferences (Phase 2) */}
+          <Card className="shadow-soft">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base"><Briefcase className="h-4 w-4 text-primary" /> Job preferences</CardTitle>
+              {!showJobPrefEdit && (
+                <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => setShowJobPrefEdit(true)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-3 pt-0 text-sm">
+              {showJobPrefEdit ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notice period</label>
+                    <select className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" value={editNoticePeriod} onChange={(e) => setEditNoticePeriod(e.target.value)}>
+                      <option value="">Select notice period</option>
+                      <option value="Immediately available">Immediately available</option>
+                      <option value="Within 15 days">Within 15 days</option>
+                      <option value="Within 30 days">Within 30 days</option>
+                      <option value="Within 60 days">Within 60 days</option>
+                      <option value="Within 90 days">Within 90 days</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Work preference</label>
+                    <select className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" value={editWorkPreference} onChange={(e) => setEditWorkPreference(e.target.value)}>
+                      <option value="">Select work preference</option>
+                      <option value="Remote">Remote</option>
+                      <option value="Hybrid">Hybrid</option>
+                      <option value="On-site">On-site</option>
+                      <option value="Flexible">Flexible</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Why I'm a fit</label>
+                    <textarea className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary resize-none" rows={3} placeholder="e.g. 3 years building React apps at a fintech — shipped payments features used by 2M users." value={editWhyFit} onChange={(e) => setEditWhyFit(e.target.value)} />
+                    <p className="mt-1 text-xs text-muted-foreground">A short pitch referrers read to decide if you're worth endorsing.</p>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <Button size="sm" className="rounded-full bg-primary" onClick={handleSaveJobPrefs}><CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Save</Button>
+                    <Button size="sm" variant="ghost" onClick={handleCancelJobPrefEdit}>Cancel</Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Notice period</span>
+                    <span className="font-semibold">{s.noticePeriod || <span className="text-xs text-muted-foreground">Not set</span>}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Work preference</span>
+                    <span className="font-semibold">{s.workPreference || <span className="text-xs text-muted-foreground">Not set</span>}</span>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Why I'm a fit</div>
+                    {s.whyFit ? (
+                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.whyFit}</p>
+                    ) : (
+                      <p className="mt-1 text-xs text-muted-foreground">Not set — add a short pitch to get more referrals accepted.</p>
+                    )}
                   </div>
                 </>
               )}
