@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import {
-  ArrowRight, BarChart3, Bookmark, Briefcase, CheckCircle2, ChevronRight, Command,
+  ArrowRight, BarChart3, Bookmark, Briefcase, CheckCircle2, Command,
   FileText, GraduationCap, Linkedin, Mail, Menu, MessageSquare, Moon, Send, ShieldCheck, Sparkles, Star, TrendingUp, Users, X, Zap,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -177,19 +177,22 @@ export default function Landing() {
             </Badge>
           </div>
           <h1 className="hero-anim-2 font-display mt-6 text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-4xl lg:text-6xl">
-            Get referred.<br />Get <span className="text-gradient">hired.</span>
+            Stop applying blindly.<br />Get referred by a <span className="text-gradient">verified professional.</span>
           </h1>
           <p className="hero-anim-3 mx-auto mt-5 max-w-xl text-base sm:text-lg text-muted-foreground">
-            Direct Refer connects job seekers with verified professionals who can refer them at top companies — and gives recruiters a warmer pipeline.
+            Find the right opportunity and request a referral from a verified professional at top companies — instead of cold-applying into the void.
           </p>
           <div className="hero-anim-4 mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button size="lg" className="rounded-full bg-primary px-6 sm:px-7 shadow-glow text-sm sm:text-base" asChild>
-              <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : 'Start free'} <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link to={user ? '/dashboard' : '/login'}><GraduationCap className="mr-2 h-4 w-4" /> {user ? 'Go to Dashboard' : "I'm a candidate — get referred"} <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full px-6 sm:px-7 text-sm sm:text-base" onClick={() => scrollTo('network')}>
-              Explore the network <ChevronRight className="ml-1 h-4 w-4" />
+            <Button size="lg" variant="outline" className="rounded-full px-6 sm:px-7 text-sm sm:text-base" asChild>
+              <Link to={user ? '/dashboard' : '/login'}><Briefcase className="mr-2 h-4 w-4" /> I'm a professional — refer talent</Link>
             </Button>
           </div>
+          <p className="hero-anim-4 mt-4 text-xs text-muted-foreground/70">
+            No spam. Request limits protect every referrer. Verification protects every candidate.
+          </p>
         </div>
         <HeroMock />
       </section>
@@ -341,6 +344,32 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Trust & verification */}
+      <section className="border-t border-border/50 bg-muted/5 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <FadeIn className="mx-auto max-w-2xl text-center">
+            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">Trust is the product</h2>
+            <p className="mt-3 text-muted-foreground">A referral marketplace only works when both sides feel safe.</p>
+          </FadeIn>
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: ShieldCheck, title: 'Verified referrers', desc: 'Professionals verify their employment through work email or ID review before earning a verified badge.' },
+              { icon: Users, title: 'Request limits', desc: 'Candidates can hold a small number of active requests — no spam, no unlimited messages.' },
+              { icon: Send, title: 'Private contacts', desc: 'Contact details are hidden until a request is accepted. No cold outreach to inboxes.' },
+              { icon: FileText, title: 'Honest outcomes', desc: 'A referral is an opportunity, not a guarantee. No fabricated jobs, users, or success stories.' },
+            ].map((t, i) => (
+              <FadeIn key={t.title} delay={i * 0.08}>
+                <div className="h-full rounded-xl border border-border bg-card p-5 shadow-soft transition-all duration-200 hover:border-primary/15">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgba(59,95,229,0.08)] text-primary"><t.icon className="h-4.5 w-4.5" /></div>
+                  <h3 className="mt-3.5 text-sm sm:text-base font-semibold text-foreground">{t.title}</h3>
+                  <p className="mt-1 text-xs sm:text-[14px] text-muted-foreground">{t.desc}</p>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section className="border-t border-border/50 bg-muted/5 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-3xl">
@@ -351,9 +380,10 @@ export default function Landing() {
           <div className="mt-12 space-y-4">
             {[
               { q: 'Is Direct Refer free for job seekers?', a: 'Yes. Creating an account, browsing professionals, and sending referral requests are completely free.' },
-              { q: 'What happens after I send a referral request?', a: 'The professional receives your request with your note and resume. They can accept, decline, or message you back. You get real-time updates as your referral moves through the pipeline.' },
-              { q: 'Can recruiters use the platform too?', a: 'Absolutely. Recruiters get a dedicated workspace to post jobs, search referral-warmed talent, manage a hiring pipeline, and track funnel analytics — all in one place.' },
-              { q: 'How is this different from LinkedIn?', a: 'Direct Refer focuses specifically on the referral workflow. Instead of cold-applying, you connect with verified insiders who can refer you directly — dramatically improving your chances of landing an interview.' },
+              { q: 'What happens after I send a referral request?', a: 'The professional receives your request with your note and resume. They can accept, pass, or message you back. You get real-time updates as your referral request moves through the pipeline.' },
+              { q: 'Can recruiters use the platform too?', a: 'Recruiters get a dedicated workspace to post jobs, search referral-warmed talent, manage a hiring pipeline, and track funnel analytics — all in one place.' },
+              { q: 'How is this different from LinkedIn?', a: 'Direct Refer focuses specifically on the referral workflow. Instead of cold-applying, you connect with verified insiders who can refer you directly — improving your chances of getting noticed.' },
+              { q: 'Are referrals guaranteed?', a: 'No. A referral is an opportunity to be considered, not a guarantee of a job or interview. Referrers participate voluntarily and within their employer policies.' },
             ].map((item, i) => (
               <FadeIn key={item.q} delay={i * 0.06}>
                 <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
@@ -403,13 +433,13 @@ export default function Landing() {
         <div className="absolute left-1/2 top-1/2 -z-10 h-[380px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary opacity-[0.04]" />
         <FadeIn>
           <h2 className="font-display text-2xl sm:text-3xl lg:text-5xl font-bold tracking-tight text-foreground">Your next role is one<br /><span className="text-primary">referral away</span></h2>
-          <p className="mx-auto mt-4 max-w-md text-muted-foreground">Join professionals and job seekers on Direct Refer.</p>
+          <p className="mx-auto mt-4 max-w-md text-muted-foreground">Join candidates and verified professionals on Direct Refer.</p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Button size="lg" className="rounded-full bg-primary px-6 sm:px-8 shadow-glow text-sm sm:text-base" asChild>
-              <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : 'Create free account'} <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : "I'm a candidate"} <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
             <Button size="lg" variant="outline" className="rounded-full px-6 sm:px-8 text-sm sm:text-base" asChild>
-              <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : "I'm a professional — join now"}</Link>
+              <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : "I'm a professional — refer talent"}</Link>
             </Button>
           </div>
         </FadeIn>

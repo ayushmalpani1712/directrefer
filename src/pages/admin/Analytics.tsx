@@ -197,6 +197,34 @@ export default function AdminAnalytics() {
         </motion.div>
       </div>
 
+      <motion.div {...fadeUp} transition={{ delay: 0.38 }}>
+        <Card className="shadow-soft">
+          <CardHeader><CardTitle className="text-base">Weekly Signups (12 weeks)</CardTitle></CardHeader>
+          <CardContent className="pt-2">
+            {analytics.weeklySignups.every((w) => w.count === 0) ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No signup data yet</p>
+            ) : (
+              <div className="flex items-end gap-2 h-36">
+                {analytics.weeklySignups.map((w) => {
+                  const max = Math.max(...analytics.weeklySignups.map((x) => x.count), 1)
+                  return (
+                    <div key={w.week} className="flex flex-1 flex-col items-center gap-1.5">
+                      <span className="text-xs font-semibold text-muted-foreground">{w.count > 0 ? w.count : ''}</span>
+                      <div
+                        className="w-full rounded-t-lg bg-gradient-to-t from-primary/70 to-primary"
+                        style={{ height: `${Math.max((w.count / max) * 100, w.count > 0 ? 8 : 2)}%` }}
+                        title={`${w.week}: ${w.count}`}
+                      />
+                      <span className="text-[10px] text-muted-foreground truncate w-full text-center">{w.week}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {analytics.conversionRate > 0 && (
         <motion.div {...fadeUp} transition={{ delay: 0.4 }}>
           <Card className="shadow-soft border-primary/20 bg-gradient-to-br from-primary/[0.03] to-[#8B8FD4]/[0.03]">

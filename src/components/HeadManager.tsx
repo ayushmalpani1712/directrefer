@@ -4,7 +4,7 @@ import { useApp } from '@/context/AppContext'
 import { supabase } from '@/lib/supabase'
 
 const PAGE_META: Record<string, { title: string; description: string }> = {
-  '/': { title: 'Direct Refer — Get Referred, Get Hired', description: 'Connect with verified professionals who refer you at top companies. Track referrals, message professionals, and land your dream role.' },
+  '/': { title: 'Direct Refer — Get Referred by Verified Professionals', description: 'Find the right opportunity and request a referral from a verified professional at top companies. Track your referral pipeline instead of cold-applying.' },
   '/login': { title: 'Sign In', description: 'Sign in to your Direct Refer account. Access referrals, messaging, and analytics.' },
   '/dashboard': { title: 'Dashboard', description: 'Your referral dashboard. Track applications, messages, and analytics.' },
   '/job-seeker/profile': { title: 'My Profile', description: 'Manage your professional profile, resume, and referral preferences on Direct Refer.' },
@@ -96,6 +96,14 @@ export function HeadManager() {
   const meta = dynamicMeta || PAGE_META[pathname] || { title: SITE_NAME, description: DEFAULT_DESCRIPTION }
   const fullTitle = pathname === '/' ? meta.title : `${meta.title} | ${SITE_NAME}`
 
+  // Private/app routes must not be indexed
+  const NOINDEX_PATTERNS = [
+    /^\/(dashboard|admin|settings|job-seeker|professional|recruiter|auth)/,
+    /^\/(forgot-password|reset-password|verify-email)/,
+  ]
+  const noindex = NOINDEX_PATTERNS.some((re) => re.test(pathname))
+  const robotsValue = noindex ? 'noindex, nofollow' : 'index, follow'
+
   useEffect(() => {
     document.title = fullTitle
 
@@ -120,7 +128,7 @@ export function HeadManager() {
     }
 
     setMeta('description', meta.description)
-    setMeta('robots', 'index, follow')
+    setMeta('robots', robotsValue)
     setMeta('theme-color', '#0F172A')
 
     setProperty('og:title', fullTitle)
@@ -142,7 +150,7 @@ export function HeadManager() {
       document.head.appendChild(canonical)
     }
     canonical.setAttribute('href', `${BASE_URL}${pathname}`)
-  }, [pathname, fullTitle, meta.description, companyMeta])
+  }, [pathname, fullTitle, meta.description, robotsValue, companyMeta])
 
   return null
 }

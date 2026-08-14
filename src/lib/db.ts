@@ -1227,6 +1227,33 @@ export async function fetchPlatformAnalytics(): Promise<PlatformAnalytics> {
     })
     const referralStatusBreakdown = Object.entries(statusCounts).map(([status, count]) => ({ status, count }))
 
+    // Weekly signups — last 12 weeks, oldest first
+    const weekStarts: Date[] = []
+    const nowWeekStart = new Date()
+    nowWeekStart.setHours(0, 0, 0, 0)
+    nowWeekStart.setDate(nowWeekStart.getDate() - nowWeekStart.getDay())
+    for (let i = 11; i >= 0; i--) {
+      const start = new Date(nowWeekStart)
+      start.setDate(start.getDate() - i * 7)
+      weekStarts.push(start)
+    }
+    const weeks: { week: string; count: number }[] = weekStarts.map((s) => ({
+      week: s.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      count: 0,
+    }))
+    users.forEach((u) => {
+      if (!u.created_at) return
+      const d = new Date(u.created_at)
+      for (let i = 0; i < weekStarts.length; i++) {
+        const wStart = weekStarts[i]
+        const wEnd = i + 1 < weekStarts.length ? weekStarts[i + 1] : new Date(nowWeekStart.getTime() + 7 * 86_400_000)
+        if (d >= wStart && d < wEnd) {
+          weeks[i].count++
+          break
+        }
+      }
+    })
+
     return {
       totalUsers: users.length,
       totalReferrals: refs.length,
@@ -1236,7 +1263,7 @@ export async function fetchPlatformAnalytics(): Promise<PlatformAnalytics> {
       referralsThisWeek: refsThisWeek,
       conversionRate,
       usersByRole,
-      weeklySignups: [],
+      weeklySignups: weeks,
       referralStatusBreakdown,
     }
   } catch {
