@@ -127,6 +127,7 @@ export default function Landing() {
           <nav className="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex">
             <button type="button" onClick={() => scrollTo('roles')} className="hover:text-foreground">Who it's for</button>
             <button type="button" onClick={() => scrollTo('features')} className="hover:text-foreground">Features</button>
+            <Link to="/referral-jobs" className="hover:text-foreground">Referral Jobs</Link>
             <button type="button" onClick={() => scrollTo('network')} className="hover:text-foreground">Network</button>
           </nav>
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -159,6 +160,7 @@ export default function Landing() {
               <button type="button" onClick={() => { scrollTo('roles'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Who it's for</button>
               <button type="button" onClick={() => { scrollTo('features'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Features</button>
               <button type="button" onClick={() => { scrollTo('network'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Network</button>
+              <Link to="/referral-jobs" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 min-h-[44px] flex items-center hover:bg-muted hover:text-foreground">Referral Jobs</Link>
               {!user && (
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 min-h-[44px] flex items-center hover:bg-muted hover:text-foreground">Sign in</Link>
               )}
@@ -193,6 +195,12 @@ export default function Landing() {
           <p className="hero-anim-4 mt-4 text-xs text-muted-foreground/70">
             No spam. Request limits protect every referrer. Verification protects every candidate.
           </p>
+          <div className="hero-anim-4 mt-5">
+            <Link to="/referral-jobs" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+              <Briefcase className="h-3.5 w-3.5" /> Browse referral jobs with live referrer availability
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
         </div>
         <HeroMock />
       </section>

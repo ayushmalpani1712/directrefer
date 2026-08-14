@@ -96,8 +96,8 @@ function detectCompanyLinkedIn() {
     try {
       const json = JSON.parse(s.textContent)
       if (json.hiringOrganization?.name) return json.hiringOrganization.name
-      if (json Organization?.name) return json Organization.name
-    } catch {}
+      if (json.Organization?.name) return json.Organization.name
+    } catch { /* malformed JSON-LD — skip */ }
   }
 
   const title = document.title
@@ -133,7 +133,7 @@ function detectCompanyNaukri() {
     try {
       const json = JSON.parse(s.textContent)
       if (json.hiringOrganization?.name) return json.hiringOrganization.name
-    } catch {}
+    } catch { /* malformed JSON-LD — skip */ }
   }
 
   return null

@@ -2,7 +2,7 @@ import { config } from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
-import type { Page, TestInfo } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, '..', '.env.test.local') });

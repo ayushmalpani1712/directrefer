@@ -666,6 +666,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         referralDuration: '',
         linkedinUrl: patch.linkedinUrl ?? '',
         githubUrl: patch.githubUrl ?? '',
+        college: patch.college ?? undefined,
       }]
     })
     if (user) {
@@ -695,6 +696,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (patch.skills) profilePatch.skills = patch.skills
       if (patch.openPositions) profilePatch.open_positions = JSON.stringify(patch.openPositions)
       if (patch.githubUrl !== undefined) profilePatch.github_url = patch.githubUrl
+      if (patch.college !== undefined) profilePatch.college = patch.college
       if (Object.keys(profilePatch).length > 0) {
         updateProfessionalProfile(id, profilePatch).catch((err) => {
           console.error('Failed to update professional profile:', err)

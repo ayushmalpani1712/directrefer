@@ -19,6 +19,7 @@ const PAGE_META: Record<string, { title: string; description: string }> = {
   '/admin': { title: 'Admin Panel', description: 'Platform management, user oversight, and system health.' },
   '/settings': { title: 'Settings', description: 'Manage your account, preferences, and security settings.' },
   '/help': { title: 'Help & Support', description: 'Answers, guides, and support for using Direct Refer.' },
+  '/referral-jobs': { title: 'Referral Jobs', description: 'Browse open roles at companies with verified referrers available. Filter by company, role, location, and skills, then request a referral instead of cold-applying.' },
   '/verify-email': { title: 'Verify Email', description: 'Verify your email address to access your account.' },
   '/forgot-password': { title: 'Forgot Password', description: 'Reset your Direct Refer password.' },
   '/privacy': { title: 'Privacy Policy', description: 'How Direct Refer collects, uses, and protects your personal information. Read our privacy practices.' },

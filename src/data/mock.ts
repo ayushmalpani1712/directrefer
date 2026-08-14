@@ -76,6 +76,7 @@ export interface Professional {
   referralDuration: string
   linkedinUrl: string
   githubUrl: string
+  college?: string
 }
 
 export const GRADIENTS = [

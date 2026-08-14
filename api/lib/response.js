@@ -39,7 +39,7 @@ export function parseBody(req) {
     req.on('end', () => {
       try {
         resolve(body ? JSON.parse(body) : {});
-      } catch (e) {
+      } catch {
         reject(new Error('Invalid JSON body'));
       }
     });

@@ -129,7 +129,6 @@ const cardY = 400
 const cardW = 200
 const cardH = 130
 const cardGap = 30
-const cardR = 12
 const cards = [
   { icon: '🎓', label: 'Students', desc: 'Request referrals', x: sx },
   { icon: '💼', label: 'Professionals', desc: 'Refer & track', x: sx + cardW + cardGap },

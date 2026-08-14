@@ -297,7 +297,7 @@ export default function FindProfessionals() {
   ]
 
   const results = useMemo(() => {
-    let list = professionals.filter((p) => {
+    const list = professionals.filter((p) => {
       if (f.q) {
         const q = f.q.toLowerCase()
         const hay = [p.name, p.designation, p.company, p.location, ...p.skills].join(' ').toLowerCase()

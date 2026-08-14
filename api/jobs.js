@@ -2,7 +2,7 @@ import { handleCors } from './lib/cors.js';
 import { authenticate, requireRole } from './lib/auth.js';
 import { getServiceClient } from './lib/db.js';
 import { success, created, error, parseBody } from './lib/response.js';
-import { validateBody, CreateJobSchema, UpdateJobSchema, JobStatusSchema } from './lib/validation.js';
+import { validateBody, CreateJobSchema, UpdateJobSchema } from './lib/validation.js';
 
 async function listJobs(req, res, params, profile) {
   const supabase = getServiceClient();

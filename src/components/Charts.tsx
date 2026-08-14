@@ -4,7 +4,6 @@ const rechartsPromise = import('recharts')
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function lazyRecharts(selector: (mod: typeof import('recharts')) => any) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Lazy = React.lazy(() => rechartsPromise.then((m) => ({ default: selector(m) })))
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Wrapper = (props: any) => (

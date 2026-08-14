@@ -51,7 +51,7 @@ async function deleteUser(req, res, userId) {
   const supabase = getServiceClient();
   const { error: dbError } = await supabase.from('users').delete().eq('id', userId);
   if (dbError) return error(res, dbError.message, 500);
-  try { await supabase.auth.admin.deleteUser(userId); } catch {}
+  try { await supabase.auth.admin.deleteUser(userId); } catch { /* auth deletion is best-effort */ }
   await supabase.from('admin_logs').insert({ admin_id: auth.profile.id, action: 'delete_user', target_id: userId, details: {} });
   return success(res, { deleted: true });
 }

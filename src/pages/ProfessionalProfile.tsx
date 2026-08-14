@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Building2, Check, Github, Linkedin, MapPin, Pencil, Plus,
+  Building2, Check, Github, GraduationCap, Linkedin, MapPin, Pencil, Plus,
   ShieldCheck, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -75,6 +75,7 @@ export default function ProfessionalProfile() {
   const [editCompany, setEditCompany] = useState(ME.company)
   const [editLocation, setEditLocation] = useState(ME.location)
   const [editIndustry, setEditIndustry] = useState(ME.industry)
+  const [editCollege, setEditCollege] = useState(ME.college ?? '')
   const [linkedinUrl, setLinkedinUrl] = useState(ME.linkedinUrl)
   const [githubUrl, setGithubUrl] = useState(ME.githubUrl)
   const [newPosition, setNewPosition] = useState('')
@@ -98,10 +99,11 @@ export default function ProfessionalProfile() {
     setEditCompany((prev) => prev === ME.company ? prev : ME.company)
     setEditLocation((prev) => prev === ME.location ? prev : ME.location)
     setEditIndustry((prev) => prev === ME.industry ? prev : ME.industry)
+    setEditCollege((prev) => prev === (ME.college ?? '') ? prev : (ME.college ?? ''))
     setLinkedinUrl((prev) => prev === ME.linkedinUrl ? prev : ME.linkedinUrl)
     setGithubUrl((prev) => prev === ME.githubUrl ? prev : ME.githubUrl)
     capacityRef.current = ME.maxPerMonth
-  }, [ME.openForReferrals, ME.isOpenToWork, ME.maxPerMonth, ME.bio, ME.referralPolicy, ME.name, ME.designation, ME.company, ME.location, ME.industry, ME.linkedinUrl, ME.githubUrl])
+  }, [ME.openForReferrals, ME.isOpenToWork, ME.maxPerMonth, ME.bio, ME.referralPolicy, ME.name, ME.designation, ME.company, ME.location, ME.industry, ME.college, ME.linkedinUrl, ME.githubUrl])
 
   if (loading) {
     return (
@@ -148,11 +150,13 @@ export default function ProfessionalProfile() {
                       <>
                         <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. Pune, India" value={editLocation} onChange={(e) => setEditLocation(e.target.value)} /></span>
                         <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. Technology" value={editIndustry} onChange={(e) => setEditIndustry(e.target.value)} /></span>
+                        <span className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="College (for affinity matching)" value={editCollege} onChange={(e) => setEditCollege(e.target.value)} /></span>
                       </>
                     ) : (
                       <>
                         <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {p.location}</span>
                         <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> {p.industry}</span>
+                        {p.college && <span className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> {p.college}</span>}
                       </>
                     )}
                   </div>
@@ -179,6 +183,7 @@ export default function ProfessionalProfile() {
                       setEditCompany(ME.company)
                       setEditLocation(ME.location)
                       setEditIndustry(ME.industry)
+                      setEditCollege(ME.college ?? '')
                       setLinkedinUrl(ME.linkedinUrl)
                       setGithubUrl(ME.githubUrl)
                       setEditingHeader(false)
@@ -190,6 +195,7 @@ export default function ProfessionalProfile() {
                         company: editCompany,
                         location: editLocation,
                         industry: editIndustry,
+                        college: editCollege.trim() || undefined,
                         linkedinUrl,
                         githubUrl,
                       })

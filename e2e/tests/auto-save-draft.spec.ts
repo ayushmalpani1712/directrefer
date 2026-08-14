@@ -1,4 +1,4 @@
-import { test, expect, spaReload } from '../fixtures/test';
+import { test, expect } from '../fixtures/test';
 import { ProfilePage } from '../pages';
 
 /**

@@ -1,4 +1,4 @@
-import { COMPANIES, ROLES, LOCATIONS } from '../src/data/referral-seo'
+import { COMPANIES, ROLES } from '../src/data/referral-seo'
 
 const BASE_URL = 'https://www.directrefer.in'
 

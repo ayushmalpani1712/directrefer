@@ -58,6 +58,7 @@ const Contact = lazy(() => import('@/pages/Contact'))
 const VerifyEmail = lazy(() => import('@/pages/VerifyEmail'))
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
+const ReferralJobs = lazy(() => import('@/pages/ReferralJobs'))
 const CompanyReferral = lazy(() => import('@/pages/CompanyReferral'))
 
 function LazyErrorBoundary({ children }: { children: React.ReactNode }) {
@@ -221,6 +222,7 @@ export default function App() {
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/help" element={<Help />} />
+                <Route path="/referral-jobs" element={<ReferralJobs />} />
 
                 {/* ── Public profile pages (accessible by anyone) ── */}
                 <Route path="/job-seekers/:id" element={<JobSeekerPublic />} />

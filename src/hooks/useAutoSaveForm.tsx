@@ -304,7 +304,6 @@ export function useAutoSaveForm({
       localStorage.removeItem(getStorageKey(userId, formId))
     }
     // Run only on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, formId, enabled])
 
   // ── Fetch server draft on mount (for cross-device restore) ──

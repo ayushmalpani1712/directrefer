@@ -1,7 +1,6 @@
 import { test as base, type Page } from '@playwright/test';
 import {
   signInViaAPI,
-  seedTestUsers,
   TEST_USERS,
   type TestUser,
 } from './auth';

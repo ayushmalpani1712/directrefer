@@ -14,7 +14,7 @@ if (!SUPABASE_URL || !SERVICE_KEY || SERVICE_KEY === '[SENSITIVE]') {
   console.log('Could not read env vars, trying hardcoded project ref...');
 }
 
-const PROJECT_REF = 'ecdqnysmosxmojhvxbdu';
+const PROJECT_REF = 'ecdqnysmosxmojhvxbdu'; // eslint-disable-line @typescript-eslint/no-unused-vars
 console.log(`URL: ${SUPABASE_URL}`);
 console.log(`Key length: ${SERVICE_KEY?.length}`);
 console.log(`Key type: ${SERVICE_KEY?.substring(0, 10)}...`);

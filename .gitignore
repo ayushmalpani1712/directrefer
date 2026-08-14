@@ -11,4 +11,5 @@ AGENT_CONTEXT.md
 # Playwright
 test-results/
 blob-report/
+playwright-report/
 playwright/.cache/

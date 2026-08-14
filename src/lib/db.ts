@@ -47,6 +47,44 @@ export async function candidateFieldsSupported(): Promise<boolean> {
   return candidateFieldsSupportedCache
 }
 
+let applicationUrlSupportedCache: boolean | null = null
+
+// Phase 4 added jobs.application_url via database/08-referral-jobs.sql so the
+// /referral-jobs page can link out to the company ATS. Probe once so the app keeps
+// working before that migration is applied.
+export async function applicationUrlSupported(): Promise<boolean> {
+  if (applicationUrlSupportedCache !== null) return applicationUrlSupportedCache
+  try {
+    const { error } = await supabase
+      .from('jobs')
+      .select('application_url')
+      .limit(1)
+    applicationUrlSupportedCache = !error
+  } catch {
+    applicationUrlSupportedCache = false
+  }
+  return applicationUrlSupportedCache
+}
+
+let professionalCollegeSupportedCache: boolean | null = null
+
+// Phase 4 also added profiles_professional.college (database/08-referral-jobs.sql)
+// to drive honest "Same College" affinity matching. Probe once so the rest of the
+// app keeps working before that migration is applied.
+export async function professionalCollegeSupported(): Promise<boolean> {
+  if (professionalCollegeSupportedCache !== null) return professionalCollegeSupportedCache
+  try {
+    const { error } = await supabase
+      .from('profiles_professional')
+      .select('college')
+      .limit(1)
+    professionalCollegeSupportedCache = !error
+  } catch {
+    professionalCollegeSupportedCache = false
+  }
+  return professionalCollegeSupportedCache
+}
+
 function daysSince(iso: string): number {
   const ms = Date.now() - new Date(iso).getTime()
   return Math.floor(ms / 86_400_000)
@@ -109,11 +147,11 @@ export async function fetchProfessionals(currentUserId?: string): Promise<Profes
       currentUserId
         ? supabase
             .from('profiles_professional')
-            .select('user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url')
+            .select(`user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url${(await professionalCollegeSupported()) ? ', college' : ''}`)
             .or(`open_for_referrals.eq.true,user_id.eq.${currentUserId}`)
         : supabase
             .from('profiles_professional')
-            .select('user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url')
+            .select(`user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url${(await professionalCollegeSupported()) ? ', college' : ''}`)
             .eq('open_for_referrals', true),
     ])
 
@@ -153,6 +191,7 @@ export async function fetchProfessionals(currentUserId?: string): Promise<Profes
         rating: number
         review_count: number
         github_url: string | null
+        college: string | null
       } | undefined
 
       const openPositionsRaw = profile?.open_positions
@@ -206,6 +245,7 @@ export async function fetchProfessionals(currentUserId?: string): Promise<Profes
         referralDuration: 'Active',
         linkedinUrl: row.linkedin ?? '',
         githubUrl: profile?.github_url ?? '',
+        college: profile?.college ?? undefined,
       }
     })
   } catch (err) {
