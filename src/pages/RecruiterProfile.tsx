@@ -151,33 +151,29 @@ export default function RecruiterProfile() {
                         </select>
                       ) : `${c.size} employees`}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Globe className="h-3.5 w-3.5 text-primary" />
-                      {editing ? (
+                  </div>
+                  {editing && (
+                    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Globe className="h-3.5 w-3.5 text-primary" />
                         <input
                           value={editWebsite}
                           onChange={(e) => setEditWebsite(e.target.value)}
                           className="bg-transparent border-b border-primary/50 outline-none w-full sm:w-36 text-xs text-primary placeholder:text-muted-foreground/40"
                           placeholder="e.g. acme.com"
                         />
-                      ) : c.website ? (
-                        <a href={c.website.startsWith('http') ? c.website : `https://${c.website}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{c.website}</a>
-                      ) : c.website}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" />
-                      {editing ? (
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" />
                         <input
                           value={editLinkedin}
                           onChange={(e) => setEditLinkedin(e.target.value)}
                           className="bg-transparent border-b border-[#0A66C2]/50 outline-none w-full sm:w-44 text-xs text-[#0A66C2] placeholder:text-muted-foreground/40"
                           placeholder="e.g. linkedin.com/company/acme"
                         />
-                      ) : c.linkedin ? (
-                        <a href={c.linkedin.startsWith('http') ? c.linkedin : `https://${c.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-[#0A66C2] hover:underline">{c.linkedin}</a>
-                      ) : <span className="text-muted-foreground/50">No LinkedIn</span>}
-                    </span>
-                  </div>
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2 sm:pb-0.5">
