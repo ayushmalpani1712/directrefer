@@ -1,22 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <linearGradient id="arrowGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#a8b4d0"/>
-      <stop offset="100%" stop-color="#c8d0e8"/>
-    </linearGradient>
-  </defs>
-  <!-- Arrow behind the d -->
+  <!-- Blue "d" letter -->
   <g>
-    <!-- Arrow shaft - diagonal from bottom-left to upper-right -->
-    <path d="M 80 420 L 380 120" stroke="url(#arrowGrad)" stroke-width="56" stroke-linecap="round" fill="none"/>
-    <!-- Arrow head -->
-    <path d="M 310 80 L 420 80 L 420 190" stroke="url(#arrowGrad)" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Bowl of d (circle on left) -->
+    <path d="M 310 160 C 240 160 180 220 180 310 C 180 400 240 460 310 460 L 310 370 C 280 370 260 350 260 310 C 260 270 280 250 310 250 Z" fill="#3B5FE5"/>
+    <!-- Stem of d (vertical bar) -->
+    <rect x="310" y="80" width="52" height="430" rx="6" fill="#3B5FE5"/>
   </g>
-  <!-- Letter d -->
+  <!-- Purple/lavender arrow curving from bowl up-right -->
   <g>
-    <!-- Vertical stem of d -->
-    <path d="M 300 80 L 300 432 Q 300 480 260 480 L 240 480 Q 180 480 160 420 Q 140 360 140 300 Q 140 200 190 140 Q 230 80 300 80 Z" fill="#4361EE"/>
-    <!-- Bowl of d - inner cutout -->
-    <ellipse cx="220" cy="300" rx="70" ry="90" fill="#0a0a1a"/>
+    <path d="M 210 310 C 210 250 260 200 320 200 C 370 200 400 170 420 130" stroke="#8B8FD4" stroke-width="50" stroke-linecap="round" fill="none"/>
+    <!-- Arrowhead -->
+    <path d="M 380 80 L 440 120 L 380 170" stroke="#8B8FD4" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
   </g>
 </svg>
