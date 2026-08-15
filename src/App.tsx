@@ -64,7 +64,6 @@ const AudiencePage = lazy(() => import('@/pages/AudiencePage').then(m => ({ defa
 const GuidesPage = lazy(() => import('@/pages/GuidesPage'))
 const SuccessStoriesPage = lazy(() => import('@/pages/SuccessStoriesPage'))
 const AcquisitionDashboard = lazy(() => import('@/pages/admin/AcquisitionDashboard'))
-const ReferrerReputation = lazy(() => import('@/pages/ReferrerReputation'))
 
 function LazyErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
@@ -238,9 +237,6 @@ export default function App() {
                 <Route path="/guides/:topic" element={<GuidesPage />} />
                 <Route path="/success-stories" element={<SuccessStoriesPage />} />
                 <Route path="/success-stories/:slug" element={<SuccessStoriesPage />} />
-
-                {/* ── Phase 7: Referrer reputation ── */}
-                <Route path="/referrers/leaderboard" element={<ReferrerReputation />} />
 
                 {/* ── Public profile pages (accessible by anyone) ── */}
                 <Route path="/job-seekers/:id" element={<JobSeekerPublic />} />

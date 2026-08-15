@@ -1,51 +1,49 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router'
 import {
-  ArrowRight, BarChart3, Bookmark, Briefcase, CheckCircle2, Command,
-  FileText, GraduationCap, Linkedin, Mail, Menu, MessageSquare, Moon, Send, ShieldCheck, Sparkles, Star, TrendingUp, Users, X, Zap,
+  ArrowRight, Briefcase, CheckCircle2, FileText, GraduationCap, Building2, MapPin, Clock, Linkedin, Mail, Menu, Send, ShieldCheck, Sparkles, Star, TrendingUp, Users, X,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { GAvatar } from '@/components/ui-kit'
+import { Chip, GAvatar } from '@/components/ui-kit'
 import { Logo } from '@/components/layout'
 import { FadeIn } from '@/components/FadeIn'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { profileUrl } from '@/data/mock'
+import { supabase } from '@/lib/supabase'
 
 const ROLES = [
   {
     icon: GraduationCap,
     title: 'For Job Seekers',
     desc: 'Request referrals from verified professionals, track every application, and land your dream role.',
-    points: ['One-click referral requests'],
-    gradient: 'from-[#4F7CFF] to-[#7C5CFF]',
+    points: ['One-click referral requests', 'Real-time pipeline tracking', 'Verified referrer network'],
   },
   {
     icon: Briefcase,
     title: 'For Professionals',
     desc: 'Manage inbound referrals like a pro — with capacity controls, analytics and a reputation that compounds.',
-    points: ['Smart request inbox', 'Referral analytics', 'Leaderboard & badges'],
-    gradient: 'from-sky-500 to-cyan-400',
+    points: ['Smart request inbox', 'Referral analytics', 'Capacity controls'],
   },
   {
     icon: Users,
     title: 'For Recruiters',
     desc: 'Discover referral-warmed talent, run your pipeline, and measure every stage of the hiring funnel.',
     points: ['Talent search', 'Pipeline kanban', 'Hiring funnel analytics'],
-    gradient: 'from-[#4F7CFF] to-[#7C5CFF]',
   },
 ]
 
-const FEATURES = [
-  { icon: Command, title: 'Command palette', desc: 'Every page, person and action — one ⌘K away.' },
-  { icon: Moon, title: 'Dark & light mode', desc: 'A pixel-perfect theme system that follows your OS.' },
-  { icon: MessageSquare, title: 'Real-time messaging', desc: 'Chat with professionals, share resumes inline.' },
-  { icon: BarChart3, title: 'Deep analytics', desc: 'Referral, review and hiring-funnel insights.' },
-  { icon: ShieldCheck, title: 'Verified network', desc: 'Company-verified professionals you can trust.' },
-  { icon: Bookmark, title: 'Bookmarks & feeds', desc: 'Save people, follow activity, never lose track.' },
-]
+interface JobRow {
+  id: string
+  title: string
+  department: string | null
+  location: string | null
+  type: string | null
+  skills: string[] | null
+  posted_at: string
+}
 
 function HeroMock() {
   const { visibleProfessionals } = useApp()
@@ -118,6 +116,14 @@ export default function Landing() {
   const { visibleProfessionals: professionals } = useApp()
   const { user } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [featuredJobs, setFeaturedJobs] = useState<JobRow[]>([])
+
+  useEffect(() => {
+    supabase.from('jobs').select('id, title, department, location, type, skills, posted_at').order('posted_at', { ascending: false }).limit(6).then(({ data }) => {
+      if (data) setFeaturedJobs(data)
+    })
+  }, [])
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
       {/* Nav */}
@@ -125,10 +131,10 @@ export default function Landing() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Logo />
           <nav className="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex">
-            <button type="button" onClick={() => scrollTo('roles')} className="hover:text-foreground">Who it's for</button>
-            <button type="button" onClick={() => scrollTo('features')} className="hover:text-foreground">Features</button>
             <Link to="/referral-jobs" className="hover:text-foreground">Referral Jobs</Link>
-            <button type="button" onClick={() => scrollTo('network')} className="hover:text-foreground">Network</button>
+            <button type="button" onClick={() => scrollTo('how-it-works')} className="hover:text-foreground">How it works</button>
+            <button type="button" onClick={() => scrollTo('trust')} className="hover:text-foreground">Why Trust</button>
+            <button type="button" onClick={() => scrollTo('roles')} className="hover:text-foreground">Who it's for</button>
           </nav>
           <div className="flex items-center gap-1.5 sm:gap-2">
             {user ? (
@@ -153,14 +159,13 @@ export default function Landing() {
             </button>
           </div>
         </div>
-        {/* Mobile menu dropdown */}
         {mobileMenuOpen && (
           <div className="border-t border-border/50 bg-background px-4 pb-4 pt-2 md:hidden">
             <nav className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
-              <button type="button" onClick={() => { scrollTo('roles'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Who it's for</button>
-              <button type="button" onClick={() => { scrollTo('features'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Features</button>
-              <button type="button" onClick={() => { scrollTo('network'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Network</button>
               <Link to="/referral-jobs" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 min-h-[44px] flex items-center hover:bg-muted hover:text-foreground">Referral Jobs</Link>
+              <button type="button" onClick={() => { scrollTo('how-it-works'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">How it works</button>
+              <button type="button" onClick={() => { scrollTo('trust'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Why Trust</button>
+              <button type="button" onClick={() => { scrollTo('roles'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Who it's for</button>
               {!user && (
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 min-h-[44px] flex items-center hover:bg-muted hover:text-foreground">Sign in</Link>
               )}
@@ -170,7 +175,7 @@ export default function Landing() {
       </header>
 
       <main id="main-content">
-      {/* Hero */}
+      {/* ── 1. Hero ── */}
       <section className="relative overflow-hidden px-4 pb-14 pt-12 sm:px-6 sm:pb-24 sm:pt-20 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <div className="hero-anim-1">
@@ -179,7 +184,7 @@ export default function Landing() {
             </Badge>
           </div>
           <h1 className="hero-anim-2 font-display mt-6 text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-4xl lg:text-6xl">
-            Stop applying blindly.<br />Get referred by a <span className="text-gradient">verified professional.</span>
+            Stop applying blindly.<br />Find a real opportunity and get<br /><span className="text-gradient">referred by a verified professional.</span>
           </h1>
           <p className="hero-anim-3 mx-auto mt-5 max-w-xl text-base sm:text-lg text-muted-foreground">
             Find the right opportunity and request a referral from a verified professional at top companies — instead of cold-applying into the void.
@@ -205,95 +210,135 @@ export default function Landing() {
         <HeroMock />
       </section>
 
-      {/* Why referrals */}
+      {/* ── 2. Referral Opportunities ── */}
       <section className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <FadeIn className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-2xl sm:text-[30px] lg:text-[34px] font-bold tracking-tight">Why referrals change everything</h2>
-            <p className="mt-3 text-muted-foreground">The data is clear — referred candidates win.</p>
+            <h2 className="font-display text-2xl sm:text-[30px] lg:text-[34px] font-bold tracking-tight">Referral opportunities with verified insiders</h2>
+            <p className="mt-3 text-muted-foreground">Real roles at real companies — with verified professionals ready to refer you.</p>
           </FadeIn>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredJobs.length === 0 ? (
+              [...Array(6)].map((_, i) => (
+                <div key={i} className="h-40 animate-pulse rounded-2xl bg-muted/50" />
+              ))
+            ) : (
+              featuredJobs.map((job, i) => (
+                <FadeIn key={job.id} delay={i * 0.06}>
+                  <Link to="/referral-jobs">
+                    <Card className="h-full shadow-soft transition-all duration-200 hover:border-primary/15 cursor-pointer">
+                      <CardContent className="p-5">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-sm">
+                            <Building2 className="h-5 w-5 text-primary" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold leading-tight text-foreground">{job.title}</h3>
+                            <p className="mt-0.5 text-xs text-muted-foreground">{job.department}</p>
+                          </div>
+                          <Badge variant="outline" className="shrink-0 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px]">
+                            <ShieldCheck className="mr-1 h-3 w-3" /> Referrer
+                          </Badge>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          {job.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {job.location}</span>}
+                          {job.type && <span className="inline-flex items-center gap-1"><Briefcase className="h-3 w-3" /> {job.type}</span>}
+                          <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {Math.max(0, Math.floor((Date.now() - new Date(job.posted_at).getTime()) / 86_400_000))}d ago</span>
+                        </div>
+                        {job.skills && job.skills.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-1.5">
+                            {job.skills.slice(0, 3).map((s) => <Chip key={s}>{s}</Chip>)}
+                            {job.skills.length > 3 && <Chip>+{job.skills.length - 3}</Chip>}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </FadeIn>
+              ))
+            )}
+          </div>
+          <div className="mt-8 text-center">
+            <Button variant="outline" className="rounded-full" asChild>
+              <Link to="/referral-jobs">Browse all referral jobs <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3. How It Works ── */}
+      <section id="how-it-works" className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <FadeIn className="mx-auto max-w-2xl text-center">
+            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">How it works</h2>
+            <p className="mt-3 text-muted-foreground">Three simple steps to your next referral.</p>
+          </FadeIn>
+          <div className="mt-12 grid gap-8 sm:grid-cols-3">
             {[
-              { icon: TrendingUp, stat: '13×', label: 'More likely to be hired than job board applicants', color: 'text-[#4ADE80]' },
-              { icon: Zap, stat: '55%', label: 'Faster time-to-fill compared to other sourcing channels', color: 'text-primary' },
-              { icon: Users, stat: '46%', label: 'Higher retention rate after one year of employment', color: 'text-amber-500' },
-              { icon: BarChart3, stat: '2.6×', label: 'Higher offer acceptance rate for referred candidates', color: 'text-rose-500' },
-            ].map((item, i) => (
-              <FadeIn key={item.label} delay={i * 0.08}>
-                <div className="rounded-xl border border-border bg-card p-6 text-center shadow-soft transition-all duration-200 hover:border-primary/15">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(59,95,229,0.08)]">
-                    <item.icon className={`h-5 w-5 ${item.color}`} />
-                  </div>
-                  <div className="mt-4 font-display text-2xl sm:text-3xl font-extrabold text-foreground">{item.stat}</div>
-                  <p className="mt-2 text-xs sm:text-[13px] leading-relaxed text-muted-foreground">{item.label}</p>
+              { step: '1', title: 'Find a professional', desc: 'Browse verified professionals from your target companies who are open to referrals.', icon: Users },
+              { step: '2', title: 'Send a request', desc: 'Write a personalized note explaining why you are a fit, and attach your resume.', icon: Send },
+              { step: '3', title: 'Track & get hired', desc: 'Follow your referral through every stage of the pipeline — from request to offer.', icon: TrendingUp },
+            ].map((s, i) => (
+              <FadeIn key={s.step} delay={i * 0.12} className="text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-glow">
+                  <s.icon className="h-6 w-6" />
+                </div>
+                <div className="mt-4 text-xs font-bold uppercase tracking-widest text-primary">Step {s.step}</div>
+                <h3 className="mt-2 text-base sm:text-[18px] font-semibold text-foreground">{s.title}</h3>
+                <p className="mt-2 text-xs sm:text-[14px] text-muted-foreground">{s.desc}</p>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 4. Why Trust DirectRefer ── */}
+      <section id="trust" className="border-t border-border/50 bg-muted/5 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <FadeIn className="mx-auto max-w-2xl text-center">
+            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">Trust is the product</h2>
+            <p className="mt-3 text-muted-foreground">A referral marketplace only works when both sides feel safe.</p>
+          </FadeIn>
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: ShieldCheck, title: 'Verified referrers', desc: 'Professionals verify their employment through work email or ID review before earning a verified badge.' },
+              { icon: Users, title: 'Request limits', desc: 'Candidates can hold up to 5 active requests — no spam, no unlimited messages.' },
+              { icon: Send, title: 'Private contacts', desc: 'Contact details are hidden until a request is accepted. No cold outreach to inboxes.' },
+              { icon: FileText, title: 'Honest outcomes', desc: 'A referral is an opportunity, not a guarantee. No fabricated jobs, users, or success stories.' },
+            ].map((t, i) => (
+              <FadeIn key={t.title} delay={i * 0.08}>
+                <div className="h-full rounded-xl border border-border bg-card p-5 shadow-soft transition-all duration-200 hover:border-primary/15">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgba(59,95,229,0.08)] text-primary"><t.icon className="h-4.5 w-4.5" /></div>
+                  <h3 className="mt-3.5 text-sm sm:text-base font-semibold text-foreground">{t.title}</h3>
+                  <p className="mt-1 text-xs sm:text-[14px] text-muted-foreground">{t.desc}</p>
                 </div>
               </FadeIn>
             ))}
           </div>
-          <p className="mt-6 text-center text-xs text-muted-foreground/60">Sources: Jobvite, Employee Referrals Benchmark Report, SHRM</p>
-        </div>
-      </section>
-
-      {/* Roles */}
-      <section id="roles" className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <FadeIn className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">One platform, three superpowers</h2>
-            <p className="mt-3 text-muted-foreground">Every role gets its own dashboard, navigation and workflow — purpose-built, not one-size-fits-all.</p>
-          </FadeIn>
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {ROLES.map((r, i) => (
-              <FadeIn key={r.title} delay={i * 0.1}>
-                <Card className="h-full shadow-soft transition-all duration-200 hover:border-primary/15">
-                  <CardContent className="p-6">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[rgba(59,95,229,0.08)] text-primary">
-                      <r.icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="mt-4 text-base sm:text-[18px] font-semibold text-foreground">{r.title}</h3>
-                    <p className="mt-2 text-sm sm:text-[14px] leading-relaxed text-muted-foreground">{r.desc}</p>
-                    <ul className="mt-4 space-y-2">
-                      {r.points.map((p) => (
-                        <li key={p} className="flex items-center gap-2 text-sm">
-                          <CheckCircle2 className="h-4 w-4 text-[#4ADE80]" /> {p}
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </FadeIn>
+          <div className="mt-10 grid gap-6 sm:grid-cols-4 text-center">
+            {[
+              { stat: '13×', label: 'More likely to be hired', source: 'Jobvite' },
+              { stat: '55%', label: 'Faster time-to-fill', source: 'SHRM' },
+              { stat: '46%', label: 'Higher retention rate', source: 'Employee Referrals Benchmark' },
+              { stat: '2.6×', label: 'Higher offer acceptance', source: 'Jobvite' },
+            ].map((item) => (
+              <div key={item.label}>
+                <div className="font-display text-2xl sm:text-3xl font-extrabold text-foreground">{item.stat}</div>
+                <div className="mt-1 text-xs sm:text-[13px] text-muted-foreground">{item.label}</div>
+                <div className="mt-0.5 text-[10px] text-muted-foreground/60">Source: {item.source}</div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="border-t border-border/50 bg-muted/5 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <FadeIn className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">Designed like the tools you love</h2>
-            <p className="mt-3 text-muted-foreground">The polish of Linear, the warmth of Airbnb, the speed of Vercel — applied to your career.</p>
-          </FadeIn>
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f, i) => (
-              <FadeIn key={f.title} delay={(i % 3) * 0.08}>
-                <div className="h-full rounded-xl border border-[rgba(255,255,255,0.06)] bg-card p-5 shadow-soft transition-all duration-200 hover:border-primary/15">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgba(59,95,229,0.08)] text-primary"><f.icon className="h-4.5 w-4.5" /></div>
-                  <h3 className="mt-3.5 text-sm sm:text-base font-semibold text-foreground">{f.title}</h3>
-                  <p className="mt-1 text-xs sm:text-[14px] text-muted-foreground">{f.desc}</p>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Network */}
-      <section id="network" className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+      {/* ── 5. Featured Professionals ── */}
+      <section className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <FadeIn className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">A network that opens doors</h2>
-              <p className="mt-3 max-w-xl text-muted-foreground">Verified professionals from the companies you actually want to work at.</p>
+              <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">Featured professionals</h2>
+              <p className="mt-3 max-w-xl text-muted-foreground">Verified insiders from the companies you actually want to work at.</p>
             </div>
             <Button variant="outline" className="rounded-full" asChild>
               <Link to={user ? '/dashboard' : '/login'}>Browse all professionals <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
@@ -326,59 +371,39 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+      {/* ── 6. Candidate / Referrer Paths ── */}
+      <section id="roles" className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <FadeIn className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">How it works</h2>
-            <p className="mt-3 text-muted-foreground">Three simple steps to your next referral.</p>
+            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">One platform, three superpowers</h2>
+            <p className="mt-3 text-muted-foreground">Every role gets its own dashboard, navigation and workflow — purpose-built, not one-size-fits-all.</p>
           </FadeIn>
-          <div className="mt-12 grid gap-8 sm:grid-cols-3">
-            {[
-              { step: '1', title: 'Find a professional', desc: 'Browse verified professionals from your target companies.', icon: Users },
-              { step: '2', title: 'Send a request', desc: 'Write a personalized note and attach your resume.', icon: Send },
-              { step: '3', title: 'Track & get hired', desc: 'Follow your referral through every stage of the pipeline.', icon: TrendingUp },
-            ].map((s, i) => (
-              <FadeIn key={s.step} delay={i * 0.12} className="text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-glow">
-                  <s.icon className="h-6 w-6" />
-                </div>
-                <div className="mt-4 text-xs font-bold uppercase tracking-widest text-primary">Step {s.step}</div>
-                <h3 className="mt-2 text-base sm:text-[18px] font-semibold text-foreground">{s.title}</h3>
-                <p className="mt-2 text-xs sm:text-[14px] text-muted-foreground">{s.desc}</p>
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            {ROLES.map((r, i) => (
+              <FadeIn key={r.title} delay={i * 0.1}>
+                <Card className="h-full shadow-soft transition-all duration-200 hover:border-primary/15">
+                  <CardContent className="p-6">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[rgba(59,95,229,0.08)] text-primary">
+                      <r.icon className="h-5 w-5" />
+                    </div>
+                    <h3 className="mt-4 text-base sm:text-[18px] font-semibold text-foreground">{r.title}</h3>
+                    <p className="mt-2 text-sm sm:text-[14px] leading-relaxed text-muted-foreground">{r.desc}</p>
+                    <ul className="mt-4 space-y-2">
+                      {r.points.map((p) => (
+                        <li key={p} className="flex items-center gap-2 text-sm">
+                          <CheckCircle2 className="h-4 w-4 text-[#4ADE80]" /> {p}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
               </FadeIn>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Trust & verification */}
-      <section className="border-t border-border/50 bg-muted/5 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <FadeIn className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">Trust is the product</h2>
-            <p className="mt-3 text-muted-foreground">A referral marketplace only works when both sides feel safe.</p>
-          </FadeIn>
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: ShieldCheck, title: 'Verified referrers', desc: 'Professionals verify their employment through work email or ID review before earning a verified badge.' },
-              { icon: Users, title: 'Request limits', desc: 'Candidates can hold a small number of active requests — no spam, no unlimited messages.' },
-              { icon: Send, title: 'Private contacts', desc: 'Contact details are hidden until a request is accepted. No cold outreach to inboxes.' },
-              { icon: FileText, title: 'Honest outcomes', desc: 'A referral is an opportunity, not a guarantee. No fabricated jobs, users, or success stories.' },
-            ].map((t, i) => (
-              <FadeIn key={t.title} delay={i * 0.08}>
-                <div className="h-full rounded-xl border border-border bg-card p-5 shadow-soft transition-all duration-200 hover:border-primary/15">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgba(59,95,229,0.08)] text-primary"><t.icon className="h-4.5 w-4.5" /></div>
-                  <h3 className="mt-3.5 text-sm sm:text-base font-semibold text-foreground">{t.title}</h3>
-                  <p className="mt-1 text-xs sm:text-[14px] text-muted-foreground">{t.desc}</p>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
+      {/* ── 7. FAQ ── */}
       <section className="border-t border-border/50 bg-muted/5 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mx-auto max-w-3xl">
           <FadeIn className="text-center">
@@ -404,39 +429,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Founder Note */}
-      <section className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto max-w-3xl">
-          <FadeIn>
-            <div className="rounded-2xl border border-border bg-card p-6 sm:p-10 shadow-soft">
-              <div className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left">
-                <div className="shrink-0">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#4F7CFF] to-[#7C5CFF] text-2xl font-bold text-white shadow-glow">
-                    AM
-                  </div>
-                </div>
-                <div className="mt-5 sm:mt-0 sm:ml-6">
-                  <div className="text-xs font-bold uppercase tracking-widest text-primary">Built by the founder</div>
-                  <h3 className="mt-2 font-display text-xl font-bold text-foreground">Ayush Malpani</h3>
-                  <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
-                    I built Direct Refer because I was tired of cold-applying into the void. Referrals changed my career trajectory — and I want to make that accessible to everyone. This platform exists to help job seekers connect with verified insiders who can open doors.
-                  </p>
-                  <div className="mt-4 flex items-center justify-center gap-3 sm:justify-start">
-                    <a href="https://linkedin.com/in/direct-refer" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground">
-                      <Linkedin className="h-4 w-4" /> LinkedIn
-                    </a>
-                    <a href="mailto:hello@directrefer.in" className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground">
-                      <Mail className="h-4 w-4" /> Contact
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* CTA */}
+      {/* ── 8. CTA ── */}
       <section className="relative overflow-hidden border-t border-border/50 px-4 py-14 text-center sm:px-6 sm:py-20 lg:px-8">
         <div className="absolute left-1/2 top-1/2 -z-10 h-[380px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary opacity-[0.04]" />
         <FadeIn>
@@ -459,7 +452,6 @@ export default function Landing() {
       <footer className="border-t border-border/50 px-4 py-8 sm:px-6 sm:py-10 lg:px-8" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
         <div className="mx-auto max-w-7xl min-w-0">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Brand */}
             <div className="flex flex-col items-center gap-3 sm:items-start">
               <Logo />
               <p className="max-w-xs text-center text-xs text-muted-foreground sm:text-left">The referral platform that connects job seekers with verified professionals.</p>
@@ -472,25 +464,22 @@ export default function Landing() {
                 </a>
               </div>
             </div>
-
-            {/* Product */}
             <div className="flex flex-col items-center gap-2 sm:items-start">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Product</p>
-              <button onClick={() => scrollTo('features')} className="text-sm text-muted-foreground hover:text-foreground">Features</button>
-              <button onClick={() => scrollTo('network')} className="text-sm text-muted-foreground hover:text-foreground">Network</button>
-              <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground">About</Link>
-              <Link to="/help" className="text-sm text-muted-foreground hover:text-foreground">Help & Support</Link>
+              <Link to="/referral-jobs" className="text-sm text-muted-foreground hover:text-foreground">Referral Jobs</Link>
+              <Link to="/for/freshers" className="text-sm text-muted-foreground hover:text-foreground">For Freshers</Link>
+              <Link to="/for/mba-students" className="text-sm text-muted-foreground hover:text-foreground">For MBA Students</Link>
+              <Link to="/guides" className="text-sm text-muted-foreground hover:text-foreground">Guides</Link>
+              <Link to="/success-stories" className="text-sm text-muted-foreground hover:text-foreground">Success Stories</Link>
             </div>
-
-            {/* Legal */}
             <div className="flex flex-col items-center gap-2 sm:items-start">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Legal</p>
               <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground">Privacy Policy</Link>
               <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground">Terms of Service</Link>
               <Link to="/cookies" className="text-sm text-muted-foreground hover:text-foreground">Cookie Policy</Link>
+              <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground">About</Link>
+              <Link to="/help" className="text-sm text-muted-foreground hover:text-foreground">Help & Support</Link>
             </div>
-
-            {/* Account */}
             <div className="flex flex-col items-center gap-2 sm:items-start">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Account</p>
               {user ? (
@@ -501,7 +490,6 @@ export default function Landing() {
               <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground">Contact Us</Link>
             </div>
           </div>
-
           <div className="mt-8 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/70 sm:justify-start sm:border-t sm:border-border/50 sm:pt-6">
             <FileText className="h-3.5 w-3.5" /> © {new Date().getFullYear()} Direct Refer, Inc. All rights reserved.
           </div>
