@@ -1,17 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <linearGradient id="ag" x1="20%" y1="80%" x2="80%" y2="20%">
-      <stop offset="0%" stop-color="#8B8FD4"/>
-      <stop offset="100%" stop-color="#C0C4E0"/>
-    </linearGradient>
-  </defs>
-
-  <!-- Blue "d" letter -->
+  <!-- Blue "d" letter (bowl + stem) -->
   <path d="M 300 80 L 300 432 Q 300 480 260 480 L 240 480 Q 180 480 160 420 Q 140 360 140 300 Q 140 200 190 140 Q 230 80 300 80 Z" fill="#3B5FE5"/>
+  <!-- Bowl cutout -->
   <ellipse cx="220" cy="300" rx="70" ry="90" fill="#0a0a1a"/>
 
-  <!-- Arrow shaft: thick curved stroke -->
-  <path d="M 200 330 Q 185 180 355 95" stroke="url(#ag)" stroke-width="60" stroke-linecap="round" fill="none"/>
-  <!-- Arrowhead: triangle with tip pointing in shaft direction (~27 deg above horizontal) -->
-  <polygon points="400,73 342,68 368,122" fill="url(#ag)"/>
+  <!-- Purple "r" shoulder — curves from top of d-stem upper-right, ending in arrow -->
+  <path d="M 300 160 Q 310 80 420 60" stroke="#8B8FD4" stroke-width="52" stroke-linecap="round" fill="none"/>
+  <path d="M 400 20 L 465 52 L 410 95" stroke="#8B8FD4" stroke-width="42" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>
