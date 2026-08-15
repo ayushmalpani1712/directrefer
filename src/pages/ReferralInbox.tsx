@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Chip, EmptyState, GAvatar, SectionHeader, StatCard, StatusBadge } from '@/components/ui-kit'
 import { ReportDialog } from '@/components/ui-kit'
 import CandidateCard from '@/components/CandidateCard'
@@ -94,6 +95,8 @@ export default function ReferralInbox() {
   const [tab, setTab] = useState<ReferralStatus | 'all'>('pending')
   const [q, setQ] = useState('')
   const [viewingResume, setViewingResume] = useState<{ url: string; name: string } | null>(null)
+  const [passDialog, setPassDialog] = useState<{ requestId: string; studentName: string } | null>(null)
+  const [passReason, setPassReason] = useState('')
   const navigate = useNavigate()
 
   const ME = professionals.find((p) => p.id === user?.id) ?? { id: user?.id ?? '', name: student.name || (user?.email?.split('@')[0] ?? 'User'), email: user?.email ?? '' }
@@ -175,7 +178,7 @@ export default function ReferralInbox() {
                           <Button size="sm" className="rounded-lg bg-emerald-600 hover:bg-emerald-700" onClick={() => { setRequestStatus(r.id, 'accepted'); toast.success(`Accepted ${r.student} — they'll be notified`) }}>
                             <CheckCheck className="mr-1.5 h-3.5 w-3.5" /> Accept
                           </Button>
-                          <Button size="sm" variant="outline" className="rounded-lg" onClick={() => { setRequestStatus(r.id, 'rejected'); toast.success('Declined with feedback sent') }}>
+                          <Button size="sm" variant="outline" className="rounded-lg" onClick={() => setPassDialog({ requestId: r.id, studentName: r.student })}>
                             <XCircle className="mr-1.5 h-3.5 w-3.5" /> Pass
                           </Button>
                         </>
@@ -201,6 +204,35 @@ export default function ReferralInbox() {
       )}
 
       {viewingResume && <ResumePreview url={viewingResume.url} fileName={viewingResume.name} open={!!viewingResume} onOpenChange={(open) => { if (!open) setViewingResume(null) }} />}
+
+      <Dialog open={!!passDialog} onOpenChange={(open) => { if (!open) { setPassDialog(null); setPassReason('') } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pass on {passDialog?.studentName}</DialogTitle>
+            <DialogDescription>Select a reason (optional) — this helps us improve matching.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {['Not a fit for this role', 'Overqualified', 'Underqualified', 'Capacity reached', 'No response needed'].map((reason) => (
+              <label key={reason} className="flex items-center gap-2 rounded-lg border border-border/50 p-2.5 cursor-pointer hover:bg-accent transition-colors">
+                <input type="radio" name="pass-reason" value={reason} checked={passReason === reason} onChange={() => setPassReason(reason)} className="accent-primary" />
+                <span className="text-sm">{reason}</span>
+              </label>
+            ))}
+            <Input value={passReason} onChange={(e) => setPassReason(e.target.value)} placeholder="Or type a custom reason…" className="rounded-lg" />
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => { setPassDialog(null); setPassReason('') }}>Cancel</Button>
+            <Button variant="destructive" onClick={() => {
+              if (passDialog) {
+                setRequestStatus(passDialog.requestId, 'rejected')
+                toast.success(`Passed on ${passDialog.studentName}${passReason ? ` — ${passReason}` : ''}`)
+                setPassDialog(null)
+                setPassReason('')
+              }
+            }}>Pass</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Chip, CompanyChip, EmptyState, SectionHeader } from '@/components/ui-kit'
 import { supabase } from '@/lib/supabase'
 import { applicationUrlSupported, professionalCollegeSupported } from '@/lib/db'
+import { SocialShareButtons } from '@/components/SocialShareButtons'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { PIPELINE_STAGES, type PipelineStage } from '@/data/mock'
@@ -449,6 +450,13 @@ export default function ReferralJobs() {
                           <a href={job.application_url} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-1.5 h-3.5 w-3.5" /> Apply on company site</a>
                         </Button>
                       )}
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-border/30">
+                      <SocialShareButtons
+                        title={`${job.title} at ${job.company} — Get referred via DirectRefer`}
+                        url={`https://www.directrefer.in/referral-jobs`}
+                        size="sm"
+                      />
                     </div>
                   </CardContent>
                 </Card>

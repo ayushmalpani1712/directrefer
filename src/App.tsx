@@ -60,6 +60,11 @@ const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
 const ReferralJobs = lazy(() => import('@/pages/ReferralJobs'))
 const CompanyReferral = lazy(() => import('@/pages/CompanyReferral'))
+const AudiencePage = lazy(() => import('@/pages/AudiencePage').then(m => ({ default: m.default })))
+const GuidesPage = lazy(() => import('@/pages/GuidesPage'))
+const SuccessStoriesPage = lazy(() => import('@/pages/SuccessStoriesPage'))
+const AcquisitionDashboard = lazy(() => import('@/pages/admin/AcquisitionDashboard'))
+const ReferrerReputation = lazy(() => import('@/pages/ReferrerReputation'))
 
 function LazyErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
@@ -224,6 +229,19 @@ export default function App() {
                 <Route path="/help" element={<Help />} />
                 <Route path="/referral-jobs" element={<ReferralJobs />} />
 
+                {/* ── Phase 5: Audience landing pages ── */}
+                <Route path="/for/freshers" element={<AudiencePage audience="freshers" />} />
+                <Route path="/for/mba-students" element={<AudiencePage audience="mba-students" />} />
+                <Route path="/for/career-switchers" element={<AudiencePage audience="career-switchers" />} />
+                <Route path="/for/experienced" element={<AudiencePage audience="experienced" />} />
+                <Route path="/guides" element={<GuidesPage />} />
+                <Route path="/guides/:topic" element={<GuidesPage />} />
+                <Route path="/success-stories" element={<SuccessStoriesPage />} />
+                <Route path="/success-stories/:slug" element={<SuccessStoriesPage />} />
+
+                {/* ── Phase 7: Referrer reputation ── */}
+                <Route path="/referrers/leaderboard" element={<ReferrerReputation />} />
+
                 {/* ── Public profile pages (accessible by anyone) ── */}
                 <Route path="/job-seekers/:id" element={<JobSeekerPublic />} />
                 <Route path="/professionals/:id" element={<ProfessionalPublic />} />
@@ -273,6 +291,7 @@ export default function App() {
                     <Route path="approvals" element={<AdminApprovals />} />
                     <Route path="moderation" element={<AdminModeration />} />
                     <Route path="analytics" element={<AdminAnalyticsPage />} />
+                    <Route path="acquisition" element={<AcquisitionDashboard />} />
                     <Route path="settings" element={<AdminSettingsPage />} />
                     <Route path="audit-log" element={<AdminAuditLog />} />
                     <Route path="messages" element={<Messages />} />

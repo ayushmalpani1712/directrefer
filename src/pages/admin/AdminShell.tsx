@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router'
-import { LayoutDashboard, Users, ShieldCheck, BarChart3, Settings, History, Flag, BadgeCheck } from 'lucide-react'
+import { LayoutDashboard, Users, ShieldCheck, BarChart3, Settings, History, Flag, BadgeCheck, TrendingUp } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: '/admin/approvals', label: 'Approvals', icon: BadgeCheck },
   { to: '/admin/moderation', label: 'Moderation', icon: Flag },
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { to: '/admin/acquisition', label: 'Acquisition', icon: TrendingUp },
   { to: '/admin/settings', label: 'Settings', icon: Settings },
   { to: '/admin/audit-log', label: 'Audit Log', icon: History },
 ]
