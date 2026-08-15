@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import { ArrowRight, Briefcase, CheckCircle2, GraduationCap, Loader2, Users, Zap, Eye, EyeOff, Shield, Sparkles } from 'lucide-react'
@@ -11,6 +11,8 @@ import { useAuth } from '@/context/AuthContext'
 import { ROLE_META, ROLE_ROUTE, type Role } from '@/data/mock'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { captureUTMFromURL, storeUTMParams } from '@/lib/analytics'
+import { validateInviteCode, recordInviteUse } from '@/lib/invites'
 
 const ROLE_CARDS: { role: Role; icon: typeof GraduationCap; desc: string; gradient: string; darkGradient: string }[] = [
   { role: 'student', icon: GraduationCap, desc: 'Get referred into top companies', gradient: 'from-blue-500 to-blue-400', darkGradient: 'from-blue-400 to-cyan-300' },
@@ -30,6 +32,20 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [fullName, setFullName] = useState('')
+  const [inviteCode, setInviteCode] = useState<string | null>(null)
+
+  // Capture UTM params and invite code from URL on mount
+  useEffect(() => {
+    const utm = captureUTMFromURL()
+    storeUTMParams(utm)
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('invite')
+    if (code) {
+      validateInviteCode(code).then((result) => {
+        if (result.valid) setInviteCode(code)
+      })
+    }
+  }, [])
 
   const submit = async (e?: React.FormEvent) => {
     e?.preventDefault()
@@ -67,6 +83,7 @@ export default function Login() {
           toast.success('Account created! Taking you to your dashboard...')
           navigate(ROLE_ROUTE[selected] || '/job-seeker')
         }
+        if (inviteCode) recordInviteUse(inviteCode)
       } else {
         const { error } = await signIn(email, password)
         if (error) {
@@ -195,6 +212,11 @@ export default function Login() {
                     : 'border-slate-200 bg-white/50 text-slate-900 placeholder:text-slate-400 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10',
                 )}
               />
+              {inviteCode && (
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3" /> You were invited by a colleague
+                </p>
+              )}
             </div>
           )}
 

@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import {
-  ArrowRight, CheckCheck, ChevronRight, Clock, Inbox,
-  MessageSquare, Search, TrendingUp, XCircle,
+  ArrowRight, CheckCheck, ChevronRight, Clock, Copy, Inbox,
+  MessageSquare, Search, Share2, TrendingUp, XCircle,
 } from 'lucide-react'
 import { LazyArea, LazyAreaChart, LazyBar, LazyBarChart, LazyCartesianGrid, LazyResponsiveContainer, LazyTooltip, LazyXAxis, LazyYAxis } from '@/components/Charts'
 import { toast } from 'sonner'
@@ -17,6 +17,7 @@ import { EmptyChart } from '@/components/analytics/EmptyChart'
 import { useFilteredProMonthly, useFilteredProResponseTime, hasData } from '@/hooks/useAnalytics'
 import type { Professional } from '@/data/mock'
 import { getMessagesPath, ROLE_ROUTE, getRoleFromPath, profileUrl } from '@/data/mock'
+import { generateInviteCode, fetchUserInviteStats, getInviteUrl } from '@/lib/invites'
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color?: string }>; label?: string }) {
   if (!active || !payload?.length) return null
@@ -44,6 +45,33 @@ export default function ProfessionalDashboard() {
   })
   const proMonthly = useFilteredProMonthly(range)
   const proResponseTime = useFilteredProResponseTime(range)
+  const [inviteCode, setInviteCode] = useState<string | null>(null)
+  const [inviteStats, setInviteStats] = useState<{ totalInvites: number; successfulSignups: number } | null>(null)
+
+  useEffect(() => {
+    if (!user?.id) return
+    fetchUserInviteStats(user.id).then(setInviteStats)
+  }, [user?.id])
+
+  const handleGenerateInvite = async () => {
+    if (!user?.id) return
+    const code = await generateInviteCode(user.id)
+    if (code) {
+      setInviteCode(code)
+      const stats = await fetchUserInviteStats(user.id)
+      setInviteStats(stats)
+      toast.success('Invite link generated!')
+    } else {
+      toast.error('Failed to generate invite link')
+    }
+  }
+
+  const handleCopyInvite = async () => {
+    if (!inviteCode) return
+    const url = await getInviteUrl(inviteCode)
+    await navigator.clipboard.writeText(url)
+    toast.success('Invite link copied!')
+  }
 
   const fallback = useMemo<Professional>(() => ({
     id: user?.id ?? '',
@@ -270,6 +298,38 @@ export default function ProfessionalDashboard() {
             </CardContent>
           </Card>
           </Link>
+
+          {/* Invite friends */}
+          <Card className="shadow-soft">
+            <CardHeader className=""><CardTitle className="text-[15px] font-semibold">Invite friends</CardTitle></CardHeader>
+            <CardContent className="pt-2">
+              <p className="text-[13px] text-muted-foreground mb-3">Share DirectRefer with colleagues. When they sign up and get verified, you both grow the network.</p>
+              {inviteStats && (
+                <div className="flex gap-4 mb-3 text-[13px]">
+                  <span className="text-muted-foreground">Invites sent: <strong className="text-foreground">{inviteStats.totalInvites}</strong></span>
+                  <span className="text-muted-foreground">Signups: <strong className="text-foreground">{inviteStats.successfulSignups}</strong></span>
+                </div>
+              )}
+              {inviteCode ? (
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="rounded-lg" onClick={handleCopyInvite}>
+                    <Copy className="mr-1.5 h-3.5 w-3.5" /> Copy invite link
+                  </Button>
+                  <Button size="sm" variant="ghost" className="rounded-lg" onClick={() => {
+                    const url = `${window.location.origin}/login?invite=${inviteCode}`
+                    if (navigator.share) navigator.share({ title: 'Join DirectRefer', url }).catch(() => {})
+                    else handleCopyInvite()
+                  }}>
+                    <Share2 className="mr-1.5 h-3.5 w-3.5" /> Share
+                  </Button>
+                </div>
+              ) : (
+                <Button size="sm" className="rounded-lg bg-primary" onClick={handleGenerateInvite}>
+                  Generate invite link
+                </Button>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Messages preview */}
           <Link to={getMessagesPath(role)} className="block flex-1">

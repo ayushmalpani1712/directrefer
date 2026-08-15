@@ -372,7 +372,8 @@ export async function createReferral(params: {
 
 export async function updateReferralStatus(
   referralId: string,
-  status: 'accepted' | 'rejected'
+  status: 'accepted' | 'rejected',
+  passReason?: string
 ): Promise<boolean> {
   try {
     const update: Record<string, unknown> = { status }
@@ -380,6 +381,9 @@ export async function updateReferralStatus(
     if (status === 'accepted') {
       update.pipeline_stage = 'accepted'
       update.progress = 75
+    }
+    if (status === 'rejected' && passReason) {
+      update.pass_reason = passReason
     }
     const { error } = await supabase
       .from('referrals')

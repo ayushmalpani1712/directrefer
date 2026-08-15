@@ -117,7 +117,7 @@ interface AppState {
 
   requests: ReferralRequest[]
   addRequest: (r: ReferralRequest) => void
-  setRequestStatus: (id: string, status: ReferralRequest['status']) => void
+  setRequestStatus: (id: string, status: ReferralRequest['status'], passReason?: string) => void
   advancePipelineStage: (id: string) => void
   referralsSentToday: number
   canSendReferral: boolean
@@ -1135,7 +1135,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user, student.name])
 
-  const setRequestStatus = useCallback(async (id: string, status: ReferralRequest['status']) => {
+  const setRequestStatus = useCallback(async (id: string, status: ReferralRequest['status'], passReason?: string) => {
     const { updateReferralStatus, formatRelativeTime } = await loadDb()
     // Read the current request BEFORE updating state (avoids fragile side-effect pattern)
     const req = requests.find((r) => r.id === id)
@@ -1149,7 +1149,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return updated
     }))
     if (req && (status === 'accepted' || status === 'rejected')) {
-      updateReferralStatus(id, status as 'accepted' | 'rejected').catch((err) => {
+      updateReferralStatus(id, status as 'accepted' | 'rejected', passReason).catch((err) => {
         console.error('Failed to update referral status:', err)
         toast.error('Something went wrong. Please try again.')
       })

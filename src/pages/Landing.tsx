@@ -13,6 +13,7 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { profileUrl } from '@/data/mock'
 import { supabase } from '@/lib/supabase'
+import { captureUTMFromURL, storeUTMParams, trackPageVisit } from '@/lib/analytics'
 
 const ROLES = [
   {
@@ -119,6 +120,9 @@ export default function Landing() {
   const [featuredJobs, setFeaturedJobs] = useState<JobRow[]>([])
 
   useEffect(() => {
+    const utm = captureUTMFromURL()
+    storeUTMParams(utm)
+    trackPageVisit('/')
     supabase.from('jobs').select('id, title, department, location, type, skills, posted_at').order('posted_at', { ascending: false }).limit(6).then(({ data }) => {
       if (data) setFeaturedJobs(data)
     })

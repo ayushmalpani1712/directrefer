@@ -224,7 +224,7 @@ export default function ReferralInbox() {
             <Button variant="outline" onClick={() => { setPassDialog(null); setPassReason('') }}>Cancel</Button>
             <Button variant="destructive" onClick={() => {
               if (passDialog) {
-                setRequestStatus(passDialog.requestId, 'rejected')
+                setRequestStatus(passDialog.requestId, 'rejected', passReason || undefined)
                 toast.success(`Passed on ${passDialog.studentName}${passReason ? ` — ${passReason}` : ''}`)
                 setPassDialog(null)
                 setPassReason('')
