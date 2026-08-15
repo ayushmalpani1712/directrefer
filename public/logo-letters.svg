@@ -10,10 +10,8 @@
   <path d="M 300 80 L 300 432 Q 300 480 260 480 L 240 480 Q 180 480 160 420 Q 140 360 140 300 Q 140 200 190 140 Q 230 80 300 80 Z" fill="#3B5FE5"/>
   <ellipse cx="220" cy="300" rx="70" ry="90" fill="#0a0a1a"/>
 
-  <!-- Arrow: thick curved stroke from bowl to upper-right -->
-  <g>
-    <path d="M 200 325 Q 190 175 350 90" stroke="url(#ag)" stroke-width="56" stroke-linecap="round" fill="none"/>
-    <!-- Arrowhead triangle pointing upper-right along the tangent -->
-    <path d="M 340 40 L 420 70 L 360 130 Z" fill="url(#ag)"/>
-  </g>
+  <!-- Arrow shaft: thick curved stroke -->
+  <path d="M 200 330 Q 185 180 355 95" stroke="url(#ag)" stroke-width="60" stroke-linecap="round" fill="none"/>
+  <!-- Arrowhead: triangle with tip pointing in shaft direction (~27 deg above horizontal) -->
+  <polygon points="400,73 342,68 368,122" fill="url(#ag)"/>
 </svg>
