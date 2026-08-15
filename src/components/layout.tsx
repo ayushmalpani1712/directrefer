@@ -40,7 +40,7 @@ import { cn } from '@/lib/utils'
 export function Logo({ compact }: { compact?: boolean }) {
   return (
     <Link to="/" className="flex items-center gap-2.5" aria-label="Direct Refer — Go to homepage">
-      <img src="/logo-letters.png" alt="DR" width="32" height="32" className="h-8 w-auto" />
+      <img src="/logo-letters.svg" alt="DR" width="32" height="32" className="h-8 w-auto" />
       {!compact && (
         <span className="font-display text-[21px] font-bold tracking-tight text-gradient">
           DirectRefer

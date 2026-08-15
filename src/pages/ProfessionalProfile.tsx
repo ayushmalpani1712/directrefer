@@ -118,18 +118,33 @@ export default function ProfessionalProfile() {
 
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="overflow-hidden">
-          <div className="relative h-24 sm:h-36 md:h-44 bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4]">
-            <div className="bg-grid absolute inset-0 opacity-20" />
+        <Card className="overflow-hidden glass-card">
+          <div className="relative h-32 sm:h-44 md:h-52 overflow-hidden">
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `
+                  radial-gradient(ellipse 80% 60% at 20% 40%, #3B5FE5cc 0%, transparent 60%),
+                  radial-gradient(ellipse 70% 50% at 80% 30%, #8B8FD4aa 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 80% at 50% 80%, #3B5FE544 0%, transparent 50%),
+                  radial-gradient(ellipse 90% 40% at 60% 10%, #8B8FD466 0%, transparent 45%),
+                  linear-gradient(135deg, #3B5FE5 0%, #8B8FD4 100%)
+                `,
+              }}
+            />
+            <div className="bg-grid absolute inset-0 opacity-15" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card/80" />
           </div>
           <CardContent className="relative px-4 pb-4 sm:px-6 sm:pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex items-end gap-4">
-                <div className="relative -mt-10 sm:-mt-12 md:-mt-16">
-                  <GAvatar name={p.name} gradient={p.gradient} className="h-20 w-20 border-4 border-card text-xl sm:h-24 sm:w-24 sm:text-2xl md:h-32 md:w-32 md:text-3xl" />
+                <div className="relative -mt-12 sm:-mt-14 md:-mt-18">
+                  <div className="rounded-full p-[3px] bg-gradient-to-br from-[#3B5FE5] via-[#8B8FD4] to-[#3B5FE5] shadow-glow">
+                    <GAvatar name={p.name} gradient={p.gradient} className="h-22 w-22 border-[3px] border-card text-xl sm:h-26 sm:w-26 sm:text-2xl md:h-34 md:w-34 md:text-3xl" />
+                  </div>
                 </div>
                 <div className="pb-1">
-                  <h1 className="font-display flex items-center gap-2 text-xl sm:text-2xl font-bold">
+                  <h1 className="font-display flex items-center gap-2 text-xl sm:text-2xl font-bold tracking-tight">
                     {editingHeader ? (
                       <input className="w-full bg-transparent border-b border-primary outline-none text-xl sm:text-2xl font-bold placeholder:text-muted-foreground/30" placeholder="Your full name" value={editName} onChange={(e) => setEditName(e.target.value)} />
                     ) : (
@@ -188,7 +203,7 @@ export default function ProfessionalProfile() {
                       setGithubUrl(ME.githubUrl)
                       setEditingHeader(false)
                     }}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
-                    <Button className="rounded-full bg-primary shadow-glow" onClick={() => {
+                    <Button className="rounded-full bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4] text-white shadow-glow hover:opacity-90" onClick={() => {
                       updateProfessional(ME.id, {
                         name: editName,
                         designation: editDesignation,
@@ -204,14 +219,29 @@ export default function ProfessionalProfile() {
                     }}><Check className="mr-1.5 h-4 w-4" /> Save</Button>
                   </>
                 ) : (
-                  <Button className="rounded-full bg-primary shadow-glow" onClick={() => setEditingHeader(true)}>
+                  <Button className="rounded-full bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4] text-white shadow-glow hover:opacity-90" onClick={() => setEditingHeader(true)}>
                     <Pencil className="mr-1.5 h-4 w-4" /> Edit profile
                   </Button>
                 )}
               </div>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 sm:mt-5 sm:gap-x-6 sm:gap-y-3">
+            <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <div className="flex items-center gap-4">
+                <div className="glass-card rounded-xl px-3 py-2 text-center badge-shine min-w-[90px]">
+                  <div className="text-base font-bold text-gradient">{p.referralsCompleted}</div>
+                  <div className="text-[10px] text-muted-foreground">Referrals done</div>
+                </div>
+                <div className="glass-card rounded-xl px-3 py-2 text-center badge-shine min-w-[72px]">
+                  <div className="text-base font-bold text-gradient">{p.rating > 0 ? p.rating.toFixed(1) : '—'}</div>
+                  <div className="text-[10px] text-muted-foreground">Rating</div>
+                </div>
+                <div className="glass-card rounded-xl px-3 py-2 text-center badge-shine min-w-[80px]">
+                  <div className="text-base font-bold text-gradient">{p.responseRate}%</div>
+                  <div className="text-[10px] text-muted-foreground">Response</div>
+                </div>
+              </div>
+              <div className="h-8 w-px bg-border hidden sm:block" />
               <div
                 role="presentation"
                 className={cn(
