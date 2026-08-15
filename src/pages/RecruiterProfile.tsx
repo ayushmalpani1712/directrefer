@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  Briefcase, Check, Clock, Globe, Heart, Info, Linkedin, MapPin, Pencil, Trophy, Users, X,
+  Briefcase, Check, Clock, Globe, Heart, Info, Linkedin, MapPin, Pencil, Plus, Trophy, Users, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,7 @@ export default function RecruiterProfile() {
   const { jobs, updateRecruiter, candidates, activity } = useApp()
   const { user } = useAuth()
   const loading = usePageLoading(400)
-  const [recruiterCompany, setRecruiterCompany] = useState({ name: '', industry: '', size: '', website: '', linkedin: '', description: '', mission: '', highlights: [] as string[], hiringStats: { timeToHire: 0, offerAccept: 0, referralShare: 0, activeJobs: jobs.filter((j) => j.stage === 'Active').length }, responseRate: 0, verified: false })
+  const [recruiterCompany, setRecruiterCompany] = useState({ name: '', industry: '', size: '', website: '', linkedin: '', description: '', highlights: [] as string[], hiringStats: { timeToHire: 0, offerAccept: 0, referralShare: 0, activeJobs: jobs.filter((j) => j.stage === 'Active').length }, responseRate: 0, verified: false })
   const c = recruiterCompany
   const navigate = useNavigate()
   const profileLoadedRef = useRef(false)
@@ -44,7 +44,6 @@ export default function RecruiterProfile() {
             size: data.company_size ?? prev.size,
             website: data.company_website ?? prev.website,
             description: data.company_description ?? prev.description,
-            mission: data.company_mission ?? prev.mission,
             highlights: data.company_highlights ?? prev.highlights,
             hiringStats: {
               timeToHire: data.time_to_hire ?? prev.hiringStats.timeToHire,
@@ -54,7 +53,6 @@ export default function RecruiterProfile() {
             },
           }))
           if (data.company_description) setDescription(data.company_description)
-          if (data.company_mission) setMission(data.company_mission)
           if (data.company_highlights) setHighlights(data.company_highlights)
           if (Array.isArray(data.benefits) && data.benefits.length > 0) setBenefits(data.benefits)
           if (Array.isArray(data.office_locations) && data.office_locations.length > 0) setLocations(data.office_locations)
@@ -75,9 +73,7 @@ export default function RecruiterProfile() {
   const [editWebsite, setEditWebsite] = useState(c.website)
   const [editLinkedin, setEditLinkedin] = useState(c.linkedin)
   const [editingCard, setEditingCard] = useState<string | null>(null)
-  const [mission, setMission] = useState(c.mission)
   const [highlights, setHighlights] = useState<string[]>(c.highlights)
-  const [editMission, setEditMission] = useState(c.mission)
   const [editHighlights, setEditHighlights] = useState('')
   const [benefits, setBenefits] = useState<string[]>([])
   const [editBenefits, setEditBenefits] = useState('')
@@ -94,10 +90,8 @@ export default function RecruiterProfile() {
     setEditWebsite((prev) => prev === c.website ? prev : c.website)
     setEditLinkedin((prev) => prev === c.linkedin ? prev : c.linkedin)
     setDescription((prev) => prev === c.description ? prev : c.description)
-    setMission((prev) => prev === c.mission ? prev : c.mission)
-    setEditMission((prev) => prev === c.mission ? prev : c.mission)
     setHighlights((prev) => prev === c.highlights ? prev : c.highlights)
-  }, [c.name, c.industry, c.size, c.website, c.linkedin, c.description, c.mission, c.highlights])
+  }, [c.name, c.industry, c.size, c.website, c.linkedin, c.description, c.highlights])
 
   if (loading) {
     return (
@@ -253,7 +247,7 @@ export default function RecruiterProfile() {
           <Card className="shadow-soft">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><Info className="h-4 w-4 text-primary" /> About {c.name}</CardTitle>
-              {editingCard !== 'about' && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setEditMission(mission); setEditHighlights(highlights.join(', ')); setEditingCard('about') }}><Pencil className="h-3.5 w-3.5" /></Button>}
+              {editingCard !== 'about' && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setEditHighlights(highlights.join(', ')); setEditingCard('about') }}><Pencil className="h-3.5 w-3.5" /></Button>}
             </CardHeader>
             <CardContent className="pt-0">
               {editingCard === 'about' ? (
@@ -264,18 +258,8 @@ export default function RecruiterProfile() {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       className="w-full rounded-xl border border-border bg-background p-3 text-sm leading-relaxed text-muted-foreground focus:border-primary focus:outline-none"
-                      rows={3}
+                      rows={4}
                       placeholder="Tell candidates what your company does, its history, and culture..."
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Mission</label>
-                    <textarea
-                      value={editMission}
-                      onChange={(e) => setEditMission(e.target.value)}
-                      className="w-full rounded-xl border border-border bg-background p-3 text-sm leading-relaxed text-muted-foreground focus:border-primary focus:outline-none"
-                      rows={2}
-                      placeholder="What is your company's mission statement?"
                     />
                   </div>
                   <div>
@@ -296,10 +280,9 @@ export default function RecruiterProfile() {
                       setSavingAbout(true)
                       try {
                         const parsedHighlights = editHighlights.split(',').map((h) => h.trim()).filter(Boolean)
-                        setMission(editMission)
                         setHighlights(parsedHighlights)
-                        setRecruiterCompany((prev) => ({ ...prev, description, mission: editMission, highlights: parsedHighlights }))
-                        updateRecruiter({ company_description: description, company_mission: editMission, company_highlights: parsedHighlights })
+                        setRecruiterCompany((prev) => ({ ...prev, description, highlights: parsedHighlights }))
+                        updateRecruiter({ company_description: description, company_highlights: parsedHighlights })
                         setEditingCard(null)
                         toast.success('About section saved')
                       } finally {
@@ -309,16 +292,11 @@ export default function RecruiterProfile() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-5">
+                <div className="space-y-4">
                   <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
-                  <div>
-                    <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Our Mission</h4>
-                    <p className="text-sm leading-relaxed text-muted-foreground">{mission}</p>
-                  </div>
-                  <div>
-                    <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Highlights</h4>
+                  {highlights.length > 0 && (
                     <div className="flex flex-wrap gap-2">{highlights.map((h) => <Chip key={h} tone="primary">{h}</Chip>)}</div>
-                  </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -327,7 +305,7 @@ export default function RecruiterProfile() {
           <Card className="shadow-soft">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><Briefcase className="h-4 w-4 text-primary" /> Open positions ({jobs.filter((j) => j.stage === 'Active').length})</CardTitle>
-              <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { toast.success('Opening job creation form — fill in the role details, requirements, and benefits'); navigate('/recruiter/jobs') }}>+ Post job</Button>
+              <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { toast.success('Opening job creation form — fill in the role details, requirements, and benefits'); navigate('/recruiter/jobs') }}><Plus className="h-3.5 w-3.5" /></Button>
             </CardHeader>
             <CardContent className="space-y-2.5 pt-0">
               {jobs.filter((j) => j.stage === 'Active').map((j) => (
