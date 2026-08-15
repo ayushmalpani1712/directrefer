@@ -243,6 +243,11 @@ export default function RecruiterProfile() {
               ) : (
                 <button type="button" onClick={() => { setEditName(c.name); setEditIndustry(c.industry); setEditSize(c.size); setEditWebsite(c.website); setEditLinkedin(c.linkedin); setEditing(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"><Linkedin className="h-4 w-4" /> Add LinkedIn</button>
               )}
+              {c.website ? (
+                <a href={c.website.startsWith('http') ? c.website : `https://${c.website}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"><Globe className="h-4 w-4" /> Website</a>
+              ) : (
+                <button type="button" onClick={() => { setEditName(c.name); setEditIndustry(c.industry); setEditSize(c.size); setEditWebsite(c.website); setEditLinkedin(c.linkedin); setEditing(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"><Globe className="h-4 w-4" /> Add Website</button>
+              )}
             </div>
           </CardContent>
         </Card>
