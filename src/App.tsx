@@ -62,6 +62,7 @@ const ReferralJobs = lazy(() => import('@/pages/ReferralJobs'))
 const CompanyReferral = lazy(() => import('@/pages/CompanyReferral'))
 const AudiencePage = lazy(() => import('@/pages/AudiencePage').then(m => ({ default: m.default })))
 const GuidesPage = lazy(() => import('@/pages/GuidesPage'))
+const DataHub = lazy(() => import('@/pages/DataHub'))
 const SuccessStoriesPage = lazy(() => import('@/pages/SuccessStoriesPage'))
 const AcquisitionDashboard = lazy(() => import('@/pages/admin/AcquisitionDashboard'))
 
@@ -235,6 +236,9 @@ export default function App() {
                 <Route path="/for/experienced" element={<AudiencePage audience="experienced" />} />
                 <Route path="/guides" element={<GuidesPage />} />
                 <Route path="/guides/:topic" element={<GuidesPage />} />
+
+                {/* ── Data Hub ── */}
+                <Route path="/data-hub" element={<DataHub />} />
                 <Route path="/success-stories" element={<SuccessStoriesPage />} />
                 <Route path="/success-stories/:slug" element={<SuccessStoriesPage />} />
 

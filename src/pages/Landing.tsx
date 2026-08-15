@@ -136,6 +136,7 @@ export default function Landing() {
           <Logo />
           <nav className="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex">
             <Link to="/referral-jobs" className="hover:text-foreground">Referral Jobs</Link>
+            <Link to="/data-hub" className="hover:text-foreground">Data Hub</Link>
             <button type="button" onClick={() => scrollTo('how-it-works')} className="hover:text-foreground">How it works</button>
             <button type="button" onClick={() => scrollTo('trust')} className="hover:text-foreground">Why Trust</button>
             <button type="button" onClick={() => scrollTo('roles')} className="hover:text-foreground">Who it's for</button>
@@ -167,6 +168,7 @@ export default function Landing() {
           <div className="border-t border-border/50 bg-background px-4 pb-4 pt-2 md:hidden">
             <nav className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
               <Link to="/referral-jobs" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 min-h-[44px] flex items-center hover:bg-muted hover:text-foreground">Referral Jobs</Link>
+              <Link to="/data-hub" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 min-h-[44px] flex items-center hover:bg-muted hover:text-foreground">Data Hub</Link>
               <button type="button" onClick={() => { scrollTo('how-it-works'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">How it works</button>
               <button type="button" onClick={() => { scrollTo('trust'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Why Trust</button>
               <button type="button" onClick={() => { scrollTo('roles'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Who it's for</button>
@@ -471,6 +473,7 @@ export default function Landing() {
             <div className="flex flex-col items-center gap-2 sm:items-start">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Product</p>
               <Link to="/referral-jobs" className="text-sm text-muted-foreground hover:text-foreground">Referral Jobs</Link>
+              <Link to="/data-hub" className="text-sm text-muted-foreground hover:text-foreground">Data Hub</Link>
               <Link to="/for/freshers" className="text-sm text-muted-foreground hover:text-foreground">For Freshers</Link>
               <Link to="/for/mba-students" className="text-sm text-muted-foreground hover:text-foreground">For MBA Students</Link>
               <Link to="/guides" className="text-sm text-muted-foreground hover:text-foreground">Guides</Link>

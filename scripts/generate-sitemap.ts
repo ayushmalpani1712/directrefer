@@ -23,6 +23,7 @@ function generateSitemap(): string {
     { path: '/for/experienced', priority: '0.7', changefreq: 'monthly' },
     { path: '/guides', priority: '0.7', changefreq: 'weekly' },
     { path: '/success-stories', priority: '0.7', changefreq: 'weekly' },
+    { path: '/data-hub', priority: '0.8', changefreq: 'weekly' },
   ]
 
   // Guide detail pages
