@@ -477,51 +477,32 @@ export default function StudentProfile() {
       <input ref={resumeInputRef} type="file" accept=".pdf" className="hidden" onChange={handleResumeUpload} />
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="overflow-hidden glass-card">
-          <div className="relative h-32 sm:h-44 md:h-52 overflow-hidden">
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `
-                  radial-gradient(ellipse 80% 60% at 20% 40%, #3B5FE5cc 0%, transparent 60%),
-                  radial-gradient(ellipse 70% 50% at 80% 30%, #8B8FD4aa 0%, transparent 55%),
-                  radial-gradient(ellipse 50% 80% at 50% 80%, #3B5FE544 0%, transparent 50%),
-                  radial-gradient(ellipse 90% 40% at 60% 10%, #8B8FD466 0%, transparent 45%),
-                  linear-gradient(135deg, #3B5FE5 0%, #8B8FD4 100%)
-                `,
-              }}
-            />
-            <div className="bg-grid absolute inset-0 opacity-15" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card/80" />
+        <Card className="overflow-hidden">
+          <div className="relative h-28 sm:h-36 bg-gradient-to-br from-[#3B5FE5] via-[#5B7FE8] to-[#8B8FD4]">
+            <div className="absolute inset-0 bg-grid opacity-10" />
           </div>
-          <CardContent className="relative px-4 pb-4 sm:px-6 sm:pb-6">
+          <CardContent className="relative px-4 pb-5 sm:px-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-3 sm:gap-4">
-                <div className="relative -mt-12 sm:-mt-14 md:-mt-18">
-                  <div className="rounded-full p-[3px] bg-gradient-to-br from-[#3B5FE5] via-[#8B8FD4] to-[#3B5FE5] shadow-glow">
-                    <GAvatar name={s.name} gradient={s.gradient} className="h-22 w-22 border-[3px] border-card text-xl sm:h-26 sm:w-26 sm:text-2xl md:h-34 md:w-34 md:text-3xl" />
-                  </div>
+              <div className="flex items-end gap-4">
+                <div className="-mt-12 sm:-mt-14">
+                  <GAvatar name={s.name} gradient={s.gradient} className="h-20 w-20 border-4 border-card text-xl sm:h-24 sm:w-24 sm:text-2xl" />
                 </div>
-                <div className="pb-1">
-                  <h1 className="font-display flex items-center gap-2 text-xl sm:text-2xl font-bold tracking-tight">
+                <div className="pb-0.5 min-w-0">
+                  <h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight truncate">
                     {editing ? (
                       <input className="w-full bg-transparent border-b border-primary outline-none text-xl sm:text-2xl font-bold placeholder:text-muted-foreground/30" placeholder="Your full name" value={editName} onChange={(e) => setEditName(e.target.value)} />
-                    ) : (
-                      s.name
-                    )}
+                    ) : s.name}
                   </h1>
                   {editing ? (
                     <input className="mt-0.5 w-full bg-transparent border-b border-muted-foreground/30 outline-none text-sm text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. Software Engineer | React & Node.js" value={editHeadline} onChange={(e) => setEditHeadline(e.target.value)} />
                   ) : (
-                    <div className="mt-0.5 text-sm text-muted-foreground">{s.headline}</div>
+                    <p className="mt-0.5 text-sm text-muted-foreground truncate">{s.headline}</p>
                   )}
                   <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                     {editing ? (
                       <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. Pune, India" value={editLocation} onChange={(e) => setEditLocation(e.target.value)} />
                     ) : (
-                      <>
-                        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.location)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors"><MapPin className="h-3.5 w-3.5" /> {s.location}</a>
-                      </>
+                      <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.location)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors"><MapPin className="h-3.5 w-3.5" /> {s.location}</a>
                     )}
                   </div>
                   {editing && (
@@ -538,46 +519,33 @@ export default function StudentProfile() {
                   )}
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 sm:pb-1">
+              <div className="flex flex-wrap gap-2 sm:pb-0.5">
                 {s.resumeFile?.url ? (
-                  <Button variant="outline" className="rounded-full" onClick={() => setShowResumePreview(true)}><FileText className="mr-1.5 h-4 w-4" /> Resume</Button>
+                  <Button variant="outline" size="sm" className="rounded-full" onClick={() => setShowResumePreview(true)}><FileText className="mr-1.5 h-3.5 w-3.5" /> Resume</Button>
                 ) : (
-                  <Button variant="outline" className="rounded-full" onClick={handleDownloadResume}><Download className="mr-1.5 h-4 w-4" /> Resume</Button>
+                  <Button variant="outline" size="sm" className="rounded-full" onClick={handleDownloadResume}><Download className="mr-1.5 h-3.5 w-3.5" /> Resume</Button>
                 )}
                 {editing ? (
                   <>
-                    <Button variant="outline" className="rounded-full" onClick={handleCancelEdit}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
-                    <Button className="rounded-full bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4] text-white shadow-glow hover:opacity-90" onClick={handleSaveProfile}><CheckCircle2 className="mr-1.5 h-4 w-4" /> Save</Button>
+                    <Button variant="outline" size="sm" className="rounded-full" onClick={handleCancelEdit}><X className="mr-1.5 h-3.5 w-3.5" /> Cancel</Button>
+                    <Button size="sm" className="rounded-full" onClick={handleSaveProfile}><CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Save</Button>
                   </>
                 ) : (
-                  <Button className="rounded-full bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4] text-white shadow-glow hover:opacity-90" onClick={() => { setEditName(s.name); setEditHeadline(s.headline); setEditLocation(s.location); setEditing(true) }}><Pencil className="mr-1.5 h-4 w-4" /> Edit profile</Button>
+                  <Button size="sm" className="rounded-full" onClick={() => { setEditName(s.name); setEditHeadline(s.headline); setEditLocation(s.location); setEditing(true) }}><Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit profile</Button>
                 )}
               </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
-              <div className="flex items-center gap-4">
-                <div className="glass-card rounded-xl px-3 py-2 text-center badge-shine min-w-[90px]">
-                  <div className="text-base font-bold text-gradient">{myRequests.length}</div>
-                  <div className="text-[10px] text-muted-foreground">Referrals sent</div>
-                </div>
-                <div className="glass-card rounded-xl px-3 py-2 text-center badge-shine min-w-[72px]">
-                  <div className="text-base font-bold text-gradient">{s.skills.length}</div>
-                  <div className="text-[10px] text-muted-foreground">Skills</div>
-                </div>
-                <div className="glass-card rounded-xl px-3 py-2 text-center badge-shine min-w-[80px]">
-                  <div className="text-base font-bold text-gradient">{s.profileCompletion}%</div>
-                  <div className="text-[10px] text-muted-foreground">Complete</div>
-                </div>
-              </div>
-              <div className="h-8 w-px bg-border hidden sm:block" />
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2.5 text-sm">
+              <span className="text-muted-foreground"><strong className="text-foreground">{myRequests.length}</strong> referrals sent</span>
+              <span className="text-muted-foreground"><strong className="text-foreground">{s.skills.length}</strong> skills</span>
+              <span className="text-muted-foreground"><strong className="text-foreground">{s.profileCompletion}%</strong> complete</span>
+              <div className="h-4 w-px bg-border hidden sm:block" />
               <div
                 role="presentation"
                 className={cn(
-                  'flex items-center gap-2.5 rounded-full border px-4 py-2 transition-colors',
-                  openToWork
-                    ? 'border-emerald-500/30 bg-emerald-500/5'
-                    : 'border-border bg-transparent'
+                  'flex items-center gap-2 rounded-full border px-3 py-1 transition-colors text-xs font-medium',
+                  openToWork ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400' : 'border-border text-muted-foreground'
                 )}
               >
                 <Switch

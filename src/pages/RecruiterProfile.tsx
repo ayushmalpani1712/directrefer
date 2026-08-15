@@ -109,32 +109,17 @@ export default function RecruiterProfile() {
 
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="overflow-hidden glass-card">
-          <div className="relative h-36 sm:h-48 md:h-56 overflow-hidden">
-            <div
-              className="absolute inset-0"
-              style={{
-                background: `
-                  radial-gradient(ellipse 80% 60% at 20% 40%, #3B5FE5cc 0%, transparent 60%),
-                  radial-gradient(ellipse 70% 50% at 80% 30%, #8B8FD4aa 0%, transparent 55%),
-                  radial-gradient(ellipse 50% 80% at 50% 80%, #3B5FE544 0%, transparent 50%),
-                  radial-gradient(ellipse 90% 40% at 60% 10%, #8B8FD466 0%, transparent 45%),
-                  linear-gradient(135deg, #3B5FE5 0%, #8B8FD4 100%)
-                `,
-              }}
-            />
-            <div className="bg-grid absolute inset-0 opacity-15" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card/80" />
+        <Card className="overflow-hidden">
+          <div className="relative h-28 sm:h-36 bg-gradient-to-br from-[#3B5FE5] via-[#5B7FE8] to-[#8B8FD4]">
+            <div className="absolute inset-0 bg-grid opacity-10" />
           </div>
-          <CardContent className="relative px-4 pb-4 sm:px-6 sm:pb-6">
+          <CardContent className="relative px-4 pb-5 sm:px-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-3 sm:gap-4">
-                <div className="-mt-10 sm:-mt-12 md:-mt-14">
-                  <div className="rounded-2xl p-[3px] bg-gradient-to-br from-[#3B5FE5] via-[#8B8FD4] to-[#3B5FE5] shadow-glow">
-                    <CompanyChip name={c.name} className="h-18 w-18 rounded-[13px] border-[3px] border-card text-xl sm:h-22 sm:w-22 sm:text-2xl md:h-26 md:w-26" />
-                  </div>
+              <div className="flex items-end gap-4">
+                <div className="-mt-10 sm:-mt-12">
+                  <CompanyChip name={c.name} className="h-16 w-16 rounded-2xl border-4 border-card text-lg sm:h-20 sm:w-20 sm:text-xl" />
                 </div>
-                <div className="pb-1">
+                <div className="pb-0.5 min-w-0">
                   {editing ? (
                     <input
                       value={editName}
@@ -143,12 +128,10 @@ export default function RecruiterProfile() {
                       placeholder="Company name"
                     />
                   ) : (
-                    <h1 className="font-display flex items-center gap-2 text-2xl font-bold tracking-tight">
-                      {c.name}
-                    </h1>
+                    <h1 className="font-display text-2xl font-bold tracking-tight truncate">{c.name}</h1>
                   )}
                   {editing ? (
-                    <div className="mt-1 text-sm text-muted-foreground">
+                    <div className="mt-0.5 text-sm text-muted-foreground">
                       <input
                         value={editIndustry}
                         onChange={(e) => setEditIndustry(e.target.value)}
@@ -157,7 +140,7 @@ export default function RecruiterProfile() {
                       />
                     </div>
                   ) : (
-                    <div className="mt-0.5 text-sm text-muted-foreground">{c.industry}</div>
+                    <p className="mt-0.5 text-sm text-muted-foreground">{c.industry}</p>
                   )}
                   <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
@@ -203,18 +186,18 @@ export default function RecruiterProfile() {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2 sm:pb-1">
+              <div className="flex gap-2 sm:pb-0.5">
                 {editing ? (
                   <>
-                    <Button variant="outline" className="rounded-full" onClick={() => {
+                    <Button variant="outline" size="sm" className="rounded-full" onClick={() => {
                       setEditName(c.name)
                       setEditIndustry(c.industry)
                       setEditSize(c.size)
                       setEditWebsite(c.website)
                       setEditLinkedin(c.linkedin)
                       setEditing(false)
-                    }}><X className="mr-1.5 h-4 w-4" /> Cancel</Button>
-                    <Button className="rounded-full bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4] text-white shadow-glow hover:opacity-90" disabled={savingHeader} onClick={async () => {
+                    }}><X className="mr-1.5 h-3.5 w-3.5" /> Cancel</Button>
+                    <Button size="sm" className="rounded-full" disabled={savingHeader} onClick={async () => {
                       setSavingHeader(true)
                       try {
                         setRecruiterCompany((prev) => ({
@@ -241,36 +224,25 @@ export default function RecruiterProfile() {
                       } finally {
                         setSavingHeader(false)
                       }
-                    }}><Check className="mr-1.5 h-4 w-4" /> {savingHeader ? 'Saving...' : 'Save'}</Button>
+                    }}><Check className="mr-1.5 h-3.5 w-3.5" /> {savingHeader ? 'Saving...' : 'Save'}</Button>
                   </>
                 ) : (
-                  <Button className="rounded-full bg-gradient-to-r from-[#3B5FE5] to-[#8B8FD4] text-white shadow-glow hover:opacity-90" onClick={() => {
+                  <Button size="sm" className="rounded-full" onClick={() => {
                     setEditName(c.name)
                     setEditIndustry(c.industry)
                     setEditSize(c.size)
                     setEditWebsite(c.website)
                     setEditLinkedin(c.linkedin)
                     setEditing(true)
-                  }}><Pencil className="mr-1.5 h-4 w-4" /> Edit profile</Button>
+                  }}><Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit profile</Button>
                 )}
               </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3">
-              <div className="flex items-center gap-4">
-                <div className="glass-card rounded-xl px-3 py-2 text-center badge-shine min-w-[80px]">
-                  <div className="text-base font-bold text-gradient">{jobs.filter((j) => j.stage === 'Active').length}</div>
-                  <div className="text-[10px] text-muted-foreground">Jobs posted</div>
-                </div>
-                <div className="glass-card rounded-xl px-3 py-2 text-center badge-shine min-w-[72px]">
-                  <div className="text-base font-bold text-gradient">{candidates.filter((c) => c.stage === 'Screened').length}</div>
-                  <div className="text-[10px] text-muted-foreground">Hires</div>
-                </div>
-                <div className="glass-card rounded-xl px-3 py-2 text-center badge-shine min-w-[80px]">
-                  <div className="text-base font-bold text-gradient">{c.size || '—'}</div>
-                  <div className="text-[10px] text-muted-foreground">Team size</div>
-                </div>
-              </div>
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2.5 text-sm">
+              <span className="text-muted-foreground"><strong className="text-foreground">{jobs.filter((j) => j.stage === 'Active').length}</strong> jobs posted</span>
+              <span className="text-muted-foreground"><strong className="text-foreground">{candidates.filter((c) => c.stage === 'Screened').length}</strong> hires</span>
+              <span className="text-muted-foreground"><strong className="text-foreground">{c.size || '—'}</strong> team size</span>
             </div>
           </CardContent>
         </Card>
