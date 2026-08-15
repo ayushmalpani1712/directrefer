@@ -2,7 +2,7 @@ function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
-const LOGO_IMG = '<img src="https://www.directrefer.in/logo-letters.png" alt="Direct Refer" style="height:32px;width:auto;vertical-align:middle;" />'
+const LOGO_IMG = '<img src="https://www.directrefer.in/logo-letters.svg" alt="Direct Refer" style="height:32px;width:auto;vertical-align:middle;" />'
 
 const EMAIL_HEADER = `
   <div style="text-align:center;margin-bottom:32px;">

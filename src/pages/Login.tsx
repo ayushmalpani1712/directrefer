@@ -155,7 +155,7 @@ export default function Login() {
                 ? 'bg-gradient-to-br from-blue-500/20 to-violet-500/20 shadow-[0_0_20px_-4px_rgba(79,124,255,0.3)]'
                 : 'bg-gradient-to-br from-blue-500/10 to-violet-500/10 shadow-[0_2px_12px_-2px_rgba(79,124,255,0.15)]',
             )}>
-              <img src="/logo-letters.png" alt="DR" className="h-6 w-auto transition-transform duration-300 group-hover:scale-110" />
+              <img src="/logo-letters.svg" alt="DR" className="h-6 w-auto transition-transform duration-300 group-hover:scale-110" />
             </div>
             <span className={cn(
               'font-display text-[26px] font-bold tracking-tight bg-clip-text text-transparent transition-colors duration-300',
