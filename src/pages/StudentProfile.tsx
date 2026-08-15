@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import {
   Award, BadgeCheck, Briefcase, Building2, CheckCircle2,
   Download, FileText, Github, GraduationCap, Languages, Linkedin, MapPin, Pencil, Plus,
-  Sparkles, Trash2, Upload, Globe, X,
+  Sparkles, Target, Trash2, Upload, Zap, Globe, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import ResumePreview from '@/components/ResumePreview'
@@ -26,14 +26,14 @@ import { cn } from '@/lib/utils'
 function Section({ title, icon: Icon, children, onAdd, actions, className }: { title: string; icon: typeof Award; children: React.ReactNode; onAdd?: () => void; actions?: React.ReactNode; className?: string }) {
   return (
     <Card className={cn('shadow-soft', className)}>
-      <div className="flex items-center justify-between gap-4 px-5 pt-5 pb-0">
-        <CardTitle className="flex items-center gap-2 text-base font-semibold"><Icon className="h-4 w-4 text-primary" /> {title}</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2 text-base"><Icon className="h-4 w-4 text-primary" /> {title}</CardTitle>
         <div className="flex items-center gap-1">
           {actions}
-          {onAdd && <Button variant="ghost" size="sm" className="h-8 text-primary" onClick={onAdd}><Plus className="mr-1 h-4 w-4" /> Add</Button>}
+          {onAdd && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={onAdd}><Plus className="h-3.5 w-3.5" /></Button>}
         </div>
-      </div>
-      <CardContent className="pt-3">{children}</CardContent>
+      </CardHeader>
+      <CardContent className="pt-0">{children}</CardContent>
     </Card>
   )
 }
@@ -855,9 +855,9 @@ export default function StudentProfile() {
 
           {/* Skills */}
           <Card className="shadow-soft">
-      <CardHeader className="">
-              <CardTitle className="text-base">Skills</CardTitle>
-              <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => setShowSkillInput(!showSkillInput)}><Plus className="h-4 w-4" /></Button>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base"><Zap className="h-4 w-4 text-primary" /> Skills</CardTitle>
+              <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => setShowSkillInput(!showSkillInput)}><Plus className="h-3.5 w-3.5" /></Button>
             </CardHeader>
             <CardContent className="pt-0">
               {showSkillInput && (
@@ -884,10 +884,10 @@ export default function StudentProfile() {
           {/* Preferences */}
           <Card className="shadow-soft">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Career preferences</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base"><Target className="h-4 w-4 text-primary" /> Career preferences</CardTitle>
               {!showCareerEdit && (
                 <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => setShowCareerEdit(true)}>
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className="h-3.5 w-3.5" />
                 </Button>
               )}
             </CardHeader>
@@ -954,7 +954,7 @@ export default function StudentProfile() {
               <CardTitle className="flex items-center gap-2 text-base"><Briefcase className="h-4 w-4 text-primary" /> Job preferences</CardTitle>
               {!showJobPrefEdit && (
                 <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => setShowJobPrefEdit(true)}>
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className="h-3.5 w-3.5" />
                 </Button>
               )}
             </CardHeader>
@@ -1017,13 +1017,13 @@ export default function StudentProfile() {
 
           {/* Resume */}
           <Card className="shadow-soft flex-1">
-            <CardHeader className="">
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><FileText className="h-4 w-4 text-primary" /> Resume</CardTitle>
               <div data-slot="card-action" className="flex items-center gap-1">
                 {s.resumeFile && (
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-rose-500" onClick={() => setShowResumeConfirm(true)}><Trash2 className="h-3.5 w-3.5" /></Button>
                 )}
-                <Button variant="ghost" size="sm" className="h-8 text-primary" onClick={() => resumeInputRef.current?.click()}><Plus className="h-4 w-4" /></Button>
+                <Button variant="ghost" size="sm" className="h-8 text-primary" onClick={() => resumeInputRef.current?.click()}><Plus className="h-3.5 w-3.5" /></Button>
               </div>
             </CardHeader>
             <CardContent className="pt-0">

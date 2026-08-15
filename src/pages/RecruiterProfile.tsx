@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  Briefcase, Check, Clock, Globe, Heart, Linkedin, MapPin, Pencil, Trophy, Users, X,
+  Briefcase, Check, Clock, Globe, Heart, Info, Linkedin, MapPin, Pencil, Trophy, Users, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -251,9 +251,9 @@ export default function RecruiterProfile() {
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card className="shadow-soft">
-            <CardHeader className="">
-              <CardTitle className="text-base">About {c.name}</CardTitle>
-              {editingCard !== 'about' && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setEditMission(mission); setEditHighlights(highlights.join(', ')); setEditingCard('about') }}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>}
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base"><Info className="h-4 w-4 text-primary" /> About {c.name}</CardTitle>
+              {editingCard !== 'about' && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setEditMission(mission); setEditHighlights(highlights.join(', ')); setEditingCard('about') }}><Pencil className="h-3.5 w-3.5" /></Button>}
             </CardHeader>
             <CardContent className="pt-0">
               {editingCard === 'about' ? (
@@ -325,7 +325,7 @@ export default function RecruiterProfile() {
           </Card>
 
           <Card className="shadow-soft">
-            <CardHeader className="">
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><Briefcase className="h-4 w-4 text-primary" /> Open positions ({jobs.filter((j) => j.stage === 'Active').length})</CardTitle>
               <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { toast.success('Opening job creation form — fill in the role details, requirements, and benefits'); navigate('/recruiter/jobs') }}>+ Post job</Button>
             </CardHeader>
@@ -346,9 +346,9 @@ export default function RecruiterProfile() {
           </Card>
 
           <Card className="shadow-soft">
-            <CardHeader className="">
-              <CardTitle className="flex items-center gap-2 text-base"><Heart className="h-4 w-4 text-rose-500" /> Benefits & perks</CardTitle>
-              {editingCard !== 'benefits' && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setEditBenefits(benefits.join(', ')); setEditingCard('benefits') }}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>}
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base"><Heart className="h-4 w-4 text-primary" /> Benefits & perks</CardTitle>
+              {editingCard !== 'benefits' && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setEditBenefits(benefits.join(', ')); setEditingCard('benefits') }}><Pencil className="h-3.5 w-3.5" /></Button>}
             </CardHeader>
             <CardContent className="pt-0">
               {editingCard === 'benefits' ? (
@@ -386,9 +386,9 @@ export default function RecruiterProfile() {
 
         <div className="flex flex-col gap-6">
           <Card className="shadow-soft">
-            <CardHeader className="">
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><MapPin className="h-4 w-4 text-primary" /> Office locations</CardTitle>
-              {editingCard !== 'locations' && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setEditLocations(locations.join(', ')); setEditingCard('locations') }}><Pencil className="mr-1 h-3.5 w-3.5" /> Edit</Button>}
+              {editingCard !== 'locations' && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setEditLocations(locations.join(', ')); setEditingCard('locations') }}><Pencil className="h-3.5 w-3.5" /></Button>}
             </CardHeader>
             <CardContent className="space-y-2 pt-0">
               {editingCard === 'locations' ? (
@@ -428,8 +428,8 @@ export default function RecruiterProfile() {
           </Card>
 
           <Card className="shadow-soft">
-            <CardHeader className="">
-              <CardTitle className="flex items-center gap-2 text-base"><Trophy className="h-4 w-4 text-amber-500" /> Selected candidates</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base"><Trophy className="h-4 w-4 text-primary" /> Selected candidates</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 pt-0">
               {(() => {
@@ -456,7 +456,7 @@ export default function RecruiterProfile() {
           </Card>
 
           <Card className="shadow-soft">
-            <CardHeader className="">
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><Clock className="h-4 w-4 text-primary" /> Recent activity</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">

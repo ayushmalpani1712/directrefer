@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Building2, Check, Github, GraduationCap, Linkedin, MapPin, Pencil, Plus,
-  ShieldCheck, X,
+  Building2, Check, Github, GraduationCap, Info, Linkedin, MapPin, Pencil, Plus,
+  ShieldCheck, Wrench, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -266,8 +266,8 @@ export default function ProfessionalProfile() {
         <div className="flex flex-col gap-6 lg:col-span-2">
           {/* About */}
           <Card className="shadow-soft">
-            <CardHeader className="">
-              <CardTitle className="text-base">About</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base"><Info className="h-4 w-4 text-primary" /> About</CardTitle>
               {!editingAbout && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setBio(ME.bio); setEditingAbout(true) }}><Pencil className="h-3.5 w-3.5" /></Button>}
             </CardHeader>
             <CardContent className="pt-0">
@@ -393,7 +393,7 @@ export default function ProfessionalProfile() {
         {/* Right column */}
         <div className="flex flex-col gap-6">
           <Card className="shadow-soft">
-            <CardHeader className=""><CardTitle className="text-base">Company</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between"><CardTitle className="flex items-center gap-2 text-base"><Building2 className="h-4 w-4 text-primary" /> Company</CardTitle></CardHeader>
             <CardContent className="pt-0">
               <div className="flex items-center gap-3">
                 <CompanyChip name={p.company} className="h-11 w-11 rounded-xl text-sm" />
@@ -411,9 +411,9 @@ export default function ProfessionalProfile() {
           </Card>
 
           <Card className="shadow-soft flex-1">
-            <CardHeader className="">
-              <CardTitle className="text-base">Skills & technologies</CardTitle>
-              <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => setShowSkillInput(true)}><Plus className="h-4 w-4" /></Button>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base"><Wrench className="h-4 w-4 text-primary" /> Skills & technologies</CardTitle>
+              <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => setShowSkillInput(true)}><Plus className="h-3.5 w-3.5" /></Button>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="flex flex-wrap gap-2">
