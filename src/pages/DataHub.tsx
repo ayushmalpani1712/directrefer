@@ -86,6 +86,49 @@ const MARKET_TRENDS = [
   { month: 'Aug', jobs: 54000, hires: 11800, referrals: 3800 },
 ]
 
+const SPARKLINE_SALARY = [
+  { m: 'J', v: 138 }, { m: 'F', v: 139.5 }, { m: 'M', v: 141 }, { m: 'A', v: 140 },
+  { m: 'M', v: 142.5 }, { m: 'J', v: 143 }, { m: 'J', v: 144 }, { m: 'A', v: 145 },
+]
+const SPARKLINE_JOBS = [
+  { m: 'J', v: 42 }, { m: 'F', v: 44.5 }, { m: 'M', v: 47 }, { m: 'A', v: 45 },
+  { m: 'M', v: 48 }, { m: 'J', v: 50 }, { m: 'J', v: 52 }, { m: 'A', v: 54 },
+]
+const SPARKLINE_APIS = [
+  { m: 'J', v: 1380 }, { m: 'F', v: 1395 }, { m: 'M', v: 1410 }, { m: 'A', v: 1420 },
+  { m: 'M', v: 1430 }, { m: 'J', v: 1435 }, { m: 'J', v: 1442 }, { m: 'A', v: 1447 },
+]
+
+// ── Custom Tooltip ───────────────────────────────────────────────────────────
+
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color?: string }>; label?: string }) {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="rounded-xl border border-border/60 bg-card/95 px-3.5 py-2.5 shadow-xl backdrop-blur-sm">
+      {label && <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>}
+      {payload.map((p, i) => (
+        <div key={i} className="flex items-center gap-2 text-sm">
+          <span className="h-2 w-2 rounded-full" style={{ background: p.color || '#3B82F6' }} />
+          <span className="text-muted-foreground">{p.name}:</span>
+          <span className="font-semibold text-foreground">{typeof p.value === 'number' ? p.value.toLocaleString() : p.value}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function Sparkline({ data, color = '#3B82F6' }: { data: Array<{ m: string; v: number }>; color?: string }) {
+  return (
+    <div className="sparkline-wrap">
+      <LazyResponsiveContainer width="100%" height={32}>
+        <LazyLineChart data={data}>
+          <LazyLine type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} dot={false} />
+        </LazyLineChart>
+      </LazyResponsiveContainer>
+    </div>
+  )
+}
+
 // ── Hooks ────────────────────────────────────────────────────────────────────
 
 function useLiveIndicator() {
@@ -124,15 +167,18 @@ function LiveBadge() {
   )
 }
 
-function StatTicker({ label, value, prefix = '', suffix = '', icon: Icon }: { label: string; value: number; prefix?: string; suffix?: string; icon: typeof TrendingUp }) {
+function StatTicker({ label, value, prefix = '', suffix = '', icon: Icon, sparkline, sparkColor }: { label: string; value: number; prefix?: string; suffix?: string; icon: typeof TrendingUp; sparkline?: Array<{ m: string; v: number }>; sparkColor?: string }) {
   const v = useStatTicker(value)
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary badge-shine">
         <Icon className="h-5 w-5" />
       </div>
-      <div>
-        <div className="font-display text-2xl font-bold text-foreground">{prefix}{v.toLocaleString()}{suffix}</div>
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-display text-2xl font-bold text-foreground">{prefix}{v.toLocaleString()}{suffix}</span>
+          {sparkline && <Sparkline data={sparkline} color={sparkColor} />}
+        </div>
         <div className="text-xs text-muted-foreground">{label}</div>
       </div>
     </div>
@@ -245,7 +291,7 @@ export default function DataHub() {
   return (
     <div className="min-h-screen bg-background">
       {/* ── Header ── */}
-      <header className="glass sticky top-0 z-40 border-b border-border/50">
+      <header className="glass-nav sticky top-0 z-40">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Logo />
           <nav className="hidden items-center gap-1 md:flex">
@@ -315,9 +361,9 @@ export default function DataHub() {
             <FadeIn delay={0.1}>
               <div className="mt-8 flex flex-col items-center gap-6">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
-                  <StatTicker label="Job Openings Tracked" value={345200} icon={Briefcase} suffix="+" />
-                  <StatTicker label="Avg. Referral Salary" value={142000} prefix="$" icon={DollarSign} />
-                  <StatTicker label="APIs Catalogued" value={1447} icon={Globe} />
+                  <StatTicker label="Job Openings Tracked" value={345200} icon={Briefcase} suffix="+" sparkline={SPARKLINE_JOBS} sparkColor="#3B82F6" />
+                  <StatTicker label="Avg. Referral Salary" value={142000} prefix="$" icon={DollarSign} sparkline={SPARKLINE_SALARY} sparkColor="#10B981" />
+                  <StatTicker label="APIs Catalogued" value={1447} icon={Globe} sparkline={SPARKLINE_APIS} sparkColor="#8B5CF6" />
                   <StatTicker label="Companies Indexed" value={2840} icon={Building2} />
                 </div>
                 <div className="relative w-full max-w-md">
@@ -356,7 +402,7 @@ export default function DataHub() {
                 {/* Charts */}
                 <div className="grid gap-6 lg:grid-cols-2">
                   <FadeIn delay={0.05}>
-                    <Card className="shadow-soft">
+                    <Card className="glass-card shadow-soft">
                       <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><LineChartIcon className="h-4 w-4 text-primary" /> Salary Trends (2024)</CardTitle></CardHeader>
                       <CardContent>
                         <LazyResponsiveContainer width="100%" height={280}>
@@ -364,7 +410,7 @@ export default function DataHub() {
                             <LazyCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                             <LazyXAxis dataKey="month" tick={{ fontSize: 12, fill: '#9CA3AF' }} />
                             <LazyYAxis tick={{ fontSize: 12, fill: '#9CA3AF' }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
-                            <LazyTooltip contentStyle={{ background: '#1A2028', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }} formatter={(v: number) => [`$${v.toLocaleString()}`, '']} />
+                            <LazyTooltip content={<ChartTooltip />} />
                             <LazyLegend wrapperStyle={{ fontSize: 12 }} />
                             <LazyLine type="monotone" dataKey="swe" stroke="#3B82F6" strokeWidth={2} name="Software Eng." dot={false} />
                             <LazyLine type="monotone" dataKey="ds" stroke="#8B5CF6" strokeWidth={2} name="Data Scientist" dot={false} />
@@ -375,7 +421,7 @@ export default function DataHub() {
                     </Card>
                   </FadeIn>
                   <FadeIn delay={0.1}>
-                    <Card className="shadow-soft">
+                    <Card className="glass-card shadow-soft">
                       <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> Growth Rate by Role</CardTitle></CardHeader>
                       <CardContent>
                         <LazyResponsiveContainer width="100%" height={280}>
@@ -383,7 +429,7 @@ export default function DataHub() {
                             <LazyCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                             <LazyXAxis type="number" tick={{ fontSize: 12, fill: '#9CA3AF' }} tickFormatter={(v: number) => `${v}%`} />
                             <LazyYAxis type="category" dataKey="role" tick={{ fontSize: 11, fill: '#9CA3AF' }} width={130} />
-                            <LazyTooltip contentStyle={{ background: '#1A2028', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }} formatter={(v: number) => [`${v}%`, 'Growth']} />
+                            <LazyTooltip content={<ChartTooltip />} />
                             <LazyBar dataKey="growth" fill="#3B82F6" radius={[0, 4, 4, 0]} />
                           </LazyBarChart>
                         </LazyResponsiveContainer>
@@ -394,7 +440,7 @@ export default function DataHub() {
 
                 {/* Table */}
                 <FadeIn delay={0.15}>
-                  <Card className="shadow-soft">
+                  <Card className="glass-card shadow-soft">
                     <CardHeader><CardTitle className="text-sm font-semibold">Role Details & Salary Benchmarks</CardTitle></CardHeader>
                     <CardContent>
                       <DataTable
@@ -415,7 +461,7 @@ export default function DataHub() {
 
                 {/* Market Trends Chart */}
                 <FadeIn delay={0.2}>
-                  <Card className="shadow-soft">
+                  <Card className="glass-card shadow-soft">
                     <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> Monthly Hiring & Referral Volume</CardTitle></CardHeader>
                     <CardContent>
                       <LazyResponsiveContainer width="100%" height={300}>
@@ -423,7 +469,7 @@ export default function DataHub() {
                           <LazyCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                           <LazyXAxis dataKey="month" tick={{ fontSize: 12, fill: '#9CA3AF' }} />
                           <LazyYAxis tick={{ fontSize: 12, fill: '#9CA3AF' }} />
-                          <LazyTooltip contentStyle={{ background: '#1A2028', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }} />
+                          <LazyTooltip content={<ChartTooltip />} />
                           <LazyLegend wrapperStyle={{ fontSize: 12 }} />
                           <LazyArea type="monotone" dataKey="jobs" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.1} name="Job Postings" />
                           <LazyArea type="monotone" dataKey="hires" stroke="#10B981" fill="#10B981" fillOpacity={0.1} name="Hires" />
@@ -455,7 +501,7 @@ export default function DataHub() {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {FINANCE_DATA.slice(0, 4).map((stock, i) => (
                     <FadeIn key={stock.symbol} delay={i * 0.05}>
-                      <Card className="shadow-soft">
+                      <Card className="glass-card shadow-soft">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">
                             <div>
@@ -479,7 +525,7 @@ export default function DataHub() {
 
                 {/* Stock Chart */}
                 <FadeIn delay={0.1}>
-                  <Card className="shadow-soft">
+                  <Card className="glass-card shadow-soft">
                     <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><LineChartIcon className="h-4 w-4 text-primary" /> Price Comparison</CardTitle></CardHeader>
                     <CardContent>
                       <LazyResponsiveContainer width="100%" height={300}>
@@ -487,7 +533,7 @@ export default function DataHub() {
                           <LazyCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                           <LazyXAxis dataKey="symbol" tick={{ fontSize: 12, fill: '#9CA3AF' }} />
                           <LazyYAxis tick={{ fontSize: 12, fill: '#9CA3AF' }} tickFormatter={(v: number) => `$${v}`} />
-                          <LazyTooltip contentStyle={{ background: '#1A2028', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }} formatter={(v: number) => [`$${v}`, 'Price']} />
+                          <LazyTooltip content={<ChartTooltip />} />
                           <LazyBar dataKey="price" fill="#3B82F6" radius={[4, 4, 0, 0]} />
                         </LazyBarChart>
                       </LazyResponsiveContainer>
@@ -497,7 +543,7 @@ export default function DataHub() {
 
                 {/* Finance Table */}
                 <FadeIn delay={0.15}>
-                  <Card className="shadow-soft">
+                  <Card className="glass-card shadow-soft">
                     <CardHeader><CardTitle className="text-sm font-semibold">All Stocks</CardTitle></CardHeader>
                     <CardContent>
                       <DataTable
@@ -519,7 +565,7 @@ export default function DataHub() {
                 {/* P/E Pie */}
                 <div className="grid gap-6 lg:grid-cols-2">
                   <FadeIn delay={0.2}>
-                    <Card className="shadow-soft">
+                    <Card className="glass-card shadow-soft">
                       <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><PieChartIcon className="h-4 w-4 text-primary" /> Market Cap Distribution</CardTitle></CardHeader>
                       <CardContent>
                         <LazyResponsiveContainer width="100%" height={280}>
@@ -527,14 +573,14 @@ export default function DataHub() {
                             <LazyPie data={FINANCE_DATA} dataKey="pe" nameKey="symbol" cx="50%" cy="50%" outerRadius={100} label={({ symbol, pe }: { symbol: string; pe: number }) => `${symbol} (${pe}x)`}>
                               {FINANCE_DATA.map((_, i) => <LazyCell key={i} fill={['#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#EC4899', '#06B6D4', '#F97316'][i]} />)}
                             </LazyPie>
-                            <LazyTooltip contentStyle={{ background: '#1A2028', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }} />
+                            <LazyTooltip content={<ChartTooltip />} />
                           </LazyPieChart>
                         </LazyResponsiveContainer>
                       </CardContent>
                     </Card>
                   </FadeIn>
                   <FadeIn delay={0.25}>
-                    <Card className="shadow-soft">
+                    <Card className="glass-card shadow-soft">
                       <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> P/E Ratio Comparison</CardTitle></CardHeader>
                       <CardContent>
                         <LazyResponsiveContainer width="100%" height={280}>
@@ -542,7 +588,7 @@ export default function DataHub() {
                             <LazyCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                             <LazyXAxis dataKey="symbol" tick={{ fontSize: 12, fill: '#9CA3AF' }} />
                             <LazyYAxis tick={{ fontSize: 12, fill: '#9CA3AF' }} />
-                            <LazyTooltip contentStyle={{ background: '#1A2028', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }} formatter={(v: number) => [`${v}x`, 'P/E']} />
+                            <LazyTooltip content={<ChartTooltip />} />
                             <LazyBar dataKey="pe" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
                           </LazyBarChart>
                         </LazyResponsiveContainer>
@@ -587,7 +633,7 @@ export default function DataHub() {
 
                 {/* APIs Table */}
                 <FadeIn delay={0.1}>
-                  <Card className="shadow-soft">
+                  <Card className="glass-card shadow-soft">
                     <CardHeader><CardTitle className="text-sm font-semibold">Trending Public APIs</CardTitle></CardHeader>
                     <CardContent>
                       <DataTable
@@ -609,7 +655,7 @@ export default function DataHub() {
                 {/* API Stats */}
                 <div className="grid gap-4 sm:grid-cols-3">
                   <FadeIn delay={0.15}>
-                    <Card className="shadow-soft">
+                    <Card className="glass-card shadow-soft">
                       <CardContent className="p-5 text-center">
                         <div className="font-display text-3xl font-bold text-primary">1,447</div>
                         <div className="mt-1 text-sm text-muted-foreground">Total APIs Catalogued</div>
@@ -617,7 +663,7 @@ export default function DataHub() {
                     </Card>
                   </FadeIn>
                   <FadeIn delay={0.2}>
-                    <Card className="shadow-soft">
+                    <Card className="glass-card shadow-soft">
                       <CardContent className="p-5 text-center">
                         <div className="font-display text-3xl font-bold text-emerald-500">89%</div>
                         <div className="mt-1 text-sm text-muted-foreground">Support HTTPS</div>
@@ -625,7 +671,7 @@ export default function DataHub() {
                     </Card>
                   </FadeIn>
                   <FadeIn delay={0.25}>
-                    <Card className="shadow-soft">
+                    <Card className="glass-card shadow-soft">
                       <CardContent className="p-5 text-center">
                         <div className="font-display text-3xl font-bold text-amber-500">62%</div>
                         <div className="mt-1 text-sm text-muted-foreground">No Auth Required</div>
@@ -655,7 +701,7 @@ export default function DataHub() {
                 { icon: Zap, title: 'Lightning Fast', desc: 'Optimized loading with skeleton states, lazy charts, and incremental data hydration.' },
               ].map((f, i) => (
                 <FadeIn key={f.title} delay={i * 0.06}>
-                  <Card className="h-full shadow-soft transition-all duration-200 hover:border-primary/15">
+                  <Card className="h-full glass-card shadow-soft transition-all duration-200 hover:border-primary/15">
                     <CardContent className="p-5">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                         <f.icon className="h-5 w-5" />

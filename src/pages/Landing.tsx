@@ -87,7 +87,7 @@ function HeroMock() {
           </div>
           <div className="space-y-3">
             {pros.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#1A2028] p-3.5 transition-colors hover:border-[rgba(59,95,229,0.2)]">
+              <div key={p.id} className="flex items-center gap-3 rounded-xl glass-card p-3.5">
                 <GAvatar name={p.name} gradient={p.gradient} className="h-10 w-10 text-xs" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 text-xs sm:text-[14px] font-semibold text-white">
@@ -131,7 +131,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
       {/* Nav */}
-      <header className="glass sticky top-0 z-40 border-b border-border/50">
+      <header className="glass-nav sticky top-0 z-40">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Logo />
           <nav className="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex">
@@ -232,7 +232,7 @@ export default function Landing() {
               featuredJobs.map((job, i) => (
                 <FadeIn key={job.id} delay={i * 0.06}>
                   <Link to="/referral-jobs">
-                    <Card className="h-full shadow-soft transition-all duration-200 hover:border-primary/15 cursor-pointer">
+                    <Card className="h-full glass-card shadow-soft transition-all duration-200 hover:border-primary/15 cursor-pointer">
                       <CardContent className="p-5">
                         <div className="flex items-start gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-sm">
@@ -354,7 +354,7 @@ export default function Landing() {
             {professionals.slice(0, 4).map((p, i) => (
               <FadeIn key={p.id} delay={i * 0.08}>
                 <Link to={profileUrl('professional', p.id, p.slug)}>
-                  <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
+                  <Card className="glass-card h-full shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
                     <CardContent className="p-5">
                       <div className="flex items-center gap-3">
                         <GAvatar name={p.name} gradient={p.gradient} className="h-11 w-11 text-sm" />
@@ -387,7 +387,7 @@ export default function Landing() {
           <div className="mt-12 grid gap-5 md:grid-cols-3">
             {ROLES.map((r, i) => (
               <FadeIn key={r.title} delay={i * 0.1}>
-                <Card className="h-full shadow-soft transition-all duration-200 hover:border-primary/15">
+                <Card className="h-full glass-card shadow-soft transition-all duration-200 hover:border-primary/15">
                   <CardContent className="p-6">
                     <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[rgba(59,95,229,0.08)] text-primary">
                       <r.icon className="h-5 w-5" />
