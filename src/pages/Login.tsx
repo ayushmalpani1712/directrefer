@@ -155,7 +155,11 @@ export default function Login() {
                 ? 'bg-gradient-to-br from-blue-500/20 to-violet-500/20 shadow-[0_0_20px_-4px_rgba(79,124,255,0.3)]'
                 : 'bg-gradient-to-br from-blue-500/10 to-violet-500/10 shadow-[0_2px_12px_-2px_rgba(79,124,255,0.15)]',
             )}>
-              <img src="/logo-letters.svg" alt="DR" className="h-6 w-auto transition-transform duration-300 group-hover:scale-110" />
+              <svg viewBox="0 0 512 512" className="h-6 w-auto transition-transform duration-300 group-hover:scale-110" aria-hidden="true">
+                <path fill="#3B5FE5" fillRule="evenodd" d="M 278 78 L 278 445 Q 278 478 242 478 L 222 478 Q 155 478 135 418 Q 115 355 115 280 Q 115 188 168 128 Q 210 78 278 78 Z M 198 228 C 168 228 145 255 145 285 C 145 318 168 342 198 342 C 228 342 252 318 252 285 C 252 255 228 228 198 228 Z"/>
+                <path d="M 148 378 C 135 295 175 195 318 118" stroke="#8B8FD4" strokeWidth="54" strokeLinecap="round" fill="none"/>
+                <path d="M 368 58 L 420 98 L 358 142 Z" fill="#8B8FD4"/>
+              </svg>
             </div>
             <span className={cn(
               'font-display text-[26px] font-bold tracking-tight bg-clip-text text-transparent transition-colors duration-300',

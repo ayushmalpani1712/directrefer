@@ -40,7 +40,11 @@ import { cn } from '@/lib/utils'
 export function Logo({ compact }: { compact?: boolean }) {
   return (
     <Link to="/" className="flex items-center gap-2.5" aria-label="Direct Refer — Go to homepage">
-      <img src="/logo-letters.svg" alt="DR" width="32" height="32" className="h-8 w-auto" />
+      <svg viewBox="0 0 512 512" width="32" height="32" className="h-8 w-auto" aria-hidden="true">
+        <path fill="#3B5FE5" fillRule="evenodd" d="M 278 78 L 278 445 Q 278 478 242 478 L 222 478 Q 155 478 135 418 Q 115 355 115 280 Q 115 188 168 128 Q 210 78 278 78 Z M 198 228 C 168 228 145 255 145 285 C 145 318 168 342 198 342 C 228 342 252 318 252 285 C 252 255 228 228 198 228 Z"/>
+        <path d="M 148 378 C 135 295 175 195 318 118" stroke="#8B8FD4" strokeWidth="54" strokeLinecap="round" fill="none"/>
+        <path d="M 368 58 L 420 98 L 358 142 Z" fill="#8B8FD4"/>
+      </svg>
       {!compact && (
         <span className="font-display text-[21px] font-bold tracking-tight text-gradient">
           DirectRefer
