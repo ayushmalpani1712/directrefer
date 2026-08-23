@@ -259,6 +259,22 @@
   animation: hero-fade-in 0.7s ease-out 0.25s both;
 }
 
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-hidden {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .hero-anim-1,
+  .hero-anim-2,
+  .hero-anim-3,
+  .hero-anim-4,
+  .hero-mock-anim {
+    animation: none;
+  }
+}
+
 /* Sparkline container */
 .sparkline-wrap {
   height: 32px;
