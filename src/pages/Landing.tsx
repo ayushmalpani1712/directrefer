@@ -932,13 +932,6 @@ export default function Landing() {
             </div>
           </FadeIn>
         </section>
-
-        {/* ── 11. Waitlist ── */}
-        <section className="border-t border-border/50 px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-          <div className="mx-auto max-w-3xl">
-            <WaitlistForm />
-          </div>
-        </section>
       </main>
 
       {/* ── Footer ── */}
