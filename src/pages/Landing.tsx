@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowRight,
   Bell,
@@ -10,8 +11,6 @@ import {
   FileText,
   GraduationCap,
   Loader2,
-  Linkedin,
-  Mail,
   Menu,
   Pause,
   Play,
@@ -594,8 +593,6 @@ function WaitlistForm({ className = '' }: { className?: string }) {
 // Main Landing page
 // ═══════════════════════════════════════════════════════════════
 
-import { AnimatePresence, motion } from 'framer-motion'
-
 export default function Landing() {
   const { visibleProfessionals: professionals } = useApp()
   const { user } = useAuth()
@@ -665,7 +662,7 @@ export default function Landing() {
           <div className="absolute right-0 top-1/2 -z-10 h-[250px] w-[350px] rounded-full bg-secondary/[0.02] blur-[80px]" />
           <div className="mx-auto max-w-3xl text-center relative z-10">
             <div className="hero-anim-1">
-              <Badge variant="outline" className="gap-1.5 rounded-full border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary badge-shine">
+              <Badge variant="outline" className="gap-1.5 rounded-full border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary  badge-shine">
                 <Sparkles className="h-3 w-3" /> <span>Ask for the referral, without the awkward cold DM</span>
               </Badge>
             </div>
@@ -832,7 +829,7 @@ export default function Landing() {
               </Button>
             </FadeIn>
             <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {professionals.filter(p => p.openForReferrals).slice(0, 4).map((p, i) => (
+              {professionals.slice(0, 4).map((p, i) => (
                 <FadeIn key={p.id} delay={i * 0.08}>
                   <Link to={profileUrl('professional', p.id, p.slug)}>
                     <GlowCard className="h-full shadow-soft cursor-pointer transition-[border-color,box-shadow] duration-300 hover:shadow-glow group">
@@ -949,7 +946,7 @@ export default function Landing() {
         <div className="mx-auto max-w-5xl">
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             <div className="flex flex-col items-center gap-3 sm:items-start">
-              <Link to="/" className="flex items-center gap-2.5" aria-label="DirectRefer - Home">
+              <Link to="/" className="flex items-center gap-2.5" aria-label="DirectRefer — Home">
                 <svg viewBox="0 0 250 189" className="h-7 w-auto" aria-hidden="true">
                   <image href="/logo-emblem.png" width="250" height="189" />
                 </svg>
@@ -958,13 +955,13 @@ export default function Landing() {
               <p className="max-w-[220px] text-center text-xs text-muted-foreground leading-relaxed sm:text-left">Ask for the referral, without the awkward cold DM.</p>
               <div className="flex items-center gap-2">
                 <a href="https://linkedin.com/in/direct-refer" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground hover:bg-muted" aria-label="LinkedIn">
-                  <Linkedin className="h-3.5 w-3.5" />
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
                 </a>
                 <a href="https://x.com/directrefer" target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground hover:bg-muted" aria-label="X (Twitter)">
                   <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
                 </a>
                 <a href="mailto:hello@directrefer.in" className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground hover:bg-muted" aria-label="Email">
-                  <Mail className="h-3.5 w-3.5" />
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
                 </a>
               </div>
             </div>
