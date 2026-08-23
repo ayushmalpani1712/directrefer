@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { useTheme } from 'next-themes'
 import {
-  Bell, Building2, Check, CreditCard, Globe, KeyRound, Laptop, Lock, Mail, Monitor, Moon, Palette,
-  ShieldCheck, Sun, Trash2, User, Zap,
+  Bell, Building2, Check, CreditCard, Globe, KeyRound, Laptop, Lock, Mail, Monitor, Palette,
+  ShieldCheck, Trash2, Zap,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -20,7 +19,6 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { VerificationModal } from '@/components/VerificationModal'
 import { useVerification } from '@/hooks/useVerification'
-import { ROLE_META } from '@/data/mock'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
@@ -32,7 +30,7 @@ interface Session {
 
 function Row({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-6 py-4">
+    <div className="flex min-w-0 items-center justify-between gap-6 py-4">
       <div className="min-w-0">
         <div className="text-sm font-medium">{title}</div>
         {desc && <div className="mt-0.5 text-xs text-muted-foreground">{desc}</div>}
@@ -43,16 +41,13 @@ function Row({ title, desc, children }: { title: string; desc?: string; children
 }
 
 export default function Settings() {
-  const { role, student, updateStudent, logout } = useApp()
-  const { theme, setTheme } = useTheme()
+  const { role, student, logout } = useApp()
   const { signOut } = useAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const activeTab = searchParams.get('tab') || 'profile'
+  const activeTab = searchParams.get('tab') || 'workspace'
   const setActiveTab = (t: string) => setSearchParams({ tab: t }, { replace: true })
   const [sessions, setSessions] = useState<Session[]>([])
-  const [name, setName] = useState(student.name)
-  const [location, setLocation] = useState(student.location)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmNew, setConfirmNew] = useState('')
@@ -68,11 +63,6 @@ export default function Settings() {
   })
   const [language, setLanguage] = useState('en')
   const [timezone, setTimezone] = useState('ist')
-
-  useEffect(() => {
-    setName(student.name)
-    setLocation(student.location)
-  }, [student.name, student.location])
 
   useEffect(() => {
     try {
@@ -144,11 +134,6 @@ export default function Settings() {
     loadSecurity()
   }, [])
 
-  const handleSaveProfile = () => {
-    updateStudent({ name, location })
-    toast.success('Profile updated successfully')
-  }
-
   const handleUpdatePassword = async () => {
     if (!currentPassword || !newPassword || !confirmNew) {
       toast.error('Please fill in all password fields')
@@ -188,13 +173,12 @@ export default function Settings() {
 
   return (
     <>
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-4xl min-w-0 overflow-x-hidden space-y-6">
 
       <SectionHeader title="Settings" subtitle="Manage your account, preferences and security" />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="h-auto flex-wrap justify-start">
-          <TabsTrigger value="profile"><User className="mr-1.5 h-4 w-4" /> Profile</TabsTrigger>
           <TabsTrigger value="workspace"><Building2 className="mr-1.5 h-4 w-4" /> Workspace</TabsTrigger>
           <TabsTrigger value="notifications"><Bell className="mr-1.5 h-4 w-4" /> Notifications</TabsTrigger>
           <TabsTrigger value="privacy"><Lock className="mr-1.5 h-4 w-4" /> Privacy</TabsTrigger>
@@ -202,32 +186,6 @@ export default function Settings() {
           <TabsTrigger value="appearance"><Palette className="mr-1.5 h-4 w-4" /> Appearance</TabsTrigger>
           <TabsTrigger value="billing" className="opacity-50 pointer-events-none"><CreditCard className="mr-1.5 h-4 w-4" /> Billing <Lock className="ml-1 h-3 w-3" /></TabsTrigger>
         </TabsList>
-
-        {/* Profile */}
-        <TabsContent value="profile" className="mt-5 space-y-5">
-          <Card className="shadow-soft">
-            <CardHeader><CardTitle className="text-base">Personal information</CardTitle><CardDescription>Shown on your public {ROLE_META[role].label.toLowerCase()} profile</CardDescription></CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5"><Label>Full name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-              <div className="space-y-1.5"><Label>Email</Label><Input value={student.email} disabled className="opacity-60" /></div>
-              <div className="space-y-1.5"><Label>Location</Label><Input value={location} onChange={(e) => setLocation(e.target.value)} /></div>
-              <div className="space-y-1.5"><Label>Role</Label><Input value={ROLE_META[role].label} disabled /></div>
-              <div className="sm:col-span-2 flex items-center gap-2">
-                <Button onClick={handleSaveProfile}>Save changes</Button>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-soft border-rose-500/30">
-            <CardHeader><CardTitle className="flex items-center gap-2 text-base text-rose-500"><Trash2 className="h-4 w-4" /> Danger zone</CardTitle></CardHeader>
-            <CardContent className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-              <p className="text-sm text-muted-foreground">Permanently delete your account and all referral history. This cannot be undone.</p>
-              <Button variant="outline" className="border-rose-500/40 text-rose-500 hover:bg-rose-500/10" disabled={deleting} onClick={() => {
-                if (role === 'admin') { toast.error('Admin accounts cannot be self-deleted. Contact another admin.'); return }
-                setDeleteDialogOpen(true)
-              }}>{deleting ? 'Deleting...' : 'Delete account'}</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* Workspace Verification */}
         <TabsContent value="workspace" className="mt-5 space-y-5">
@@ -242,7 +200,7 @@ export default function Settings() {
               {([
                 { key: 'referral_updates' as const, t: 'Referral status updates', d: 'Accepted, declined, review started — instantly', icon: Zap },
                 { key: 'new_messages' as const, t: 'New messages', d: 'When someone messages you', icon: Mail },
-                { key: 'profile_views' as const, t: 'Profile views', d: 'When a recruiter or professional views your profile', icon: User },
+                { key: 'profile_views' as const, t: 'Profile views', d: 'When a recruiter or professional views your profile', icon: Zap },
                 { key: 'completion_reminders' as const, t: 'Profile completion reminders', d: 'Weekly nudge until you hit 90%', icon: Bell },
                 { key: 'product_announcements' as const, t: 'Product announcements', d: 'New features and improvements', icon: Monitor },
                 { key: 'weekly_digest' as const, t: 'Weekly digest email', d: 'A Sunday summary of your pipeline', icon: Mail },
@@ -286,8 +244,8 @@ export default function Settings() {
             <CardHeader><CardTitle className="text-base">Active sessions</CardTitle></CardHeader>
             <CardContent>
               {sessions.map((s) => (
-                <div key={s.id} className="flex items-center justify-between rounded-lg border border-border px-3.5 py-2.5 text-sm">
-                  <span className="flex items-center gap-2"><Laptop className="h-4 w-4 text-muted-foreground" /> {s.device}</span>
+                <div key={s.id} className="flex min-w-0 items-center justify-between rounded-lg border border-border px-3.5 py-2.5 text-sm">
+                  <span className="flex min-w-0 items-center gap-2 truncate"><Laptop className="h-4 w-4 shrink-0 text-muted-foreground" /> <span className="truncate">{s.device}</span></span>
                   {s.isCurrent ? <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10">This device</Badge> : <Button variant="ghost" size="sm" className="h-7 text-xs text-rose-500" onClick={() => {
                     toast.info('To revoke all other sessions, change your password below. All sessions will be invalidated.')
                     setActiveTab('security')
@@ -296,33 +254,20 @@ export default function Settings() {
               ))}
             </CardContent>
           </Card>
+          <Card className="shadow-soft border-rose-500/30">
+            <CardHeader><CardTitle className="flex items-center gap-2 text-base text-rose-500"><Trash2 className="h-4 w-4" /> Danger zone</CardTitle></CardHeader>
+            <CardContent className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+              <p className="min-w-0 text-sm text-muted-foreground">Permanently delete your account and all referral history. This cannot be undone.</p>
+              <Button variant="outline" className="border-rose-500/40 text-rose-500 hover:bg-rose-500/10" disabled={deleting} onClick={() => {
+                if (role === 'admin') { toast.error('Admin accounts cannot be self-deleted. Contact another admin.'); return }
+                setDeleteDialogOpen(true)
+              }}>{deleting ? 'Deleting...' : 'Delete account'}</Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Appearance */}
         <TabsContent value="appearance" className="mt-5 space-y-5">
-          <Card className="shadow-soft">
-            <CardHeader><CardTitle className="text-base">Theme</CardTitle><CardDescription>Choose how Direct Refer looks on this device</CardDescription></CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-3">
-              {[
-                { key: 'light', label: 'Light', icon: Sun },
-                { key: 'dark', label: 'Dark', icon: Moon },
-                { key: 'system', label: 'System', icon: Monitor },
-              ].map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => setTheme(t.key)}
-                  className={cn(
-                    'flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:border-primary/40',
-                    theme === t.key ? 'border-primary bg-primary/5' : 'border-border',
-                  )}
-                >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><t.icon className="h-4 w-4" /></div>
-                  <span className="flex-1 text-sm font-medium">{t.label}</span>
-                  {theme === t.key && <Check className="h-4 w-4 text-primary" />}
-                </button>
-              ))}
-            </CardContent>
-          </Card>
           <Card className="shadow-soft">
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Globe className="h-4 w-4 text-primary" /> Language & region</CardTitle></CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -425,16 +370,15 @@ function WorkspaceVerificationCard() {
           <CardTitle className="flex items-center gap-2 text-base">
             <Building2 className="h-4 w-4 text-primary" /> Work Identity Verification
           </CardTitle>
-          <CardDescription>Optional — verify your corporate credentials to earn a verified badge</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className={cn(
-              'rounded-xl border p-4 transition-colors',
+              'min-w-0 rounded-xl border p-4 transition-colors',
               professionalVerified ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-muted',
             )}>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Professional</span>
+              <div className="flex min-w-0 items-center justify-between">
+                <span className="truncate text-sm font-medium">Professional</span>
                 {professionalVerified ? (
                   <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                     <Check className="mr-1 h-3 w-3" /> Verified
@@ -452,11 +396,11 @@ function WorkspaceVerificationCard() {
               </p>
             </div>
             <div className={cn(
-              'rounded-xl border p-4 transition-colors',
+              'min-w-0 rounded-xl border p-4 transition-colors',
               recruiterVerified ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-muted',
             )}>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Recruiter</span>
+              <div className="flex min-w-0 items-center justify-between">
+                <span className="truncate text-sm font-medium">Recruiter</span>
                 {recruiterVerified ? (
                   <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                     <Check className="mr-1 h-3 w-3" /> Verified

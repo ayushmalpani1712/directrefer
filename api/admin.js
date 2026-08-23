@@ -1,8 +1,4 @@
-import { handleCors } from './lib/cors.js';
-import { authenticate, requireAdmin } from './lib/auth.js';
-import { getServiceClient } from './lib/db.js';
-import { success, error, parseBody } from './lib/response.js';
-import { validateBody, UpdateUserRoleSchema, BanUserSchema, AdminJobUpdateSchema } from './lib/validation.js';
+import { handleCors, authenticate, requireAdmin, getServiceClient, success, error, parseBody, validateBody, UpdateUserRoleSchema, BanUserSchema, AdminJobUpdateSchema } from './lib.js';
 
 // ─── USERS ─────────────────────────────────────────────
 

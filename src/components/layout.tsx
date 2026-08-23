@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
-import { useTheme } from 'next-themes'
 
 import {
   Bell, Bookmark, Briefcase, CheckCheck, ChevronRight, CircleHelp, Command,
-  FileText, FileUp, Home, LayoutDashboard, Mail, MessageSquare, Moon,
-  Plus, Search, Settings, Shield, Sparkles, Sun, User, Users, Zap, Inbox, LineChart, Activity, BarChart3,
+  FileText, FileUp, Home, LayoutDashboard, Mail, MessageSquare,
+  Plus, Search, Settings, Shield, Sparkles, User, Users, Zap, Inbox, LineChart, Activity, BarChart3,
   type LucideIcon,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -22,7 +21,6 @@ import {
   SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem,
   SidebarProvider, SidebarRail, SidebarTrigger, useSidebar,
 } from '@/components/ui/sidebar'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { GAvatar } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher'
@@ -38,19 +36,21 @@ import { cn } from '@/lib/utils'
 
 // ── Logo ────────────────────────────────────────────────────
 export function Logo({ compact }: { compact?: boolean }) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    window.location.assign('/')
+  }
   return (
-    <Link to="/" className="flex items-center gap-2.5" aria-label="Direct Refer — Go to homepage">
-      <svg viewBox="0 0 512 512" width="32" height="32" className="h-8 w-auto" aria-hidden="true">
-        <path fill="#3B5FE5" fillRule="evenodd" d="M 278 78 L 278 445 Q 278 478 242 478 L 222 478 Q 155 478 135 418 Q 115 355 115 280 Q 115 188 168 128 Q 210 78 278 78 Z M 198 228 C 168 228 145 255 145 285 C 145 318 168 342 198 342 C 228 342 252 318 252 285 C 252 255 228 228 198 228 Z"/>
-        <path d="M 148 378 C 135 295 175 195 318 118" stroke="#8B8FD4" strokeWidth="54" strokeLinecap="round" fill="none"/>
-        <path d="M 368 58 L 420 98 L 358 142 Z" fill="#8B8FD4"/>
+    <a href="/" onClick={handleClick} className="flex items-center gap-3" aria-label="Direct Refer — Go to homepage">
+      <svg viewBox="0 0 250 189" className="h-10 w-auto shrink-0" aria-hidden="true">
+        <image href="/logo-emblem.png" width="250" height="189" />
       </svg>
       {!compact && (
         <span className="font-display text-[21px] font-bold tracking-tight text-gradient">
           DirectRefer
         </span>
       )}
-    </Link>
+    </a>
   )
 }
 
@@ -143,7 +143,7 @@ function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="h-14 justify-center border-b border-sidebar-border px-4">
         {state === 'collapsed' ? (
-          <Link to="/" className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground" aria-label="Direct Refer — Go to homepage">
+          <Link to="/" className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-glow" aria-label="Direct Refer — Go to homepage">
             <Zap className="h-4.5 w-4.5 fill-white text-white" />
           </Link>
         ) : (
@@ -166,18 +166,18 @@ function AppSidebar() {
                         <Link
                           to={item.href}
                           className={cn(
-                            'flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-all duration-200',
+                            'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-colors duration-200 min-h-[44px] relative',
                             isActive
-                              ? 'bg-primary/10 text-foreground font-semibold before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[2px] before:rounded-full before:bg-primary'
-                              : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground',
+                              ? 'bg-primary/10 text-primary font-semibold shadow-[0_0_12px_-4px_var(--card-glow)] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-primary'
+                              : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground hover:translate-x-[1px]',
                           )}
                         >
-                          <item.icon className="h-[18px] w-[18px] shrink-0" />
+                          <item.icon className={cn('h-[18px] w-[18px] shrink-0 transition-transform duration-200', isActive && 'scale-110')} />
                           <span className="truncate">{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
                       {item.badge && (
-                        <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary">
+                        <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary badge-shine">
                           {item.badge}
                         </SidebarMenuBadge>
                       )}
@@ -193,7 +193,7 @@ function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Settings">
-              <Link to={`${prefix}/settings`} className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', (pathname === `${prefix}/settings` || pathname === '/settings') && 'bg-primary/10 text-primary')}>
+              <Link to={`${prefix}/settings`} className={cn('flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground transition-colors duration-200', (pathname === `${prefix}/settings` || pathname === '/settings') && 'bg-primary/10 text-primary')}>
                 <Settings className="h-[18px] w-[18px]" /> <span>Settings</span>
               </Link>
             </SidebarMenuButton>
@@ -201,7 +201,7 @@ function AppSidebar() {
           {role === 'admin' && (
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Admin Panel">
-              <Link to="/admin/overview" className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', pathname.startsWith('/admin') && 'bg-primary/10 text-primary')}>
+              <Link to="/admin/overview" className={cn('flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground transition-colors duration-200', pathname.startsWith('/admin') && 'bg-primary/10 text-primary')}>
                 <Shield className="h-[18px] w-[18px]" /> <span>Admin</span>
               </Link>
             </SidebarMenuButton>
@@ -209,18 +209,22 @@ function AppSidebar() {
           )}
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Help & Support">
-              <Link to={`${prefix}/help`} className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200', (pathname === `${prefix}/help` || pathname === '/help') && 'bg-primary/10 text-primary')}>
+              <Link to={`${prefix}/help`} className={cn('flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground transition-colors duration-200', (pathname === `${prefix}/help` || pathname === '/help') && 'bg-primary/10 text-primary')}>
                 <CircleHelp className="h-[18px] w-[18px]" /> <span>Help & Support</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <QuickActions />
         {state !== 'collapsed' && (
-          <div className="mt-2 flex items-center gap-2.5 rounded-lg bg-muted/50 p-2.5">
-            <GAvatar name={user.name} gradient={user.gradient} className="h-8 w-8 text-xs" />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[13px] font-semibold">{user.name}</div>
-              <div className="truncate text-[11px] text-muted-foreground">{ROLE_META[urlRole].label}</div>
+          <div className="mt-2 rounded-xl bg-gradient-to-br from-primary/5 via-muted/50 to-secondary/5 p-3 border border-border/50 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.03] to-secondary/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative flex items-center gap-2.5">
+              <GAvatar name={user.name} gradient={user.gradient} className="h-9 w-9 text-xs ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all" />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[13px] font-semibold">{user.name}</div>
+                <div className="truncate text-[11px] text-muted-foreground">{ROLE_META[urlRole].label}</div>
+              </div>
             </div>
           </div>
         )}
@@ -230,19 +234,92 @@ function AppSidebar() {
   )
 }
 
-// ── Theme toggle ────────────────────────────────────────────
-function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
-  const dark = theme === 'dark'
+// ── Quick actions (sidebar) ─────────────────────────────────
+function QuickActions() {
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const urlRole = getRoleFromPath(pathname)
+  const { state } = useSidebar()
+
+  const actions = useMemo(() => {
+    if (urlRole === 'student') {
+      return [
+        { icon: Plus, label: 'Request referral', run: () => navigate('/job-seeker/request-referral') },
+        { icon: Users, label: 'Find professionals', run: () => navigate('/job-seeker/professionals') },
+        { icon: FileUp, label: 'Upload resume', run: () => navigate('/job-seeker/profile') },
+        { icon: Sparkles, label: 'View analytics', run: () => navigate('/job-seeker/analytics') },
+      ]
+    }
+    if (urlRole === 'admin') {
+      return [
+        { icon: BarChart3, label: 'Dashboard', run: () => navigate('/admin/overview') },
+        { icon: Users, label: 'Manage workspaces', run: () => navigate('/admin/users') },
+        { icon: MessageSquare, label: 'Messages', run: () => navigate('/admin/messages') },
+        { icon: Settings, label: 'Settings', run: () => navigate('/admin/settings') },
+      ]
+    }
+    if (urlRole === 'professional') {
+      return [
+        { icon: CheckCheck, label: 'Review pending requests', run: () => navigate('/professional/referrals') },
+        { icon: Briefcase, label: 'Find job seekers', run: () => navigate('/professional/talent') },
+        { icon: Plus, label: 'Update profile', run: () => navigate('/professional/profile') },
+        { icon: Sparkles, label: 'View analytics', run: () => navigate('/professional/analytics') },
+      ]
+    }
+    return [
+      { icon: Plus, label: 'Post a job', run: () => navigate('/recruiter/jobs') },
+      { icon: Users, label: 'Search talent', run: () => navigate('/recruiter/talent') },
+      { icon: Sparkles, label: 'View analytics', run: () => navigate('/recruiter/analytics') },
+    ]
+  }, [urlRole, navigate])
+
+  if (state === 'collapsed') {
+    return (
+      <SidebarMenuItem>
+        <Popover>
+          <PopoverTrigger asChild>
+            <SidebarMenuButton asChild tooltip="Quick actions">
+              <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-[14px] font-medium text-primary bg-primary/10 hover:bg-primary/15 transition-colors duration-200 cursor-pointer">
+                <Zap className="h-[18px] w-[18px] shrink-0" />
+              </button>
+            </SidebarMenuButton>
+          </PopoverTrigger>
+          <PopoverContent align="start" sideOffset={8} className="w-56 p-1.5">
+            <div className="px-2.5 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick actions</div>
+            {actions.map((a) => (
+              <button key={a.label} onClick={a.run} className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm hover:bg-muted">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary"><a.icon className="h-3.5 w-3.5" /></div>
+                {a.label}
+              </button>
+            ))}
+          </PopoverContent>
+        </Popover>
+      </SidebarMenuItem>
+    )
+  }
+
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full" onClick={() => setTheme(dark ? 'light' : 'dark')}>
-          {dark ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{dark ? 'Light mode' : 'Dark mode'}</TooltipContent>
-    </Tooltip>
+    <SidebarMenuItem>
+      <Popover>
+        <PopoverTrigger asChild>
+          <SidebarMenuButton asChild tooltip="Quick actions">
+            <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium text-primary bg-primary/10 hover:bg-primary/15 transition-colors duration-200 cursor-pointer">
+              <Zap className="h-[18px] w-[18px] shrink-0" />
+              <span>Quick actions</span>
+            </button>
+          </SidebarMenuButton>
+        </PopoverTrigger>
+        <PopoverContent align="start" sideOffset={8} className="w-56 p-1.5">
+          <div className="px-2.5 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick actions</div>
+          {actions.map((a) => (
+            <button key={a.label} onClick={a.run} className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm hover:bg-muted">
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary"><a.icon className="h-3.5 w-3.5" /></div>
+              {a.label}
+            </button>
+          ))}
+        </PopoverContent>
+      </Popover>
+    </SidebarMenuItem>
   )
 }
 
@@ -405,71 +482,13 @@ function Breadcrumbs() {
   )
 }
 
-// ── Floating Action Button ──────────────────────────────────
-function FAB() {
-  const navigate = useNavigate()
-  const { pathname } = useLocation()
-  const urlRole = getRoleFromPath(pathname)
-  const actions = useMemo(() => {
-    if (urlRole === 'student') {
-      return [
-        { icon: Plus, label: 'Request referral', run: () => navigate('/job-seeker/request-referral') },
-        { icon: Users, label: 'Find professionals', run: () => navigate('/job-seeker/professionals') },
-        { icon: FileUp, label: 'Upload resume', run: () => navigate('/job-seeker/profile') },
-        { icon: Sparkles, label: 'View analytics', run: () => navigate('/job-seeker/analytics') },
-
-      ]
-    }
-    if (urlRole === 'admin') {
-      return [
-        { icon: BarChart3, label: 'Dashboard', run: () => navigate('/admin/overview') },
-        { icon: Users, label: 'Manage workspaces', run: () => navigate('/admin/users') },
-        { icon: MessageSquare, label: 'Messages', run: () => navigate('/admin/messages') },
-        { icon: Settings, label: 'Settings', run: () => navigate('/admin/settings') },
-      ]
-    }
-    if (urlRole === 'professional') {
-      return [
-        { icon: CheckCheck, label: 'Review pending requests', run: () => navigate('/professional/referrals') },
-        { icon: Briefcase, label: 'Find job seekers', run: () => navigate('/professional/talent') },
-        { icon: Plus, label: 'Update profile', run: () => navigate('/professional/profile') },
-        { icon: Sparkles, label: 'View analytics', run: () => navigate('/professional/analytics') },
-      ]
-    }
-    return [
-      { icon: Plus, label: 'Post a job', run: () => navigate('/recruiter/jobs') },
-      { icon: Users, label: 'Search talent', run: () => navigate('/recruiter/talent') },
-      { icon: Sparkles, label: 'View analytics', run: () => navigate('/recruiter/analytics') },
-    ]
-  }, [urlRole, navigate])
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button size="icon" className="fixed bottom-6 right-6 z-40 h-12 w-12 rounded-full bg-gradient-to-br from-[#4F7CFF] to-[#7C5CFF] shadow-glow transition-all duration-200 hover:scale-105 hover:translate-y-[-2px]" aria-label="Quick actions">
-          <Plus className="h-5 w-5" aria-hidden="true" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={10} className="w-60 p-1.5">
-        <div className="px-2.5 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick actions</div>
-        {actions.map((a) => (
-          <button key={a.label} onClick={a.run} className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm hover:bg-muted">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary"><a.icon className="h-3.5 w-3.5" /></div>
-            {a.label}
-          </button>
-        ))}
-      </PopoverContent>
-    </Popover>
-  )
-}
-
 // ── Topbar ──────────────────────────────────────────────────
 function Topbar() {
   const { pathname } = useLocation()
   const urlRole = getRoleFromPath(pathname) || 'student'
   return (
-    <header className="glass sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border px-4">
-      <SidebarTrigger className="md:hidden h-11 w-11 shrink-0" />
+    <header className="glass sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/50 px-3 sm:px-4 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
+      <SidebarTrigger className="md:hidden h-11 w-11 shrink-0 touch-target" />
       <button
         onClick={() => {
           const e = new KeyboardEvent('keydown', { key: 'k', bubbles: true, cancelable: true })
@@ -477,21 +496,20 @@ function Topbar() {
           Object.defineProperty(e, 'ctrlKey', { value: true })
           document.dispatchEvent(e)
         }}
-        className="hidden h-9 flex-1 items-center gap-2.5 rounded-xl border border-border bg-muted/40 px-4 text-[14px] text-muted-foreground transition-all duration-200 hover:border-primary/30 hover:bg-muted/60 focus:border-primary/50 focus:outline-none sm:flex sm:max-w-md"
+        className="hidden h-9 flex-1 items-center gap-2.5 rounded-xl border border-border/60 bg-muted/50 px-4 text-[14px] text-muted-foreground transition-[border-color,box-shadow] duration-300 hover:border-primary/30 hover:bg-muted/50 hover:shadow-[0_0_20px_-4px_var(--card-glow)] focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_20px_-4px_var(--card-glow-hover)] sm:flex sm:max-w-md dark:bg-white/[0.04] dark:border-white/[0.08] dark:hover:border-primary/30 dark:hover:bg-white/[0.06] dark:focus:border-primary/40"
         aria-label="Search (Ctrl+K)"
       >
         <Search className="h-4 w-4" />
         <span className="flex-1 text-left">Search people, jobs, pages…</span>
-        <kbd className="pointer-events-none inline-flex items-center gap-0.5 rounded-md border bg-background px-1.5 font-mono text-[10px] text-muted-foreground">
+        <kbd className="pointer-events-none inline-flex items-center gap-0.5 rounded-md border border-border/60 bg-muted/50 px-1.5 font-mono text-[10px] text-muted-foreground/70">
           <Command className="h-3 w-3" />K
         </kbd>
       </button>
-      <Badge variant="outline" className="hidden border-primary/40 bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary sm:inline-flex">
+      <Badge variant="outline" className="hidden border-primary/40 bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary sm:inline-flex badge-shine">
         {ROLE_META[urlRole].label}
       </Badge>
       <div className="flex-1 sm:hidden" />
       <div className="ml-auto flex items-center gap-0">
-        <ThemeToggle />
         <MessagesMenu />
         <NotificationsMenu />
         <Separator orientation="vertical" className="mx-1 hidden h-5 sm:mx-2 sm:block" />
@@ -501,11 +519,12 @@ function Topbar() {
   )
 }
 
-// ── Shell ───────────────────────────────────────────────────
+// ── Animated Outlet ─────────────────────────────────────────
 function AnimatedOutlet() {
-  return <div className="flex flex-1 flex-col min-h-0"><Outlet /></div>
+  return <div className="flex flex-col min-w-0 min-h-0 overflow-x-hidden"><Outlet /></div>
 }
 
+// ── Shell ───────────────────────────────────────────────────
 export default function AppShell() {
   return (
     <SidebarProvider>
@@ -513,26 +532,12 @@ export default function AppShell() {
         Skip to content
       </a>
       <AppSidebar aria-label="Main navigation" />
-      <SidebarInset className="bg-background flex flex-col">
+      <SidebarInset className="bg-background flex flex-col min-w-0 min-h-0 overflow-y-auto overflow-x-hidden">
         <Topbar />
-        <main id="main-content" className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 overflow-hidden" role="main">
+        <main id="main-content" className="mx-auto w-full min-w-0 max-w-7xl min-h-0 px-4 py-6 sm:px-6 lg:px-8 overflow-x-hidden" role="main">
           <Breadcrumbs />
           <AnimatedOutlet />
         </main>
-        <footer className="border-t border-border min-w-0 shrink-0 px-4 py-5 text-[11px] leading-relaxed text-muted-foreground sm:text-xs" role="contentinfo" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
-          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            <span>© {new Date().getFullYear()} Direct Refer</span>
-            <span className="hidden sm:inline">·</span>
-            <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
-            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-            <Link to="/cookies" className="hover:text-foreground transition-colors">Cookies</Link>
-            <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
-            <span className="hidden sm:inline">·</span>
-            <a href="https://linkedin.com/in/direct-refer" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">LinkedIn</a>
-          </div>
-        </footer>
-        <FAB />
       </SidebarInset>
       <LazyCommandPalette />
     </SidebarProvider>

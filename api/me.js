@@ -1,6 +1,4 @@
-import { handleCors } from './lib/cors.js';
-import { authenticate } from './lib/auth.js';
-import { success, error } from './lib/response.js';
+import { handleCors, authenticate, success, error } from './lib.js';
 
 /**
  * GET /api/me
