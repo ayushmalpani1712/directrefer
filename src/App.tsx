@@ -202,7 +202,7 @@ function NPSModal() {
 
 export default function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider attribute="class" forcedTheme="dark" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
       <TooltipProvider>
         <AuthProvider>
           <AppProvider>
