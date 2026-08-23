@@ -4,25 +4,13 @@
   "description": "Get referred into top companies. Connect with verified professionals.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0F172A",
+  "background_color": "#000000",
   "theme_color": "#3B5FE5",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/logo-letters.svg",
+      "src": "/logo-emblem.png",
       "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/favicon.png",
-      "sizes": "32x32",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
