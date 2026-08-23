@@ -1,4 +1,4 @@
-import { handleCors, authenticate, requireRole, getServiceClient, success, created, error, parseBody, validateBody, CreateReferralSchema, UpdateReferralStatusSchema } from './lib.js';
+import { handleCors, authenticate, requireRole, getServiceClient, success, created, error, parseBody, validateBody, CreateReferralSchema, UpdateReferralStatusSchema } from './_lib.js';
 
 async function listReferrals(req, res, params, profile) {
   const supabase = getServiceClient();

@@ -1,4 +1,4 @@
-import { handleCors, authenticate, getServiceClient, success, error, parseBody, parseQuery } from './lib.js';
+import { handleCors, authenticate, getServiceClient, success, error, parseBody, parseQuery } from './_lib.js';
 
 function isTableMissing(dbError) {
   return dbError?.code === '42P01' || dbError?.message?.includes('does not exist');

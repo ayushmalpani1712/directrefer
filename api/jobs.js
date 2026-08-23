@@ -1,4 +1,4 @@
-import { handleCors, authenticate, requireRole, getServiceClient, success, created, error, parseBody, validateBody, CreateJobSchema, UpdateJobSchema } from './lib.js';
+import { handleCors, authenticate, requireRole, getServiceClient, success, created, error, parseBody, validateBody, CreateJobSchema, UpdateJobSchema } from './_lib.js';
 
 async function listJobs(req, res, params, profile) {
   const supabase = getServiceClient();

@@ -1,4 +1,4 @@
-import { handleCors, authenticate, requireAdmin, getServiceClient, success, error, parseBody, validateBody, UpdateUserRoleSchema, BanUserSchema, AdminJobUpdateSchema } from './lib.js';
+import { handleCors, authenticate, requireAdmin, getServiceClient, success, error, parseBody, validateBody, UpdateUserRoleSchema, BanUserSchema, AdminJobUpdateSchema } from './_lib.js';
 
 // ─── USERS ─────────────────────────────────────────────
 
