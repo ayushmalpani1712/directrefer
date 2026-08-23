@@ -3,14 +3,11 @@ import { Link } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowRight,
-  Bell,
   Briefcase,
   ChartColumn,
   CheckCircle2,
-  CircleCheckBig,
   FileText,
   GraduationCap,
-  Loader2,
   Menu,
   Pause,
   Play,
