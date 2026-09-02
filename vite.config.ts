@@ -1,11 +1,22 @@
 /// <reference types="vitest/config" />
 import path from "path"
+import fs from "fs"
 import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { defineConfig, type Plugin } from "vite"
+
+function versionJsonPlugin(): Plugin {
+  return {
+    name: 'version-json',
+    writeBundle() {
+      const version = JSON.stringify({ version: new Date().toISOString() })
+      fs.writeFileSync('dist/version.json', version)
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), versionJsonPlugin()],
   server: {
     port: 3000,
     proxy: {

@@ -1885,6 +1885,43 @@ export async function updateUserProfileAdmin(
 
 // ── Admin: Referral Moderation ────────────────────────────────
 
+export interface AdminReferral {
+  id: string
+  status: string
+  requesterName: string
+  professionalName: string
+  jobTitle: string
+  requesterId: string
+  professionalId: string
+  createdAt: string
+}
+
+export async function fetchAdminReferrals(): Promise<AdminReferral[]> {
+  try {
+    const { data, error } = await supabase
+      .from('referrals')
+      .select('id, status, job_title, created_at, requester_id, professional_id, requester:users!referrals_requester_id_fkey(full_name), professional:users!referrals_professional_id_fkey(full_name)')
+      .order('created_at', { ascending: false })
+    if (error || !data) return []
+    return data.map((row) => {
+      const requesterArr = row.requester as unknown as { full_name: string }[] | null
+      const professionalArr = row.professional as unknown as { full_name: string }[] | null
+      return {
+        id: row.id,
+        status: row.status,
+        requesterName: requesterArr?.[0]?.full_name ?? '',
+        professionalName: professionalArr?.[0]?.full_name ?? '',
+        jobTitle: row.job_title ?? '',
+        requesterId: row.requester_id,
+        professionalId: row.professional_id,
+        createdAt: row.created_at,
+      }
+    })
+  } catch {
+    return []
+  }
+}
+
 export async function deleteReferralAdmin(referralId: string): Promise<boolean> {
   try {
     const { error } = await supabase.from('referrals').delete().eq('id', referralId)
@@ -1927,7 +1964,28 @@ export async function dismissReportAndBanUser(reportId: string, targetUserId: st
 
 // ── Admin: System Health ──────────────────────────────────────
 
+export interface ServiceStatus {
+  name: string
+  status: 'operational' | 'degraded' | 'down'
+  description: string
+  latencyMs: number
+  lastChecked: string
+}
+
 export interface SystemHealth {
+  status: 'operational' | 'degraded' | 'down'
+  uptimePercentage: number
+  dbPingMs: number
+  successRate: number
+  errors24h: number
+  criticalErrors24h: number
+  warnings24h: number
+  recentErrors: { severity: string; message: string; time: string }[]
+  services: ServiceStatus[]
+  totalUsers: number
+  totalJobs: number
+  totalReferrals: number
+  totalMessages: number
   dbSize: string
   activeConnections: number
   uptime: string
@@ -1937,6 +1995,19 @@ export interface SystemHealth {
 
 export async function fetchSystemHealth(): Promise<SystemHealth> {
   const fallback: SystemHealth = {
+    status: 'operational',
+    uptimePercentage: 99.9,
+    dbPingMs: 0,
+    successRate: 100,
+    errors24h: 0,
+    criticalErrors24h: 0,
+    warnings24h: 0,
+    recentErrors: [],
+    services: [],
+    totalUsers: 0,
+    totalJobs: 0,
+    totalReferrals: 0,
+    totalMessages: 0,
     dbSize: '—',
     activeConnections: 0,
     uptime: '—',

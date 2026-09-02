@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Route, Routes, Navigate, useNavigate, useLocation } from 'react-router'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/sonner'
@@ -8,6 +8,7 @@ import { AppProvider, useApp } from '@/context/AppContext'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { HeadManager } from '@/components/HeadManager'
 import { ROLE_ROUTE, ROLE_MESSAGES_ROUTE, getRoleFromPath, type Role } from '@/data/mock'
+import { retryLazy as lazy, clearChunkReloadFlag } from '@/lib/retryLazy'
 
 const AppShell = lazy(() => import('@/components/layout'))
 const OnboardingOverlay = lazy(() => import('@/components/OnboardingOverlay').then(m => ({ default: m.OnboardingOverlay })))
@@ -201,6 +202,11 @@ function NPSModal() {
 }
 
 export default function App() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    clearChunkReloadFlag()
+  }, [pathname])
+
   return (
     <ThemeProvider attribute="class" forcedTheme="dark" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
       <TooltipProvider>
