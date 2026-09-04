@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DirectRefer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 320px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #0f172a;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #4F7CFF 0%, #7C5CFF 100%);
+      padding: 20px;
+      color: #fff;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .header p {
+      font-size: 12px;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+
+    .content {
+      padding: 16px;
+    }
+
+    .info-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .info-card h3 {
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .info-card p {
+      font-size: 13px;
+      color: #334155;
+      line-height: 1.5;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4F7CFF 0%, #7C5CFF 100%);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 4px 16px rgba(79, 124, 255, 0.35);
+    }
+
+    .sites {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .site-badge {
+      flex: 1;
+      text-align: center;
+      padding: 8px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .site-badge.active {
+      background: #ecfdf5;
+      color: #059669;
+    }
+
+    .footer {
+      padding: 12px 16px;
+      text-align: center;
+      font-size: 11px;
+      color: #94a3b8;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .footer a {
+      color: #4F7CFF;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>DirectRefer</h1>
+    <p>Get referred, get hired</p>
+  </div>
+  <div class="content">
+    <div class="info-card">
+      <h3>How it works</h3>
+      <p>When you view a job listing, this extension checks if there are verified employee referrers at that company on DirectRefer.</p>
+    </div>
+
+    <div class="sites">
+      <div class="site-badge active" id="badge-linkedin">LinkedIn</div>
+      <div class="site-badge active" id="badge-naukri">Naukri</div>
+    </div>
+
+    <a href="https://www.directrefer.in" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="margin-top: 14px;">
+      Open DirectRefer
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 17 17 7"/><path d="M7 7h10v10"/>
+      </svg>
+    </a>
+  </div>
+  <div class="footer">
+    <a href="https://www.directrefer.in" target="_blank">directrefer.in</a>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

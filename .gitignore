@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+app/
+
+# Environment files (NEVER commit)
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Supabase local
+supabase/
+
+# Agent context (contains secrets)
+AGENT_CONTEXT.md
+
+# Playwright
+test-results/
+blob-report/
+playwright-report/
+playwright/.cache/
+
+# Chrome extension config (contains secrets)
+chrome-extension/config.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

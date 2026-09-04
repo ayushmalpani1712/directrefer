@@ -1,0 +1,24 @@
+{
+  "name": "Direct Refer",
+  "short_name": "DirectRefer",
+  "description": "Get referred into top companies. Connect with verified professionals.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#3B5FE5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo-emblem.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
