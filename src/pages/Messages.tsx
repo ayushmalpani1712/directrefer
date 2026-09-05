@@ -321,7 +321,7 @@ export default function Messages() {
   const profilePath = getProfilePath(active?.otherUserRole, active?.otherUserId, active?.otherUserSlug)
 
   return (
-    <div className="flex h-full min-h-[400px] overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="flex h-full min-h-[400px] flex-col overflow-hidden rounded-2xl border border-border bg-card sm:flex-row">
       {/* Conversation list */}
       <aside className={cn('w-full flex-col border-r border-border sm:flex sm:w-80', activeId && 'hidden sm:flex')}>
         <div className="border-b border-border p-4">
@@ -361,7 +361,7 @@ export default function Messages() {
       </aside>
 
       {/* Chat pane */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div className={cn('flex min-w-0 flex-1 flex-col overflow-hidden', !activeId && 'hidden sm:flex')}>
         {!active ? (
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
             {conversations.length === 0 ? 'No conversations yet' : 'Select a conversation'}
