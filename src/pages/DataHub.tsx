@@ -327,7 +327,7 @@ export default function DataHub() {
             <FadeIn delay={0.1}>
               <div className="mt-8 flex flex-col items-center gap-6">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
-                  <StatTicker label="Job Openings Tracked" value={345200} icon={Briefcase} suffix="+" sparkline={SPARKLINE_JOBS} sparkColor="#3B82F6" />
+                  <StatTicker label="Job Openings Tracked" value={345200} icon={Briefcase} suffix="+" sparkline={SPARKLINE_JOBS} sparkColor="#6366F1" />
                   <StatTicker label="Avg. Referral Salary" value={142000} prefix="$" icon={DollarSign} sparkline={SPARKLINE_SALARY} sparkColor="#34D399" />
                   <StatTicker label="APIs Catalogued" value={1447} icon={Globe} sparkline={SPARKLINE_APIS} sparkColor="#8B5CF6" />
                   <StatTicker label="Companies Indexed" value={2840} icon={Building2} />
@@ -378,7 +378,7 @@ export default function DataHub() {
                             <LazyYAxis tick={{ fontSize: 12, fill: '#9A9BA8' }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
                             <LazyTooltip content={<ChartTooltip />} />
                             <LazyLegend wrapperStyle={{ fontSize: 12 }} />
-                            <LazyLine type="monotone" dataKey="swe" stroke="#3B82F6" strokeWidth={2} name="Software Eng." dot={false} />
+                            <LazyLine type="monotone" dataKey="swe" stroke="#6366F1" strokeWidth={2} name="Software Eng." dot={false} />
                             <LazyLine type="monotone" dataKey="ds" stroke="#8B5CF6" strokeWidth={2} name="Data Scientist" dot={false} />
                             <LazyLine type="monotone" dataKey="pm" stroke="#F59E0B" strokeWidth={2} name="Product Manager" dot={false} />
                           </LazyLineChart>
@@ -396,7 +396,7 @@ export default function DataHub() {
                             <LazyXAxis type="number" tick={{ fontSize: 12, fill: '#9A9BA8' }} tickFormatter={(v: number) => `${v}%`} />
                             <LazyYAxis type="category" dataKey="role" tick={{ fontSize: 11, fill: '#9A9BA8' }} width={130} />
                             <LazyTooltip content={<ChartTooltip />} />
-                            <LazyBar dataKey="growth" fill="#3B82F6" radius={[0, 4, 4, 0]} />
+                            <LazyBar dataKey="growth" fill="#6366F1" radius={[0, 4, 4, 0]} />
                           </LazyBarChart>
                         </LazyResponsiveContainer>
                       </CardContent>
@@ -437,7 +437,7 @@ export default function DataHub() {
                           <LazyYAxis tick={{ fontSize: 12, fill: '#9A9BA8' }} />
                           <LazyTooltip content={<ChartTooltip />} />
                           <LazyLegend wrapperStyle={{ fontSize: 12 }} />
-                          <LazyArea type="monotone" dataKey="jobs" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.1} name="Job Postings" />
+                          <LazyArea type="monotone" dataKey="jobs" stroke="#6366F1" fill="#6366F1" fillOpacity={0.1} name="Job Postings" />
                           <LazyArea type="monotone" dataKey="hires" stroke="#34D399" fill="#34D399" fillOpacity={0.1} name="Hires" />
                           <LazyArea type="monotone" dataKey="referrals" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.1} name="Referrals" />
                         </LazyAreaChart>
@@ -500,7 +500,7 @@ export default function DataHub() {
                           <LazyXAxis dataKey="symbol" tick={{ fontSize: 12, fill: '#9A9BA8' }} />
                           <LazyYAxis tick={{ fontSize: 12, fill: '#9A9BA8' }} tickFormatter={(v: number) => `$${v}`} />
                           <LazyTooltip content={<ChartTooltip />} />
-                          <LazyBar dataKey="price" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                          <LazyBar dataKey="price" fill="#6366F1" radius={[4, 4, 0, 0]} />
                         </LazyBarChart>
                       </LazyResponsiveContainer>
                     </CardContent>

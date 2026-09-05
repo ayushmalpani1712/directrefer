@@ -191,7 +191,7 @@ export default function ProfessionalDashboard() {
             <CardContent className="space-y-3 pt-2">
               {inbox.slice(0, 4).map((r) => (
                 <div key={r.id} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center">
-                  <GAvatar name={r.student} color="#64748B" className="h-10 w-10 text-xs" />
+                  <GAvatar name={r.student} color="#5C5D66" className="h-10 w-10 text-xs" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-[14px] font-semibold">{r.student}</span>

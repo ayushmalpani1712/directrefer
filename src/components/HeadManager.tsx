@@ -130,7 +130,7 @@ export function HeadManager() {
 
     setMeta('description', meta.description)
     setMeta('robots', robotsValue)
-    setMeta('theme-color', '#0F172A')
+    setMeta('theme-color', '#0A0A0F')
 
     setProperty('og:title', fullTitle)
     setProperty('og:description', meta.description)

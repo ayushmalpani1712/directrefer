@@ -20,10 +20,10 @@ const TICK = { fill: '#9A9BA8', fontSize: 12 } as const
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color?: string }>; label?: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#f1f5f9' }}>
-      {label && <div style={{ marginBottom: 4, fontWeight: 600, color: '#f1f5f9' }}>{label}</div>}
+    <div style={{ background: '#13141A', border: '1px solid #26272F', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#F2F2F5' }}>
+      {label && <div style={{ marginBottom: 4, fontWeight: 600, color: '#F2F2F5' }}>{label}</div>}
       {payload.map((p, i) => (
-        <div key={i} style={{ color: p.color || '#f1f5f9' }}>
+        <div key={i} style={{ color: p.color || '#F2F2F5' }}>
           {p.name} : {p.value}
         </div>
       ))}

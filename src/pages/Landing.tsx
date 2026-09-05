@@ -374,7 +374,7 @@ function DashboardTab() {
           </div>
           <div className="h-10 w-px bg-[rgba(255,255,255,0.07)]" />
           <div className="text-center">
-            <div className="font-display text-2xl font-bold text-[#FBBF24]">3</div>
+            <div className="font-display text-2xl font-bold text-[#E8B44C]">3</div>
             <div className="text-[10px] text-[#9A9BA8]">Interviews</div>
           </div>
         </div>
@@ -382,7 +382,7 @@ function DashboardTab() {
       <div className="flex flex-wrap gap-2">
         <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-[#34D399] text-[10px]">Accepted {'\u2022'} Flipkart</Badge>
         <Badge className="border border-[rgba(99, 102, 241,0.2)] bg-[rgba(99, 102, 241,0.1)] text-[#6366F1] text-[10px]">Applied {'\u2022'} Razorpay</Badge>
-        <Badge className="border border-[rgba(251,191,36,0.2)] bg-[rgba(251,191,36,0.1)] text-[#FBBF24] text-[10px]">Under Review {'\u2022'} Google</Badge>
+        <Badge className="border border-[rgba(232,180,76,0.2)] bg-[rgba(232,180,76,0.1)] text-[#E8B44C] text-[10px]">Under Review {'\u2022'} Google</Badge>
       </div>
       <div className="rounded-xl bg-[rgba(255,255,255,0.05)] p-4">
         <div className="text-xs font-medium text-[#9A9BA8] mb-3">Pipeline</div>
@@ -420,7 +420,7 @@ function ProfessionalsTab() {
             <div className="text-[11px] text-[#9A9BA8]">{p.role} {'\u2022'} {p.company}</div>
           </div>
           <div className="flex items-center gap-3 text-[10px] text-[#9A9BA8]">
-            <span className="flex items-center gap-0.5"><Star className="h-3 w-3 fill-[#FBBF24] text-[#FBBF24]" />{p.rating}</span>
+            <span className="flex items-center gap-0.5"><Star className="h-3 w-3 fill-[#E8B44C] text-[#E8B44C]" />{p.rating}</span>
             <span>{p.referrals} referrals</span>
           </div>
           <Button size="sm" variant="outline" className="shrink-0 rounded-full border-[rgba(255,255,255,0.06)] text-[10px] text-white hover:bg-[rgba(255,255,255,0.05)]">Request</Button>
@@ -434,7 +434,7 @@ function ReferralsTab() {
   const jobs = [
     { company: 'Flipkart', role: 'SDE-2', stage: 'Accepted', color: '#34D399', date: '2 days ago' },
     { company: 'Razorpay', role: 'Frontend Engineer', stage: 'Applied', color: '#6366F1', date: '5 days ago' },
-    { company: 'Google', role: 'L3 SWE', stage: 'Under Review', color: '#FBBF24', date: '1 week ago' },
+    { company: 'Google', role: 'L3 SWE', stage: 'Under Review', color: '#E8B44C', date: '1 week ago' },
   ]
   return (
     <div className="space-y-3">
@@ -755,7 +755,7 @@ export default function Landing() {
                           </div>
                         </div>
                         <div className="mt-3 flex items-center justify-between text-xs sm:text-[13px] text-muted-foreground">
-                          <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-[#FBBF24] text-[#FBBF24]" /> {p.rating}</span>
+                          <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-[#E8B44C] text-[#E8B44C]" /> {p.rating}</span>
                           <span>{p.referralsCompleted} referrals</span>
                           <span className="text-[#34D399]">{p.responseRate}% replies</span>
                         </div>
