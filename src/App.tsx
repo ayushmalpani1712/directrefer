@@ -15,6 +15,7 @@ const AppShell = lazyWithRetry(() => import('@/components/layout'))
 const OnboardingOverlay = lazyWithRetry(() => import('@/components/OnboardingOverlay').then(m => ({ default: m.OnboardingOverlay })))
 const NPSSurveyModal = lazyWithRetry(() => import('@/components/NPSSurveyModal').then(m => ({ default: m.NPSSurveyModal })))
 const CookieConsentBanner = lazyWithRetry(() => import('@/components/CookieConsentBanner').then(m => ({ default: m.CookieConsentBanner })))
+const InstallPrompt = lazyWithRetry(() => import('@/components/InstallPrompt').then(m => ({ default: m.InstallPrompt })))
 
 const Landing = lazyWithRetry(() => import('@/pages/Landing'))
 const Login = lazyWithRetry(() => import('@/pages/Login'))
@@ -218,6 +219,7 @@ export default function App() {
               <HeadManager />
               <VersionChecker />
               <Suspense fallback={null}><OnboardingOverlay /></Suspense>
+              <Suspense fallback={null}><InstallPrompt /></Suspense>
               <RecoveryHandler />
               <LazyErrorBoundary>
               <Routes>

@@ -7,7 +7,12 @@
   ],
   "rewrites": [
     { "source": "/assets/(.*)", "destination": "/assets/$1" },
-    { "source": "/((?!api/|assets/).*)", "destination": "/index.html" }
+    { "source": "/sw.js", "destination": "/sw.js" },
+    { "source": "/sw-cleanup.js", "destination": "/sw-cleanup.js" },
+    { "source": "/manifest.json", "destination": "/manifest.json" },
+    { "source": "/logo-emblem.png", "destination": "/logo-emblem.png" },
+    { "source": "/pwa-icon.png", "destination": "/pwa-icon.png" },
+    { "source": "/((?!api/|assets/|sw\\.js|sw-cleanup\\.js|manifest\\.json|logo-emblem\\.png|pwa-icon\\.png).*)", "destination": "/index.html" }
   ],
   "headers": [
     {

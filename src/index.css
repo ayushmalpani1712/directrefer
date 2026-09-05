@@ -237,6 +237,9 @@
   body {
     padding-bottom: env(safe-area-inset-bottom);
   }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 /* Lightweight fade-in animation (replaces framer-motion for static pages) */
