@@ -2,9 +2,9 @@ import { lazy, Suspense, useMemo, useEffect } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 
 import {
-  Bell, Bookmark, Briefcase, CheckCheck, ChevronRight, CircleHelp, Command,
-  FileText, FileUp, Home, LayoutDashboard, MessageSquare,
-  Plus, Search, Settings, Shield, ShieldCheck, Sparkles, User, Users, Zap, Inbox, LineChart, Activity, BarChart3,
+  Bell, Bookmark, Briefcase, ChevronRight, CircleHelp, Command,
+  FileText, Home, LayoutDashboard, MessageSquare,
+  Search, Settings, Shield, ShieldCheck, User, Users, Zap, Inbox, LineChart, Activity,
   type LucideIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -13,7 +13,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem,
@@ -56,7 +56,7 @@ export function Logo({ compact }: { compact?: boolean }) {
 // ── Nav config ──────────────────────────────────────────────
 interface NavItem { label: string; href: string; icon: LucideIcon; badge?: string }
 
-function navFor(role: Role, unread: number, pendingCount: number, prefix: string): { group: string; items: NavItem[] }[] {
+function navFor(role: Role, pendingCount: number, prefix: string): { group: string; items: NavItem[] }[] {
   const common: { group: string; items: NavItem[] }[] = []
   if (role === 'admin') {
     common.push({
@@ -64,14 +64,12 @@ function navFor(role: Role, unread: number, pendingCount: number, prefix: string
       items: [
         { label: 'Dashboard', href: '/admin/overview', icon: LayoutDashboard },
         { label: 'Workspaces', href: '/admin/users', icon: Users },
-        { label: 'Messages', href: getMessagesPath('admin'), icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
         { label: 'Settings', href: '/admin/settings', icon: Settings },
       ],
     })
     common.push({
       group: 'Network',
       items: [
-        { label: 'Notifications', href: `${prefix}/notifications`, icon: Bell },
         { label: 'Activity', href: `${prefix}/activity`, icon: Activity },
         { label: 'Analytics', href: `${prefix}/analytics`, icon: LineChart },
       ],
@@ -114,8 +112,6 @@ function navFor(role: Role, unread: number, pendingCount: number, prefix: string
   common.push({
     group: 'Network',
     items: [
-      { label: 'Messages', href: getMessagesPath(role), icon: MessageSquare, badge: unread > 0 ? String(unread) : undefined },
-      { label: 'Notifications', href: `${prefix}/notifications`, icon: Bell },
       ...(role === 'student' ? [{ label: 'Bookmarks', href: `${prefix}/bookmarks`, icon: Bookmark }] : []),
       { label: 'Activity', href: `${prefix}/activity`, icon: Activity },
       { label: 'Analytics', href: `${prefix}/analytics`, icon: LineChart },
@@ -245,14 +241,13 @@ function LazyCommandPalette() {
 
 // ── Sidebar ─────────────────────────────────────────────────
 function AppSidebar() {
-  const { role, student, conversations, requests } = useApp()
+  const { role, student, requests } = useApp()
   const { state, setOpenMobile } = useSidebar()
   const { pathname } = useLocation()
-  const unread = conversations.reduce((a, c) => a + c.unread, 0)
   const pendingCount = requests.filter((r) => r.status === 'requested' || r.status === 'under_review').length
   const urlRole = getRoleFromPath(pathname) || role
   const prefix = ROLE_ROUTE[urlRole]
-  const groups = navFor(urlRole, unread, pendingCount, prefix)
+  const groups = navFor(urlRole, pendingCount, prefix)
   const user = student
 
   useEffect(() => { setOpenMobile(false) }, [setOpenMobile])
@@ -336,7 +331,6 @@ function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-          <QuickActions />
           {state !== 'collapsed' && (
             <div className="mt-2 rounded-xl bg-gradient-to-br from-primary/5 via-muted/50 to-secondary/5 p-3 border border-border/50 relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.03] to-secondary/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -353,95 +347,6 @@ function AppSidebar() {
       </div>
       <SidebarRail />
     </Sidebar>
-  )
-}
-
-// ── Quick actions (sidebar) ─────────────────────────────────
-function QuickActions() {
-  const navigate = useNavigate()
-  const { pathname } = useLocation()
-  const urlRole = getRoleFromPath(pathname)
-  const { state } = useSidebar()
-
-  const actions = useMemo(() => {
-    if (urlRole === 'student') {
-      return [
-        { icon: Plus, label: 'Request referral', run: () => navigate('/job-seeker/request-referral') },
-        { icon: Users, label: 'Find professionals', run: () => navigate('/job-seeker/professionals') },
-        { icon: FileUp, label: 'Upload resume', run: () => navigate('/job-seeker/profile') },
-        { icon: Sparkles, label: 'View analytics', run: () => navigate('/job-seeker/analytics') },
-      ]
-    }
-    if (urlRole === 'admin') {
-      return [
-        { icon: BarChart3, label: 'Dashboard', run: () => navigate('/admin/overview') },
-        { icon: Users, label: 'Manage workspaces', run: () => navigate('/admin/users') },
-        { icon: MessageSquare, label: 'Messages', run: () => navigate('/admin/messages') },
-        { icon: Settings, label: 'Settings', run: () => navigate('/admin/settings') },
-      ]
-    }
-    if (urlRole === 'professional') {
-      return [
-        { icon: CheckCheck, label: 'Review pending requests', run: () => navigate('/professional/referrals') },
-        { icon: Briefcase, label: 'Find job seekers', run: () => navigate('/professional/talent') },
-        { icon: Plus, label: 'Update profile', run: () => navigate('/professional/profile') },
-        { icon: Sparkles, label: 'View analytics', run: () => navigate('/professional/analytics') },
-      ]
-    }
-    return RECRUITER_VISIBLE ? [
-      { icon: Plus, label: 'Post a job', run: () => navigate('/recruiter/jobs') },
-      { icon: Users, label: 'Search talent', run: () => navigate('/recruiter/talent') },
-      { icon: Sparkles, label: 'View analytics', run: () => navigate('/recruiter/analytics') },
-    ] : []
-  }, [urlRole, navigate])
-
-  if (state === 'collapsed') {
-    return (
-      <SidebarMenuItem>
-        <Popover>
-          <PopoverTrigger asChild>
-            <SidebarMenuButton asChild tooltip="Quick actions">
-              <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-[14px] font-medium text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors duration-200 cursor-pointer">
-                <Zap className="h-[18px] w-[18px] shrink-0" />
-              </button>
-            </SidebarMenuButton>
-          </PopoverTrigger>
-          <PopoverContent align="start" sideOffset={8} className="w-56 p-1.5">
-            <div className="px-2.5 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick actions</div>
-            {actions.map((a) => (
-              <button key={a.label} onClick={a.run} className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm hover:bg-muted">
-                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary"><a.icon className="h-3.5 w-3.5" /></div>
-                {a.label}
-              </button>
-            ))}
-          </PopoverContent>
-        </Popover>
-      </SidebarMenuItem>
-    )
-  }
-
-  return (
-    <SidebarMenuItem>
-      <Popover>
-        <PopoverTrigger asChild>
-            <SidebarMenuButton asChild tooltip="Quick actions">
-              <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors duration-200 cursor-pointer">
-                <Zap className="h-[18px] w-[18px] shrink-0" />
-                <span>Quick actions</span>
-              </button>
-            </SidebarMenuButton>
-        </PopoverTrigger>
-        <PopoverContent align="start" sideOffset={8} className="w-56 p-1.5">
-          <div className="px-2.5 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick actions</div>
-          {actions.map((a) => (
-            <button key={a.label} onClick={a.run} className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm hover:bg-muted">
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary"><a.icon className="h-3.5 w-3.5" /></div>
-              {a.label}
-            </button>
-          ))}
-        </PopoverContent>
-      </Popover>
-    </SidebarMenuItem>
   )
 }
 
