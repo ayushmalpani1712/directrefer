@@ -16,7 +16,7 @@ function getSteps(role: Role) {
     return [
       {
         icon: Building2,
-        title: 'Set up your referrer profile',
+        title: 'Set up your professional profile',
         description: 'Add your company, role, and the positions you can refer for so candidates can find you.',
         action: 'Set up profile',
         to: `${base}/profile`,

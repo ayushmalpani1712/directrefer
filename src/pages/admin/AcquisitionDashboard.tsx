@@ -128,11 +128,11 @@ export default function AcquisitionDashboard() {
 
       const diagnostics: DiagnosticRule[] = []
       if (activatedCandidates < referralRequests * 0.3) {
-        diagnostics.push({ id: 'supply', label: 'Supply-Demand Balance', status: 'warning', message: 'Many candidates but few referrers. Focus on supply recruitment.' })
+        diagnostics.push({ id: 'supply', label: 'Supply-Demand Balance', status: 'warning', message: 'Many candidates but few professionals. Focus on supply recruitment.' })
       } else if (referralRequests < activatedCandidates * 0.5) {
-        diagnostics.push({ id: 'demand', label: 'Supply-Demand Balance', status: 'warning', message: 'Many referrers but few candidates. Focus on SEO, communities and candidate onboarding.' })
+        diagnostics.push({ id: 'demand', label: 'Supply-Demand Balance', status: 'warning', message: 'Many professionals but few candidates. Focus on SEO, communities and candidate onboarding.' })
       } else {
-        diagnostics.push({ id: 'balance', label: 'Supply-Demand Balance', status: 'healthy', message: 'Good balance between candidates and referrers.' })
+        diagnostics.push({ id: 'balance', label: 'Supply-Demand Balance', status: 'healthy', message: 'Good balance between candidates and professionals.' })
       }
 
       if (acceptedRequests < referralRequests * 0.2) {
@@ -148,9 +148,9 @@ export default function AcquisitionDashboard() {
       }
 
       if (referrerRepeatRate < 10) {
-        diagnostics.push({ id: 'repeat', label: 'Referrer Retention', status: 'warning', message: 'Low repeat activity. Improve referrer value and experience.' })
+        diagnostics.push({ id: 'repeat', label: 'Professional Retention', status: 'warning', message: 'Low repeat activity. Improve professional value and experience.' })
       } else {
-        diagnostics.push({ id: 'repeat', label: 'Referrer Retention', status: 'healthy', message: 'Good referrer retention.' })
+        diagnostics.push({ id: 'repeat', label: 'Professional Retention', status: 'healthy', message: 'Good professional retention.' })
       }
 
       setMetrics({
@@ -235,7 +235,7 @@ export default function AcquisitionDashboard() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold">{metrics.verifiedReferrers}</div>
-                  <div className="text-xs text-muted-foreground">Verified Referrers</div>
+                  <div className="text-xs text-muted-foreground">Verified Professionals</div>
                 </div>
               </CardContent>
             </Card>
@@ -285,7 +285,7 @@ export default function AcquisitionDashboard() {
             <CardContent className="flex items-center gap-4 p-4">
               <div>
                 <div className="text-2xl font-bold">{metrics.referrerRepeatRate}%</div>
-                <div className="text-xs text-muted-foreground">Referrer Repeat Rate</div>
+                <div className="text-xs text-muted-foreground">Professional Repeat Rate</div>
               </div>
             </CardContent>
           </Card>
@@ -415,7 +415,7 @@ export default function AcquisitionDashboard() {
                   <div key={c.company}>
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium">{c.company}</span>
-                      <span className="text-muted-foreground">{c.demand} demand · {c.supply} referrers</span>
+                      <span className="text-muted-foreground">{c.demand} demand · {c.supply} professionals</span>
                     </div>
                     <div className="mt-1 flex h-2 overflow-hidden rounded-full bg-muted">
                       <div className="bg-amber-500" style={{ width: `${demandPct}%` }} />

@@ -422,7 +422,8 @@ export default function FindProfessionals() {
           icon={Search}
           title="No professionals found"
           description="Try a different search or clear your filters."
-          action={<Button variant="ghost" size="sm" onClick={() => setF(EMPTY_FILTERS)}>Clear filters</Button>}
+          primaryCtaLabel="Clear filters"
+          onPrimaryCtaClick={() => setF(EMPTY_FILTERS)}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 items-stretch">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft, BadgeCheck, Briefcase, Building2, Globe, Send, Users,
@@ -12,7 +12,7 @@ import { Chip, CompanyChip, ReportDialog, Stars } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { getMessagesPath } from '@/data/mock'
+import { getMessagesPath, RECRUITER_VISIBLE } from '@/data/mock'
 import { getBannerStyle } from '@/lib/utils'
 import NotFound from '@/pages/NotFound'
 
@@ -45,6 +45,8 @@ export default function RecruiterPublic() {
   const [userId, setUserId] = useState<string | null>(null)
   const [bannerTheme, setBannerTheme] = useState<string | null>(null)
   const [loadingData, setLoadingData] = useState(true)
+
+  if (!RECRUITER_VISIBLE) return <Navigate to="/" replace />
 
   useEffect(() => {
     if (!paramId) return

@@ -40,7 +40,7 @@ const AUDIENCE_CONFIG = {
     stats: [
       { value: '3x', label: 'Faster interview process' },
       { value: '45%', label: 'Of MBA hires via referrals' },
-      { value: '100+', label: 'Verified referrers' },
+      { value: '100+', label: 'Verified professionals' },
     ],
     benefits: [
       { icon: GraduationCap, title: 'MBA-targeted roles', text: 'Find referral opportunities specifically for consulting, PM, and finance roles' },
@@ -48,8 +48,8 @@ const AUDIENCE_CONFIG = {
       { icon: Users, title: 'Alumni network', text: 'Connect with MBA alumni who can vouch for your skills and potential' },
     ],
     faqs: [
-      { q: 'Which companies can I get referred to?', a: 'We have verified referrers at 50+ top companies including Google, Microsoft, Amazon, McKinsey, and leading Indian companies.' },
-      { q: 'Do I need to be at a top-tier MBA?', a: 'No. We have referrers from various backgrounds who are happy to help motivated candidates.' },
+      { q: 'Which companies can I get referred to?', a: 'We have verified professionals at 50+ top companies including Google, Microsoft, Amazon, McKinsey, and leading Indian companies.' },
+      { q: 'Do I need to be at a top-tier MBA?', a: 'No. We have professionals from various backgrounds who are happy to help motivated candidates.' },
       { q: 'How long does a referral take?', a: 'Most referrals are reviewed within 3-5 business days. Some companies respond faster.' },
     ],
     cta: 'Find MBA Referral Opportunities',
@@ -69,12 +69,12 @@ const AUDIENCE_CONFIG = {
     benefits: [
       { icon: Users, title: 'Insider perspective', text: 'Learn what skills actually matter for the role you want to switch into' },
       { icon: Building2, title: 'Bypass resume filters', text: 'ATS systems often reject career changers — referrals bypass this entirely' },
-      { icon: Briefcase, title: 'Contextual introduction', text: 'Your referrer explains your transferable skills better than a resume ever could' },
+      { icon: Briefcase, title: 'Contextual introduction', text: 'Your professional contact explains your transferable skills better than a resume ever could' },
     ],
     faqs: [
       { q: 'Can I get referred even without direct experience?', a: 'Yes. Referrals help by highlighting transferable skills that ATS systems miss.' },
       { q: 'What roles are best for career switchers?', a: 'Product management, data analytics, and frontend development are popular switches with strong referral support.' },
-      { q: 'How do I explain my career switch in a referral request?', a: 'Focus on transferable skills and genuine interest. Your referrer can advocate for your potential.' },
+      { q: 'How do I explain my career switch in a referral request?', a: 'Focus on transferable skills and genuine interest. Your professional contact can advocate for your potential.' },
     ],
     cta: 'Explore Referral Opportunities',
     ctaLink: '/referral-jobs',
@@ -93,10 +93,10 @@ const AUDIENCE_CONFIG = {
     benefits: [
       { icon: Building2, title: 'Executive access', text: 'Get introduced directly to hiring managers, not HR screening' },
       { icon: Users, title: 'Industry connections', text: 'Connect with senior professionals who understand your expertise' },
-      { icon: Briefcase, title: 'Contextual matching', text: 'Your referrer advocates for your specific skills and leadership style' },
+      { icon: Briefcase, title: 'Contextual matching', text: 'Your professional contact advocates for your specific skills and leadership style' },
     ],
     faqs: [
-      { q: 'Are there senior-level referrers?', a: 'Yes. Our verified professionals include directors, VPs, and senior leads at top companies.' },
+      { q: 'Are there senior-level professionals?', a: 'Yes. Our verified professionals include directors, VPs, and senior leads at top companies.' },
       { q: 'How does this differ from executive search?', a: 'DirectRefer gives you direct access to current employees who can refer you internally, often before roles are publicly posted.' },
       { q: 'Can I refer others too?', a: 'Absolutely. Senior professionals often refer peers and build their network through the platform.' },
     ],
@@ -198,8 +198,8 @@ export default function AudiencePage({ audience }: AudiencePageProps) {
           <div className="mt-10 grid gap-6 sm:grid-cols-3 items-stretch">
             {[
               { step: '1', title: 'Create your profile', text: 'Sign up and complete your profile with skills, experience, and target roles.' },
-              { step: '2', title: 'Find a referrer', text: 'Browse verified professionals at your target companies who are open to referrals.' },
-              { step: '3', title: 'Request a referral', text: 'Send a personalized request. Your referrer reviews and submits an internal referral.' },
+              { step: '2', title: 'Find a professional', text: 'Browse verified professionals at your target companies who are open to referrals.' },
+              { step: '3', title: 'Request a referral', text: 'Send a personalized request. Your professional contact reviews and submits an internal referral.' },
             ].map((s) => (
               <div key={s.step}>
                 <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{s.step}</div>

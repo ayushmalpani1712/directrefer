@@ -31,7 +31,7 @@ import { validateInviteCode, recordInviteUse } from '@/lib/invites'
 
 const ROLE_CARDS: { role: Role; icon: typeof GraduationCap; label: string; description: string }[] = [
   { role: 'student', icon: GraduationCap, label: 'Job Seeker', description: 'Find jobs and get referred' },
-  { role: 'professional', icon: Briefcase, label: 'Referrer', description: 'Help candidates get referrals' },
+  { role: 'professional', icon: Briefcase, label: 'Professional', description: 'Refer candidates to opportunities' },
   ...(RECRUITER_VISIBLE ? [{ role: 'recruiter' as Role, icon: Users, label: 'Recruiter', description: 'Hire top talent' }] : []),
 ]
 

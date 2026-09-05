@@ -98,7 +98,8 @@ export function BookmarksPage() {
           icon={BookmarkIcon}
           title="No bookmarks yet"
           description="Save professionals while browsing and they'll show up here."
-          action={<Button asChild><Link to="/job-seeker/professionals">Browse professionals</Link></Button>}
+          primaryCtaLabel="Browse professionals"
+          primaryCtaHref="/job-seeker/professionals"
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 items-stretch">
@@ -125,6 +126,14 @@ export function ActivityPage() {
       <SectionHeader title="Activity feed" subtitle="A timeline of everything happening on your account" />
       <Card className="shadow-soft">
         <CardContent className="p-6">
+          {activity.length === 0 ? (
+            <EmptyState
+              icon={ActivityIcon}
+              title="No activity yet"
+              description="Your referral activity will appear here as you send requests and interact with professionals."
+              bordered={false}
+            />
+          ) : (
           <div className="relative space-y-6 before:absolute before:bottom-2 before:left-[19px] before:top-2 before:w-px before:bg-border">
             {activity.map((a, i) => {
               const cfg = ACT_ICON[a.kind] ?? ACT_ICON.profile
@@ -141,6 +150,7 @@ export function ActivityPage() {
               )
             })}
           </div>
+          )}
         </CardContent>
       </Card>
       <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">

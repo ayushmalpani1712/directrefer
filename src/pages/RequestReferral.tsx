@@ -420,7 +420,7 @@ export default function RequestReferral() {
                     </div>
                   )}
                   <div className="rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">
-                    Profiles with a portfolio link get <b className="text-foreground">2.3× more accepts</b> from {pro?.company ?? 'top'} referrers.
+                    Profiles with a portfolio link get <b className="text-foreground">2.3× more accepts</b> from {pro?.company ?? 'top'} professionals.
                   </div>
                 </div>
               </CardContent>
@@ -530,7 +530,7 @@ export default function RequestReferral() {
                   )}
                   {!student.noticePeriod && (
                     <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-4 text-sm text-amber-600 dark:text-amber-400">
-                      <b>Tip:</b> Add your notice period to your profile — referrers are far more likely to accept when they know when you can start. <button onClick={() => navigate('/job-seeker/profile')} className="font-semibold underline">Add now</button>
+                      <b>Tip:</b> Add your notice period to your profile — professionals are far more likely to accept when they know when you can start. <button onClick={() => navigate('/job-seeker/profile')} className="font-semibold underline">Add now</button>
                     </div>
                   )}
                 </div>
@@ -583,7 +583,7 @@ export default function RequestReferral() {
                      <p className="mt-1 text-xs text-muted-foreground">Help others get referred — build your professional reputation and help your community. Verified employees get priority visibility.</p>
                    </div>
                    <Button variant="outline" className="shrink-0 rounded-full" asChild>
-                     <Link to="/login?role=professional">Become a Referrer</Link>
+                      <Link to="/login?role=professional">Become a Professional</Link>
                    </Button>
                  </CardContent>
                </Card>

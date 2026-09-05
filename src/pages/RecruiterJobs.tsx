@@ -133,7 +133,7 @@ export function BrowseJobsView() {
                       <Button size="sm" className="w-full rounded-full bg-primary shadow-glow text-xs">Request Referral</Button>
                     </Link>
                     <Link to="/job-seeker/professionals" className="flex-1">
-                      <Button size="sm" variant="outline" className="w-full rounded-full text-xs">Find Referrer</Button>
+                      <Button size="sm" variant="outline" className="w-full rounded-full text-xs">Find Professional</Button>
                     </Link>
                   </div>
                 </CardContent>

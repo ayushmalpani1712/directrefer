@@ -1028,7 +1028,7 @@ export default function StudentProfile() {
                   <div>
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Why I'm a fit</label>
                     <textarea className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary resize-none" rows={3} placeholder="e.g. 3 years building React apps at a fintech — shipped payments features used by 2M users." value={editWhyFit} onChange={(e) => setEditWhyFit(e.target.value)} />
-                    <p className="mt-1 text-xs text-muted-foreground">A short pitch referrers read to decide if you're worth endorsing.</p>
+                    <p className="mt-1 text-xs text-muted-foreground">A short pitch professionals read to decide if you're worth endorsing.</p>
                   </div>
                   <div className="flex gap-2 pt-1">
                     <Button size="sm" className="rounded-full bg-primary" onClick={handleSaveJobPrefs}><CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Save</Button>

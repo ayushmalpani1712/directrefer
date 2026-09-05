@@ -575,9 +575,10 @@ const CRUMB_LABELS: Record<string, string> = {
   bookmarks: 'Bookmarks', activity: 'Activity', analytics: 'Analytics', settings: 'Settings',
   help: 'Help & Support', 'request-referral': 'Request Referral', company: 'Company Profile',
   users: 'Users', flagged: 'Flagged', verification: 'Verification', announcements: 'Announcements',
-  flags: 'Feature Flags', audit: 'Audit Log', professional: 'Referrer', recruiter: 'Recruiter',
+  flags: 'Feature Flags', audit: 'Audit Log', professional: 'Professional',
   admin: 'Admin', 'browse-jobs': 'Browse Jobs', workspaces: 'Workspaces',
 }
+if (RECRUITER_VISIBLE) CRUMB_LABELS.recruiter = 'Recruiter'
 
 function Breadcrumbs() {
   const { pathname } = useLocation()

@@ -124,7 +124,7 @@ function AffinityBadges({ job, referrer, student }: {
   if (referrer?.college && studentSchools.length > 0) {
     const refCollege = normalizeText(referrer.college)
     if (studentSchools.some((s) => s.includes(refCollege) || refCollege.includes(s))) {
-      badges.push({ label: `Same college as ${referrer.full_name.split(' ')[0] || 'referrer'}`, tone: 'border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400', icon: GraduationCap })
+      badges.push({ label: `Same college as ${referrer.full_name.split(' ')[0] || 'professional'}`, tone: 'border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400', icon: GraduationCap })
     }
   }
 
@@ -156,9 +156,9 @@ function MatchExplanation({ job, hasReferrer, referrerCount, skillsList, student
   const reasons: string[] = []
 
   if (hasReferrer) {
-    reasons.push(`${referrerCount} verified referrer${referrerCount > 1 ? 's' : ''} at ${job.department || 'this company'} who can refer you`)
+    reasons.push(`${referrerCount} verified professional${referrerCount > 1 ? 's' : ''} at ${job.department || 'this company'} who can refer you`)
   } else {
-    reasons.push('No verified referrer attached yet — request and our matching will route it to the best-fit referrer')
+    reasons.push('No verified professional attached yet — request and our matching will route it to the best-fit professional')
   }
   const exp = extractExperience(job.description)
   if (exp) reasons.push(`Role expects ${exp} experience`)
@@ -325,7 +325,7 @@ export default function ReferralJobs() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <SectionHeader
           title="Referral Jobs"
-          subtitle="Open roles at companies where verified referrers are available — no cold applying."
+          subtitle="Open roles at companies where verified professionals are available — no cold applying."
         />
         <div className="relative sm:w-72">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -382,10 +382,10 @@ export default function ReferralJobs() {
                           </div>
                           {job.hasReferrer ? (
                             <Badge variant="outline" className="shrink-0 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                              <BadgeCheck className="mr-1 h-3 w-3" /> Referrer available
+                              <BadgeCheck className="mr-1 h-3 w-3" /> Professional available
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="shrink-0 border-muted text-muted-foreground">No referrer yet</Badge>
+                            <Badge variant="outline" className="shrink-0 border-muted text-muted-foreground">No professional yet</Badge>
                           )}
                         </div>
                       </div>
@@ -441,12 +441,12 @@ export default function ReferralJobs() {
                         </Button>
                       ) : (
                         <Button size="sm" variant="outline" className="rounded-full" disabled>
-                          No referrer attached yet
+                          No professional attached yet
                         </Button>
                       )}
                       {topReferrer?.slug && (
                         <Button size="sm" variant="ghost" className="rounded-full" asChild>
-                          <Link to={`/p/${topReferrer.slug}`}><ExternalLink className="mr-1.5 h-3.5 w-3.5" /> View referrer</Link>
+                          <Link to={`/p/${topReferrer.slug}`}><ExternalLink className="mr-1.5 h-3.5 w-3.5" /> View professional</Link>
                         </Button>
                       )}
                       {job.application_url && (
@@ -471,7 +471,7 @@ export default function ReferralJobs() {
       </div>
 
       <p className="mt-8 text-center text-xs text-muted-foreground">
-        Referrer availability and affinity badges are shown only when real, verified data backs them — never fabricated.
+        Professional availability and affinity badges are shown only when real, verified data backs them — never fabricated.
       </p>
     </div>
   )

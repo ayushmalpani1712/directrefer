@@ -42,7 +42,7 @@ const ROLES = [
     icon: GraduationCap,
     title: 'For Job Seekers',
     desc: 'Skip the queue. Request referrals from verified insiders, track every application, and know exactly where you stand.',
-    points: ['One-click referral requests', 'Real-time pipeline tracking', 'Verified referrer network'],
+    points: ['One-click referral requests', 'Real-time pipeline tracking', 'Verified professional network'],
   },
   {
     icon: Briefcase,
@@ -270,7 +270,7 @@ function GetReferredScene({ active }: { active: boolean }) {
       <motion.h3 initial={{ opacity: 0, y: 10 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 10 }} transition={{ delay: 0.5 }} className="font-display text-lg sm:text-xl font-bold text-foreground text-center">Stop applying into the void.</motion.h3>
       <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 8 }} transition={{ delay: 0.8 }} className="text-sm text-muted-foreground text-center max-w-xs">Get referred into your next role. It&rsquo;s free for job seekers.</motion.p>
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 8 }} transition={{ delay: 1.1 }}>
-        <Button size="lg" className="rounded-full bg-primary px-8 shadow-glow text-sm">Find a referrer {'\u2014'} it&rsquo;s free</Button>
+        <Button size="lg" className="rounded-full bg-primary px-8 shadow-glow text-sm">Find a professional {'\u2014'} it&rsquo;s free</Button>
       </motion.div>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: active ? 1 : 0 }} transition={{ delay: 1.5 }}>
         <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary text-[10px]">Pre-launch {'\u2022'} Early access</Badge>
@@ -587,15 +587,15 @@ export default function Landing() {
             </p>
             <div className="hero-anim-4 mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button size="lg" className="rounded-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] px-6 sm:px-8 text-white shadow-glow hover:shadow-[0_4px_30px_-4px_rgba(99,102,241,0.5)] transition-all duration-300 text-sm sm:text-base" asChild>
-                <Link to={user ? '/dashboard' : '/login'}><GraduationCap className="mr-2 h-4 w-4" /> {user ? 'Go to Dashboard' : "Find a referrer \u2014 it's free"} <ArrowRight className="ml-1 h-4 w-4" /></Link>
+                <Link to={user ? '/dashboard' : '/login'}><GraduationCap className="mr-2 h-4 w-4" /> {user ? 'Go to Dashboard' : "Find a professional \u2014 it's free"} <ArrowRight className="ml-1 h-4 w-4" /></Link>
               </Button>
             </div>
             <p className="hero-anim-4 mt-4 text-xs text-muted-foreground/70">
-              Free for job seekers. No spam. Request limits protect every referrer.
+              Free for job seekers. No spam. Request limits protect every professional.
             </p>
             <div className="hero-anim-4 mt-5">
               <Link to="/referral-jobs" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline hover:underline-offset-4 transition-all">
-                <Briefcase className="h-3.5 w-3.5" /> Browse referral jobs with live referrer availability
+                <Briefcase className="h-3.5 w-3.5" /> Browse referral jobs with live professional availability
                 <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
@@ -664,7 +664,7 @@ export default function Landing() {
             </FadeIn>
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
               {[
-                { icon: ShieldCheck, title: 'Verified referrers', desc: 'Professionals verify their employment through work email or ID review before earning a verified badge.' },
+                { icon: ShieldCheck, title: 'Verified professionals', desc: 'Professionals verify their employment through work email or ID review before earning a verified badge.' },
                 { icon: Users, title: 'Request limits', desc: 'Candidates can hold up to 5 active requests \u2014 no spam, no unlimited messages.' },
                 { icon: Send, title: 'Private contacts', desc: 'Contact details are hidden until a request is accepted. No cold outreach to inboxes.' },
                 { icon: FileText, title: 'Honest outcomes', desc: 'A referral is an opportunity, not a guarantee. No fabricated jobs, users, or success stories.' },
@@ -705,8 +705,8 @@ export default function Landing() {
             <div className="mt-12 grid gap-5 sm:grid-cols-3 items-stretch">
               {[
                 { icon: Search, title: "You don\u2019t know who refers", problem: 'LinkedIn shows 900M+ profiles. Finding someone who can actually refer you at a specific company is a needle-in-a-haystack problem.', solution: "DirectRefer shows you exactly who\u2019s verified, available, and accepting referral requests \u2014 filtered by company and role." },
-                { icon: ShieldOff, title: 'No verification layer', problem: 'Anyone can claim to work anywhere on LinkedIn. You can\u2019t tell real insiders from people who just updated their headline.', solution: 'Every referrer on DirectRefer is verified through work email or ID review. You see a verified badge or you don\u2019t.' },
-                { icon: Send, title: 'Cold DMs get ignored', problem: 'The average LinkedIn InMail gets a 10-15% response rate. Most referral asks disappear into the void.', solution: "DirectRefer requests are structured, professional, and include your resume + note. Referrers have capacity limits \u2014 so they actually read them." },
+                { icon: ShieldOff, title: 'No verification layer', problem: 'Anyone can claim to work anywhere on LinkedIn. You can\u2019t tell real insiders from people who just updated their headline.', solution: 'Every professional on DirectRefer is verified through work email or ID review. You see a verified badge or you don\u2019t.' },
+                { icon: Send, title: 'Cold DMs get ignored', problem: 'The average LinkedIn InMail gets a 10-15% response rate. Most referral asks disappear into the void.', solution: "DirectRefer requests are structured, professional, and include your resume + note. Professionals have capacity limits \u2014 so they actually read them." },
               ].map((item, i) => (
                 <FadeIn key={item.title} delay={i * 0.1}>
                   <SpotlightCard className="flex flex-col h-full rounded-2xl border border-border/60 bg-card p-5 sm:p-6">
@@ -811,8 +811,8 @@ export default function Landing() {
               {[
                 { q: 'Is Direct Refer free for job seekers?', a: 'Yes. Creating an account, browsing professionals, and sending referral requests are completely free.' },
                 { q: 'What happens after I send a referral request?', a: 'The professional receives your request with your note and resume. They can accept, pass, or message you back. You get real-time updates as your referral request moves through the pipeline.' },
-                { q: 'How is this different from LinkedIn?', a: 'LinkedIn has 900M+ profiles \u2014 finding a real referrer is a needle-in-a-haystack problem. DirectRefer shows only verified, available professionals with structured referral workflows. No cold DMs. No ghosting. Real outcomes.' },
-                { q: 'Are referrals guaranteed?', a: 'No. A referral is an opportunity to be considered, not a guarantee of a job or interview. Referrers participate voluntarily and within their employer policies.' },
+                { q: 'How is this different from LinkedIn?', a: 'LinkedIn has 900M+ profiles \u2014 finding a real professional is a needle-in-a-haystack problem. DirectRefer shows only verified, available professionals with structured referral workflows. No cold DMs. No ghosting. Real outcomes.' },
+                { q: 'Are referrals guaranteed?', a: 'No. A referral is an opportunity to be considered, not a guarantee of a job or interview. Professionals participate voluntarily and within their employer policies.' },
               ].map((item, i) => (
                 <FadeIn key={item.q} delay={i * 0.06}>
                   <GlowCard className="p-4 sm:p-5 transition-all duration-300">
@@ -836,7 +836,7 @@ export default function Landing() {
             <p className="mx-auto mt-4 max-w-md text-muted-foreground">Referred candidates are 13× more likely to be hired. Your next role starts with one intro.</p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Button size="lg" className="rounded-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] px-6 sm:px-8 text-white shadow-glow hover:shadow-[0_4px_30px_-4px_rgba(99,102,241,0.5)] transition-all duration-300 text-sm sm:text-base" asChild>
-                <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : 'Find a referrer'} <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : 'Find a professional'} <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button size="lg" variant="outline" className="rounded-full px-6 sm:px-8 text-sm sm:text-base border-border/60 hover:border-primary/30 hover:bg-muted/30" asChild>
                 <Link to="/referral-jobs">Browse referral jobs</Link>

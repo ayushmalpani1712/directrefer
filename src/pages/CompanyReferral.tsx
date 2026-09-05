@@ -162,13 +162,13 @@ export default function CompanyReferral() {
               to="/login"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-              Find {companyData.name} Referrers <ArrowRight className="h-4 w-4" />
+              Find {companyData.name} Professionals <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               to="/login"
               className="inline-flex items-center justify-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors"
             >
-              Become a Referrer
+              Become a Professional
             </Link>
           </div>
         </div>
