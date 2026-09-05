@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { StatCard } from '@/components/ui-kit'
+import { RECRUITER_VISIBLE } from '@/data/mock'
 import {
   fetchAllUsersFull,
   fetchPlatformAnalytics,
@@ -68,7 +69,7 @@ export default function AdminOverview() {
         <StatCard icon={Users} label="Active Job Seekers" value={studentCount} />
         <StatCard icon={Briefcase} label="Verified Professionals" value={professionalCount} />
         <StatCard icon={Flag} label="Pending Reports" value={flaggedAccounts.length} />
-        <StatCard icon={MessageSquare} label="Active Recruiters" value={recruiterCount} />
+        {RECRUITER_VISIBLE && <StatCard icon={MessageSquare} label="Active Recruiters" value={recruiterCount} />}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

@@ -32,7 +32,7 @@ import { Logo } from '@/components/layout'
 import { FadeIn } from '@/components/FadeIn'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { profileUrl } from '@/data/mock'
+import { profileUrl, RECRUITER_VISIBLE } from '@/data/mock'
 import { GlowCard } from '@/components/GlowCard'
 import { SpotlightCard } from '@/components/SpotlightCard'
 import { captureUTMFromURL, storeUTMParams, trackPageVisit } from '@/lib/analytics'
@@ -50,12 +50,12 @@ const ROLES = [
     desc: 'Give back — without the noise. Manage inbound referrals with capacity controls, analytics, and a reputation that compounds.',
     points: ['Smart request inbox', 'Referral analytics', 'Capacity controls'],
   },
-  {
+  ...(RECRUITER_VISIBLE ? [{
     icon: Users,
     title: 'For Recruiters',
     desc: 'Access referral-warmed talent that other recruiters can\u2019t find. Run your pipeline and measure every stage of the hiring funnel.',
     points: ['Talent search', 'Pipeline kanban', 'Hiring funnel analytics'],
-  },
+  }] : []),
 ]
 
 function scrollTo(id: string) {
@@ -621,7 +621,7 @@ export default function Landing() {
           <div className="mx-auto max-w-7xl">
             <FadeIn className="mx-auto max-w-2xl text-center">
               <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">Three steps. One referral. Zero cold applications.</h2>
-              <p className="mt-3 text-muted-foreground">No recruiter fees. No job board. Just a direct line to someone who can refer you.</p>
+              <p className="mt-3 text-muted-foreground">No fees. No job board. Just a direct line to someone who can refer you.</p>
             </FadeIn>
             <div className="mt-12 grid gap-8 sm:grid-cols-3 items-stretch">
               {[
@@ -811,7 +811,6 @@ export default function Landing() {
               {[
                 { q: 'Is Direct Refer free for job seekers?', a: 'Yes. Creating an account, browsing professionals, and sending referral requests are completely free.' },
                 { q: 'What happens after I send a referral request?', a: 'The professional receives your request with your note and resume. They can accept, pass, or message you back. You get real-time updates as your referral request moves through the pipeline.' },
-                { q: 'Can recruiters use the platform too?', a: 'Recruiters get a dedicated workspace to post jobs, search referral-warmed talent, manage a hiring pipeline, and track funnel analytics \u2014 all in one place.' },
                 { q: 'How is this different from LinkedIn?', a: 'LinkedIn has 900M+ profiles \u2014 finding a real referrer is a needle-in-a-haystack problem. DirectRefer shows only verified, available professionals with structured referral workflows. No cold DMs. No ghosting. Real outcomes.' },
                 { q: 'Are referrals guaranteed?', a: 'No. A referral is an opportunity to be considered, not a guarantee of a job or interview. Referrers participate voluntarily and within their employer policies.' },
               ].map((item, i) => (

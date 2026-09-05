@@ -274,7 +274,7 @@ export default function ProfessionalProfile() {
               >
                 <Switch
                   checked={isOpenToWork}
-                  onCheckedChange={async (v) => { setIsOpenToWork(v); const ok = await toggleProfessionalOpenToWork(v); if (ok) toast.success(v ? 'You are now visible to recruiters' : 'Profile hidden from recruiters') }}
+                  onCheckedChange={async (v) => { setIsOpenToWork(v); const ok = await toggleProfessionalOpenToWork(v); if (ok) toast.success(v ? 'You are now visible in search' : 'Profile hidden from search') }}
                 />
                 <span className={cn(
                   'text-sm font-medium',

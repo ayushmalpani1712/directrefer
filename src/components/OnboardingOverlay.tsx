@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle, Search, Upload, X, Briefcase, Building2 } from
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/context/AuthContext'
-import { ROLE_ROUTE } from '@/data/mock'
+import { ROLE_ROUTE, RECRUITER_VISIBLE } from '@/data/mock'
 import type { Role } from '@/data/mock'
 
 const ONBOARDING_DISMISSED_KEY = 'onboarding_dismissed'
@@ -41,7 +41,7 @@ function getSteps(role: Role) {
     ]
   }
 
-  if (role === 'recruiter') {
+  if (role === 'recruiter' && RECRUITER_VISIBLE) {
     return [
       {
         icon: Building2,

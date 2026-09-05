@@ -31,7 +31,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-lg font-semibold text-foreground">2. Information We Collect</h2>
             <h3 className="text-base font-medium text-foreground">2.1 Information You Provide</h3>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Account Information:</strong> Name, email address, password, mobile number, and professional role (job seeker, professional, or recruiter).</li>
+              <li><strong>Account Information:</strong> Name, email address, password, mobile number, and professional role (job seeker or professional).</li>
               <li><strong>Profile Data:</strong> Work history, skills, education, resume, bio, company name, job title, location, and professional links (LinkedIn, GitHub, portfolio).</li>
               <li><strong>Referral Data:</strong> Referral requests, messages, job postings, and application materials shared through the platform.</li>
               <li><strong>Verification Data:</strong> Work email for OTP verification, government ID for identity verification.</li>
@@ -50,7 +50,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-lg font-semibold text-foreground">3. How We Use Your Information</h2>
             <ul className="list-disc pl-5 space-y-1">
               <li>To provide, maintain, and improve the referral platform.</li>
-              <li>To facilitate connections between job seekers, professionals, and recruiters.</li>
+              <li>To facilitate connections between job seekers and professionals.</li>
               <li>To process referral requests and track pipeline progress.</li>
               <li>To verify professional identities and maintain platform trust.</li>
               <li>To send transactional notifications (referral updates, messages, system alerts).</li>

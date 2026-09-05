@@ -28,6 +28,7 @@ import { useAuth } from '@/context/AuthContext'
 import {
   ROLE_META,
   ROLE_ROUTE,
+  RECRUITER_VISIBLE,
   getRoleFromPath,
   getMessagesPath,
   type Role,
@@ -102,7 +103,7 @@ function navFor(role: Role, unread: number, pendingCount: number, prefix: string
         { label: 'My Profile', href: '/professional/profile', icon: User },
       ],
     })
-  } else {
+  } else if (role === 'recruiter' && RECRUITER_VISIBLE) {
     common.push({
       group: 'Workspace',
       items: [
@@ -141,9 +142,11 @@ function WorkspaceSwitcher() {
   const { pathname } = useLocation()
   const urlRole = getRoleFromPath(pathname)
 
-  const workspaceRoles: Role[] = useMemo(() =>
-    isAdmin ? ['student', 'professional', 'recruiter', 'admin'] : ['student', 'professional', 'recruiter'],
-  [isAdmin])
+  const workspaceRoles: Role[] = useMemo(() => {
+    const roles: Role[] = isAdmin ? ['student', 'professional', 'admin'] : ['student', 'professional']
+    if (RECRUITER_VISIBLE) roles.splice(isAdmin ? 3 : 2, 0, 'recruiter')
+    return roles
+  }, [isAdmin])
 
   const handleSwitch = (r: Role) => {
     if (r === urlRole) return
@@ -388,11 +391,11 @@ function QuickActions() {
         { icon: Sparkles, label: 'View analytics', run: () => navigate('/professional/analytics') },
       ]
     }
-    return [
+    return RECRUITER_VISIBLE ? [
       { icon: Plus, label: 'Post a job', run: () => navigate('/recruiter/jobs') },
       { icon: Users, label: 'Search talent', run: () => navigate('/recruiter/talent') },
       { icon: Sparkles, label: 'View analytics', run: () => navigate('/recruiter/analytics') },
-    ]
+    ] : []
   }, [urlRole, navigate])
 
   if (state === 'collapsed') {

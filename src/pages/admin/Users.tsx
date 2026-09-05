@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { GAvatar } from '@/components/ui-kit'
-import { GRADIENTS } from '@/data/mock'
+import { GRADIENTS, RECRUITER_VISIBLE } from '@/data/mock'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import {
@@ -26,7 +26,7 @@ const ROLE_TABS: { key: RoleTab; label: string; icon: typeof Users; role: string
   { key: 'all', label: 'All Users', icon: Users, role: null },
   { key: 'job-seekers', label: 'Job Seekers', icon: Users, role: 'student' },
   { key: 'professionals', label: 'Professionals', icon: Eye, role: 'professional' },
-  { key: 'recruiters', label: 'Recruiters', icon: UserSquare, role: 'recruiter' },
+  ...(RECRUITER_VISIBLE ? [{ key: 'recruiters' as RoleTab, label: 'Recruiters', icon: UserSquare, role: 'recruiter' }] : []),
 ]
 
 export default function AdminUsers() {
@@ -396,7 +396,7 @@ export default function AdminUsers() {
                         <select value={editUserRole} onChange={(e) => setEditUserRole(e.target.value)} className="rounded-lg border border-border bg-background px-2 py-0.5 text-xs">
                           <option value="student">Student</option>
                           <option value="professional">Professional</option>
-                          <option value="recruiter">Recruiter</option>
+                          {RECRUITER_VISIBLE && <option value="recruiter">Recruiter</option>}
                           <option value="admin">Admin</option>
                         </select>
                       </div>
@@ -573,7 +573,7 @@ export default function AdminUsers() {
                 <select value={masterEditRole} onChange={(e) => setMasterEditRole(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
                   <option value="student">Student</option>
                   <option value="professional">Professional</option>
-                  <option value="recruiter">Recruiter</option>
+                  {RECRUITER_VISIBLE && <option value="recruiter">Recruiter</option>}
                   <option value="admin">Admin</option>
                 </select>
               </div>

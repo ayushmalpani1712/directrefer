@@ -136,7 +136,7 @@ export default function VerifyEmail() {
           <span className="font-medium text-foreground">{userEmail || 'your email'}</span>
         </p>
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          Professionals and recruiters must verify their email before accessing the platform. Check your inbox and click the verification link.
+          Professionals must verify their email before accessing the platform. Check your inbox and click the verification link.
         </p>
         <Button onClick={handleResend} disabled={resending} className="mt-6 h-10 w-full rounded-lg bg-primary font-semibold">
           {resending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}

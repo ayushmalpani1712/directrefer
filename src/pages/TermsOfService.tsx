@@ -27,7 +27,7 @@ export default function TermsOfService() {
           <section className="space-y-3">
             <h2 className="text-lg font-semibold text-foreground">2. Description of Service</h2>
             <p>
-              Direct Refer is a referral platform that connects job seekers with verified professionals and recruiters. The Service enables users to request, manage, and track employee referrals at various companies.
+              Direct Refer is a referral platform that connects job seekers with verified professionals. The Service enables users to request, manage, and track employee referrals at various companies.
             </p>
           </section>
 

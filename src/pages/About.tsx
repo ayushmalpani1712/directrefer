@@ -65,7 +65,7 @@ export default function About() {
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">1</span>
               <div>
                 <p className="font-medium text-foreground">Create your profile</p>
-                <p className="text-sm text-muted-foreground">Sign up as a job seeker, professional, or recruiter. Build your profile with skills, experience, and preferences.</p>
+                <p className="text-sm text-muted-foreground">Sign up as a job seeker or professional. Build your profile with skills, experience, and preferences.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">

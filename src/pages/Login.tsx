@@ -23,7 +23,7 @@ import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/context/AuthContext'
 import { useApp } from '@/context/AppContext'
 import GoogleSignInButton from '@/components/GoogleSignInButton'
-import { ROLE_META, ROLE_ROUTE, type Role } from '@/data/mock'
+import { ROLE_META, ROLE_ROUTE, RECRUITER_VISIBLE, type Role } from '@/data/mock'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { captureUTMFromURL, storeUTMParams } from '@/lib/analytics'
@@ -32,7 +32,7 @@ import { validateInviteCode, recordInviteUse } from '@/lib/invites'
 const ROLE_CARDS: { role: Role; icon: typeof GraduationCap; label: string; description: string }[] = [
   { role: 'student', icon: GraduationCap, label: 'Job Seeker', description: 'Find jobs and get referred' },
   { role: 'professional', icon: Briefcase, label: 'Referrer', description: 'Help candidates get referrals' },
-  { role: 'recruiter', icon: Users, label: 'Recruiter', description: 'Hire top talent' },
+  ...(RECRUITER_VISIBLE ? [{ role: 'recruiter' as Role, icon: Users, label: 'Recruiter', description: 'Hire top talent' }] : []),
 ]
 
 const PIPELINE_STEPS = [
@@ -79,7 +79,7 @@ export default function Login() {
     e?.preventDefault()
     setError(null)
     if (!selected) {
-      setError('Please select a role (Job Seeker, Professional, or Recruiter).')
+      setError('Please select a role (Job Seeker or Professional).')
       setLoading(false)
       return
     }
@@ -141,7 +141,7 @@ export default function Login() {
   const handleLinkedIn = async () => {
     setError(null)
     if (!selected) {
-      setError('Please select a role (Job Seeker, Professional, or Recruiter).')
+      setError('Please select a role (Job Seeker or Professional).')
       return
     }
     const { error } = await signInWithLinkedIn()

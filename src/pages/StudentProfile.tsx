@@ -577,7 +577,7 @@ export default function StudentProfile() {
                   onCheckedChange={async (v) => {
                     setOpenToWork(v)
                     const ok = await toggleStudentOpenToWork(v)
-                    if (ok) toast.success(v ? 'You are now visible to recruiters' : 'Profile hidden from recruiters')
+                    if (ok) toast.success(v ? 'You are now visible in search' : 'Profile hidden from search')
                   }}
                 />
                 <span className={cn(
@@ -886,7 +886,7 @@ export default function StudentProfile() {
               <div className="flex items-center justify-between rounded-xl border border-border p-3.5">
                 <div className="min-w-0">
                   <div className="font-medium">Open to Work</div>
-                  <div className="text-xs text-muted-foreground">Visible to recruiters in talent search</div>
+                  <div className="text-xs text-muted-foreground">Visible in talent search</div>
                 </div>
                 <Switch checked={openToWork} onCheckedChange={async (v) => { setOpenToWork(v); await toggleStudentOpenToWork(v) }} />
               </div>

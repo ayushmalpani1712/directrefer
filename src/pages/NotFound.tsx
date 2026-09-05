@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Compass, Home, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useApp } from '@/context/AppContext'
-import { ROLE_ROUTE } from '@/data/mock'
+import { ROLE_ROUTE, RECRUITER_VISIBLE } from '@/data/mock'
 
 export default function NotFound() {
   const { role } = useApp()
@@ -24,7 +24,7 @@ export default function NotFound() {
             <Link to="/dashboard"><Home className="mr-1.5 h-4 w-4" /> Back to dashboard</Link>
           </Button>
           <Button variant="outline" className="rounded-full" asChild>
-            <Link to={role === 'recruiter' ? `${base}/talent` : `${base}/professionals`}><Search className="mr-1.5 h-4 w-4" /> {role === 'recruiter' ? 'Find talent' : 'Find professionals'}</Link>
+            <Link to={role === 'recruiter' && RECRUITER_VISIBLE ? `${base}/talent` : `${base}/professionals`}><Search className="mr-1.5 h-4 w-4" /> {role === 'recruiter' && RECRUITER_VISIBLE ? 'Find talent' : 'Find professionals'}</Link>
           </Button>
         </div>
         <div className="mt-8 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">

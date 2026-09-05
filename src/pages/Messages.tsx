@@ -256,9 +256,9 @@ export default function Messages() {
         <EmptyState
           illustration={<MessageIllustration />}
           title="Start a conversation"
-          description="No messages yet. Once you send or receive a referral request, you'll be able to chat directly with professionals and recruiters here."
-          primaryCtaLabel={urlRole === 'student' ? 'Browse professionals' : urlRole === 'professional' ? 'Discover talent' : 'Browse talent'}
-          primaryCtaHref={urlRole === 'student' ? '/job-seeker/professionals' : urlRole === 'professional' ? '/professional/talent' : '/recruiter/talent'}
+          description="No messages yet. Once you send or receive a referral request, you'll be able to chat directly with professionals here."
+          primaryCtaLabel={urlRole === 'student' ? 'Browse professionals' : 'Discover talent'}
+          primaryCtaHref={urlRole === 'student' ? '/job-seeker/professionals' : '/professional/talent'}
         />
       </div>
     )

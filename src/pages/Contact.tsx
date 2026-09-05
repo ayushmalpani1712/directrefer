@@ -77,10 +77,6 @@ export default function Contact() {
           <h2 className="text-xl font-semibold">Common Questions</h2>
           <div className="space-y-3">
             <div className="rounded-xl border border-border p-4 space-y-1">
-              <p className="font-medium text-foreground text-sm">I'm a recruiter — how do I get started?</p>
-              <p className="text-sm text-muted-foreground">Sign up as a recruiter, complete your company profile, and start posting jobs. Candidates can find you through search.</p>
-            </div>
-            <div className="rounded-xl border border-border p-4 space-y-1">
               <p className="font-medium text-foreground text-sm">I want to verify my account — how?</p>
               <p className="text-sm text-muted-foreground">Go to Settings &gt; Verification and choose between work email OTP or ID card verification.</p>
             </div>

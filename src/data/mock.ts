@@ -7,6 +7,9 @@
 
 export type Role = 'student' | 'professional' | 'recruiter' | 'admin'
 
+/** Master toggle — set to true to re-enable Recruiter everywhere. */
+export const RECRUITER_VISIBLE = false
+
 export const ROLE_META: Record<Role, { label: string; singular: string }> = {
   student: { label: 'Job Seeker', singular: 'Student' },
   professional: { label: 'Referrer', singular: 'Referrer' },

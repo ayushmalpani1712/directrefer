@@ -18,7 +18,6 @@ const FAQS = [
   { q: 'How are professionals verified?', a: 'Every professional verifies employment via corporate email, cross-checked against LinkedIn and company directories. Badges like "Top Referrer" are earned from real candidate outcomes.' },
   { q: 'Can I message a professional before requesting?', a: 'Yes — but a well-prepared referral request converts far better than a cold message. We recommend requesting first, then messaging to add context.' },
   { q: 'As a professional, how do I control request volume?', a: 'Set a monthly capacity in your profile, pause requests anytime, or turn on vacation mode. Your slots reset on the 1st of each month.' },
-  { q: 'How do recruiters use Direct Refer?', a: 'Recruiters get a company workspace: post jobs, search referral-warmed talent, manage a pipeline kanban, and measure funnel conversion. Referral-sourced candidates are flagged so you can prioritize them.' },
 ]
 
 export default function Help() {
