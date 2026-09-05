@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
-import { CheckCircle2, Clock, Download, FileText, MessageSquare, Send, ShieldCheck, Users, XCircle } from 'lucide-react'
+import { CheckCircle2, Clock, Download, FileText, MessageSquare, Send, ShieldCheck, Users, XCircle, FileCheck, Ban } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -18,38 +18,41 @@ import { ListSkeleton } from '@/components/ui/skeleton'
 
 const STAGES: { key: ReferralStatus | 'all'; label: string }[] = [
   { key: 'all', label: 'All' },
-  { key: 'pending', label: 'Pending' },
+  { key: 'requested', label: 'Requested' },
   { key: 'accepted', label: 'Accepted' },
-  { key: 'rejected', label: 'Declined' },
-  { key: 'hired', label: 'Hired' },
+  { key: 'referral_submitted', label: 'Submitted' },
+  { key: 'declined', label: 'Declined' },
+  { key: 'closed', label: 'Closed' },
 ]
 
 const STAGE_ICONS: Record<PipelineStage, typeof Send> = {
-  request_sent: Send,
+  requested: Send,
   under_review: Clock,
   accepted: CheckCircle2,
-  submitted: FileText,
-  hired: CheckCircle2,
+  referral_submitted: FileCheck,
+  application_submitted: FileText,
+  closed: CheckCircle2,
 }
 
 const STAGE_COLORS: Record<PipelineStage, string> = {
-  request_sent: 'text-blue-500',
+  requested: 'text-blue-500',
   under_review: 'text-amber-500',
   accepted: 'text-emerald-500',
-  submitted: 'text-[#8B5CF6]',
-  hired: 'text-violet-500',
+  referral_submitted: 'text-violet-500',
+  application_submitted: 'text-cyan-500',
+  closed: 'text-slate-500',
 }
 
 function PipelineTracker({ stage, status }: { stage: PipelineStage; status: ReferralStatus }) {
   const currentIdx = PIPELINE_STAGES.findIndex((s) => s.key === stage)
-  const isRejected = status === 'rejected'
+  const isDeclined = status === 'declined'
 
   return (
     <div className="mt-5">
-      {isRejected ? (
+      {isDeclined ? (
         <div className="flex items-center gap-2.5 rounded-xl bg-rose-500/5 p-3.5 text-sm text-rose-600 dark:text-rose-400">
-          <XCircle className="h-4.5 w-4.5 shrink-0" />
-          Request declined — you can try a different referrer or re-apply later.
+          <XCircle className="h-4 w-4 shrink-0" />
+          <span className="font-medium">Request declined</span>
         </div>
       ) : (
         <>
@@ -115,7 +118,7 @@ function PipelineTracker({ stage, status }: { stage: PipelineStage; status: Refe
 }
 
 export default function MyReferrals() {
-  const { requests, professionals, loading, startConversation, role } = useApp()
+  const { requests, professionals, loading, startConversation, cancelReferral, updateApplicationStatus, role } = useApp()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [tab, setTab] = useState<'all' | ReferralStatus>('all')
@@ -127,7 +130,7 @@ export default function MyReferrals() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <SectionHeader title="My Referrals" subtitle="Track every referral from request to interview" />
+        <SectionHeader title="My Referrals" subtitle="Track every referral from request to close" />
         <div className="flex gap-2">
           <Button variant="outline" className="rounded-full" onClick={() => { exportReferralsCSV(mine); toast.success('Referrals exported as CSV') }}>
             <Download className="mr-1.5 h-4 w-4" /> Export CSV
@@ -141,8 +144,8 @@ export default function MyReferrals() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard icon={Send} label="Total sent" value={mine.length} />
         <StatCard icon={CheckCircle2} label="Accepted" value={mine.filter((r) => r.status === 'accepted').length} />
-        <StatCard icon={Clock} label="Awaiting reply" value={mine.filter((r) => r.status === 'pending').length} />
-        <StatCard icon={XCircle} label="Declined" value={mine.filter((r) => r.status === 'rejected').length} />
+        <StatCard icon={Clock} label="Awaiting reply" value={mine.filter((r) => r.status === 'requested' || r.status === 'under_review').length} />
+        <StatCard icon={FileCheck} label="Submitted" value={mine.filter((r) => r.status === 'referral_submitted').length} />
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
@@ -206,6 +209,16 @@ export default function MyReferrals() {
                         <StatusBadge status={r.status} />
                         {r.status === 'accepted' && (
                           <LinkedInShareButton role={r.role} company={p.company} professionalName={p.name} size="sm" showCopy={false} />
+                        )}
+                        {r.status === 'referral_submitted' && (
+                          <Button size="sm" className="rounded-full bg-cyan-600 hover:bg-cyan-700" onClick={() => { updateApplicationStatus(r.id, 'application_submitted'); toast.success('Marked as applied') }}>
+                            <Send className="mr-1.5 h-3.5 w-3.5" /> Applied
+                          </Button>
+                        )}
+                        {(r.status === 'requested' || r.status === 'under_review') && (
+                          <Button variant="outline" size="sm" className="rounded-full text-rose-500 hover:text-rose-600 hover:bg-rose-500/10" onClick={() => { cancelReferral(r.id); toast.success('Request cancelled') }}>
+                            <Ban className="mr-1.5 h-3.5 w-3.5" /> Cancel
+                          </Button>
                         )}
                         <Button variant="outline" size="sm" className="rounded-full" onClick={async () => { const convId = await startConversation(p.id); if (convId) navigate(`${getMessagesPath(role)}?conversation=${convId}`) }}><MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message</Button>
                       </div>

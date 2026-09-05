@@ -67,7 +67,7 @@ export default function AcquisitionDashboard() {
 
       const referralRequests = referrals.length
       const acceptedRequests = referrals.filter(r => r.status === 'accepted').length
-      const completedReferrals = referrals.filter(r => r.status === 'accepted' || r.pipeline_stage === 'submitted' || r.pipeline_stage === 'hired').length
+      const completedReferrals = referrals.filter(r => r.status === 'accepted' || r.pipeline_stage === 'referral_submitted' || r.pipeline_stage === 'submitted' || r.pipeline_stage === 'application_submitted' || r.pipeline_stage === 'hired' || r.pipeline_stage === 'closed').length
 
       const professionalIds = [...new Set(referrals.map(r => r.professional_id).filter(Boolean))]
       const repeatReferrers = professionalIds.filter(pid => referrals.filter(r => r.professional_id === pid).length > 1).length

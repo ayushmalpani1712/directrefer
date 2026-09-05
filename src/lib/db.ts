@@ -11,6 +11,7 @@ import {
   type Professional,
   type ReferralRequest,
   type ReferralStatus,
+  type PipelineStage,
   type Conversation,
   type Message,
   type Job,
@@ -123,10 +124,39 @@ export function formatRelativeTime(iso: string): string {
 }
 
 function mapReferralStatus(
-  dbStatus: 'pending' | 'accepted' | 'rejected' | 'expired' | 'hired'
+  dbStatus: string
 ): ReferralStatus {
-  if (dbStatus === 'expired') return 'rejected'
-  return dbStatus
+  switch (dbStatus) {
+    case 'pending': return 'requested'
+    case 'requested': return 'requested'
+    case 'under_review': return 'under_review'
+    case 'accepted': return 'accepted'
+    case 'rejected': return 'declined'
+    case 'declined': return 'declined'
+    case 'referral_submitted': return 'referral_submitted'
+    case 'application_submitted': return 'application_submitted'
+    case 'closed': return 'closed'
+    case 'expired': return 'declined'
+    case 'hired': return 'closed'
+    default: return 'requested'
+  }
+}
+
+function mapPipelineStage(
+  dbStage: string
+): PipelineStage {
+  switch (dbStage) {
+    case 'request_sent': return 'requested'
+    case 'requested': return 'requested'
+    case 'under_review': return 'under_review'
+    case 'accepted': return 'accepted'
+    case 'referral_submitted': return 'referral_submitted'
+    case 'submitted': return 'referral_submitted'
+    case 'application_submitted': return 'application_submitted'
+    case 'closed': return 'closed'
+    case 'hired': return 'closed'
+    default: return 'requested'
+  }
 }
 
 function mapNotificationType(
@@ -314,7 +344,7 @@ export async function fetchReferrals(userId: string): Promise<ReferralRequest[]>
         professionalId: row.professional_id,
         role: row.job_title,
         status: mapReferralStatus(row.status),
-        pipelineStage: row.pipeline_stage ?? (row.status === 'accepted' ? 'accepted' : row.status === 'rejected' ? 'request_sent' : 'request_sent'),
+        pipelineStage: mapPipelineStage(row.pipeline_stage ?? row.status),
         date: new Date(row.created_at).toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
@@ -365,7 +395,8 @@ export async function createReferral(params: {
         relationship_type: params.relationship_type ?? null,
         relationship_note: params.relationship_note ?? null,
         policy_acknowledged: params.policy_acknowledged ?? false,
-        pipeline_stage: 'request_sent',
+        pipeline_stage: 'requested',
+        status: 'pending',
         progress: 15,
       })
       .select('id, professional_id, job_title, status, created_at, note, progress, relationship_type, relationship_note, policy_acknowledged, requester:users!referrals_requester_id_fkey(full_name)')
@@ -379,7 +410,7 @@ export async function createReferral(params: {
       professionalId: data.professional_id,
       role: data.job_title,
       status: mapReferralStatus(data.status),
-      pipelineStage: 'request_sent',
+      pipelineStage: 'requested',
       date: new Date(data.created_at).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -400,18 +431,22 @@ export async function createReferral(params: {
 
 export async function updateReferralStatus(
   referralId: string,
-  status: 'accepted' | 'rejected',
+  status: 'accepted' | 'rejected' | 'under_review',
   passReason?: string
 ): Promise<boolean> {
   try {
-    const update: Record<string, unknown> = { status }
-    // Advance pipeline when accepted
+    const update: Record<string, unknown> = {}
     if (status === 'accepted') {
+      update.status = 'accepted'
       update.pipeline_stage = 'accepted'
       update.progress = 75
-    }
-    if (status === 'rejected' && passReason) {
-      update.pass_reason = passReason
+    } else if (status === 'rejected') {
+      update.status = 'rejected'
+      if (passReason) update.pass_reason = passReason
+    } else if (status === 'under_review') {
+      update.status = 'pending'
+      update.pipeline_stage = 'under_review'
+      update.progress = 35
     }
     const { error } = await supabase
       .from('referrals')
@@ -421,6 +456,68 @@ export async function updateReferralStatus(
     return !error
   } catch (err) {
     console.error('updateReferralStatus failed:', err)
+    return false
+  }
+}
+
+export async function submitReferral(
+  referralId: string
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('referrals')
+      .update({
+        status: 'referral_submitted',
+        pipeline_stage: 'referral_submitted',
+        progress: 85,
+      })
+      .eq('id', referralId)
+    return !error
+  } catch (err) {
+    console.error('submitReferral failed:', err)
+    return false
+  }
+}
+
+export async function cancelReferral(
+  referralId: string
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('referrals')
+      .update({
+        status: 'expired',
+        pipeline_stage: 'closed',
+        progress: 0,
+      })
+      .eq('id', referralId)
+    return !error
+  } catch (err) {
+    console.error('cancelReferral failed:', err)
+    return false
+  }
+}
+
+export async function updateApplicationStatus(
+  referralId: string,
+  status: 'application_submitted' | 'closed'
+): Promise<boolean> {
+  try {
+    const update: Record<string, unknown> = { status }
+    if (status === 'application_submitted') {
+      update.pipeline_stage = 'application_submitted'
+      update.progress = 95
+    } else if (status === 'closed') {
+      update.pipeline_stage = 'closed'
+      update.progress = 100
+    }
+    const { error } = await supabase
+      .from('referrals')
+      .update(update)
+      .eq('id', referralId)
+    return !error
+  } catch (err) {
+    console.error('updateApplicationStatus failed:', err)
     return false
   }
 }
@@ -2021,7 +2118,7 @@ export async function deleteReferralAdmin(referralId: string): Promise<boolean> 
 
 export async function updateReferralStatusAdmin(referralId: string, status: string): Promise<boolean> {
   try {
-    const validStatuses = ['pending', 'accepted', 'rejected', 'expired']
+    const validStatuses = ['pending', 'accepted', 'rejected', 'expired', 'referral_submitted', 'application_submitted', 'closed']
     if (!validStatuses.includes(status)) {
       console.error('Invalid referral status:', status)
       return false

@@ -75,11 +75,12 @@ function extractExperience(description: string | null): string | null {
 }
 
 const PIPELINE_STAGE_META: Record<PipelineStage, { label: string; icon: typeof Send; cls: string }> = {
-  request_sent: { label: 'Requested', icon: Send, cls: 'text-blue-500' },
+  requested: { label: 'Requested', icon: Send, cls: 'text-blue-500' },
   under_review: { label: 'Under Review', icon: Clock, cls: 'text-amber-500' },
   accepted: { label: 'Accepted', icon: CheckCircle2, cls: 'text-emerald-500' },
-  submitted: { label: 'Referred', icon: FileText, cls: 'text-violet-500' },
-  hired: { label: 'Closed', icon: CheckCircle2, cls: 'text-foreground' },
+  referral_submitted: { label: 'Referred', icon: FileText, cls: 'text-violet-500' },
+  application_submitted: { label: 'Applied', icon: Send, cls: 'text-cyan-500' },
+  closed: { label: 'Closed', icon: CheckCircle2, cls: 'text-foreground' },
 }
 
 function PipelineProgress({ stage }: { stage: PipelineStage }) {

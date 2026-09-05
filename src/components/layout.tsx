@@ -249,7 +249,7 @@ function AppSidebar() {
   const { state, setOpenMobile } = useSidebar()
   const { pathname } = useLocation()
   const unread = conversations.reduce((a, c) => a + c.unread, 0)
-  const pendingCount = requests.filter((r) => r.status === 'pending').length
+  const pendingCount = requests.filter((r) => r.status === 'requested' || r.status === 'under_review').length
   const urlRole = getRoleFromPath(pathname) || role
   const prefix = ROLE_ROUTE[urlRole]
   const groups = navFor(urlRole, unread, pendingCount, prefix)

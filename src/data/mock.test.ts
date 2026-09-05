@@ -24,12 +24,12 @@ describe('PIPELINE_STAGES', () => {
     expect(PIPELINE_STAGES).toHaveLength(4)
   })
 
-  it('starts with request_sent', () => {
-    expect(PIPELINE_STAGES[0].key).toBe('request_sent')
+  it('starts with requested', () => {
+    expect(PIPELINE_STAGES[0].key).toBe('requested')
   })
 
-  it('ends with submitted', () => {
-    expect(PIPELINE_STAGES[PIPELINE_STAGES.length - 1].key).toBe('submitted')
+  it('ends with closed', () => {
+    expect(PIPELINE_STAGES[PIPELINE_STAGES.length - 1].key).toBe('closed')
   })
 })
 

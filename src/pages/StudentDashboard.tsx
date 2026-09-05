@@ -90,7 +90,7 @@ export default function StudentDashboard() {
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} · {getGreeting()}
               </div>
               <h1 className="font-display mt-0.5 text-xl sm:text-[28px] font-bold leading-tight text-foreground">
-                {(student.name || 'User').split(' ')[0]}, your referral pipeline is {myRequests.filter((r) => r.status === 'pending').length > 0 ? 'active' : 'ready to go'}
+                {(student.name || 'User').split(' ')[0]}, your referral pipeline is {myRequests.filter((r) => r.status === 'requested' || r.status === 'under_review').length > 0 ? 'active' : 'ready to go'}
               </h1>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Badge className="border border-border bg-muted/30 text-[13px] text-muted-foreground hover:bg-muted/50">
@@ -121,7 +121,7 @@ export default function StudentDashboard() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 items-stretch">
         <StatCard icon={Send} label="Referrals sent" value={myRequests.length} delta={myRequests.length > 0 ? Math.round((myRequests.length / Math.max(1, myRequests.length + 2)) * 100) : 0} deltaLabel="completion" delay={0.05} href="/job-seeker/applications" />
         <StatCard icon={TrendingUp} label="Acceptance rate" value={myRequests.length > 0 ? `${Math.round((myRequests.filter((r) => r.status === 'accepted').length / myRequests.length) * 100)}%` : '0%'} delta={myRequests.filter((r) => r.status === 'accepted').length} deltaLabel="accepted" delay={0.1} href="/job-seeker/applications" />
-        <StatCard icon={Users} label="Active referrals" value={myRequests.filter((r) => r.status === 'pending').length} delta={myRequests.filter((r) => r.status === 'pending').length} deltaLabel="awaiting reply" delay={0.15} href="/job-seeker/applications" />
+        <StatCard icon={Users} label="Active referrals" value={myRequests.filter((r) => r.status === 'requested' || r.status === 'under_review').length} delta={myRequests.filter((r) => r.status === 'requested' || r.status === 'under_review').length} deltaLabel="awaiting reply" delay={0.15} href="/job-seeker/applications" />
       </div>
 
       {/* Quick actions */}

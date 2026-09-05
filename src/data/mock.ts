@@ -93,9 +93,9 @@ export const GRADIENTS = [
   'from-teal-500 to-emerald-400',
 ]
 
-export type ReferralStatus = 'pending' | 'accepted' | 'rejected' | 'hired'
+export type ReferralStatus = 'requested' | 'under_review' | 'accepted' | 'declined' | 'referral_submitted' | 'application_submitted' | 'closed'
 
-export type PipelineStage = 'request_sent' | 'under_review' | 'accepted' | 'submitted' | 'hired'
+export type PipelineStage = 'requested' | 'under_review' | 'accepted' | 'referral_submitted' | 'application_submitted' | 'closed'
 
 export type RelationshipType = 'former_colleague' | 'current_colleague' | 'manager' | 'mentor' | 'alumni' | 'friend' | 'referral_chain' | 'stranger'
 
@@ -112,12 +112,96 @@ export const REFERRAL_RELATIONSHIPS: { value: RelationshipType; label: string; d
 
 export const POLICY_ACKNOWLEDGMENT = 'I understand this professional is not obligated to refer me and may decline for any reason. I will not pressure, spam, or misrepresent my qualifications. I respect their time and decision.'
 
+/** Calculate match score between a candidate profile and a professional referrer (0-100) */
+export function calculateMatchScore(
+  candidate: ReferralRequest['candidate'],
+  professional: Professional,
+  targetRole?: string,
+): { score: number; reasons: string[] } {
+  const reasons: string[] = []
+  let score = 0
+
+  // Skills overlap (0-30 pts)
+  if (candidate?.skills?.length && professional.skills.length) {
+    const overlap = candidate.skills.filter((s) =>
+      professional.skills.some((ps) => ps.toLowerCase() === s.toLowerCase())
+    )
+    const skillScore = Math.min(30, Math.round((overlap.length / Math.max(candidate.skills.length, 1)) * 30))
+    score += skillScore
+    if (overlap.length > 0) reasons.push(`${overlap.length} skill${overlap.length > 1 ? 's' : ''} match`)
+  }
+
+  // Role/title match (0-25 pts)
+  if (targetRole && professional.openPositions.length) {
+    const roleLower = targetRole.toLowerCase()
+    const matchPos = professional.openPositions.find((p) => {
+      const pLower = p.toLowerCase()
+      return pLower.includes(roleLower) || roleLower.includes(pLower) ||
+        pLower.split(/\s+/).some((w) => w.length > 3 && roleLower.includes(w))
+    })
+    if (matchPos) {
+      score += 25
+      reasons.push(`Open role: ${matchPos}`)
+    }
+  }
+
+  // Company match (0-15 pts) — if candidate targets this company
+  if (candidate?.headline?.toLowerCase().includes(professional.company.toLowerCase()) ||
+      candidate?.whyFit?.toLowerCase().includes(professional.company.toLowerCase())) {
+    score += 15
+    reasons.push(`Targets ${professional.company}`)
+  }
+
+  // Location match (0-10 pts)
+  if (candidate?.location && professional.location) {
+    const candLoc = candidate.location.toLowerCase()
+    const proLoc = professional.location.toLowerCase()
+    if (candLoc === proLoc || candLoc.split(',')[0] === proLoc.split(',')[0]) {
+      score += 10
+      reasons.push('Same location')
+    } else if (candLoc.split(',').pop()?.trim() === proLoc.split(',').pop()?.trim()) {
+      score += 5
+      reasons.push('Same region')
+    }
+  }
+
+  // Referrer quality bonus (0-20 pts)
+  if (professional.verified) score += 5
+  if (professional.responseRate >= 90) { score += 8; reasons.push('High response rate') }
+  if (professional.referralsCompleted >= 10) { score += 4; reasons.push('Experienced referrer') }
+  if (professional.openForReferrals && professional.usedThisMonth < professional.maxPerMonth) {
+    score += 3
+  }
+
+  return { score: Math.min(100, score), reasons }
+}
+
 export const PIPELINE_STAGES: { key: PipelineStage; label: string; description: string }[] = [
-  { key: 'request_sent', label: 'Request Sent', description: 'Your referral request has been sent' },
+  { key: 'requested', label: 'Requested', description: 'Your referral request has been sent' },
   { key: 'under_review', label: 'Under Review', description: 'The professional is reviewing your profile' },
   { key: 'accepted', label: 'Accepted', description: 'Your request has been accepted' },
-  { key: 'submitted', label: 'Submitted', description: 'Your profile has been submitted internally' },
-  { key: 'hired', label: 'Hired', description: 'Congratulations! You got the offer' },
+  { key: 'referral_submitted', label: 'Referral Submitted', description: 'The professional has submitted your referral' },
+  { key: 'application_submitted', label: 'Application Submitted', description: 'You have applied for the position' },
+  { key: 'closed', label: 'Closed', description: 'The referral process is complete' },
+]
+
+export const STATUS_META: Record<ReferralStatus, { label: string; color: string; icon: string; description: string }> = {
+  requested: { label: 'Requested', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20', icon: 'Send', description: 'Waiting for the professional to review' },
+  under_review: { label: 'Under Review', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20', icon: 'Clock', description: 'The professional is reviewing your request' },
+  accepted: { label: 'Accepted', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', icon: 'CheckCircle2', description: 'The professional has agreed to refer you' },
+  declined: { label: 'Declined', color: 'bg-rose-500/10 text-rose-400 border-rose-500/20', icon: 'XCircle', description: 'The professional declined your request' },
+  referral_submitted: { label: 'Referral Submitted', color: 'bg-violet-500/10 text-violet-400 border-violet-500/20', icon: 'FileCheck', description: 'The referral has been submitted to the company' },
+  application_submitted: { label: 'Application Submitted', color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20', icon: 'Send', description: 'You have applied for the position' },
+  closed: { label: 'Closed', color: 'bg-slate-500/10 text-slate-400 border-slate-500/20', icon: 'CheckCircle2', description: 'This referral process is complete' },
+}
+
+export const DECLINE_REASONS = [
+  { value: 'not_fit', label: 'Not a fit for the role' },
+  { value: 'overqualified', label: 'Overqualified' },
+  { value: 'underqualified', label: 'Underqualified' },
+  { value: 'capacity', label: 'At capacity — cannot take more referrals' },
+  { value: 'no_response', label: 'No response needed' },
+  { value: 'other', label: 'Other reason' },
 ]
 
 export interface ReferralRequest {
@@ -175,7 +259,7 @@ export interface Conversation {
   otherUserSlug?: string
 }
 
-export type NotificationType = 'accepted' | 'rejected' | 'message' | 'view' | 'reminder' | 'system'
+export type NotificationType = 'accepted' | 'rejected' | 'declined' | 'referral_submitted' | 'application_submitted' | 'closed' | 'message' | 'view' | 'reminder' | 'system'
 
 export interface AppNotification {
   id: string; type: NotificationType; title: string; description: string; time: string; read: boolean

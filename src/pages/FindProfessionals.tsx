@@ -14,11 +14,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { SkeletonGrid } from '@/components/ui/skeleton'
 import { EmptyState, GAvatar } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
-import { type Professional, profileUrl } from '@/data/mock'
+import { type Professional, profileUrl, calculateMatchScore } from '@/data/mock'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { cn } from '@/lib/utils'
 
-type SortKey = 'recommended' | 'top_rated' | 'fastest' | 'recent' | 'most_referrals'
+  type SortKey = 'best_match' | 'recommended' | 'top_rated' | 'fastest' | 'recent' | 'most_referrals'
 
 interface Filters {
   q: string
@@ -283,16 +283,17 @@ function FilterSheet({ f, setF, companies, allSkills, allLocations }: { f: Filte
 }
 
 export default function FindProfessionals() {
-  const { visibleProfessionals: allProfessionals } = useApp()
+  const { visibleProfessionals: allProfessionals, student } = useApp()
   const professionals = useMemo(() => allProfessionals.filter((p) => p.openForReferrals), [allProfessionals])
   const ALL_SKILLS = useMemo(() => [...new Set(professionals.flatMap(p => p.skills ?? []))], [professionals])
   const COMPANIES = useMemo(() => [...new Set(professionals.map(p => p.company))], [professionals])
   const ALL_LOCATIONS = useMemo(() => [...new Set(professionals.map(p => p.location).filter(Boolean))], [professionals])
   const loading = usePageLoading(300)
   const [f, setF] = useState<Filters>(EMPTY_FILTERS)
-  const [sort, setSort] = useState<SortKey>('recommended')
+  const [sort, setSort] = useState<SortKey>('best_match')
 
   const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+    { key: 'best_match', label: 'Best Match' },
     { key: 'recommended', label: 'Recommended' },
     { key: 'top_rated', label: 'Top Rated' },
     { key: 'fastest', label: 'Fastest Reply' },
@@ -313,6 +314,12 @@ export default function FindProfessionals() {
       return true
     })
     const by: Record<SortKey, (a: Professional, b: Professional) => number> = {
+      best_match: (a, b) => {
+        const candidateData = { skills: student?.skills, location: student?.location, headline: student?.headline, whyFit: student?.whyFit }
+        const scoreA = calculateMatchScore(candidateData, a, student?.preferredRoles?.[0] || '').score
+        const scoreB = calculateMatchScore(candidateData, b, student?.preferredRoles?.[0] || '').score
+        return scoreB - scoreA
+      },
       recommended: (a, b) => b.responseRate * b.successRate - a.responseRate * a.successRate,
       top_rated: (a, b) => b.rating - a.rating || b.reviews - a.reviews,
       fastest: (a, b) => a.avgReplyHours - b.avgReplyHours,

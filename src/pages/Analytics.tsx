@@ -198,8 +198,8 @@ function ProfessionalAnalytics({ range }: { range: DateRange }) {
 
   const receivedCount = requests.length
   const acceptedCount = requests.filter((r) => r.status === 'accepted').length
-  const rejectedCount = requests.filter((r) => r.status === 'rejected').length
-  const pendingCount = requests.filter((r) => r.status === 'pending').length
+  const rejectedCount = requests.filter((r) => r.status === 'declined').length
+  const pendingCount = requests.filter((r) => r.status === 'requested' || r.status === 'under_review').length
 
   return (
     <div className="space-y-6">

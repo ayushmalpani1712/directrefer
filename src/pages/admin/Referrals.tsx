@@ -77,7 +77,7 @@ export default function AdminReferrals() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h2 className="text-lg font-semibold">All Referrals</h2>
-          <p className="text-xs text-muted-foreground">{referrals.length} total &middot; {referrals.filter(r => r.status === 'pending').length} pending</p>
+          <p className="text-xs text-muted-foreground">{referrals.length} total &middot; {referrals.filter(r => r.status === 'requested' || r.status === 'under_review').length} pending</p>
         </div>
         <div className="relative w-64">
           <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />

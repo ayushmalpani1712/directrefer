@@ -155,7 +155,7 @@ export default function RequestReferral() {
       toast.error('Rate limit exceeded. Please wait before sending more requests.')
       return
     }
-    const activeCount = requests?.filter((r) => r.status === 'pending').length ?? 0
+    const activeCount = requests?.filter((r) => r.status === 'requested' || r.status === 'under_review').length ?? 0
     if (activeCount >= MAX_ACTIVE_REQUESTS) {
       toast.error(`You already have ${activeCount} pending referral requests. A slot frees up when one is accepted or declined.`)
       return
@@ -176,8 +176,8 @@ export default function RequestReferral() {
         studentEmail: user?.email,
         professionalId: draft.professionalId,
         role: draft.role || pro?.openPositions[0] || 'Open role',
-        status: 'pending',
-        pipelineStage: 'request_sent',
+        status: 'requested',
+        pipelineStage: 'requested',
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         note: structuredNote,
         progress: 15,

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CheckCheck, ChevronRight, FileText, Inbox, MessageSquare, Search, Share2, ShieldCheck, Users, XCircle } from 'lucide-react'
+import { CheckCheck, ChevronRight, FileText, Inbox, MessageSquare, Search, Share2, ShieldCheck, Users, XCircle, Send, FileCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,7 +14,7 @@ import { InboxIllustration } from '@/components/illustrations'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import type { ReferralStatus, PipelineStage } from '@/data/mock'
-import { PIPELINE_STAGES, getMessagesPath, REFERRAL_RELATIONSHIPS } from '@/data/mock'
+import { PIPELINE_STAGES, getMessagesPath, REFERRAL_RELATIONSHIPS, DECLINE_REASONS } from '@/data/mock'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { useNavigate } from 'react-router'
 import { cn } from '@/lib/utils'
@@ -22,9 +22,11 @@ import { ListSkeleton } from '@/components/ui/skeleton'
 import ResumePreview from '@/components/ResumePreview'
 
 const TABS: { key: ReferralStatus | 'all'; label: string }[] = [
-  { key: 'pending', label: 'Pending' },
+  { key: 'requested', label: 'New' },
+  { key: 'under_review', label: 'Reviewing' },
   { key: 'accepted', label: 'Accepted' },
-  { key: 'rejected', label: 'Declined' },
+  { key: 'referral_submitted', label: 'Submitted' },
+  { key: 'declined', label: 'Declined' },
   { key: 'all', label: 'All' },
 ]
 
@@ -37,14 +39,14 @@ function InlinePipeline({ stage, requestId }: { stage: PipelineStage; requestId:
     if (!isLast) {
       advancePipelineStage(requestId)
       const nextStage = PIPELINE_STAGES[currentIdx + 1]
-      toast.success(`Advanced to "${nextStage.label}" — student notified`)
+      toast.success(`Advanced to "${nextStage.label}" — candidate notified`)
     }
   }
 
   return (
     <div className="mt-3 flex items-center gap-2">
       <div className="flex items-center gap-1 flex-1">
-        {PIPELINE_STAGES.map((s, j) => (
+        {PIPELINE_STAGES.slice(0, 4).map((s, j) => (
           <div key={s.key} className="flex items-center">
             <div className={cn(
               'flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold',
@@ -54,7 +56,7 @@ function InlinePipeline({ stage, requestId }: { stage: PipelineStage; requestId:
             )}>
               {j + 1}
             </div>
-            {j < PIPELINE_STAGES.length - 1 && (
+            {j < 3 && (
               <div className={cn('mx-0.5 h-0.5 w-3', j < currentIdx ? 'bg-emerald-500' : 'bg-border')} />
             )}
           </div>
@@ -90,9 +92,9 @@ function ShareOnLinkedIn({ role, professionalName }: { student: string; role: st
 
 export default function ReferralInbox() {
   const loading = usePageLoading(400)
-  const { requests, setRequestStatus, professionals, student, startConversation, role } = useApp()
+  const { requests, setRequestStatus, submitReferral, professionals, student, startConversation, role } = useApp()
   const { user } = useAuth()
-  const [tab, setTab] = useState<ReferralStatus | 'all'>('pending')
+  const [tab, setTab] = useState<ReferralStatus | 'all'>('requested')
   const [q, setQ] = useState('')
   const [viewingResume, setViewingResume] = useState<{ url: string; name: string } | null>(null)
   const [passDialog, setPassDialog] = useState<{ requestId: string; studentName: string } | null>(null)
@@ -114,9 +116,10 @@ export default function ReferralInbox() {
       <SectionHeader title="Referral requests" subtitle="Review, accept, and track candidates through the pipeline" />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard icon={Inbox} label="Pending review" value={counts('pending')} />
+        <StatCard icon={Inbox} label="New requests" value={counts('requested')} />
         <StatCard icon={CheckCheck} label="Accepted" value={counts('accepted')} />
-        <StatCard icon={XCircle} label="Declined" value={counts('rejected')} />
+        <StatCard icon={Send} label="Submitted" value={counts('referral_submitted')} />
+        <StatCard icon={XCircle} label="Declined" value={counts('declined')} />
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -176,16 +179,16 @@ export default function ReferralInbox() {
                         {r.studentResumeUrl && <Chip>Resume attached</Chip>}
                         {r.note && <Chip>Note</Chip>}
                       </div>
-                      {(r.status === 'accepted' || r.status === 'pending') && (
+                      {(r.status === 'accepted' || r.status === 'requested' || r.status === 'under_review' || r.status === 'referral_submitted') && (
                         <InlinePipeline stage={r.pipelineStage} requestId={r.id} />
                       )}
-                      {r.status === 'pending' && r.policyAcknowledged && (
+                      {r.status === 'requested' && r.policyAcknowledged && (
                         <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-500/5 px-2.5 py-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
                           <ShieldCheck className="h-3 w-3 shrink-0" />
                           Candidate acknowledged referral etiquette
                         </div>
                       )}
-                      {r.status === 'pending' && !r.policyAcknowledged && (
+                      {r.status === 'requested' && !r.policyAcknowledged && (
                         <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-amber-500/5 px-2.5 py-1.5 text-[11px] text-amber-600 dark:text-amber-400">
                           <ShieldCheck className="h-3 w-3 shrink-0" />
                           Policy not yet acknowledged — remind candidate if needed
@@ -193,13 +196,22 @@ export default function ReferralInbox() {
                       )}
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">
-                      {r.status === 'pending' ? (
+                      {r.status === 'requested' || r.status === 'under_review' ? (
                         <>
                           <Button size="sm" className="rounded-lg bg-emerald-600 hover:bg-emerald-700" onClick={() => { setRequestStatus(r.id, 'accepted'); toast.success(`Accepted ${r.student} — they'll be notified`) }}>
                             <CheckCheck className="mr-1.5 h-3.5 w-3.5" /> Accept
                           </Button>
                           <Button size="sm" variant="outline" className="rounded-lg" onClick={() => setPassDialog({ requestId: r.id, studentName: r.student })}>
-                            <XCircle className="mr-1.5 h-3.5 w-3.5" /> Pass
+                            <XCircle className="mr-1.5 h-3.5 w-3.5" /> Decline
+                          </Button>
+                        </>
+                      ) : r.status === 'accepted' ? (
+                        <>
+                          <Button size="sm" className="rounded-lg bg-violet-600 hover:bg-violet-700" onClick={() => { submitReferral(r.id); toast.success(`Referral submitted for ${r.student}`) }}>
+                            <FileCheck className="mr-1.5 h-3.5 w-3.5" /> Submit Referral
+                          </Button>
+                          <Button size="sm" variant="outline" className="rounded-lg" disabled={!r.requesterId} onClick={async () => { if (!r.requesterId) return; const convId = await startConversation(r.requesterId); if (convId) navigate(`${getMessagesPath(role)}?conversation=${convId}`) }}>
+                            <MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message
                           </Button>
                         </>
                       ) : (
@@ -228,28 +240,27 @@ export default function ReferralInbox() {
       <Dialog open={!!passDialog} onOpenChange={(open) => { if (!open) { setPassDialog(null); setPassReason('') } }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Pass on {passDialog?.studentName}</DialogTitle>
-            <DialogDescription>Select a reason (optional) — this helps us improve matching.</DialogDescription>
+            <DialogTitle>Decline {passDialog?.studentName}</DialogTitle>
+            <DialogDescription>Select a reason (optional) — this helps improve matching quality.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            {['Not a fit for this role', 'Overqualified', 'Underqualified', 'Capacity reached', 'No response needed'].map((reason) => (
-              <label key={reason} className="flex items-center gap-2 rounded-lg border border-border/50 p-2.5 cursor-pointer hover:bg-accent transition-colors">
-                <input type="radio" name="pass-reason" value={reason} checked={passReason === reason} onChange={() => setPassReason(reason)} className="accent-primary" />
-                <span className="text-sm">{reason}</span>
+            {DECLINE_REASONS.map((r) => (
+              <label key={r.value} className="flex items-center gap-2 rounded-lg border border-border/50 p-2.5 cursor-pointer hover:bg-accent transition-colors">
+                <input type="radio" name="pass-reason" value={r.value} checked={passReason === r.value} onChange={() => setPassReason(r.value)} className="accent-primary" />
+                <span className="text-sm">{r.label}</span>
               </label>
             ))}
-            <Input value={passReason} onChange={(e) => setPassReason(e.target.value)} placeholder="Or type a custom reason…" className="rounded-lg" />
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => { setPassDialog(null); setPassReason('') }}>Cancel</Button>
             <Button variant="destructive" onClick={() => {
               if (passDialog) {
-                setRequestStatus(passDialog.requestId, 'rejected', passReason || undefined)
-                toast.success(`Passed on ${passDialog.studentName}${passReason ? ` — ${passReason}` : ''}`)
+                setRequestStatus(passDialog.requestId, 'declined', passReason || undefined)
+                toast.success(`Declined ${passDialog.studentName}${passReason ? ` — ${DECLINE_REASONS.find((r) => r.value === passReason)?.label || passReason}` : ''}`)
                 setPassDialog(null)
                 setPassReason('')
               }
-            }}>Pass</Button>
+            }}>Decline</Button>
           </div>
         </DialogContent>
       </Dialog>

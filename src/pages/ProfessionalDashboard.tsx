@@ -113,7 +113,7 @@ export default function ProfessionalDashboard() {
   if (loading) return <DashboardSkeleton />
   const PRO_USER = { name: ME.name || 'User', designation: ME.designation, company: ME.company, email: ME.email || '', location: ME.location || '', gradient: ME.gradient }
   const inbox = ME ? requests.filter((r) => r.professionalId === ME.id) : []
-  const pending = inbox.filter((r) => r.status === 'pending')
+  const pending = inbox.filter((r) => r.status === 'requested' || r.status === 'under_review')
 
   return (
     <div className="space-y-6">
@@ -200,12 +200,12 @@ export default function ProfessionalDashboard() {
                     <div className="mt-0.5 truncate text-[13px] text-muted-foreground">{r.role} · {r.date}</div>
                     <p className="mt-1 line-clamp-1 text-[13px] text-muted-foreground">"{r.note}"</p>
                   </div>
-                  {r.status === 'pending' ? (
+                  {r.status === 'requested' || r.status === 'under_review' ? (
                     <div className="flex gap-2">
                       <Button size="sm" className="rounded-lg bg-emerald-600 hover:bg-emerald-700" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRequestStatus(r.id, 'accepted'); toast.success(`Accepted ${r.student}'s request`) }}>
                         <CheckCheck className="mr-1 h-3.5 w-3.5" /> Accept
                       </Button>
-                      <Button size="sm" variant="outline" className="rounded-lg" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRequestStatus(r.id, 'rejected'); toast('Request declined') }}>
+                      <Button size="sm" variant="outline" className="rounded-lg" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRequestStatus(r.id, 'declined'); toast('Request declined') }}>
                         <XCircle className="mr-1 h-3.5 w-3.5" /> Decline
                       </Button>
                     </div>

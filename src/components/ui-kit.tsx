@@ -46,10 +46,13 @@ export function Stars({ value, className }: { value: number; className?: string 
 
 // ── Status badge ────────────────────────────────────────────
 const STATUS_STYLES: Record<ReferralStatus, { label: string; cls: string; dot: string }> = {
-  pending: { label: 'Pending', cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25', dot: 'bg-amber-500' },
+  requested: { label: 'Requested', cls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25', dot: 'bg-blue-500' },
+  under_review: { label: 'Under Review', cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25', dot: 'bg-amber-500' },
   accepted: { label: 'Accepted', cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25', dot: 'bg-emerald-500' },
-  rejected: { label: 'Declined', cls: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25', dot: 'bg-rose-500' },
-  hired: { label: 'Hired', cls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25', dot: 'bg-violet-500' },
+  declined: { label: 'Declined', cls: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25', dot: 'bg-rose-500' },
+  referral_submitted: { label: 'Referral Submitted', cls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25', dot: 'bg-violet-500' },
+  application_submitted: { label: 'Applied', cls: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25', dot: 'bg-cyan-500' },
+  closed: { label: 'Closed', cls: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/25', dot: 'bg-slate-500' },
 }
 
 export function StatusBadge({ status }: { status: ReferralStatus }) {

@@ -5,6 +5,8 @@ import {
   GRADIENTS,
   type Professional,
   type ReferralRequest,
+  type ReferralStatus,
+  type PipelineStage,
   type Role,
   type Conversation,
   type Message,
@@ -23,13 +25,17 @@ async function loadDb() {
   return await import('@/lib/db')
 }
 
-const RATE_LIMIT = 3
+const RATE_LIMIT = 5
 const RATE_WINDOW_MS = 24 * 60 * 60 * 1000
 
 function mapNotificationType(dbType: string): AppNotification['type'] {
   switch (dbType) {
     case 'referral_accepted': return 'accepted'
     case 'referral_rejected': return 'rejected'
+    case 'referral_declined': return 'declined'
+    case 'referral_submitted': return 'referral_submitted'
+    case 'application_submitted': return 'application_submitted'
+    case 'referral_closed': return 'closed'
     case 'referral_request': return 'reminder'
     case 'message': return 'message'
     case 'job_match': return 'system'
@@ -121,6 +127,9 @@ interface AppState {
   addRequest: (r: ReferralRequest) => void
   setRequestStatus: (id: string, status: ReferralRequest['status'], passReason?: string) => void
   advancePipelineStage: (id: string) => void
+  submitReferral: (id: string) => void
+  cancelReferral: (id: string) => void
+  updateApplicationStatus: (id: string, status: 'application_submitted' | 'closed') => void
   referralsSentToday: number
   canSendReferral: boolean
   nextReferralReset: string
@@ -1131,7 +1140,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }).then((newRequest) => {
         // Replace local optimistic request with server-returned one (has real UUID)
         if (newRequest) {
-          setRequests((prev) => prev.map((req) => req.id === r.id ? { ...req, id: newRequest.id } : req))
+          setRequests((prev) => prev.map((req) => req.id === r.id ? { ...req, id: newRequest.id, status: newRequest.status, pipelineStage: newRequest.pipelineStage } : req))
           // Notification for the professional — only after successful referral creation
           supabase.from('notifications').insert({
             user_id: r.professionalId,
@@ -1176,21 +1185,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (status === 'accepted') {
         updated.pipelineStage = 'accepted'
         updated.progress = 75
+      } else if (status === 'declined') {
+        updated.progress = r.progress
+      } else if (status === 'under_review') {
+        updated.pipelineStage = 'under_review'
+        updated.progress = 35
       }
       return updated
     }))
-    if (req && (status === 'accepted' || status === 'rejected')) {
-      updateReferralStatus(id, status as 'accepted' | 'rejected', passReason).catch((err) => {
-        console.error('Failed to update referral status:', err)
-        logClientError(`Referral status update failed: ${err}`, 'referral', 'error')
-        toast.error('Something went wrong. Please try again.')
-      })
+    if (req) {
+      const dbStatus = status === 'declined' ? 'rejected' : status === 'requested' ? 'pending' : status
+      if (status === 'accepted' || status === 'declined' || status === 'under_review') {
+        updateReferralStatus(id, dbStatus as 'accepted' | 'rejected' | 'under_review', passReason).catch((err) => {
+          console.error('Failed to update referral status:', err)
+          logClientError(`Referral status update failed: ${err}`, 'referral', 'error')
+          toast.error('Something went wrong. Please try again.')
+        })
+      }
       if (user && req.requesterId) {
         supabase.from('notifications').insert({
           user_id: req.requesterId,
           type: `referral_${status}`,
-          title: `Referral ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-          description: `Your referral request for ${req.role} has been ${status}`,
+          title: `Referral ${status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ')}`,
+          description: `Your referral request for ${req.role} has been ${status.replace(/_/g, ' ')}`,
         }).select().single().then(({ data: notifData }) => {
           if (notifData) {
             setNotifications((prev) => [{
@@ -1212,7 +1229,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (req.studentEmail) {
         const professional = professionals.find((p) => p.id === req.professionalId)
         const proName = professional?.name || 'the professional'
-        sendReferralStatusEmail(req.studentEmail, req.student, proName, req.role, status as 'accepted' | 'rejected')
+        sendReferralStatusEmail(req.studentEmail, req.student, proName, req.role, status === 'declined' ? 'rejected' : status as 'accepted' | 'rejected')
           .catch((err) => { console.error('Failed to send referral status email:', err); toast.error('Failed to send status email') })
       }
     }
@@ -1231,7 +1248,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const reminded = new Set<string>(JSON.parse(localStorage.getItem(remindedKey) || '[]'))
     let changed = false
     requests
-      .filter((r) => r.status === 'pending')
+      .filter((r) => r.status === 'requested' || r.status === 'under_review')
       .forEach((r) => {
         if (reminded.has(r.id)) return
         const requestDate = new Date(r.date).getTime()
@@ -1266,6 +1283,106 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (r.id !== id) return r
           return { ...r, pipelineStage: current.pipelineStage, progress: current.progress }
         }))
+      })
+    }
+  }, [requests])
+
+  const submitReferral = useCallback(async (id: string) => {
+    const { submitReferral: submitReferralDb, formatRelativeTime } = await loadDb()
+    const req = requests.find((r) => r.id === id)
+    setRequests((prev) => prev.map((r) => {
+      if (r.id !== id) return r
+      return { ...r, status: 'referral_submitted' as ReferralStatus, pipelineStage: 'referral_submitted' as PipelineStage, progress: 85 }
+    }))
+    submitReferralDb(id).catch((err) => {
+      console.error('Failed to submit referral:', err)
+      toast.error('Something went wrong. Please try again.')
+      setRequests((prev) => prev.map((r) => {
+        if (r.id !== id) return r
+        return { ...r, status: 'accepted' as ReferralStatus, pipelineStage: 'accepted' as PipelineStage, progress: 75 }
+      }))
+    })
+    if (req?.requesterId) {
+      supabase.from('notifications').insert({
+        user_id: req.requesterId,
+        type: 'referral_submitted',
+        title: 'Referral Submitted',
+        description: `Your referral for ${req.role} has been submitted to the company`,
+      }).select().single().then(({ data: notifData }) => {
+        if (notifData) {
+          setNotifications((prev) => [{
+            id: notifData.id,
+            type: mapNotificationType(notifData.type),
+            title: notifData.title,
+            description: notifData.description ?? '',
+            time: formatRelativeTime(notifData.created_at),
+            read: notifData.read ?? false,
+          }, ...prev])
+        }
+      }, (err: unknown) => {
+        console.error('Failed to create notification:', err)
+      })
+    }
+  }, [requests])
+
+  const cancelReferral = useCallback(async (id: string) => {
+    const { cancelReferral: cancelReferralDb } = await loadDb()
+    const req = requests.find((r) => r.id === id)
+    setRequests((prev) => prev.map((r) => {
+      if (r.id !== id) return r
+      return { ...r, status: 'closed' as ReferralStatus, pipelineStage: 'closed' as PipelineStage, progress: 0 }
+    }))
+    cancelReferralDb(id).catch((err) => {
+      console.error('Failed to cancel referral:', err)
+      toast.error('Something went wrong. Please try again.')
+      if (req) {
+        setRequests((prev) => prev.map((r) => {
+          if (r.id !== id) return r
+          return { ...r, status: req.status, pipelineStage: req.pipelineStage, progress: req.progress }
+        }))
+      }
+    })
+  }, [requests])
+
+  const updateApplicationStatus = useCallback(async (id: string, newStatus: 'application_submitted' | 'closed') => {
+    const { updateApplicationStatus: updateAppStatusDb, formatRelativeTime } = await loadDb()
+    const req = requests.find((r) => r.id === id)
+    setRequests((prev) => prev.map((r) => {
+      if (r.id !== id) return r
+      const progress = newStatus === 'application_submitted' ? 95 : 100
+      return { ...r, status: newStatus as ReferralStatus, pipelineStage: newStatus as PipelineStage, progress }
+    }))
+    updateAppStatusDb(id, newStatus).catch((err) => {
+      console.error('Failed to update application status:', err)
+      toast.error('Something went wrong. Please try again.')
+      if (req) {
+        setRequests((prev) => prev.map((r) => {
+          if (r.id !== id) return r
+          return { ...r, status: req.status, pipelineStage: req.pipelineStage, progress: req.progress }
+        }))
+      }
+    })
+    if (req?.professionalId) {
+      supabase.from('notifications').insert({
+        user_id: req.professionalId,
+        type: newStatus === 'application_submitted' ? 'application_submitted' : 'referral_closed',
+        title: newStatus === 'application_submitted' ? 'Application Submitted' : 'Referral Closed',
+        description: newStatus === 'application_submitted'
+          ? `${req.student} has applied for ${req.role}`
+          : `The referral process for ${req.role} has been closed`,
+      }).select().single().then(({ data: notifData }) => {
+        if (notifData) {
+          setNotifications((prev) => [{
+            id: notifData.id,
+            type: mapNotificationType(notifData.type),
+            title: notifData.title,
+            description: notifData.description ?? '',
+            time: formatRelativeTime(notifData.created_at),
+            read: notifData.read ?? false,
+          }, ...prev])
+        }
+      }, (err: unknown) => {
+        console.error('Failed to create notification:', err)
       })
     }
   }, [requests])
@@ -1405,8 +1522,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [requests, user])
   const myReferralCount = myRequests.length
   const myAcceptedCount = useMemo(() => myRequests.filter((r) => r.status === 'accepted').length, [myRequests])
-  const myPendingCount = useMemo(() => myRequests.filter((r) => r.status === 'pending').length, [myRequests])
-  const myRejectedCount = useMemo(() => myRequests.filter((r) => r.status === 'rejected').length, [myRequests])
+  const myPendingCount = useMemo(() => myRequests.filter((r) => r.status === 'requested' || r.status === 'under_review').length, [myRequests])
+  const myRejectedCount = useMemo(() => myRequests.filter((r) => r.status === 'declined').length, [myRequests])
 
   const toggleDemoMode = useCallback(() => {
     setDemoMode((prev) => {
@@ -1439,7 +1556,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         kind: 'referral',
           text: r.status === 'accepted'
             ? `Your referral for ${r.role} was accepted`
-            : r.status === 'rejected'
+            : r.status === 'declined'
             ? `Your referral for ${r.role} was declined`
             : `Referral request sent for ${r.role}`,
         time: r.date,
@@ -1556,6 +1673,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addRequest,
     setRequestStatus,
     advancePipelineStage,
+    submitReferral,
+    cancelReferral,
+    updateApplicationStatus,
     referralsSentToday,
     canSendReferral,
     nextReferralReset,
