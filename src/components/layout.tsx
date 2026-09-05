@@ -425,7 +425,7 @@ function Topbar() {
           <Command className="h-3 w-3" />K
         </kbd>
       </button>
-      <Badge variant="outline" className="hidden sm:inline-flex h-6 shrink-0 rounded-full border-primary/40 bg-primary/10 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground/90 badge-shine">
+      <Badge variant="outline" className="hidden sm:inline-flex h-6 shrink-0 rounded-full border-primary/40 bg-primary/5 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-primary badge-shine">
         {ROLE_META[urlRole].label}
       </Badge>
       <div className="flex-1 sm:hidden" />
