@@ -15,7 +15,7 @@ import { CompanyChip, GAvatar, ReportDialog } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { getMessagesPath, calculateReputationScore, BADGE_DEFINITIONS } from '@/data/mock'
+import { getMessagesPath, calculateReputationScore, BADGE_DEFINITIONS, type Professional } from '@/data/mock'
 import { getBannerStyle, getProfileTheme } from '@/lib/utils'
 import NotFound from '@/pages/NotFound'
 
@@ -26,6 +26,25 @@ interface PublicProfessional {
   usedThisMonth: number; referralDuration: string; avgReplyHours: number
   referralsCompleted: number; rating: number; linkedinUrl: string; githubUrl: string
   email: string; phone: string; whatsapp: string
+  responseRate?: number; successRate?: number; joinedDaysAgo?: number; referralPolicy?: string
+}
+
+function toProfessional(p: PublicProfessional): Professional {
+  return {
+    id: p.id, slug: p.slug, name: p.name, designation: p.designation, company: p.company,
+    industry: '', location: p.location, yearsExp: p.yearsExp, skills: p.skills,
+    responseRate: p.responseRate ?? 0, avgReplyHours: p.avgReplyHours,
+    referralsCompleted: p.referralsCompleted, rating: p.rating, reviews: 0,
+    verified: p.verified, openForReferrals: p.openForReferrals, isOpenToWork: false,
+    maxPerMonth: p.maxPerMonth, usedThisMonth: p.usedThisMonth,
+    successRate: p.successRate ?? 0, followers: 0,
+    joinedDaysAgo: p.joinedDaysAgo ?? 0, activityScore: 0,
+    referralPolicy: p.referralPolicy ?? '', openPositions: p.openPositions,
+    bio: p.bio, badges: [], gradient: p.gradient, phone: p.phone,
+    whatsapp: p.whatsapp, email: p.email, hiringTimeline: [],
+    referralDuration: p.referralDuration, linkedinUrl: p.linkedinUrl,
+    githubUrl: p.githubUrl,
+  }
 }
 
 async function resolveUserId(paramId: string): Promise<string | null> {
@@ -197,7 +216,7 @@ export default function ProfessionalPublic() {
 
       {/* Reputation badges */}
       {pro && (() => {
-        const rep = calculateReputationScore(pro as never)
+        const rep = calculateReputationScore(toProfessional(pro))
         if (rep.badges.length === 0) return null
         return (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>

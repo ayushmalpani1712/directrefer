@@ -1718,13 +1718,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     role, roleLoaded, authed, loading, logout, isAdmin, professionals, updateProfessional, updateRecruiter,
     student, updateStudent, addStudentCertification, removeStudentCertification, addStudentAchievement, removeStudentAchievement, addStudentProject, removeStudentProject, addStudentSkill, removeStudentSkill, addStudentExperience, removeStudentExperience, addStudentEducation, removeStudentEducation, setStudentResume, removeStudentResume,
     bookmarks, toggleBookmark, savedCandidates, toggleCandidate,
-    requests, addRequest, setRequestStatus, advancePipelineStage, referralsSentToday, canSendReferral, nextReferralReset,
-    conversations, setConversations, sendMessage, markConversationRead,
+    requests, addRequest, setRequestStatus, advancePipelineStage, submitReferral, cancelReferral, updateApplicationStatus, referralsSentToday, canSendReferral, nextReferralReset,
+    conversations, setConversations, sendMessage, markConversationRead, startConversation,
     notifications, markNotificationRead, markAllNotificationsRead, unreadNotificationCount,
     jobs, setJobs, updateJob, candidates, refreshCandidates,
     myReferralCount, myAcceptedCount, myPendingCount, myRejectedCount,
     demoMode, toggleDemoMode, activity, getUserOnlineStatus,
-    npsOpen, setNpsOpen,
+    npsOpen, setNpsOpen, toggleStudentOpenToWork, toggleProfessionalOpenForReferrals, toggleProfessionalOpenToWork,
   ])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
