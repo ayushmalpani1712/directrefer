@@ -16,7 +16,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
-import { AVATAR_COLORS, type Professional } from '@/data/mock'
+import { type Professional } from '@/data/mock'
 import { supabase } from '@/lib/supabase'
 import { cn, getBannerStyle } from '@/lib/utils'
 import { BannerColorModal } from '@/components/BannerColorModal'
@@ -89,7 +89,7 @@ export default function ProfessionalProfile() {
   const [editingPositionValue, setEditingPositionValue] = useState('')
   const capacityRef = useRef(ME.maxPerMonth)
   const [bannerTheme, setBannerTheme] = useState<string | null>(null)
-  const [selectedAvatarColor, setSelectedAvatarColor] = useState<string>(ME.gradient)
+  const [selectedAvatarColor] = useState<string>(ME.gradient)
   const [bannerModalOpen, setBannerModalOpen] = useState(false)
   const [showOnFind, setShowOnFind] = useState(true)
 
@@ -154,22 +154,6 @@ export default function ProfessionalProfile() {
             onChange={async (g) => { setBannerTheme(g); if (user?.id) await supabase.from('users').update({ banner_theme: g }).eq('id', user.id) }}
           />
           <CardContent className="relative px-4 pb-5 sm:px-6">
-            {/* Avatar Color Picker */}
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs text-muted-foreground">Avatar color:</span>
-              <div className="flex gap-1.5">
-                {AVATAR_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => { setSelectedAvatarColor(c); updateProfessional(ME.id, { gradient: c }) }}
-                    className={`h-6 w-6 rounded-full transition-all ${selectedAvatarColor === c ? 'ring-2 ring-offset-2 ring-offset-card' : 'hover:scale-110'}`}
-                    style={{ backgroundColor: c }}
-                    title={c}
-                  />
-                ))}
-              </div>
-            </div>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex items-end gap-4">
                 <div className="-mt-12 sm:-mt-14">
