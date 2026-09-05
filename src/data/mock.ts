@@ -97,6 +97,21 @@ export type ReferralStatus = 'pending' | 'accepted' | 'rejected' | 'hired'
 
 export type PipelineStage = 'request_sent' | 'under_review' | 'accepted' | 'submitted' | 'hired'
 
+export type RelationshipType = 'former_colleague' | 'current_colleague' | 'manager' | 'mentor' | 'alumni' | 'friend' | 'referral_chain' | 'stranger'
+
+export const REFERRAL_RELATIONSHIPS: { value: RelationshipType; label: string; description: string }[] = [
+  { value: 'former_colleague', label: 'Former colleague', description: 'Worked together at a previous company' },
+  { value: 'current_colleague', label: 'Current colleague', description: 'Currently work at the same company' },
+  { value: 'manager', label: 'Manager / Report', description: 'Direct reporting relationship' },
+  { value: 'mentor', label: 'Mentor / Mentee', description: 'Guided each other professionally' },
+  { value: 'alumni', label: 'Alumni', description: 'Attended the same college or university' },
+  { value: 'friend', label: 'Friend', description: 'Personal acquaintance outside work' },
+  { value: 'referral_chain', label: 'Referral chain', description: 'Connected through mutual contacts' },
+  { value: 'stranger', label: 'No prior relationship', description: 'Found them on DirectRefer' },
+]
+
+export const POLICY_ACKNOWLEDGMENT = 'I understand this professional is not obligated to refer me and may decline for any reason. I will not pressure, spam, or misrepresent my qualifications. I respect their time and decision.'
+
 export const PIPELINE_STAGES: { key: PipelineStage; label: string; description: string }[] = [
   { key: 'request_sent', label: 'Request Sent', description: 'Your referral request has been sent' },
   { key: 'under_review', label: 'Under Review', description: 'The professional is reviewing your profile' },
@@ -119,6 +134,9 @@ export interface ReferralRequest {
   note: string
   progress: number
   createdAt?: string
+  relationshipType?: RelationshipType
+  relationshipNote?: string
+  policyAcknowledged?: boolean
   candidate?: {
     headline?: string
     location?: string

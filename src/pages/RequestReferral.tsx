@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, FileText, FileUp, Github, Globe, Briefcase, Link2, Linkedin, Loader2,
-  MessageSquare, PartyPopper, Save, Search, Send, ShieldCheck, Sparkles, User, UserX,
+  MessageSquare, PartyPopper, Save, Search, Send, ShieldCheck, Sparkles, User, UserX, Users, Handshake,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { checkRateLimit, checkServerRateLimit } from '@/lib/rateLimit'
@@ -18,18 +18,19 @@ import { LinkedInShareButton } from '@/components/LinkedInShareButton'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
-import { type Professional } from '@/data/mock'
+import { type Professional, type RelationshipType, REFERRAL_RELATIONSHIPS, POLICY_ACKNOWLEDGMENT } from '@/data/mock'
 import { uploadResume } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import { ListSkeleton } from '@/components/ui/skeleton'
 
 const STEPS = [
   { id: 1, label: 'Professional', icon: User },
-  { id: 2, label: 'Resume', icon: FileUp },
-  { id: 3, label: 'Portfolio', icon: Link2 },
-  { id: 4, label: 'Message', icon: MessageSquare },
-  { id: 5, label: 'Review', icon: CheckCircle2 },
-  { id: 6, label: 'Done', icon: PartyPopper },
+  { id: 2, label: 'Relationship', icon: Users },
+  { id: 3, label: 'Resume', icon: FileUp },
+  { id: 4, label: 'Portfolio', icon: Link2 },
+  { id: 5, label: 'Message', icon: MessageSquare },
+  { id: 6, label: 'Review', icon: CheckCircle2 },
+  { id: 7, label: 'Done', icon: PartyPopper },
 ]
 
 // Max concurrent pending referral requests a candidate can hold.
@@ -38,6 +39,9 @@ const MAX_ACTIVE_REQUESTS = 5
 
 interface Draft {
   professionalId: string
+  relationshipType: RelationshipType | ''
+  relationshipNote: string
+  policyAcknowledged: boolean
   resumeName: string
   resumeUrl: string
   portfolioUrl: string
@@ -59,6 +63,9 @@ export default function RequestReferral() {
   const [step, setStep] = useState(1)
   const [draft, setDraft] = useState<Draft>({
     professionalId: id ?? '',
+    relationshipType: '',
+    relationshipNote: '',
+    policyAcknowledged: false,
     resumeName: '', resumeUrl: '',
     portfolioUrl: student.links.website || '',
     linkedinUrl: student.links.linkedin || '',
@@ -121,21 +128,22 @@ export default function RequestReferral() {
 
   const canNext =
     step === 1 ? !!draft.professionalId
-    : step === 2 ? !!draft.resumeName
-    : step === 3 ? true
-    : step === 4 ? draft.message.trim().length >= 40
+    : step === 2 ? !!draft.relationshipType && draft.policyAcknowledged
+    : step === 3 ? !!draft.resumeName
+    : step === 4 ? true
+    : step === 5 ? draft.message.trim().length >= 40
     : true
 
   const next = () => {
-    if (step === 4 && draft.message.trim().length < 40) {
+    if (step === 5 && draft.message.trim().length < 40) {
       toast.error('Please write at least 40 characters — personal notes get 3× more accepts')
       return
     }
-    if (step === 5) {
+    if (step === 6) {
       submit()
       return
     }
-    setStep((s) => Math.min(6, s + 1))
+    setStep((s) => Math.min(7, s + 1))
   }
 
   const submit = async () => {
@@ -173,6 +181,9 @@ export default function RequestReferral() {
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         note: structuredNote,
         progress: 15,
+        relationshipType: draft.relationshipType as RelationshipType || undefined,
+        relationshipNote: draft.relationshipNote || undefined,
+        policyAcknowledged: draft.policyAcknowledged,
       })
       setStep(6)
       toast.success(`Referral request sent to ${pro?.name ?? 'professional'} for ${draft.role || pro?.openPositions[0] || 'Open role'}`)
@@ -188,10 +199,10 @@ export default function RequestReferral() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" className="-ml-2 text-muted-foreground" onClick={() => (step > 1 && step < 6 ? setStep(step - 1) : navigate(-1))}>
-          <ArrowLeft className="mr-1.5 h-4 w-4" /> {step > 1 && step < 6 ? 'Previous step' : 'Back'}
+        <Button variant="ghost" size="sm" className="-ml-2 text-muted-foreground" onClick={() => (step > 1 && step < 7 ? setStep(step - 1) : navigate(-1))}>
+          <ArrowLeft className="mr-1.5 h-4 w-4" /> {step > 1 && step < 7 ? 'Previous step' : 'Back'}
         </Button>
-        {savedAt && step < 6 && (
+        {savedAt && step < 7 && (
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Save className="h-3.5 w-3.5 text-emerald-500" /> Draft saved {savedAt}</span>
         )}
       </div>
@@ -266,8 +277,70 @@ export default function RequestReferral() {
             </Card>
           )}
 
-          {/* STEP 2 — resume */}
+          {/* STEP 2 — relationship type & policy */}
           {step === 2 && (
+            <Card className="shadow-soft">
+              <CardContent className="p-6">
+                <h2 className="font-display text-xl font-bold">How do you know {pro?.name?.split(' ')[0]}?</h2>
+                <p className="mt-1 text-sm text-muted-foreground">This helps the professional understand your connection and decide faster.</p>
+                <div className="mt-4 space-y-2">
+                  {REFERRAL_RELATIONSHIPS.map((rel) => (
+                    <button
+                      key={rel.value}
+                      onClick={() => setDraft((d) => ({ ...d, relationshipType: rel.value }))}
+                      className={cn(
+                        'flex w-full items-center gap-3 rounded-xl border border-border p-3.5 text-left transition-all hover:border-primary/40',
+                        draft.relationshipType === rel.value && 'border-primary bg-primary/5',
+                      )}
+                    >
+                      <div className={cn(
+                        'flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors shrink-0',
+                        draft.relationshipType === rel.value ? 'border-primary bg-primary' : 'border-border',
+                      )}>
+                        {draft.relationshipType === rel.value && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold">{rel.label}</div>
+                        <div className="text-xs text-muted-foreground">{rel.description}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-4 space-y-1.5">
+                  <Label htmlFor="rel-note">Additional context (optional)</Label>
+                  <Textarea
+                    id="rel-note"
+                    value={draft.relationshipNote}
+                    onChange={(e) => setDraft((d) => ({ ...d, relationshipNote: e.target.value }))}
+                    rows={2}
+                    className="resize-none"
+                    placeholder="e.g. Worked together at Acme Corp on the payments team"
+                  />
+                </div>
+                <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+                  <div className="flex items-start gap-3">
+                    <Handshake className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+                    <div>
+                      <div className="text-sm font-semibold text-amber-700 dark:text-amber-400">Referral etiquette</div>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{POLICY_ACKNOWLEDGMENT}</p>
+                      <label className="mt-2.5 flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={draft.policyAcknowledged}
+                          onChange={(e) => setDraft((d) => ({ ...d, policyAcknowledged: e.target.checked }))}
+                          className="mt-0.5 accent-amber-500"
+                        />
+                        <span className="text-xs font-medium text-foreground">I acknowledge and agree</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* STEP 3 — resume */}
+          {step === 3 && (
             <Card className="shadow-soft">
               <CardContent className="p-6">
                 <h2 className="font-display text-xl font-bold">Attach your resume</h2>
@@ -305,8 +378,8 @@ export default function RequestReferral() {
             </Card>
           )}
 
-          {/* STEP 3 — portfolio */}
-          {step === 3 && (
+          {/* STEP 4 — portfolio */}
+          {step === 4 && (
             <Card className="shadow-soft">
               <CardContent className="p-6">
                 <h2 className="font-display text-xl font-bold">Portfolio & links <span className="text-sm font-normal text-muted-foreground">(optional but recommended)</span></h2>
@@ -354,8 +427,8 @@ export default function RequestReferral() {
             </Card>
           )}
 
-          {/* STEP 4 — message */}
-          {step === 4 && (
+          {/* STEP 5 — message */}
+          {step === 5 && (
             <Card className="shadow-soft">
               <CardContent className="p-6">
                 <h2 className="font-display text-xl font-bold">Your referral message</h2>
@@ -384,8 +457,8 @@ export default function RequestReferral() {
             </Card>
           )}
 
-          {/* STEP 5 — review */}
-          {step === 5 && pro && (
+          {/* STEP 6 — review */}
+          {step === 6 && pro && (
             <Card className="shadow-soft">
               <CardContent className="p-6">
                 <h2 className="font-display text-xl font-bold">Review & send</h2>
@@ -403,23 +476,33 @@ export default function RequestReferral() {
                     <div className="rounded-xl border border-border p-4">
                       <div className="flex items-center justify-between">
                         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target role</div>
-                        <button onClick={() => setStep(4)} className="text-[11px] font-medium text-primary hover:underline">Edit</button>
+                        <button onClick={() => setStep(5)} className="text-[11px] font-medium text-primary hover:underline">Edit</button>
                       </div>
                       <div className="mt-1 text-sm font-medium">{draft.role || pro.openPositions[0] || 'Open role'}</div>
                     </div>
                     <div className="rounded-xl border border-border p-4">
                       <div className="flex items-center justify-between">
                         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resume</div>
-                        <button onClick={() => setStep(2)} className="text-[11px] font-medium text-primary hover:underline">Edit</button>
+                        <button onClick={() => setStep(3)} className="text-[11px] font-medium text-primary hover:underline">Edit</button>
                       </div>
                       <div className="mt-1 flex items-center gap-1.5 text-sm font-medium"><FileText className="h-4 w-4 text-primary" /> {draft.resumeName}</div>
                     </div>
                   </div>
+                  {draft.relationshipType && (
+                    <div className="rounded-xl border border-border p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Relationship</div>
+                        <button onClick={() => setStep(2)} className="text-[11px] font-medium text-primary hover:underline">Edit</button>
+                      </div>
+                      <div className="mt-1 text-sm font-medium">{REFERRAL_RELATIONSHIPS.find((r) => r.value === draft.relationshipType)?.label}</div>
+                      {draft.relationshipNote && <div className="mt-0.5 text-xs text-muted-foreground">{draft.relationshipNote}</div>}
+                    </div>
+                  )}
                   {(draft.linkedinUrl || draft.portfolioUrl || draft.githubUrl) && (
                     <div className="rounded-xl border border-border p-4">
                       <div className="flex items-center justify-between">
                         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Links</div>
-                        <button onClick={() => setStep(3)} className="text-[11px] font-medium text-primary hover:underline">Edit</button>
+                        <button onClick={() => setStep(4)} className="text-[11px] font-medium text-primary hover:underline">Edit</button>
                       </div>
                       <div className="mt-1.5 flex flex-wrap gap-2">
                         {draft.linkedinUrl && <Chip tone="primary"><Linkedin className="mr-1 h-3 w-3 text-[#0A66C2]" /> {draft.linkedinUrl}</Chip>}
@@ -431,7 +514,7 @@ export default function RequestReferral() {
                   <div className="rounded-xl border border-border p-4">
                     <div className="flex items-center justify-between">
                       <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Message</div>
-                      <button onClick={() => setStep(4)} className="text-[11px] font-medium text-primary hover:underline">Edit</button>
+                      <button onClick={() => setStep(5)} className="text-[11px] font-medium text-primary hover:underline">Edit</button>
                     </div>
                     <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">"{draft.message}"</p>
                   </div>
@@ -455,8 +538,8 @@ export default function RequestReferral() {
             </Card>
           )}
 
-          {/* STEP 6 — success */}
-          {step === 6 && pro && (
+          {/* STEP 7 — success */}
+          {step === 7 && pro && (
             <Card className="overflow-hidden">
               <CardContent className="relative flex flex-col items-center px-6 py-14 text-center">
                 <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent" />
@@ -490,10 +573,10 @@ export default function RequestReferral() {
       </AnimatePresence>
 
       {/* Footer actions */}
-      {step < 6 && (
+      {step < 7 && (
         <div className="flex items-center justify-between">
           <div className="text-xs text-muted-foreground">Step {step} of {STEPS.length - 1}</div>
-          {step < 5 ? (
+          {step < 6 ? (
             <Button onClick={next} disabled={!canNext} className="rounded-full bg-primary shadow-glow px-6">
               Continue <ArrowRight className="ml-1.5 h-4 w-4" />
             </Button>

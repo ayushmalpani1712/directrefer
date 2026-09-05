@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
-import { CheckCircle2, Clock, Download, FileText, MessageSquare, Send, XCircle } from 'lucide-react'
+import { CheckCircle2, Clock, Download, FileText, MessageSquare, Send, ShieldCheck, Users, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -10,7 +10,7 @@ import { LinkedInShareButton } from '@/components/LinkedInShareButton'
 import { ReferralIllustration } from '@/components/illustrations'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { type ReferralStatus, PIPELINE_STAGES, type PipelineStage, getMessagesPath, profileUrl } from '@/data/mock'
+import { type ReferralStatus, PIPELINE_STAGES, type PipelineStage, getMessagesPath, profileUrl, REFERRAL_RELATIONSHIPS } from '@/data/mock'
 import { cn } from '@/lib/utils'
 import { exportReferralsCSV } from '@/lib/export'
 import { toast } from 'sonner'
@@ -188,6 +188,18 @@ export default function MyReferrals() {
                             <CompanyChip name={p.company} className="h-4.5 w-4.5 text-[8px]" />
                             {p.company} · via {p.name} · {r.date}
                           </div>
+                          {r.relationshipType && (
+                            <div className="mt-1 flex items-center gap-1.5">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                                <Users className="h-2.5 w-2.5" /> {REFERRAL_RELATIONSHIPS.find((rel) => rel.value === r.relationshipType)?.label}
+                              </span>
+                              {r.policyAcknowledged && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                  <ShieldCheck className="h-2.5 w-2.5" /> Acknowledged
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </Link>
                       <div className="flex items-center gap-2">

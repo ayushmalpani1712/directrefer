@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CheckCheck, ChevronRight, FileText, Inbox, MessageSquare, Search, Share2, XCircle } from 'lucide-react'
+import { CheckCheck, ChevronRight, FileText, Inbox, MessageSquare, Search, Share2, ShieldCheck, Users, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,7 +14,7 @@ import { InboxIllustration } from '@/components/illustrations'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import type { ReferralStatus, PipelineStage } from '@/data/mock'
-import { PIPELINE_STAGES, getMessagesPath } from '@/data/mock'
+import { PIPELINE_STAGES, getMessagesPath, REFERRAL_RELATIONSHIPS } from '@/data/mock'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { useNavigate } from 'react-router'
 import { cn } from '@/lib/utils'
@@ -160,8 +160,16 @@ export default function ReferralInbox() {
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-semibold">{r.student}</span>
                         <StatusBadge status={r.status} />
+                        {r.relationshipType && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                            <Users className="h-2.5 w-2.5" /> {REFERRAL_RELATIONSHIPS.find((rel) => rel.value === r.relationshipType)?.label}
+                          </span>
+                        )}
                       </div>
                       <div className="mt-0.5 text-xs text-muted-foreground">{r.role} · {r.date}</div>
+                      {r.relationshipNote && (
+                        <div className="mt-1 text-xs text-muted-foreground italic">"{r.relationshipNote}"</div>
+                      )}
                       <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">"{r.note}"</p>
                       <CandidateCard request={r} />
                       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -170,6 +178,18 @@ export default function ReferralInbox() {
                       </div>
                       {(r.status === 'accepted' || r.status === 'pending') && (
                         <InlinePipeline stage={r.pipelineStage} requestId={r.id} />
+                      )}
+                      {r.status === 'pending' && r.policyAcknowledged && (
+                        <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-500/5 px-2.5 py-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
+                          <ShieldCheck className="h-3 w-3 shrink-0" />
+                          Candidate acknowledged referral etiquette
+                        </div>
+                      )}
+                      {r.status === 'pending' && !r.policyAcknowledged && (
+                        <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-amber-500/5 px-2.5 py-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+                          <ShieldCheck className="h-3 w-3 shrink-0" />
+                          Policy not yet acknowledged — remind candidate if needed
+                        </div>
                       )}
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">

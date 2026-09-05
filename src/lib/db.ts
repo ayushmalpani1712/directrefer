@@ -276,7 +276,7 @@ export async function fetchReferrals(userId: string): Promise<ReferralRequest[]>
   try {
     const { data, error } = await supabase
       .from('referrals')
-      .select('id, requester_id, professional_id, job_title, status, pipeline_stage, created_at, note, progress, requester:users!referrals_requester_id_fkey(full_name), professional:users!referrals_professional_id_fkey(full_name)')
+      .select('id, requester_id, professional_id, job_title, status, pipeline_stage, created_at, note, progress, relationship_type, relationship_note, policy_acknowledged, requester:users!referrals_requester_id_fkey(full_name), professional:users!referrals_professional_id_fkey(full_name)')
       .or(`requester_id.eq.${userId},professional_id.eq.${userId}`)
       .order('created_at', { ascending: false })
 
@@ -322,6 +322,9 @@ export async function fetchReferrals(userId: string): Promise<ReferralRequest[]>
         }),
         note: row.note ?? '',
         createdAt: row.created_at as string,
+        relationshipType: (row.relationship_type as ReferralRequest['relationshipType']) ?? undefined,
+        relationshipNote: (row.relationship_note as string) ?? undefined,
+        policyAcknowledged: (row.policy_acknowledged as boolean) ?? false,
         candidate: {
           headline: (sp?.headline as string) || undefined,
           location: undefined,
@@ -347,6 +350,9 @@ export async function createReferral(params: {
   professional_id: string
   job_title: string
   note?: string
+  relationship_type?: string
+  relationship_note?: string
+  policy_acknowledged?: boolean
 }): Promise<ReferralRequest | null> {
   try {
     const { data, error } = await supabase
@@ -356,10 +362,13 @@ export async function createReferral(params: {
         professional_id: params.professional_id,
         job_title: params.job_title,
         note: params.note ?? null,
+        relationship_type: params.relationship_type ?? null,
+        relationship_note: params.relationship_note ?? null,
+        policy_acknowledged: params.policy_acknowledged ?? false,
         pipeline_stage: 'request_sent',
         progress: 15,
       })
-      .select('id, professional_id, job_title, status, created_at, note, progress, requester:users!referrals_requester_id_fkey(full_name)')
+      .select('id, professional_id, job_title, status, created_at, note, progress, relationship_type, relationship_note, policy_acknowledged, requester:users!referrals_requester_id_fkey(full_name)')
       .single()
 
     if (error || !data) return null
@@ -379,6 +388,9 @@ export async function createReferral(params: {
       note: data.note ?? '',
       createdAt: data.created_at as string,
       progress: data.progress,
+      relationshipType: data.relationship_type as ReferralRequest['relationshipType'] ?? undefined,
+      relationshipNote: data.relationship_note as string ?? undefined,
+      policyAcknowledged: data.policy_acknowledged as boolean ?? false,
     }
   } catch (err) {
     console.error('createReferral failed:', err)

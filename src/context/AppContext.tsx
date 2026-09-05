@@ -1125,6 +1125,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         professional_id: r.professionalId,
         job_title: r.role,
         note: r.note,
+        relationship_type: r.relationshipType,
+        relationship_note: r.relationshipNote,
+        policy_acknowledged: r.policyAcknowledged,
       }).then((newRequest) => {
         // Replace local optimistic request with server-returned one (has real UUID)
         if (newRequest) {
