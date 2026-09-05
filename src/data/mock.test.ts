@@ -20,8 +20,8 @@ describe('initials', () => {
 })
 
 describe('PIPELINE_STAGES', () => {
-  it('has 4 stages', () => {
-    expect(PIPELINE_STAGES).toHaveLength(4)
+  it('has 6 stages', () => {
+    expect(PIPELINE_STAGES).toHaveLength(6)
   })
 
   it('starts with requested', () => {
