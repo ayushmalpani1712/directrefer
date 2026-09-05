@@ -64,8 +64,13 @@ export default function CommandPaletteInner() {
         setOpen((o) => !o)
       }
     }
+    const toggle = () => setOpen((o) => !o)
     document.addEventListener('keydown', down)
-    return () => document.removeEventListener('keydown', down)
+    document.addEventListener('toggle-command-palette', toggle)
+    return () => {
+      document.removeEventListener('keydown', down)
+      document.removeEventListener('toggle-command-palette', toggle)
+    }
   }, [])
 
   const go = (href: string) => { setOpen(false); navigate(href) }

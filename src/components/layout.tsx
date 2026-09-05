@@ -431,12 +431,7 @@ function Topbar() {
       <div className="flex-1 sm:hidden" />
       <div className="ml-auto flex items-center gap-0.5">
         <button
-          onClick={() => {
-            const e = new KeyboardEvent('keydown', { key: 'k', bubbles: true, cancelable: true })
-            Object.defineProperty(e, 'metaKey', { value: true })
-            Object.defineProperty(e, 'ctrlKey', { value: true })
-            document.dispatchEvent(e)
-          }}
+          onClick={() => document.dispatchEvent(new CustomEvent('toggle-command-palette'))}
           className="relative flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           aria-label="Quick actions"
         >
