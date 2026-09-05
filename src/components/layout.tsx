@@ -1,22 +1,19 @@
-import { lazy, Suspense, useMemo, useState, useEffect } from 'react'
+import { lazy, Suspense, useMemo, useEffect } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 
 import {
   Bell, Bookmark, Briefcase, CheckCheck, ChevronRight, CircleHelp, Command,
-  FileText, FileUp, Home, LayoutDashboard, Mail, MessageSquare,
+  FileText, FileUp, Home, LayoutDashboard, MessageSquare,
   Plus, Search, Settings, Shield, ShieldCheck, Sparkles, User, Users, Zap, Inbox, LineChart, Activity, BarChart3,
   type LucideIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem,
@@ -448,125 +445,6 @@ function QuickActions() {
   )
 }
 
-// ── Notifications menu ──────────────────────────────────────
-const NOTIF_ICON: Record<string, { icon: LucideIcon; cls: string }> = {
-  accepted: { icon: CheckCheck, cls: 'bg-emerald-500/10 text-emerald-500' },
-  rejected: { icon: Mail, cls: 'bg-rose-500/10 text-rose-500' },
-  message: { icon: MessageSquare, cls: 'bg-sky-500/10 text-sky-500' },
-  view: { icon: Search, cls: 'bg-primary/10 text-primary' },
-  reminder: { icon: Bell, cls: 'bg-amber-500/10 text-amber-500' },
-  system: { icon: Sparkles, cls: 'bg-accent/10 text-accent' },
-}
-
-function NotificationsMenu() {
-  const navigate = useNavigate()
-  const { notifications, markNotificationRead, markAllNotificationsRead } = useApp()
-  const { pathname } = useLocation()
-  const prefix = ROLE_ROUTE[getRoleFromPath(pathname) || 'student']
-  const [items, setItems] = useState(notifications)
-  useEffect(() => { setItems(notifications) }, [notifications])
-  const unread = items.filter((n) => !n.read).length
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-full">
-          <Bell className="h-4.5 w-4.5" />
-          {unread > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-              {unread}
-            </span>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={0} className="w-[380px] max-w-[calc(100vw-2rem)] p-0">
-        <div className="flex items-center justify-between px-4 py-3">
-          <DropdownMenuLabel className="p-0 text-sm font-semibold">Notifications</DropdownMenuLabel>
-          <Button variant="ghost" size="sm" className="h-9 text-xs text-primary" onClick={() => { markAllNotificationsRead(); setItems(items.map((n) => ({ ...n, read: true }))) }}>
-            Mark all read
-          </Button>
-        </div>
-        <Separator />
-        <ScrollArea className="h-[380px]">
-          {items.slice(0, 6).map((n) => {
-            const cfg = NOTIF_ICON[n.type]
-            return (
-              <DropdownMenuItem
-                key={n.id}
-                className="flex cursor-pointer items-start gap-3 px-4 py-3 focus:bg-muted/60"
-                onClick={() => { markNotificationRead(n.id); setItems(items.map((x) => (x.id === n.id ? { ...x, read: true } : x))); navigate(`${prefix}/notifications`) }}
-              >
-                <div className={cn('mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full', cfg.cls)}>
-                  <cfg.icon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-sm font-medium">{n.title}</span>
-                    {!n.read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
-                  </div>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.description}</p>
-                  <span className="mt-1 block text-[11px] text-muted-foreground/70">{n.time}</span>
-                </div>
-              </DropdownMenuItem>
-            )
-          })}
-        </ScrollArea>
-        <Separator />
-        <Button variant="ghost" className="w-full rounded-none text-sm text-primary" onClick={() => navigate(`${prefix}/notifications`)}>
-          View all notifications
-        </Button>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-// ── Messages menu ───────────────────────────────────────────
-function MessagesMenu() {
-  const navigate = useNavigate()
-  const { conversations } = useApp()
-  const { pathname } = useLocation()
-  const urlRole = getRoleFromPath(pathname) || 'student'
-  const unread = conversations.reduce((a, c) => a + c.unread, 0)
-  const messagesPath = getMessagesPath(urlRole)
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-full">
-          <MessageSquare className="h-4.5 w-4.5" />
-          {unread > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={0} className="w-[360px] max-w-[calc(100vw-2rem)] p-0">
-        <div className="px-4 py-3">
-          <DropdownMenuLabel className="p-0 text-sm font-semibold">Messages</DropdownMenuLabel>
-        </div>
-        <Separator />
-        {conversations.slice(0, 4).map((c) => (
-          <DropdownMenuItem key={c.id} className="flex cursor-pointer items-center gap-3 px-4 py-3" onClick={() => navigate(`${messagesPath}?conversation=${c.id}`)}>
-            <div className="relative">
-              <GAvatar name={c.name} color={c.gradient} className="h-9 w-9 text-xs" />
-              {c.online && <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-popover bg-emerald-500" />}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <span className="truncate text-sm font-medium">{c.name}</span>
-                <span className="text-[11px] text-muted-foreground">{c.time}</span>
-              </div>
-              <p className="truncate text-xs text-muted-foreground">{c.lastMessage}</p>
-            </div>
-            {c.unread > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">{c.unread}</span>
-            )}
-          </DropdownMenuItem>
-        ))}
-        <Separator />
-        <Button variant="ghost" className="w-full rounded-none text-sm text-primary" onClick={() => navigate(messagesPath)}>
-          Open messages
-        </Button>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
 // ── Breadcrumbs ─────────────────────────────────────────────
 const CRUMB_LABELS: Record<string, string> = {
   'job-seeker': 'Job Seeker', dashboard: 'Dashboard', professionals: 'Find Professionals', applications: 'My Referrals',
@@ -636,9 +514,19 @@ function Topbar() {
       </Badge>
       <div className="flex-1 sm:hidden" />
       <div className="ml-auto flex items-center gap-0">
-        <MessagesMenu />
-        <NotificationsMenu />
-        <Separator orientation="vertical" className="mx-1 hidden h-5 sm:mx-2 sm:block" />
+        <button
+          onClick={() => {
+            const e = new KeyboardEvent('keydown', { key: 'k', bubbles: true, cancelable: true })
+            Object.defineProperty(e, 'metaKey', { value: true })
+            Object.defineProperty(e, 'ctrlKey', { value: true })
+            document.dispatchEvent(e)
+          }}
+          className="flex h-9 items-center gap-1.5 rounded-lg border border-border/60 bg-muted/50 px-3 text-[13px] font-medium text-muted-foreground transition-[border-color,background-color] duration-200 hover:border-primary/30 hover:bg-muted hover:text-foreground dark:bg-white/[0.04] dark:border-white/[0.08] dark:hover:border-primary/30 dark:hover:bg-white/[0.06]"
+          aria-label="Quick actions"
+        >
+          <Zap className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Quick Actions</span>
+        </button>
         <WorkspaceSwitcher />
       </div>
     </header>
