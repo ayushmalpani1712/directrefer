@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import {
   Award, BadgeCheck, Briefcase, Building2, CheckCircle2,
   Download, FileText, Github, GraduationCap, Languages, Linkedin, MapPin, Pencil, Plus,
-  Sparkles, Target, Trash2, Upload, Zap, Globe, X, Palette,
+  Sparkles, Target, Trash2, Upload, Zap, Globe, X, Palette, Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import ResumePreview from '@/components/ResumePreview'
@@ -874,6 +874,23 @@ export default function StudentProfile() {
                   else toast.success('Your profile is looking great!')
                 }}>Complete profile</Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Privacy & visibility */}
+          <Card className="shadow-soft w-full max-w-full overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base min-w-0"><Eye className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">Privacy</span></CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-3 text-sm">
+              <div className="flex items-center justify-between rounded-xl border border-border p-3.5">
+                <div className="min-w-0">
+                  <div className="font-medium">Open to Work</div>
+                  <div className="text-xs text-muted-foreground">Visible to recruiters in talent search</div>
+                </div>
+                <Switch checked={openToWork} onCheckedChange={async (v) => { setOpenToWork(v); await toggleStudentOpenToWork(v) }} />
+              </div>
+              <p className="text-xs text-muted-foreground">Your resume, skills, and experience are visible to professionals you contact. Your email and phone are never shared publicly.</p>
             </CardContent>
           </Card>
 

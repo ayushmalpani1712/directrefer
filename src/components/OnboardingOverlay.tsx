@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { ArrowRight, CheckCircle, Search, Upload, X } from 'lucide-react'
+import { ArrowRight, CheckCircle, Search, Upload, X, Briefcase, Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/context/AuthContext'
@@ -11,12 +11,71 @@ const ONBOARDING_DISMISSED_KEY = 'onboarding_dismissed'
 
 function getSteps(role: Role) {
   const base = ROLE_ROUTE[role]
-  const findProfessionalsPath = role === 'recruiter' ? `${base}/talent` : `${base}/professionals`
+
+  if (role === 'professional') {
+    return [
+      {
+        icon: Building2,
+        title: 'Set up your referrer profile',
+        description: 'Add your company, role, and the positions you can refer for so candidates can find you.',
+        action: 'Set up profile',
+        to: `${base}/profile`,
+        gradient: 'from-[#6366F1] to-[#8B5CF6]',
+      },
+      {
+        icon: Briefcase,
+        title: 'Set your referral availability',
+        description: 'Choose how many referrals you can handle per month and write your referral policy.',
+        action: 'Configure availability',
+        to: `${base}/profile`,
+        gradient: 'from-sky-500 to-cyan-400',
+      },
+      {
+        icon: CheckCircle,
+        title: 'Review your first request',
+        description: 'When candidates send referral requests, they appear in your inbox. Accept, pass, or ask for more info.',
+        action: 'Go to Inbox',
+        to: `${base}/referrals`,
+        gradient: 'from-emerald-500 to-teal-400',
+      },
+    ]
+  }
+
+  if (role === 'recruiter') {
+    return [
+      {
+        icon: Building2,
+        title: 'Complete your company profile',
+        description: 'Add your company details, open positions, and benefits so candidates understand your offerings.',
+        action: 'Set up profile',
+        to: `${base}/profile`,
+        gradient: 'from-[#6366F1] to-[#8B5CF6]',
+      },
+      {
+        icon: Search,
+        title: 'Find referral-warmed talent',
+        description: 'Browse candidates who have been referred by verified insiders — they are more engaged and qualified.',
+        action: 'Find Talent',
+        to: `${base}/talent`,
+        gradient: 'from-emerald-500 to-teal-400',
+      },
+      {
+        icon: CheckCircle,
+        title: 'Post a referral-friendly job',
+        description: 'Create job listings that encourage employee referrals and track referral-driven hires.',
+        action: 'Post a Job',
+        to: `${base}/jobs`,
+        gradient: 'from-sky-500 to-cyan-400',
+      },
+    ]
+  }
+
+  // Default: student / job seeker
   return [
     {
       icon: CheckCircle,
       title: 'Complete your profile',
-      description: 'Add your headline, bio, skills, and experience so professionals know who you are.',
+      description: 'Add your headline, experience, skills, and education so professionals know who you are.',
       action: 'Go to Profile',
       to: `${base}/profile`,
       gradient: 'from-[#6366F1] to-[#8B5CF6]',
@@ -31,12 +90,10 @@ function getSteps(role: Role) {
     },
     {
       icon: Search,
-      title: role === 'recruiter' ? 'Find talent' : 'Find professionals',
-      description: role === 'recruiter'
-        ? 'Search referral-warmed talent and build your hiring pipeline.'
-        : 'Browse verified professionals from top companies and request referrals that advance your career.',
-      action: role === 'recruiter' ? 'Find Talent' : 'Find Professionals',
-      to: findProfessionalsPath,
+      title: 'Find professionals',
+      description: 'Browse verified professionals from top companies and request referrals that advance your career.',
+      action: 'Find Professionals',
+      to: `${base}/professionals`,
       gradient: 'from-emerald-500 to-teal-400',
     },
   ]
@@ -56,9 +113,10 @@ export function OnboardingOverlay() {
     if (!user) return
     if (localStorage.getItem(ONBOARDING_DISMISSED_KEY)) return
 
-    const profile = user.user_metadata
+    // Check if profile is incomplete based on role
+    const meta = user.user_metadata
     const needsOnboarding =
-      profile?.openToWork === false || !profile?.headline || profile.headline === ''
+      meta?.openToWork === false || !meta?.headline || meta.headline === ''
     if (needsOnboarding) {
       setShow(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))

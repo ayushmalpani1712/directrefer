@@ -572,7 +572,7 @@ const CRUMB_LABELS: Record<string, string> = {
   bookmarks: 'Bookmarks', activity: 'Activity', analytics: 'Analytics', settings: 'Settings',
   help: 'Help & Support', 'request-referral': 'Request Referral', company: 'Company Profile',
   users: 'Users', flagged: 'Flagged', verification: 'Verification', announcements: 'Announcements',
-  flags: 'Feature Flags', audit: 'Audit Log', professional: 'Professional', recruiter: 'Recruiter',
+  flags: 'Feature Flags', audit: 'Audit Log', professional: 'Referrer', recruiter: 'Recruiter',
   admin: 'Admin', 'browse-jobs': 'Browse Jobs', workspaces: 'Workspaces',
 }
 

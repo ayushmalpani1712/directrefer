@@ -9,7 +9,7 @@ export type Role = 'student' | 'professional' | 'recruiter' | 'admin'
 
 export const ROLE_META: Record<Role, { label: string; singular: string }> = {
   student: { label: 'Job Seeker', singular: 'Student' },
-  professional: { label: 'Professional', singular: 'Professional' },
+  professional: { label: 'Referrer', singular: 'Referrer' },
   recruiter: { label: 'Recruiter', singular: 'Recruiter' },
   admin: { label: 'Admin', singular: 'Admin' },
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Building2, Check, Github, GraduationCap, Info, Linkedin, MapPin, Pencil, Plus,
-  ShieldCheck, Wrench, X, Palette,
+  ShieldCheck, Wrench, X, Palette, Eye, EyeOff,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -90,12 +90,15 @@ export default function ProfessionalProfile() {
   const capacityRef = useRef(ME.maxPerMonth)
   const [bannerTheme, setBannerTheme] = useState<string | null>(null)
   const [bannerModalOpen, setBannerModalOpen] = useState(false)
+  const [showOnFind, setShowOnFind] = useState(true)
 
-  // Load banner theme from DB on mount
+  // Load banner theme and visibility from DB on mount
   useEffect(() => {
     if (!user?.id) return
     supabase.from('users').select('banner_theme').eq('id', user.id).single()
       .then(({ data }) => setBannerTheme(data?.banner_theme ?? null))
+    supabase.from('profiles_professional').select('show_on_find').eq('user_id', user.id).single()
+      .then(({ data }) => setShowOnFind(data?.show_on_find ?? true))
   }, [user?.id])
 
   // Sync local state when ME changes (DB data loads)
@@ -174,13 +177,13 @@ export default function ProfessionalProfile() {
                     {editingHeader ? (
                       <>
                         <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. Pune, India" value={editLocation} onChange={(e) => setEditLocation(e.target.value)} /></span>
-                        <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. Technology" value={editIndustry} onChange={(e) => setEditIndustry(e.target.value)} /></span>
+                        <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. Engineering, Product, Design" value={editIndustry} onChange={(e) => setEditIndustry(e.target.value)} /></span>
                         <span className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="College (for affinity matching)" value={editCollege} onChange={(e) => setEditCollege(e.target.value)} /></span>
                       </>
                     ) : (
                       <>
                         <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {p.location}</span>
-                        <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> {p.industry}</span>
+                        <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> {p.industry || 'Department'}</span>
                         {p.college && <span className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> {p.college}</span>}
                       </>
                     )}
@@ -312,13 +315,37 @@ export default function ProfessionalProfile() {
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {[
                   { label: 'Years of experience', value: `${p.yearsExp} yrs` },
-                  { label: 'Industry', value: p.industry },
+                  { label: 'Department / Function', value: p.industry || '—' },
                 ].map((x) => (
                   <div key={x.label} className="rounded-xl bg-muted/50 p-3.5 text-center">
                     <div className="text-lg font-bold">{x.value}</div>
                     <div className="text-xs text-muted-foreground">{x.label}</div>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Visibility */}
+          <Card className="shadow-soft">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base">{showOnFind ? <Eye className="h-4 w-4 text-primary" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />} Profile visibility</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex items-center justify-between rounded-xl border border-border p-4">
+                <div>
+                  <div className="text-sm font-semibold">Show in search results</div>
+                  <div className="text-xs text-muted-foreground">{showOnFind ? 'Job seekers can find and contact you for referrals' : 'Hidden from search — only people with your link can reach you'}</div>
+                </div>
+                <Switch
+                  checked={showOnFind}
+                  onCheckedChange={async (v) => {
+                    setShowOnFind(v)
+                    const { error } = await supabase.from('profiles_professional').update({ show_on_find: v }).eq('user_id', user?.id)
+                    if (error) { setShowOnFind(!v); toast.error('Failed to update visibility') }
+                    else toast.success(v ? 'You are now visible in search' : 'Hidden from search results')
+                  }}
+                />
               </div>
             </CardContent>
           </Card>

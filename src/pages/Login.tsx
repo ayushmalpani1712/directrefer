@@ -29,10 +29,10 @@ import { toast } from 'sonner'
 import { captureUTMFromURL, storeUTMParams } from '@/lib/analytics'
 import { validateInviteCode, recordInviteUse } from '@/lib/invites'
 
-const ROLE_CARDS: { role: Role; icon: typeof GraduationCap; label: string }[] = [
-  { role: 'student', icon: GraduationCap, label: 'Job Seeker' },
-  { role: 'professional', icon: Briefcase, label: 'Professional' },
-  { role: 'recruiter', icon: Users, label: 'Recruiter' },
+const ROLE_CARDS: { role: Role; icon: typeof GraduationCap; label: string; description: string }[] = [
+  { role: 'student', icon: GraduationCap, label: 'Job Seeker', description: 'Find jobs and get referred' },
+  { role: 'professional', icon: Briefcase, label: 'Referrer', description: 'Help candidates get referrals' },
+  { role: 'recruiter', icon: Users, label: 'Recruiter', description: 'Hire top talent' },
 ]
 
 const PIPELINE_STEPS = [
@@ -326,7 +326,7 @@ export default function Login() {
             </div>
 
             <div className="space-y-2 pt-1">
-              <Label className="text-xs font-medium text-slate-300">I am a…</Label>
+              <Label className="text-xs font-medium text-slate-300">I want to…</Label>
               <div className="grid grid-cols-3 gap-2.5">
                 {ROLE_CARDS.map((card) => {
                   const active = selected === card.role
@@ -348,16 +348,25 @@ export default function Login() {
                       )}>
                         <card.icon className="h-4 w-4" />
                       </div>
-                      <span className={cn(
-                        'text-xs font-semibold leading-tight',
-                        active ? 'text-white' : 'text-slate-400 group-hover:text-slate-300',
-                      )}>
-                        {card.label}
-                      </span>
+                      <div>
+                        <span className={cn(
+                          'text-xs font-semibold leading-tight',
+                          active ? 'text-white' : 'text-slate-400 group-hover:text-slate-300',
+                        )}>
+                          {card.label}
+                        </span>
+                        <p className={cn(
+                          'mt-0.5 text-[10px] leading-tight',
+                          active ? 'text-indigo-300/70' : 'text-slate-500',
+                        )}>
+                          {card.description}
+                        </p>
+                      </div>
                     </button>
                   )
                 })}
               </div>
+              <p className="text-[11px] text-slate-500">You can switch roles later from your profile.</p>
             </div>
 
             <div className="pt-2">
