@@ -243,6 +243,12 @@ export default function ProfessionalProfile() {
               <span className="text-muted-foreground"><strong className="text-foreground">{p.referralsCompleted}</strong> referrals done</span>
               <span className="text-muted-foreground"><strong className="text-foreground">{p.rating > 0 ? p.rating.toFixed(1) : '—'}</strong> rating</span>
               <span className="text-muted-foreground"><strong className="text-foreground">{p.responseRate}%</strong> response</span>
+              {p.activityScore > 0 && (
+                <span className="text-muted-foreground"><strong className="text-foreground">{p.activityScore}</strong>/100 reputation</span>
+              )}
+              {p.badges.length > 0 && (
+                <span className="text-muted-foreground"><strong className="text-foreground">{p.badges.length}</strong> badge{p.badges.length !== 1 ? 's' : ''}</span>
+              )}
               <div className="h-4 w-px bg-border hidden sm:block" />
               <div
                 role="presentation"

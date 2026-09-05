@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft, BadgeCheck, Bookmark, BookmarkCheck, Briefcase, Calendar,
-  Globe, Linkedin, MapPin, MessageSquare, Phone, Send,
+  Globe, Linkedin, MapPin, MessageSquare, Phone, Send, TrendingUp, Star,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,7 @@ import { CompanyChip, GAvatar, ReportDialog } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { getMessagesPath } from '@/data/mock'
+import { getMessagesPath, calculateReputationScore, BADGE_DEFINITIONS } from '@/data/mock'
 import { getBannerStyle, getProfileTheme } from '@/lib/utils'
 import NotFound from '@/pages/NotFound'
 
@@ -194,6 +194,55 @@ export default function ProfessionalPublic() {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Reputation badges */}
+      {pro && (() => {
+        const rep = calculateReputationScore(pro as never)
+        if (rep.badges.length === 0) return null
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <Card className="shadow-soft">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Star className="h-4 w-4 text-amber-500" />
+                  <span className="text-sm font-semibold">Trust Badges</span>
+                  <span className="text-xs text-muted-foreground">({rep.score}/100 reputation)</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {rep.badges.map((badgeId) => {
+                    const def = BADGE_DEFINITIONS.find((b) => b.id === badgeId)
+                    if (!def) return null
+                    return (
+                      <div key={badgeId} className="flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium" title={def.description}>
+                        <span>{def.icon}</span> {def.label}
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )
+      })()}
+
+      {/* Demand signal */}
+      {pro && requests && (() => {
+        const companyRequests = requests.filter((r) => {
+          const proUser = app?.professionals?.find((p) => p.id === r.professionalId)
+          return proUser?.company === pro.company && (r.status === 'requested' || r.status === 'under_review')
+        }).length
+        if (companyRequests === 0) return null
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <div className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm">
+              <TrendingUp className="h-4 w-4 shrink-0 text-amber-500" />
+              <span className="text-muted-foreground">
+                <strong className="text-foreground">{companyRequests} candidate{companyRequests !== 1 ? 's' : ''}</strong> {companyRequests === 1 ? 'is' : 'are'} looking for referrals at {pro.company} right now
+              </span>
+            </div>
+          </motion.div>
+        )
+      })()}
 
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">

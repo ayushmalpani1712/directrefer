@@ -72,13 +72,23 @@ export function ProfessionalCard({ p, index }: { p: Professional; index: number 
           )}
         </div>
 
-        {/* Tags: Professional + Available */}
+        {/* Tags: Professional + Available + Reputation */}
         <div className="mt-3 flex items-center gap-2">
           <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">Professional</span>
           {p.openForReferrals && (
             <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
               Available
+            </span>
+          )}
+          {p.activityScore >= 70 && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600" title={`Reputation score: ${p.activityScore}/100`}>
+              ⭐ {p.activityScore}
+            </span>
+          )}
+          {p.badges.length > 0 && (
+            <span className="text-xs text-muted-foreground" title={p.badges.join(', ')}>
+              {p.badges.length} badge{p.badges.length !== 1 ? 's' : ''}
             </span>
           )}
         </div>

@@ -112,7 +112,60 @@ export const REFERRAL_RELATIONSHIPS: { value: RelationshipType; label: string; d
 
 export const POLICY_ACKNOWLEDGMENT = 'I understand this professional is not obligated to refer me and may decline for any reason. I will not pressure, spam, or misrepresent my qualifications. I respect their time and decision.'
 
-/** Calculate match score between a candidate profile and a professional referrer (0-100) */
+// ─── Reputation Engine ──────────────────────────────────────
+
+export interface ReputationBreakdown {
+  responseReliability: number // 0-25
+  acceptanceRate: number // 0-25
+  referralQuality: number // 0-25
+  profileQuality: number // 0-25
+}
+
+export const BADGE_DEFINITIONS: { id: string; label: string; description: string; icon: string; condition: (p: Professional) => boolean }[] = [
+  { id: 'quick_responder', label: 'Quick Responder', description: 'Responds within 24 hours consistently', icon: '⚡', condition: (p) => p.responseRate >= 90 && p.avgReplyHours <= 24 },
+  { id: 'trusted_referrer', label: 'Trusted Referrer', description: 'High acceptance rate with 10+ referrals', icon: '🛡️', condition: (p) => p.successRate >= 70 && p.referralsCompleted >= 10 },
+  { id: 'verified_pro', label: 'Verified', description: 'Identity and employment verified', icon: '✓', condition: (p) => p.verified },
+  { id: 'top_referrer', label: 'Top Referrer', description: '25+ successful referrals', icon: '🏆', condition: (p) => p.referralsCompleted >= 25 },
+  { id: 'consistent_performer', label: 'Consistent', description: 'High response rate, 30+ days active', icon: '📈', condition: (p) => p.responseRate >= 80 && p.joinedDaysAgo >= 30 },
+  { id: 'company_champion', label: 'Champion', description: 'Active referrer at their company', icon: '🏢', condition: (p) => p.referralsCompleted >= 5 && p.openForReferrals },
+  { id: 'open_book', label: 'Transparent', description: 'Complete profile with policy and bio', icon: '📖', condition: (p) => p.bio.length > 100 && p.referralPolicy.length > 20 && p.skills.length >= 3 },
+  { id: 'fast_track', label: 'Fast Track', description: 'Average reply under 4 hours', icon: '🚀', condition: (p) => p.avgReplyHours <= 4 },
+]
+
+/** Calculate reputation score (0-100) based on genuine activity — not volume alone */
+export function calculateReputationScore(professional: Professional): { score: number; breakdown: ReputationBreakdown; badges: string[] } {
+  // Response reliability (0-25): responseRate weighted by speed
+  const responseBase = (professional.responseRate / 100) * 20
+  const speedBonus = professional.avgReplyHours <= 4 ? 5 : professional.avgReplyHours <= 12 ? 3 : professional.avgReplyHours <= 24 ? 1 : 0
+  const responseReliability = Math.min(25, Math.round(responseBase + speedBonus))
+
+  // Acceptance rate (0-25): successRate with volume confidence ramp
+  const volumeConfidence = Math.min(1, professional.referralsCompleted / 10)
+  const acceptanceRaw = (professional.successRate / 100) * 20 * volumeConfidence + (professional.referralsCompleted > 0 ? 5 : 0)
+  const cappedAcceptance = Math.min(25, Math.round(acceptanceRaw))
+
+  // Referral quality (0-25): completion + consistency, NOT volume
+  const completionScore = professional.referralsCompleted > 0 ? Math.min(15, professional.referralsCompleted * 1.5) : 0
+  const consistencyBonus = professional.joinedDaysAgo >= 60 ? 5 : professional.joinedDaysAgo >= 30 ? 3 : 0
+  const capacityUtil = professional.maxPerMonth > 0 ? professional.usedThisMonth / professional.maxPerMonth : 0
+  const activeBonus = capacityUtil > 0 && capacityUtil < 1 ? 5 : 0
+  const referralQuality = Math.min(25, Math.round(completionScore + consistencyBonus + activeBonus))
+
+  // Profile quality (0-25): completeness + verification
+  const hasBio = professional.bio.length > 50 ? 5 : 0
+  const hasPolicy = professional.referralPolicy.length > 10 ? 3 : 0
+  const hasSkills = Math.min(5, professional.skills.length)
+  const hasPositions = professional.openPositions.length > 0 ? 4 : 0
+  const verifiedBonus = professional.verified ? 5 : 0
+  const profileQuality = Math.min(25, hasBio + hasPolicy + hasSkills + hasPositions + verifiedBonus)
+
+  const score = Math.min(100, responseReliability + cappedAcceptance + referralQuality + profileQuality)
+  const badges = BADGE_DEFINITIONS.filter((b) => b.condition(professional)).map((b) => b.id)
+
+  return { score, breakdown: { responseReliability, acceptanceRate: cappedAcceptance, referralQuality, profileQuality }, badges }
+}
+
+/** Calculate match score between a candidate and a professional referrer (0-100) */
 export function calculateMatchScore(
   candidate: ReferralRequest['candidate'],
   professional: Professional,
@@ -121,17 +174,17 @@ export function calculateMatchScore(
   const reasons: string[] = []
   let score = 0
 
-  // Skills overlap (0-30 pts)
+  // Skills overlap (0-25 pts)
   if (candidate?.skills?.length && professional.skills.length) {
     const overlap = candidate.skills.filter((s) =>
       professional.skills.some((ps) => ps.toLowerCase() === s.toLowerCase())
     )
-    const skillScore = Math.min(30, Math.round((overlap.length / Math.max(candidate.skills.length, 1)) * 30))
+    const skillScore = Math.min(25, Math.round((overlap.length / Math.max(candidate.skills.length, 1)) * 25))
     score += skillScore
     if (overlap.length > 0) reasons.push(`${overlap.length} skill${overlap.length > 1 ? 's' : ''} match`)
   }
 
-  // Role/title match (0-25 pts)
+  // Role/title match (0-20 pts)
   if (targetRole && professional.openPositions.length) {
     const roleLower = targetRole.toLowerCase()
     const matchPos = professional.openPositions.find((p) => {
@@ -140,12 +193,12 @@ export function calculateMatchScore(
         pLower.split(/\s+/).some((w) => w.length > 3 && roleLower.includes(w))
     })
     if (matchPos) {
-      score += 25
+      score += 20
       reasons.push(`Open role: ${matchPos}`)
     }
   }
 
-  // Company match (0-15 pts) — if candidate targets this company
+  // Company match (0-15 pts)
   if (candidate?.headline?.toLowerCase().includes(professional.company.toLowerCase()) ||
       candidate?.whyFit?.toLowerCase().includes(professional.company.toLowerCase())) {
     score += 15
@@ -165,12 +218,16 @@ export function calculateMatchScore(
     }
   }
 
-  // Referrer quality bonus (0-20 pts)
-  if (professional.verified) score += 5
-  if (professional.responseRate >= 90) { score += 8; reasons.push('High response rate') }
-  if (professional.referralsCompleted >= 10) { score += 4; reasons.push('Experienced referrer') }
+  // Reputation score (0-30 pts)
+  const reputation = calculateReputationScore(professional)
+  const repScore = Math.round((reputation.score / 100) * 30)
+  score += repScore
+  if (reputation.score >= 70) reasons.push('High reputation')
+  if (reputation.badges.length >= 3) reasons.push(`${reputation.badges.length} trust badges`)
+
+  // Availability bonus (0-5 pts)
   if (professional.openForReferrals && professional.usedThisMonth < professional.maxPerMonth) {
-    score += 3
+    score += 5
   }
 
   return { score: Math.min(100, score), reasons }

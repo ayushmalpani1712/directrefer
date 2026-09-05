@@ -8,6 +8,7 @@
 import { supabase } from '@/lib/supabase'
 import {
   GRADIENTS,
+  calculateReputationScore,
   type Professional,
   type ReferralRequest,
   type ReferralStatus,
@@ -250,49 +251,56 @@ export async function fetchProfessionals(_currentUserId?: string): Promise<Profe
             : []
       } catch { openPositions = [] }
 
-      return {
-        id: row.id,
-        slug: row.slug || undefined,
-        name: row.full_name,
-        designation: profile?.job_title ?? '',
-        company: profile?.company_name ?? '',
-        industry: profile?.department ?? 'Technology',
-        location: buildLocation(row.city, row.state, row.country),
-        yearsExp: profile?.years_experience ?? 0,
-        skills: profile?.skills ?? [],
-        responseRate: Number(profile?.response_rate ?? 0),
-        avgReplyHours: Number(profile?.avg_reply_hours ?? 24),
-        referralsCompleted: profile?.referrals_used ?? 0,
-        rating: Number(profile?.rating ?? 0),
-        reviews: profile?.review_count ?? 0,
-        verified: row.verified,
-        openForReferrals: profile?.open_for_referrals ?? false,
-        isOpenToWork: profile?.is_open_to_work ?? false,
-        maxPerMonth: profile?.referral_capacity ?? 5,
-        usedThisMonth: profile?.referrals_used ?? 0,
-        successRate: Number(profile?.success_rate ?? 0),
-        followers: 0,
-        joinedDaysAgo: daysSince(row.created_at),
-        activityScore: Math.round(Number(profile?.response_rate ?? 0)),
-        referralPolicy: profile?.referral_policy ?? '',
-        openPositions,
-        bio: profile?.bio ?? '',
-        badges: [],
-        gradient: GRADIENTS[index % GRADIENTS.length],
-        phone: row.mobile ?? '',
-        whatsapp: row.mobile ?? '',
-        email: row.email,
-        hiringTimeline: [
-          { stage: 'Referral request', duration: 'Within 24 hours' },
-          { stage: 'Profile review', duration: '1–2 days' },
-          { stage: 'Referral submitted', duration: '2–3 days' },
-          { stage: 'Hiring manager review', duration: '1–2 weeks' },
-        ],
-        referralDuration: 'Active',
-        linkedinUrl: row.linkedin ?? '',
-        githubUrl: profile?.github_url ?? '',
-        college: profile?.college ?? undefined,
-      }
+      return (() => {
+        const pro: Professional = {
+          id: row.id,
+          slug: row.slug || undefined,
+          name: row.full_name,
+          designation: profile?.job_title ?? '',
+          company: profile?.company_name ?? '',
+          industry: profile?.department ?? 'Technology',
+          location: buildLocation(row.city, row.state, row.country),
+          yearsExp: profile?.years_experience ?? 0,
+          skills: profile?.skills ?? [],
+          responseRate: Number(profile?.response_rate ?? 0),
+          avgReplyHours: Number(profile?.avg_reply_hours ?? 24),
+          referralsCompleted: profile?.referrals_used ?? 0,
+          rating: Number(profile?.rating ?? 0),
+          reviews: profile?.review_count ?? 0,
+          verified: row.verified,
+          openForReferrals: profile?.open_for_referrals ?? false,
+          isOpenToWork: profile?.is_open_to_work ?? false,
+          maxPerMonth: profile?.referral_capacity ?? 5,
+          usedThisMonth: profile?.referrals_used ?? 0,
+          successRate: Number(profile?.success_rate ?? 0),
+          followers: 0,
+          joinedDaysAgo: daysSince(row.created_at),
+          activityScore: 0,
+          referralPolicy: profile?.referral_policy ?? '',
+          openPositions,
+          bio: profile?.bio ?? '',
+          badges: [],
+          gradient: GRADIENTS[index % GRADIENTS.length],
+          phone: row.mobile ?? '',
+          whatsapp: row.mobile ?? '',
+          email: row.email,
+          hiringTimeline: [
+            { stage: 'Referral request', duration: 'Within 24 hours' },
+            { stage: 'Profile review', duration: '1–2 days' },
+            { stage: 'Referral submitted', duration: '2–3 days' },
+            { stage: 'Hiring manager review', duration: '1–2 weeks' },
+          ],
+          referralDuration: 'Active',
+          linkedinUrl: row.linkedin ?? '',
+          githubUrl: profile?.github_url ?? '',
+          college: profile?.college ?? undefined,
+        }
+        // Calculate reputation from genuine activity
+        const rep = calculateReputationScore(pro)
+        pro.activityScore = rep.score
+        pro.badges = rep.badges
+        return pro
+      })()
     })
   } catch (err) {
     console.error('fetchProfessionals failed:', err)

@@ -20,6 +20,7 @@ interface AcquisitionMetrics {
   organicTrafficPages: number
   weeklySignups: Array<{ week: string; count: number }>
   sourceBreakdown: Array<{ source: string; count: number }>
+  companyDemand: Array<{ company: string; demand: number; supply: number }>
   diagnostics: DiagnosticRule[]
 }
 
@@ -96,6 +97,35 @@ export default function AcquisitionDashboard() {
 
       const sourceBreakdown: Array<{ source: string; count: number }> = []
 
+      // Company demand/supply balance
+      const [proProfilesRes, seekerRefsRes] = await Promise.all([
+        supabase.from('profiles_professional').select('user_id, company_name, open_for_referrals'),
+        supabase.from('referrals').select('requester_id, professional_id, status').in('status', ['pending', 'accepted']),
+      ])
+      const proProfiles = proProfilesRes.data || []
+      const activeRefs = seekerRefsRes.data || []
+
+      const companyMap = new Map<string, { demand: number; supply: number }>()
+      // Supply: verified referrers per company
+      for (const p of proProfiles) {
+        if (!p.company_name) continue
+        const entry = companyMap.get(p.company_name) || { demand: 0, supply: 0 }
+        if (p.open_for_referrals) entry.supply++
+        companyMap.set(p.company_name, entry)
+      }
+      // Demand: pending requests per company (via professional's company)
+      for (const r of activeRefs) {
+        const pro = proProfiles.find((p) => p.user_id === r.professional_id)
+        if (!pro?.company_name) continue
+        const entry = companyMap.get(pro.company_name) || { demand: 0, supply: 0 }
+        entry.demand++
+        companyMap.set(pro.company_name, entry)
+      }
+      const companyDemand = [...companyMap.entries()]
+        .map(([company, data]) => ({ company, ...data }))
+        .sort((a, b) => b.demand - a.demand)
+        .slice(0, 10)
+
       const diagnostics: DiagnosticRule[] = []
       if (activatedCandidates < referralRequests * 0.3) {
         diagnostics.push({ id: 'supply', label: 'Supply-Demand Balance', status: 'warning', message: 'Many candidates but few referrers. Focus on supply recruitment.' })
@@ -134,6 +164,7 @@ export default function AcquisitionDashboard() {
         organicTrafficPages: jobs.length,
         weeklySignups,
         sourceBreakdown,
+        companyDemand,
         diagnostics,
       })
     } catch {
@@ -367,6 +398,40 @@ export default function AcquisitionDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Company Demand/Supply Balance */}
+      {metrics.companyDemand.length > 0 && (
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="text-base">Company Demand vs Supply</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {metrics.companyDemand.map((c) => {
+                const total = c.demand + c.supply
+                const demandPct = total > 0 ? Math.round((c.demand / total) * 100) : 0
+                const supplyPct = 100 - demandPct
+                return (
+                  <div key={c.company}>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{c.company}</span>
+                      <span className="text-muted-foreground">{c.demand} demand · {c.supply} referrers</span>
+                    </div>
+                    <div className="mt-1 flex h-2 overflow-hidden rounded-full bg-muted">
+                      <div className="bg-amber-500" style={{ width: `${demandPct}%` }} />
+                      <div className="bg-emerald-500" style={{ width: `${supplyPct}%` }} />
+                    </div>
+                  </div>
+                )
+              })}
+              <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
+                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /> Demand</span>
+                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Supply</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Diagnostic Rules */}
       <Card className="shadow-soft">

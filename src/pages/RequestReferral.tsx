@@ -538,37 +538,57 @@ export default function RequestReferral() {
             </Card>
           )}
 
-          {/* STEP 7 — success */}
-          {step === 7 && pro && (
-            <Card className="overflow-hidden">
-              <CardContent className="relative flex flex-col items-center px-6 py-14 text-center">
-                <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent" />
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 220, damping: 14, delay: 0.1 }}
-                  className="relative flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 text-white"
-                >
-                  <Check className="h-10 w-10" strokeWidth={3} />
-                </motion.div>
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="relative">
-                  <h2 className="font-display mt-6 text-2xl font-bold">Referral request sent</h2>
-                  <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                    {pro.name} typically replies within ~{pro.avgReplyHours} hours. We'll notify you the moment they respond, and you can track progress in My Referrals.
-                  </p>
-                  <div className="mt-6 flex flex-col justify-center gap-2.5 sm:flex-row">
-                    <Button className="rounded-full bg-primary" asChild>
-                      <Link to="/job-seeker/applications">Track my referrals <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
-                    </Button>
-                    <Button variant="outline" className="rounded-full" asChild>
-                      <Link to="/job-seeker/professionals">Request another</Link>
-                    </Button>
-                    <LinkedInShareButton role={draft.role || pro.openPositions[0] || 'this role'} company={pro.company} professionalName={pro.name} variant="outline" />
-                  </div>
-                </motion.div>
-              </CardContent>
-            </Card>
-          )}
+           {/* STEP 7 — success */}
+           {step === 7 && pro && (
+             <Card className="overflow-hidden">
+               <CardContent className="relative flex flex-col items-center px-6 py-14 text-center">
+                 <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent" />
+                 <motion.div
+                   initial={{ scale: 0 }}
+                   animate={{ scale: 1 }}
+                   transition={{ type: 'spring', stiffness: 220, damping: 14, delay: 0.1 }}
+                   className="relative flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 text-white"
+                 >
+                   <Check className="h-10 w-10" strokeWidth={3} />
+                 </motion.div>
+                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="relative">
+                   <h2 className="font-display mt-6 text-2xl font-bold">Referral request sent</h2>
+                   <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                     {pro.name} typically replies within ~{pro.avgReplyHours} hours. We'll notify you the moment they respond, and you can track progress in My Referrals.
+                   </p>
+                   <div className="mt-6 flex flex-col justify-center gap-2.5 sm:flex-row">
+                     <Button className="rounded-full bg-primary" asChild>
+                       <Link to="/job-seeker/applications">Track my referrals <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
+                     </Button>
+                     <Button variant="outline" className="rounded-full" asChild>
+                       <Link to="/job-seeker/professionals">Request another</Link>
+                     </Button>
+                     <LinkedInShareButton role={draft.role || pro.openPositions[0] || 'this role'} company={pro.company} professionalName={pro.name} variant="outline" />
+                   </div>
+                 </motion.div>
+               </CardContent>
+             </Card>
+           )}
+
+           {/* Network effect: Become a Referrer CTA */}
+           {step === 7 && (
+             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
+               <Card className="border-primary/20 bg-primary/[0.03]">
+                 <CardContent className="flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:text-left">
+                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                     <Users className="h-6 w-6 text-primary" />
+                   </div>
+                   <div className="flex-1">
+                     <h3 className="text-sm font-semibold">Are you a professional at {pro?.company || 'a top company'}?</h3>
+                     <p className="mt-1 text-xs text-muted-foreground">Help others get referred — build your professional reputation and help your community. Verified employees get priority visibility.</p>
+                   </div>
+                   <Button variant="outline" className="shrink-0 rounded-full" asChild>
+                     <Link to="/login?role=professional">Become a Referrer</Link>
+                   </Button>
+                 </CardContent>
+               </Card>
+             </motion.div>
+           )}
         </motion.div>
       </AnimatePresence>
 
