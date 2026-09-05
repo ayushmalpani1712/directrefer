@@ -162,8 +162,8 @@ export default function Login() {
           transition={{ duration: 0.5 }}
         >
           <Link to="/" className="group inline-flex items-center gap-3" aria-label="DirectRefer — Go to homepage">
-            <svg viewBox="0 0 250 189" className="h-12 w-auto" aria-hidden="true">
-              <image href="/logo-emblem.png" width="250" height="189" />
+            <svg viewBox="0 0 512 385" className="h-12 w-auto" aria-hidden="true">
+              <image href="/logo-emblem.png" width="512" height="385" />
             </svg>
             <span className="font-display text-2xl font-bold tracking-tight text-white">DirectRefer</span>
           </Link>
@@ -222,8 +222,8 @@ export default function Login() {
         >
           <div className="mb-8 flex justify-center md:hidden">
             <Link to="/" className="group inline-flex items-center gap-3" aria-label="DirectRefer — Go to homepage">
-              <svg viewBox="0 0 250 189" className="h-10 w-auto" aria-hidden="true">
-                <image href="/logo-emblem.png" width="250" height="189" />
+              <svg viewBox="0 0 512 385" className="h-10 w-auto" aria-hidden="true">
+              <image href="/logo-emblem.png" width="512" height="385" />
               </svg>
               <span className="font-display text-2xl font-bold tracking-tight text-white">DirectRefer</span>
             </Link>

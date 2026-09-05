@@ -43,8 +43,8 @@ export function Logo({ compact }: { compact?: boolean }) {
   }
   return (
     <a href="/" onClick={handleClick} className="flex items-center gap-3" aria-label="Direct Refer — Go to homepage">
-      <svg viewBox="0 0 250 189" className="h-10 w-auto shrink-0" aria-hidden="true">
-        <image href="/logo-emblem.png" width="250" height="189" />
+      <svg viewBox="0 0 512 385" className="h-10 w-auto shrink-0" aria-hidden="true">
+        <image href="/logo-emblem.png" width="512" height="385" />
       </svg>
       {!compact && (
         <span className="font-display text-[21px] font-bold tracking-tight text-gradient">

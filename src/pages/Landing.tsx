@@ -853,8 +853,8 @@ export default function Landing() {
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             <div className="flex flex-col items-center gap-3 sm:items-start">
               <Link to="/" className="flex items-center gap-2.5" aria-label="DirectRefer — Home">
-                <svg viewBox="0 0 250 189" className="h-7 w-auto" aria-hidden="true">
-                  <image href="/logo-emblem.png" width="250" height="189" />
+                <svg viewBox="0 0 512 385" className="h-7 w-auto" aria-hidden="true">
+                  <image href="/logo-emblem.png" width="512" height="385" />
                 </svg>
                 <span className="font-display text-base font-bold text-foreground">DirectRefer</span>
               </Link>
