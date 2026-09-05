@@ -490,9 +490,20 @@ function Breadcrumbs() {
 function Topbar() {
   const { pathname } = useLocation()
   const urlRole = getRoleFromPath(pathname) || 'student'
+  const { conversations, notifications } = useApp()
+  const messagesPath = getMessagesPath(urlRole)
+  const prefix = ROLE_ROUTE[urlRole]
+  const unreadMessages = conversations.reduce((a, c) => a + c.unread, 0)
+  const unreadNotifs = notifications.filter((n) => !n.read).length
+  const navigate = useNavigate()
   return (
-    <header className="glass sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/50 px-3 sm:px-4 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
+    <header className="glass sticky top-0 z-30 flex h-14 items-center gap-1.5 border-b border-border/50 px-2 sm:px-4 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
       <SidebarTrigger className="md:hidden h-11 w-11 shrink-0 touch-target" />
+      <a href="/" onClick={(e) => { e.preventDefault(); window.location.assign('/') }} className="flex items-center shrink-0" aria-label="Direct Refer — Go to homepage">
+        <svg viewBox="0 0 512 385" className="h-8 w-auto shrink-0" aria-hidden="true">
+          <image href="/logo-emblem.png" width="512" height="385" />
+        </svg>
+      </a>
       <button
         onClick={() => {
           const e = new KeyboardEvent('keydown', { key: 'k', bubbles: true, cancelable: true })
@@ -509,11 +520,8 @@ function Topbar() {
           <Command className="h-3 w-3" />K
         </kbd>
       </button>
-      <Badge variant="outline" className="hidden border-primary/40 bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary sm:inline-flex badge-shine">
-        {ROLE_META[urlRole].label}
-      </Badge>
       <div className="flex-1 sm:hidden" />
-      <div className="ml-auto flex items-center gap-0">
+      <div className="ml-auto flex items-center gap-0.5">
         <button
           onClick={() => {
             const e = new KeyboardEvent('keydown', { key: 'k', bubbles: true, cancelable: true })
@@ -521,11 +529,34 @@ function Topbar() {
             Object.defineProperty(e, 'ctrlKey', { value: true })
             document.dispatchEvent(e)
           }}
-          className="flex h-9 items-center gap-1.5 rounded-lg border border-border/60 bg-muted/50 px-3 text-[13px] font-medium text-muted-foreground transition-[border-color,background-color] duration-200 hover:border-primary/30 hover:bg-muted hover:text-foreground dark:bg-white/[0.04] dark:border-white/[0.08] dark:hover:border-primary/30 dark:hover:bg-white/[0.06]"
+          className="relative flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           aria-label="Quick actions"
         >
-          <Zap className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Quick Actions</span>
+          <Zap className="h-[18px] w-[18px]" />
+        </button>
+        <button
+          onClick={() => navigate(messagesPath)}
+          className="relative flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label={`Messages${unreadMessages > 0 ? ` (${unreadMessages} unread)` : ''}`}
+        >
+          <MessageSquare className="h-[18px] w-[18px]" />
+          {unreadMessages > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+              {unreadMessages}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => navigate(`${prefix}/notifications`)}
+          className="relative flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label={`Notifications${unreadNotifs > 0 ? ` (${unreadNotifs} unread)` : ''}`}
+        >
+          <Bell className="h-[18px] w-[18px]" />
+          {unreadNotifs > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+              {unreadNotifs}
+            </span>
+          )}
         </button>
         <WorkspaceSwitcher />
       </div>
