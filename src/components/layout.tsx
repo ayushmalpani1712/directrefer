@@ -404,7 +404,7 @@ function Topbar() {
   return (
     <header className="glass sticky top-0 z-30 flex h-14 items-center gap-1.5 border-b border-border/50 px-2 sm:px-4 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
       <SidebarTrigger className="md:hidden h-11 w-11 shrink-0 touch-target" />
-      <a href="/" onClick={(e) => { e.preventDefault(); window.location.assign('/') }} className="flex items-center shrink-0" aria-label="Direct Refer — Go to homepage">
+      <a href="/" onClick={(e) => { e.preventDefault(); window.location.assign('/') }} className="flex items-center shrink-0 md:hidden" aria-label="Direct Refer — Go to homepage">
         <svg viewBox="0 0 512 385" className="h-8 w-auto shrink-0" aria-hidden="true">
           <image href="/logo-emblem.png" width="512" height="385" />
         </svg>
@@ -425,6 +425,9 @@ function Topbar() {
           <Command className="h-3 w-3" />K
         </kbd>
       </button>
+      <Badge variant="outline" className="hidden sm:inline-flex h-6 shrink-0 gap-1 border-violet-500/30 bg-violet-500/5 px-2 text-[10px] font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-400">
+        {ROLE_META[urlRole].label}
+      </Badge>
       <div className="flex-1 sm:hidden" />
       <div className="ml-auto flex items-center gap-0.5">
         <button
