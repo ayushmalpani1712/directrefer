@@ -388,7 +388,7 @@ export default function AdminUsers() {
                     onChange={() => toggleSelectUser(u.id)}
                     className="h-4 w-4 shrink-0 rounded border-border"
                   />
-                  <GAvatar name={u.name} gradient={u.gradient} className="h-10 w-10 shrink-0 text-xs" />
+                  <GAvatar name={u.name} color={u.gradient} className="h-10 w-10 shrink-0 text-xs" />
                   <div className="min-w-0 flex-1">
                     {editingUserId === u.id ? (
                       <div className="flex items-center gap-2">
@@ -556,7 +556,7 @@ export default function AdminUsers() {
         ) : masterEditorUser ? (
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
             <div className="flex items-center gap-4">
-              <GAvatar name={masterEditName} gradient={GRADIENTS[0]} className="h-14 w-14 text-lg" />
+              <GAvatar name={masterEditName} color={GRADIENTS[0]} className="h-14 w-14 text-lg" />
               <div>
                 <div className="text-sm font-semibold">{masterEditorUser.email}</div>
                 <div className="text-xs text-muted-foreground">ID: {masterEditorUser.id.slice(0, 8)}...</div>

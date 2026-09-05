@@ -4,20 +4,19 @@ import { ArrowDownRight, ArrowUpRight, Star, type LucideIcon } from 'lucide-reac
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { initials, type ReferralStatus } from '@/data/mock'
+import { initials, avatarColor, type ReferralStatus } from '@/data/mock'
 
-// ── Gradient avatar (local, always renders) ─────────────────
-export function GAvatar({ name, gradient, color, className, ring }: { name: string; gradient?: string; color?: string; className?: string; ring?: boolean }) {
+// ── Avatar (initials-based, solid color from official palette) ─────────
+export function GAvatar({ name, userId, color, className, ring }: { name: string; userId?: string; color?: string; className?: string; ring?: boolean }) {
+  const bg = color ?? (userId ? avatarColor(userId) : avatarColor(name))
   return (
     <div
       className={cn(
-        'flex shrink-0 select-none items-center justify-center rounded-full font-semibold text-white',
-        color ? '' : 'bg-gradient-to-br',
-        gradient,
+        'flex shrink-0 select-none items-center justify-center rounded-full font-semibold',
         ring && 'ring-2 ring-background',
         className ?? 'h-10 w-10 text-sm',
       )}
-      style={color ? { backgroundColor: color } : undefined}
+      style={{ backgroundColor: bg, color: '#F2F2F5' }}
     >
       {initials(name)}
     </div>

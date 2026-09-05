@@ -157,7 +157,7 @@ export default function ProfessionalPublic() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex items-end gap-4">
                 <div className="-mt-12 sm:-mt-14">
-                  <GAvatar name={pro.name} gradient={pro.gradient} color={getProfileTheme(bannerTheme).avatar} className="h-24 w-24 border-4 border-card text-2xl sm:h-28 sm:w-28" />
+                  <GAvatar name={pro.name} color={getProfileTheme(bannerTheme).avatar} className="h-24 w-24 border-4 border-card text-2xl sm:h-28 sm:w-28" />
                 </div>
                 <div className="pb-1">
                   <h1 className="font-display flex items-center gap-2 text-2xl font-bold tracking-tight">

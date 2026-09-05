@@ -48,7 +48,7 @@ export function ProfessionalCard({ p, index }: { p: Professional; index: number 
       <Link to={profileUrl('professional', p.id, p.slug)} className="group flex h-full flex-col rounded-2xl border border-border bg-card p-5 transition-shadow hover:shadow-md hover:border-primary/20">
         {/* Top row: Avatar + Bookmark */}
         <div className="flex items-start justify-between">
-          <GAvatar name={p.name} gradient={p.gradient} className="h-12 w-12 text-sm" />
+          <GAvatar name={p.name} color={p.gradient} className="h-12 w-12 text-sm" />
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleBookmark(p.id); toast(saved ? 'Removed' : 'Saved', { duration: 1500 }) }}
             className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"

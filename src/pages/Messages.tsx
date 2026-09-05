@@ -340,7 +340,7 @@ export default function Messages() {
               className={cn('flex w-full items-center gap-3 border-b border-border/60 px-4 py-3.5 text-left transition-colors hover:bg-muted/50', activeId === c.id && 'bg-primary/[0.06]')}
             >
               <div className="relative shrink-0">
-                <GAvatar name={c.name} gradient={c.gradient} className="h-11 w-11 text-xs" />
+                <GAvatar name={c.name} color={c.gradient} className="h-11 w-11 text-xs" />
                 {c.online && <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500" />}
               </div>
               <div className="min-w-0 flex-1">
@@ -374,10 +374,10 @@ export default function Messages() {
           </button>
           {profilePath ? (
             <Link to={profilePath}>
-              <GAvatar name={active.name} gradient={active.gradient} className="h-9 w-9 text-xs cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all" />
+              <GAvatar name={active.name} color={active.gradient} className="h-9 w-9 text-xs cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all" />
             </Link>
           ) : (
-            <GAvatar name={active.name} gradient={active.gradient} className="h-9 w-9 text-xs" />
+            <GAvatar name={active.name} color={active.gradient} className="h-9 w-9 text-xs" />
           )}
           <div className="min-w-0 flex-1">
             {profilePath ? (
@@ -411,7 +411,7 @@ export default function Messages() {
                     className={cn('flex', m.from === 'me' ? 'justify-end' : 'justify-start')}
                   >
                     <div className={cn('flex max-w-[75%] items-end gap-2', m.from === 'me' && 'flex-row-reverse')}>
-                      {m.from === 'them' && <GAvatar name={active.name} gradient={active.gradient} className="h-7 w-7 text-[9px]" />}
+                      {m.from === 'them' && <GAvatar name={active.name} color={active.gradient} className="h-7 w-7 text-[9px]" />}
                       <div>
                         {fileInfo ? (
                           <FileAttachment fileInfo={fileInfo} isMe={m.from === 'me'} />

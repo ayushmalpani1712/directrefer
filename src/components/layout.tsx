@@ -167,12 +167,12 @@ function WorkspaceSwitcher() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="flex h-14 items-center transition-colors hover:bg-muted px-1.5">
-            <GAvatar name={student?.name ?? 'U'} gradient={student?.gradient ?? 0} className="h-9 w-9 text-xs" ring />
+            <GAvatar name={student?.name ?? 'U'} color={student?.gradient} className="h-9 w-9 text-xs" ring />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" sideOffset={0} className="w-72">
           <div className="flex items-center gap-3 px-3 py-2.5">
-            <GAvatar name={student?.name ?? 'U'} gradient={student?.gradient ?? 0} className="h-10 w-10 text-sm" />
+            <GAvatar name={student?.name ?? 'U'} color={student?.gradient} className="h-10 w-10 text-sm" />
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold">{student?.name ?? 'User'}</div>
               <div className="truncate text-xs text-muted-foreground">
@@ -344,7 +344,7 @@ function AppSidebar() {
             <div className="mt-2 rounded-xl bg-gradient-to-br from-primary/5 via-muted/50 to-secondary/5 p-3 border border-border/50 relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.03] to-secondary/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative flex items-center gap-2.5">
-                <GAvatar name={user.name} gradient={user.gradient} className="h-9 w-9 text-xs ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all" />
+                <GAvatar name={user.name} color={user.gradient} className="h-9 w-9 text-xs ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px] font-semibold">{user.name}</div>
                   <div className="truncate text-[11px] text-muted-foreground">{ROLE_META[urlRole].label}</div>
@@ -543,7 +543,7 @@ function MessagesMenu() {
         {conversations.slice(0, 4).map((c) => (
           <DropdownMenuItem key={c.id} className="flex cursor-pointer items-center gap-3 px-4 py-3" onClick={() => navigate(`${messagesPath}?conversation=${c.id}`)}>
             <div className="relative">
-              <GAvatar name={c.name} gradient={c.gradient} className="h-9 w-9 text-xs" />
+              <GAvatar name={c.name} color={c.gradient} className="h-9 w-9 text-xs" />
               {c.online && <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-popover bg-emerald-500" />}
             </div>
             <div className="min-w-0 flex-1">

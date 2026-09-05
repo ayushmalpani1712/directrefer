@@ -151,7 +151,7 @@ export default function AdminApprovals() {
               <CardContent className="flex items-center gap-4 p-4">
                 <GAvatar
                   name={r.full_name}
-                  gradient={GRADIENTS[Math.abs(r.user_id.charCodeAt(0)) % GRADIENTS.length]}
+                  color={GRADIENTS[Math.abs(r.user_id.charCodeAt(0)) % GRADIENTS.length]}
                   className="h-10 w-10 shrink-0 text-xs"
                 />
                 <div className="min-w-0 flex-1">

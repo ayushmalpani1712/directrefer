@@ -123,7 +123,7 @@ export default function ProfessionalDashboard() {
           <CardContent className="relative p-4 sm:p-5">
             <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
-                <GAvatar name={PRO_USER.name} gradient={ME.gradient} className="h-12 w-12 text-base" ring />
+                <GAvatar name={PRO_USER.name} color={ME.gradient} className="h-12 w-12 text-base" ring />
                 <div>
                   <div className="text-[13px] text-muted-foreground">{PRO_USER.designation} · {PRO_USER.company}</div>
                   <h1 className="font-display text-xl sm:text-[28px] font-bold leading-tight text-foreground">Welcome back, {(ME.name || 'User').split(' ')[0]}</h1>
@@ -191,7 +191,7 @@ export default function ProfessionalDashboard() {
             <CardContent className="space-y-3 pt-2">
               {inbox.slice(0, 4).map((r) => (
                 <div key={r.id} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center">
-                  <GAvatar name={r.student} gradient="from-slate-500 to-slate-700" className="h-10 w-10 text-xs" />
+                  <GAvatar name={r.student} color="#64748B" className="h-10 w-10 text-xs" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-[14px] font-semibold">{r.student}</span>
@@ -230,7 +230,7 @@ export default function ProfessionalDashboard() {
             <CardContent className="space-y-3 pt-2">
               {candidates.filter((c) => c.source === 'Open to work' && c.id !== user?.id).slice(0, 4).map((c) => (
                 <div key={c.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/20 cursor-pointer" onClick={() => navigate(profileUrl('job-seeker', c.id, c.slug))}>
-                  <GAvatar name={c.name} gradient={c.gradient} className="h-9 w-9 text-xs" />
+                  <GAvatar name={c.name} color={c.gradient} className="h-9 w-9 text-xs" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[14px] font-semibold text-foreground">{c.name}</div>
                     <div className="text-[13px] text-muted-foreground">{c.role} · {c.exp}y exp</div>
@@ -341,7 +341,7 @@ export default function ProfessionalDashboard() {
             <CardContent className="space-y-2.5 pt-2">
               {conversations.slice(0, 3).map((c) => (
                 <Link to={`${getMessagesPath(role)}?conversation=${c.id}`} key={c.id} className="flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted/20">
-                  <GAvatar name={c.name} gradient={c.gradient} className="h-8 w-8 text-[10px]" />
+                  <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-[10px]" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[14px] font-medium text-foreground">{c.name}</div>
                     <div className="truncate text-[13px] text-muted-foreground">{c.lastMessage}</div>

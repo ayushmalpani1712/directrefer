@@ -748,7 +748,7 @@ export default function Landing() {
                     <GlowCard className="h-full shadow-soft cursor-pointer transition-[border-color,box-shadow] duration-300 hover:shadow-glow group">
                       <CardContent className="p-5">
                         <div className="flex items-center gap-3">
-                          <GAvatar name={p.name} gradient={p.gradient} className="h-12 w-12 text-sm ring-2 ring-background group-hover:ring-primary/30 transition-all" />
+                          <GAvatar name={p.name} color={p.gradient} className="h-12 w-12 text-sm ring-2 ring-background group-hover:ring-primary/30 transition-all" />
                           <div className="min-w-0">
                             <div className="flex items-center gap-1 truncate text-xs sm:text-[14px] font-semibold text-foreground">{p.name} <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#34D399]" /></div>
                             <div className="truncate text-xs sm:text-[13px] text-muted-foreground">{p.designation}</div>

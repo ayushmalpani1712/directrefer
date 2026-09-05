@@ -184,7 +184,7 @@ export default function MyReferrals() {
                   <CardContent className="p-5">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                       <Link to={profileUrl('professional', p.id, p.slug)} className="flex min-w-0 flex-1 items-center gap-3.5 group">
-                        <GAvatar name={p.name} gradient={p.gradient} className="h-12 w-12 text-sm" />
+                        <GAvatar name={p.name} color={p.gradient} className="h-12 w-12 text-sm" />
                         <div className="min-w-0">
                           <div className="truncate text-sm font-semibold group-hover:text-primary transition-colors">{r.role}</div>
                           <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">

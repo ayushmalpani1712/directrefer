@@ -211,7 +211,7 @@ export default function StudentDashboard() {
                       if (!p) return null
                       return (
                         <Link to={profileUrl('professional', p.id, p.slug)} key={r.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/15 hover:bg-card">
-                          <GAvatar name={p.name} gradient={p.gradient} className="h-9 w-9 text-[10px]" />
+                          <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-[10px]" />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                               <span className="truncate text-[14px] font-medium text-foreground">{p.name}</span>
@@ -248,7 +248,7 @@ export default function StudentDashboard() {
                       <Card className="group h-full cursor-pointer transition-all duration-200 hover:border-primary/15 hover:bg-card">
                         <CardContent className="flex h-full flex-col p-5 text-center">
                           <div className="flex justify-center">
-                            <GAvatar name={p.name} gradient={p.gradient} className="h-14 w-14 text-sm" />
+                            <GAvatar name={p.name} color={p.gradient} className="h-14 w-14 text-sm" />
                           </div>
                           <div className="mt-3">
                             <div className="flex items-center justify-center gap-1.5">
@@ -343,7 +343,7 @@ export default function StudentDashboard() {
                   <div className="space-y-2">
                     {saved.slice(0, 4).map((p) => (
                       <Link to={profileUrl('professional', p.id, p.slug)} key={p.id} className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/15">
-                        <GAvatar name={p.name} gradient={p.gradient} className="h-8 w-8 text-[10px]" />
+                        <GAvatar name={p.name} color={p.gradient} className="h-8 w-8 text-[10px]" />
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-sm font-medium text-foreground">{p.name}</div>
                           <div className="truncate text-xs text-muted-foreground">{p.company}</div>

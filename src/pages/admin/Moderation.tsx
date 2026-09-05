@@ -158,7 +158,7 @@ export default function AdminModeration() {
               <CardContent className="flex items-start gap-4 p-4">
                 <GAvatar
                   name={report.reporter_name}
-                  gradient={GRADIENTS[Math.abs(report.reporter_id.charCodeAt(0)) % GRADIENTS.length]}
+                  color={GRADIENTS[Math.abs(report.reporter_id.charCodeAt(0)) % GRADIENTS.length]}
                   className="h-10 w-10 shrink-0 text-xs"
                 />
                 <div className="min-w-0 flex-1">

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { initials, PIPELINE_STAGES, GRADIENTS } from '@/data/mock'
+import { initials, PIPELINE_STAGES, GRADIENTS, AVATAR_COLORS, avatarColor } from '@/data/mock'
 
 describe('initials', () => {
   it('returns first letters of each word', () => {
@@ -33,15 +33,31 @@ describe('PIPELINE_STAGES', () => {
   })
 })
 
-describe('GRADIENTS', () => {
-  it('has at least 10 gradients', () => {
-    expect(GRADIENTS.length).toBeGreaterThanOrEqual(10)
+describe('AVATAR_COLORS / GRADIENTS', () => {
+  it('has exactly 5 avatar colors', () => {
+    expect(AVATAR_COLORS).toHaveLength(5)
   })
 
-  it('each gradient is a valid tailwind class string', () => {
-    GRADIENTS.forEach((g) => {
-      expect(g).toContain('from-')
-      expect(g).toContain('to-')
+  it('GRADIENTS is the same as AVATAR_COLORS', () => {
+    expect(GRADIENTS).toEqual(AVATAR_COLORS)
+  })
+
+  it('each color is a valid hex string', () => {
+    AVATAR_COLORS.forEach((c) => {
+      expect(c).toMatch(/^#[0-9A-Fa-f]{6}$/)
     })
+  })
+
+  it('avatarColor returns a consistent color for the same userId', () => {
+    const c1 = avatarColor('user-abc-123')
+    const c2 = avatarColor('user-abc-123')
+    expect(c1).toBe(c2)
+  })
+
+  it('avatarColor always returns a color from the palette', () => {
+    for (let i = 0; i < 100; i++) {
+      const c = avatarColor(`test-user-${i}`)
+      expect(AVATAR_COLORS).toContain(c)
+    }
   })
 })

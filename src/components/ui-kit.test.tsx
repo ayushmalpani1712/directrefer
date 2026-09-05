@@ -64,27 +64,33 @@ describe('CompanyChip', () => {
 
 describe('GAvatar', () => {
   it('renders initials for a given name', () => {
-    render(<GAvatar name="John Doe" gradient="from-blue-500 to-purple-500" />)
+    render(<GAvatar name="John Doe" color="#8378EE" />)
     expect(screen.getByText('JD')).toBeInTheDocument()
   })
 
-  it('applies the gradient class', () => {
-    render(<GAvatar name="Jane Smith" gradient="from-green-400 to-blue-500" />)
+  it('applies the background color', () => {
+    render(<GAvatar name="Jane Smith" color="#34D399" />)
     const el = screen.getByText('JS')
-    expect(el.className).toContain('from-green-400')
-    expect(el.className).toContain('to-blue-500')
+    expect(el.closest('div')).toHaveStyle({ backgroundColor: '#34D399' })
   })
 
   it('applies ring class when ring prop is true', () => {
-    render(<GAvatar name="A B" gradient="from-red-500 to-orange-500" ring />)
+    render(<GAvatar name="A B" color="#F45485" ring />)
     const el = screen.getByText('AB')
     expect(el.className).toContain('ring-2')
   })
 
   it('applies custom className', () => {
-    render(<GAvatar name="X Y" gradient="from-pink-500 to-red-500" className="h-16 w-16" />)
+    render(<GAvatar name="X Y" color="#38BDF8" className="h-16 w-16" />)
     const el = screen.getByText('XY')
     expect(el.className).toContain('h-16')
+  })
+
+  it('auto-assigns color from userId', () => {
+    render(<GAvatar name="Test User" userId="abc-123" />)
+    const el = screen.getByText('TU')
+    const bg = el.closest('div')?.getAttribute('style')
+    expect(bg).toContain('background-color')
   })
 })
 

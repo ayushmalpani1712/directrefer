@@ -21,7 +21,8 @@ import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { uploadResume, deleteResume } from '@/lib/db'
 
-import { cn, getBannerStyle, getProfileTheme } from '@/lib/utils'
+import { cn, getBannerStyle } from '@/lib/utils'
+import { AVATAR_COLORS } from '@/data/mock'
 import { BannerColorModal } from '@/components/BannerColorModal'
 
 function Section({ title, icon: Icon, children, onAdd, actions, className }: { title: string; icon: typeof Award; children: React.ReactNode; onAdd?: () => void; actions?: React.ReactNode; className?: string }) {
@@ -56,6 +57,7 @@ export default function StudentProfile() {
 
   const [openToWork, setOpenToWork] = useState(s.openToWork)
   const [bannerTheme, setBannerTheme] = useState<string | null>(s.bannerTheme ?? null)
+  const [selectedAvatarColor, setSelectedAvatarColor] = useState<string>(s.gradient)
   const [bannerModalOpen, setBannerModalOpen] = useState(false)
 
   // Sync openToWork when DB data loads (only if value actually changed)
@@ -506,10 +508,26 @@ export default function StudentProfile() {
             onChange={(g) => { setBannerTheme(g); updateStudent({ bannerTheme: g }) }}
           />
           <CardContent className="relative px-4 pb-5 sm:px-6">
+            {/* Avatar Color Picker */}
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs text-muted-foreground">Avatar color:</span>
+              <div className="flex gap-1.5">
+                {AVATAR_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => { setSelectedAvatarColor(c); updateStudent({ gradient: c }) }}
+                    className={`h-6 w-6 rounded-full transition-all ${selectedAvatarColor === c ? 'ring-2 ring-offset-2 ring-offset-card' : 'hover:scale-110'}`}
+                    style={{ backgroundColor: c, ['--tw-ring-color' as string]: c }}
+                    title={c}
+                  />
+                ))}
+              </div>
+            </div>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex items-end gap-4 min-w-0">
                 <div className="-mt-12 sm:-mt-14 shrink-0">
-                  <GAvatar name={s.name} gradient={s.gradient} color={getProfileTheme(bannerTheme).avatar} className="h-20 w-20 border-4 border-card text-xl sm:h-24 sm:w-24 sm:text-2xl" />
+                  <GAvatar name={s.name} color={selectedAvatarColor} className="h-20 w-20 border-4 border-card text-xl sm:h-24 sm:w-24 sm:text-2xl" />
                 </div>
                 <div className="pb-0.5 min-w-0 flex-1">
                   <h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight truncate">
@@ -846,7 +864,7 @@ export default function StudentProfile() {
                 if (!p) return null
                 return (
                   <div key={r.id} className="flex items-center gap-3 rounded-xl border border-border p-3.5">
-                    <GAvatar name={p.name} gradient={p.gradient} className="h-9 w-9 text-[10px] shrink-0" />
+                    <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-[10px] shrink-0" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium">{r.role}</div>
                       <div className="truncate text-xs text-muted-foreground">via {p.name} · {p.company} · {r.date}</div>

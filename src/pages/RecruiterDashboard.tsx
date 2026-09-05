@@ -160,7 +160,7 @@ export default function RecruiterDashboard() {
           <CardContent className="relative p-4 sm:p-5">
             <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
-                <GAvatar name={RECRUITER_USER.name} gradient={RECRUITER_USER.gradient} className="h-12 w-12 text-base" ring />
+                <GAvatar name={RECRUITER_USER.name} color={RECRUITER_USER.gradient} className="h-12 w-12 text-base" ring />
                 <div>
                   <div className="text-[13px] text-muted-foreground">{RECRUITER_USER.designation}</div>
                   <h1 className="font-display text-xl sm:text-[28px] font-bold leading-tight text-foreground">Hiring at {recruiterCompany.name}</h1>
@@ -201,7 +201,7 @@ export default function RecruiterDashboard() {
         <CardContent className="space-y-3 pt-2">
           {candidates.filter((c) => c.source === 'Open to work' && c.id !== user?.id).slice(0, 4).map((c) => (
             <Link to={profileUrl('job-seeker', c.id, c.slug)} key={c.id} onClick={(e) => e.stopPropagation()} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/20">
-              <GAvatar name={c.name} gradient={c.gradient} className="h-9 w-9 text-xs" />
+              <GAvatar name={c.name} color={c.gradient} className="h-9 w-9 text-xs" />
               <div className="min-w-0 flex-1">
                 <div className="text-[14px] font-semibold text-foreground">{c.name}</div>
                 <div className="text-[13px] text-muted-foreground">{c.role} · {c.exp}y exp</div>
@@ -312,7 +312,7 @@ export default function RecruiterDashboard() {
             <CardContent className="space-y-2.5 pt-2">
               {saved.map((c) => (
                 <Link to={profileUrl('job-seeker', c.id, c.slug)} key={c.id} className="flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted/20">
-                  <GAvatar name={c.name} gradient={c.gradient} className="h-8 w-8 text-[10px]" />
+                  <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-[10px]" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[14px] font-medium text-foreground">{c.name}</div>
                     <div className="truncate text-[13px] text-muted-foreground">{c.role} · {c.exp}y exp</div>

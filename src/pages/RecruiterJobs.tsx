@@ -527,7 +527,7 @@ function RecruiterJobsManager() {
                         {pool.length === 0 && <p className="py-3 text-center text-[11px] text-muted-foreground">No available candidates</p>}
                         {pool.slice(0, 8).map((p) => (
                           <button key={p.id} className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-muted/50 transition-colors" onClick={() => addCandidateToStage(p, stage)}>
-                            <GAvatar name={p.name} gradient={p.gradient} className="h-7 w-7 text-[9px]" />
+                            <GAvatar name={p.name} color={p.gradient} className="h-7 w-7 text-[9px]" />
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-xs font-semibold">{p.name}</div>
                               <div className="truncate text-[10px] text-muted-foreground">{p.designation} · {p.company}</div>
@@ -546,7 +546,7 @@ function RecruiterJobsManager() {
                         const next = nextStage(stage)
                         return (
                           <div key={c.id} className="flex items-center gap-2.5 rounded-lg border border-border bg-background p-2.5">
-                            <GAvatar name={c.name} gradient={c.gradient} className="h-8 w-8 text-[10px]" />
+                               <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-[10px]" />
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-xs font-semibold">{c.name}</div>
                               <div className="truncate text-[10px] text-muted-foreground">{c.role} · {c.company}</div>
@@ -598,7 +598,7 @@ function RecruiterJobsManager() {
                         {pool.length === 0 && <p className="py-3 text-center text-[11px] text-muted-foreground">No available candidates</p>}
                         {pool.slice(0, 8).map((p) => (
                           <button key={p.id} className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-muted/50 transition-colors" onClick={() => addCandidateToStage(p, stage)}>
-                            <GAvatar name={p.name} gradient={p.gradient} className="h-7 w-7 text-[9px]" />
+                            <GAvatar name={p.name} color={p.gradient} className="h-7 w-7 text-[9px]" />
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-xs font-semibold">{p.name}</div>
                               <div className="truncate text-[10px] text-muted-foreground">{p.designation} · {p.company}</div>
@@ -615,7 +615,7 @@ function RecruiterJobsManager() {
                         <Card className="shadow-soft card-hover cursor-grab active:cursor-grabbing">
                           <CardContent className="p-3.5">
                             <div className="flex items-center gap-2.5">
-                              <GAvatar name={c.name} gradient={c.gradient} className="h-8 w-8 text-[10px]" />
+                            <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-[10px]" />
                               <div className="min-w-0 flex-1">
                                 <div className="truncate text-sm font-semibold">{c.name}</div>
                                 <div className="truncate text-[11px] text-muted-foreground">{c.role} · {c.exp}y</div>

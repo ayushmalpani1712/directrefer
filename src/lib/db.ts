@@ -8,6 +8,7 @@
 import { supabase } from '@/lib/supabase'
 import {
   GRADIENTS,
+  avatarColor,
   calculateReputationScore,
   type Professional,
   type ReferralRequest,
@@ -190,7 +191,7 @@ function buildLocation(
 
 export async function fetchProfessionals(_currentUserId?: string): Promise<Professional[]> {
   try {
-    const baseProfessionalSelect = 'user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url'
+    const baseProfessionalSelect = 'user_id, company_name, job_title, department, years_experience, open_for_referrals, is_open_to_work, referral_capacity, referrals_used, referral_policy, bio, skills, open_positions, response_rate, avg_reply_hours, success_rate, rating, review_count, github_url, avatar_color'
     const collegeSupported = await professionalCollegeSupported()
     const showOnFind = await showOnFindSupported()
     const professionalSelect = (collegeSupported ? baseProfessionalSelect + ', college' : baseProfessionalSelect) + (showOnFind ? ', show_on_find' : '')
@@ -218,7 +219,7 @@ export async function fetchProfessionals(_currentUserId?: string): Promise<Profe
       profileMap.set(String(p.user_id), p)
     }
 
-    return usersRes.data.map((row, index): Professional => {
+    return usersRes.data.map((row): Professional => {
       const profile = profileMap.get(row.id) as {
         company_name: string
         job_title: string
@@ -238,6 +239,7 @@ export async function fetchProfessionals(_currentUserId?: string): Promise<Profe
         rating: number
         review_count: number
         github_url: string | null
+        avatar_color: string | null
         college: string | null
       } | undefined
 
@@ -280,7 +282,7 @@ export async function fetchProfessionals(_currentUserId?: string): Promise<Profe
           openPositions,
           bio: profile?.bio ?? '',
           badges: [],
-          gradient: GRADIENTS[index % GRADIENTS.length],
+          gradient: (profile?.avatar_color as string) || avatarColor(row.id),
           phone: row.mobile ?? '',
           whatsapp: row.mobile ?? '',
           email: row.email,

@@ -82,19 +82,20 @@ export interface Professional {
   college?: string
 }
 
-export const GRADIENTS = [
-  'from-[#6366F1] to-[#8B5CF6]',
-  'from-sky-500 to-cyan-400',
-  'from-emerald-500 to-teal-400',
-  'from-rose-500 to-pink-400',
-  'from-amber-500 to-orange-400',
-  'from-[#5B6FE5] to-purple-400',
-  'from-orange-500 to-rose-400',
-  'from-cyan-600 to-sky-400',
-  'from-pink-500 to-rose-400',
-  'from-violet-500 to-indigo-400',
-  'from-teal-500 to-emerald-400',
-]
+/** Official DirectRefer Avatar/Identity Accent Set — solid colors only, no gradients */
+export const AVATAR_COLORS = ['#F45485', '#F8971E', '#8378EE', '#34D399', '#38BDF8'] as const
+
+/** Backward-compatible alias — now returns solid hex colors from the official palette */
+export const GRADIENTS: readonly string[] = AVATAR_COLORS
+
+/** Deterministically assign an avatar color from the official palette based on a stable user ID */
+export function avatarColor(userId: string): string {
+  let hash = 0
+  for (let i = 0; i < userId.length; i++) {
+    hash = ((hash << 5) - hash + userId.charCodeAt(i)) | 0
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
+}
 
 export type ReferralStatus = 'requested' | 'under_review' | 'accepted' | 'declined' | 'referral_submitted' | 'application_submitted' | 'closed'
 

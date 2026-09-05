@@ -158,7 +158,7 @@ export default function ReferralInbox() {
               <Card className="shadow-soft">
                 <CardContent className="p-5">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-                    <GAvatar name={r.student} gradient="from-slate-500 to-slate-700" className="h-12 w-12 text-sm" />
+                    <GAvatar name={r.student} color="#64748B" className="h-12 w-12 text-sm" />
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-semibold">{r.student}</span>

@@ -367,7 +367,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               .from('profiles_job_seeker')
               .upsert({ user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true })
             const { candidateFieldsSupported } = await loadDb()
-            const baseSelect = 'headline, is_open_to_work, certifications, achievements, projects, preferred_companies, preferred_role, skills, portfolio_url, github_url, website, experience, education, languages, resume_url, resume_name, resume_size_bytes, resume_uploaded_at'
+            const baseSelect = 'headline, is_open_to_work, certifications, achievements, projects, preferred_companies, preferred_role, skills, portfolio_url, github_url, website, experience, education, languages, resume_url, resume_name, resume_size_bytes, resume_uploaded_at, avatar_color'
             const extraSelect = await candidateFieldsSupported()
               ? ', notice_period, work_preference, why_me'
               : ''
@@ -474,11 +474,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           notice_period?: string
           work_preference?: string
           why_me?: string
+          avatar_color?: string
         }
         setStudent((prev) => ({
           ...prev,
           headline: pd.headline ?? prev.headline,
           openToWork: pd.is_open_to_work ?? prev.openToWork,
+          gradient: pd.avatar_color || prev.gradient,
           certifications: typeof pd.certifications === 'string' ? (() => { try { return JSON.parse(pd.certifications) } catch { return prev.certifications } })() : (pd.certifications ?? prev.certifications),
           achievements: typeof pd.achievements === 'string' ? (() => { try { return JSON.parse(pd.achievements) } catch { return prev.achievements } })() : (pd.achievements ?? prev.achievements),
           projects: typeof pd.projects === 'string' ? (() => { try { return JSON.parse(pd.projects) } catch { return prev.projects } })() : (pd.projects ?? prev.projects),
@@ -723,6 +725,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (patch.openPositions) profilePatch.open_positions = JSON.stringify(patch.openPositions)
       if (patch.githubUrl !== undefined) profilePatch.github_url = patch.githubUrl
       if (patch.college !== undefined) profilePatch.college = patch.college
+      if (patch.gradient !== undefined) profilePatch.avatar_color = patch.gradient
       if (Object.keys(profilePatch).length > 0) {
         updateProfessionalProfile(id, profilePatch).catch((err) => {
           console.error('Failed to update professional profile:', err)
@@ -796,6 +799,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (patch.certifications !== undefined) profilePatch.certifications = JSON.stringify(patch.certifications)
       if (patch.achievements !== undefined) profilePatch.achievements = JSON.stringify(patch.achievements)
       if (patch.projects !== undefined) profilePatch.projects = JSON.stringify(patch.projects)
+      if (patch.gradient !== undefined) profilePatch.avatar_color = patch.gradient
       const profilePatchBase = { ...profilePatch } as Record<string, unknown>
       if (Object.keys(profilePatch).length > 0) updateJobSeekerProfile(user.id, profilePatchBase).catch((err) => {
         console.error('Failed to update job seeker profile:', err)

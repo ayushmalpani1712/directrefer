@@ -85,7 +85,7 @@ export default function TalentSearch() {
                     <CardContent className="p-5">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <GAvatar name={c.name} gradient={c.gradient} className="h-11 w-11 text-sm" />
+                          <GAvatar name={c.name} color={c.gradient} className="h-11 w-11 text-sm" />
                           <div>
                             <div className="text-sm font-semibold">{c.name}</div>
                             <div className="text-xs text-muted-foreground">{c.role} · {c.exp}y exp</div>

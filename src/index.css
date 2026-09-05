@@ -38,36 +38,50 @@
   }
 
   .dark {
-    --background: 240 6% 5%;
-    --foreground: 240 5% 95%;
-    --card: 228 8% 9%;
-    --card-foreground: 240 5% 95%;
-    --popover: 240 5% 13%;
-    --popover-foreground: 240 5% 95%;
-    --primary: 239 84% 67%;
+    --background: 240 20% 6%;       /* #0A0A0F */
+    --foreground: 240 19% 95%;      /* #F2F2F5 */
+    --card: 231 15% 9%;             /* #13141A */
+    --card-foreground: 240 19% 95%;
+    --popover: 230 14% 13%;         /* #1C1D25 */
+    --popover-foreground: 240 19% 95%;
+    --primary: 239 84% 67%;         /* #6366F1 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 258 90% 66%;
+    --secondary: 258 90% 66%;       /* #8B5CF6 */
     --secondary-foreground: 0 0% 100%;
-    --muted: 240 5% 13%;
-    --muted-foreground: 240 4% 60%;
+    --muted: 230 14% 13%;           /* #1C1D25 */
+    --muted-foreground: 229 8% 63%; /* #9A9BA8 */
     --accent: 258 90% 66%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 350 89% 60%;
+    --destructive: 350 89% 60%;     /* #F43F5E */
     --destructive-foreground: 0 0% 100%;
-    --border: 240 5% 16%;
-    --input: 240 5% 16%;
+    --border: 231 12% 17%;          /* #26272F */
+    --input: 231 12% 17%;
     --ring: 239 84% 67%;
     --info: 239 84% 67%;
-    --sidebar-background: 240 6% 5%;
-    --sidebar-foreground: 240 4% 60%;
+    --sidebar-background: 240 20% 6%;
+    --sidebar-foreground: 229 8% 63%;
     --sidebar-primary: 239 84% 67%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 239 84% 67%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 240 5% 16%;
+    --sidebar-border: 231 12% 17%;
     --sidebar-ring: 239 84% 67%;
     --card-glow: 99 102 241;
     --card-glow-hover: 99 102 241;
+
+    /* Official palette — Avatar/Identity Accent Set */
+    --avatar-pink: #F45485;
+    --avatar-orange: #F8971E;
+    --avatar-purple: #8378EE;
+    --avatar-emerald: #34D399;
+    --avatar-sky: #38BDF8;
+
+    /* Official palette — Premium accent */
+    --gold: #E8B44C;
+
+    /* Official palette — Logo */
+    --logo: #2B44DF;
+    --logo-fallback: #4A6AFF;
   }
 }
 
