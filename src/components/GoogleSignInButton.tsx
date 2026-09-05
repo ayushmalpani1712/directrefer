@@ -77,6 +77,8 @@ export default function GoogleSignInButton({ onError, disabled }: Props) {
     if (initialized.current) return
     initialized.current = true
 
+    if (!GOOGLE_CLIENT_ID) return
+
     loadScript(GSI_SCRIPT_URL).then(() => {
       if (window.google?.accounts?.id) {
         window.google.accounts.id.initialize({
@@ -139,7 +141,7 @@ export default function GoogleSignInButton({ onError, disabled }: Props) {
   const handleClick = async () => {
     if (loading || disabled) return
 
-    if (window.google?.accounts?.id) {
+    if (window.google?.accounts?.id && GOOGLE_CLIENT_ID) {
       setLoading(true)
       window.google.accounts.id.prompt((notification) => {
         if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {

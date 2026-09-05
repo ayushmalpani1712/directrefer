@@ -11,7 +11,7 @@
     { "source": "/manifest.json", "destination": "/manifest.json" },
     { "source": "/logo-emblem.png", "destination": "/logo-emblem.png" },
     { "source": "/pwa-icon.png", "destination": "/pwa-icon.png" },
-    { "source": "/((?!api/|assets/|sw\\.js|manifest\\.json|logo-emblem\\.png|pwa-icon\\.png).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|assets/|sw\\.js|sw-register\\.js|manifest\\.json|logo-emblem\\.png|pwa-icon\\.png).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
