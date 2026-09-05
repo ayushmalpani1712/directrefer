@@ -374,8 +374,8 @@ export default function ReferralJobs() {
                       <CompanyChip name={job.company ?? ''} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <h3 className="font-semibold leading-tight">{job.title}</h3>
+                          <div className="min-w-0">
+                            <h3 className="font-semibold leading-tight truncate">{job.title}</h3>
                             <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                               <Building2 className="h-3 w-3" /> {job.company}
                             </p>

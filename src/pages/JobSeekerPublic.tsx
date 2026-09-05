@@ -151,8 +151,8 @@ export default function JobSeekerPublic() {
                   <div className="-mt-12 sm:-mt-14">
                     <GAvatar name={seeker.name} color={getProfileTheme(bannerTheme).avatar} className="h-24 w-24 border-4 border-card text-2xl sm:h-28 sm:w-28" />
                   </div>
-                  <div className="pb-1">
-                    <h1 className="font-display text-2xl font-bold tracking-tight">{seeker.name}</h1>
+                  <div className="pb-1 min-w-0">
+                    <h1 className="font-display text-2xl font-bold tracking-tight truncate">{seeker.name}</h1>
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
                       <span>{seeker.headline}</span>
                       <span>·</span>
@@ -186,7 +186,7 @@ export default function JobSeekerPublic() {
                   </div>
                 </div>
                 {!isOwnProfile && (
-                  <div className="flex gap-2 sm:pb-1">
+                  <div className="flex flex-wrap gap-2 sm:pb-1">
                     <Button className="rounded-full bg-primary shadow-glow" onClick={() => {
                       const pro = professionals?.find((p) => p.id === user?.id)
                       if (!pro) return

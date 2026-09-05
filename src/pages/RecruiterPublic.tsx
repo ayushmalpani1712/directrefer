@@ -128,9 +128,9 @@ export default function RecruiterPublic() {
                 <div className="-mt-10 sm:-mt-12">
                   <CompanyChip name={c.company_name} className="h-20 w-20 rounded-2xl border-4 border-card text-2xl sm:h-24 sm:w-24" />
                 </div>
-                <div className="pb-1">
-                  <h1 className="font-display flex items-center gap-2 text-2xl font-bold tracking-tight">
-                    {c.company_name} <BadgeCheck className="h-5.5 w-5.5 text-sky-500" />
+                <div className="pb-1 min-w-0">
+                  <h1 className="font-display flex items-center gap-2 text-2xl font-bold tracking-tight truncate">
+                    {c.company_name} <BadgeCheck className="h-5.5 w-5.5 text-sky-500 shrink-0" />
                   </h1>
                   <div className="mt-0.5 text-sm text-muted-foreground">{c.hiring_department}</div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -144,7 +144,7 @@ export default function RecruiterPublic() {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" className="rounded-full" onClick={async () => {
                   const convId = await startConversation(recruiter?.user.id ?? '')
                   if (convId) navigate(`${getMessagesPath(role)}?conversation=${convId}`)

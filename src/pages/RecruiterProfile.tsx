@@ -203,7 +203,7 @@ export default function RecruiterProfile() {
                   )}
                 </div>
               </div>
-              <div className="flex gap-2 sm:pb-0.5">
+              <div className="flex flex-wrap gap-2 sm:pb-0.5">
                 {editing ? (
                   <>
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => {

@@ -159,9 +159,9 @@ export default function ProfessionalPublic() {
                 <div className="-mt-12 sm:-mt-14">
                   <GAvatar name={pro.name} color={getProfileTheme(bannerTheme).avatar} className="h-24 w-24 border-4 border-card text-2xl sm:h-28 sm:w-28" />
                 </div>
-                <div className="pb-1">
-                  <h1 className="font-display flex items-center gap-2 text-2xl font-bold tracking-tight">
-                    {pro.name} {pro.verified && <BadgeCheck className="h-5.5 w-5.5 text-sky-500" />}
+                <div className="pb-1 min-w-0">
+                  <h1 className="font-display flex items-center gap-2 text-2xl font-bold tracking-tight truncate">
+                    {pro.name} {pro.verified && <BadgeCheck className="h-5.5 w-5.5 text-sky-500 shrink-0" />}
                   </h1>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
                     <span>{pro.designation}</span><span>·</span>
@@ -169,7 +169,7 @@ export default function ProfessionalPublic() {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2 sm:pb-1">
+              <div className="flex flex-wrap gap-2 sm:pb-1">
                 <Button
                   className="rounded-full bg-primary shadow-glow"
                   disabled={!pro.openForReferrals}

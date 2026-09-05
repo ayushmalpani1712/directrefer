@@ -219,7 +219,7 @@ export default function ProfessionalProfile() {
                   )}
                 </div>
               </div>
-              <div className="flex gap-2 sm:pb-0.5">
+              <div className="flex flex-wrap gap-2 sm:pb-0.5">
                 {editingHeader ? (
                   <>
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => {
