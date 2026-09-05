@@ -48,14 +48,6 @@ export default tseslint.config(
     },
   },
 
-  // Admin.tsx declares hooks after an early `role !== 'admin'` guard. The route is
-  // gated by <RequireRole allowed={['admin']}>, so the guard never toggles while the
-  // component is mounted — the conditional-hook pattern is safe here by construction.
-  {
-    files: ['src/pages/Admin.tsx'],
-    rules: { 'react-hooks/rules-of-hooks': 'off' },
-  },
-
   // ---- E2E (Playwright fixtures are not React components) ----
   {
     files: ['e2e/**/*.{ts,tsx}', 'playwright/**/*.{ts,tsx}'],
