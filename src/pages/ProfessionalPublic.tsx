@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress'
 import { SkeletonCard } from '@/components/ui/skeleton'
 import { CompanyChip, GAvatar, ReportDialog } from '@/components/ui-kit'
 import { TrustBadge } from '@/components/TrustBadge'
+import { useTrustScore } from '@/hooks/useTrustScore'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
@@ -116,16 +117,6 @@ export default function ProfessionalPublic() {
           phone: userData?.mobile || '',
           whatsapp: userData?.mobile || '',
         })
-        // Fetch trust score
-        try {
-          const { fetchTrustScore } = await import('@/lib/v2/api')
-          const ts = await fetchTrustScore(userId)
-          if (ts) {
-            setPro(prev => prev ? { ...prev, trustScore: ts.score, trustTier: ts.tier } : prev)
-          }
-        } catch {
-          // Non-critical
-        }
       } catch {
         setPro(null)
       }
@@ -133,6 +124,9 @@ export default function ProfessionalPublic() {
     }
     fetchPro()
   }, [paramId])
+
+  // V2 trust score
+  const { score: trustScore } = useTrustScore(pro?.id)
 
   if (loading || loadingData) {
     return (
@@ -176,7 +170,7 @@ export default function ProfessionalPublic() {
                     {pro.name} {pro.verified && <BadgeCheck className="h-5.5 w-5.5 text-sky-500 shrink-0" />}
                   </h1>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
-                    {pro.trustTier && <TrustBadge tier={pro.trustTier} score={pro.trustScore} showScore />}
+                    {trustScore && <TrustBadge tier={trustScore.tier} score={trustScore.score} showScore />}
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
                     <span>{pro.designation}</span><span>·</span>

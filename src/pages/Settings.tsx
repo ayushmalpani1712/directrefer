@@ -7,6 +7,7 @@ import {
 import { AnimatePresence, motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { MigrationReadiness } from '@/components/MigrationReadiness'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -503,6 +504,8 @@ export default function Settings() {
     <div className="mx-auto max-w-4xl min-w-0 overflow-x-hidden space-y-6">
 
       <SectionHeader title="Settings" subtitle="Manage your account, preferences and security" />
+
+      <MigrationReadiness />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="h-auto flex-wrap justify-start">
