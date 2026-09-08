@@ -282,17 +282,30 @@
 
 /* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  .fade-in-hidden {
-    opacity: 1;
-    transform: none;
-    transition: none;
+  .fade-in-hidden,
+  .link-underline::after,
+  .card-press,
+  .btn-glow::before,
+  .tooltip-enter {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
   .hero-anim-1,
   .hero-anim-2,
   .hero-anim-3,
   .hero-anim-4,
-  .hero-mock-anim {
-    animation: none;
+  .hero-mock-anim,
+  .stagger-children > *,
+  .count-animate,
+  .stat-animate,
+  .badge-pulse,
+  .badge-shine::after {
+    animation: none !important;
+  }
+  .progress-fill {
+    transition: none !important;
   }
 }
 
@@ -378,4 +391,202 @@
 @keyframes shine {
   0%, 100% { transform: translateX(-100%); }
   50% { transform: translateX(100%); }
+}
+
+/* ── Mobile Premium UX ──────────────────────────────────────────────────── */
+
+/* Minimum touch targets for mobile (WCAG 2.5.5) */
+@media (max-width: 768px) {
+  button, a, input, select, textarea, [role="button"], [role="tab"], [role="menuitem"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Larger tap areas for nav items */
+  nav a, nav button {
+    padding: 12px 16px;
+  }
+  /* Stack layout on mobile */
+  .lg\:grid-cols-3 { grid-template-columns: 1fr !important; }
+  .xl\:grid-cols-4 { grid-template-columns: 1fr !important; }
+  .xl\:grid-cols-3 { grid-template-columns: 1fr !important; }
+  /* Reduce padding on mobile cards */
+  .card, [class*="Card"] {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  /* Full-width buttons on mobile */
+  .mobile-full-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Premium Micro-Interactions ─────────────────────────────────────────── */
+
+/* Smooth link underline animation */
+.link-underline {
+  position: relative;
+  text-decoration: none;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: hsl(var(--primary));
+  transition: width 0.25s ease-out;
+}
+.link-underline:hover::after {
+  width: 100%;
+}
+
+/* Card press effect (mobile) */
+@media (hover: none) {
+  .card-press {
+    transition: transform 0.15s ease-out;
+  }
+  .card-press:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Smooth image load */
+.img-reveal {
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+.img-reveal.loaded {
+  opacity: 1;
+}
+
+/* Premium button hover glow */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+}
+.btn-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 70%);
+  transition: opacity 0.3s ease;
+}
+.btn-glow:hover::before {
+  opacity: 1;
+}
+
+/* Smooth counter animation */
+@keyframes count-slide {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.count-animate {
+  animation: count-slide 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Stagger children animation */
+.stagger-children > * {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: count-slide 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
+
+/* Progress bar smooth fill */
+.progress-fill {
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Tooltip fade */
+.tooltip-enter {
+  opacity: 0;
+  transform: scale(0.96) translateY(4px);
+  transition: all 0.15s ease-out;
+}
+.tooltip-enter.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* Notification badge pulse */
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+.badge-pulse {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+/* Smooth scroll snap for mobile carousels */
+.scroll-snap {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll-snap > * {
+  scroll-snap-align: start;
+}
+
+/* ── Mobile Premium UX ──────────────────────────────────────────────────── */
+
+/* Minimum touch targets for mobile (WCAG 2.5.5) */
+@media (max-width: 768px) {
+  button, a, input, select, textarea, [role="button"], [role="tab"], [role="menuitem"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Larger tap areas for nav items */
+  nav a, nav button {
+    padding: 12px 16px;
+  }
+  /* Stack layout on mobile */
+  .lg\:grid-cols-3 { grid-template-columns: 1fr !important; }
+  .xl\:grid-cols-4 { grid-template-columns: 1fr !important; }
+  .xl\:grid-cols-3 { grid-template-columns: 1fr !important; }
+  /* Reduce padding on mobile cards */
+  .card, [class*="Card"] {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  /* Full-width buttons on mobile */
+  .mobile-full-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  /* Better mobile spacing */
+  .space-y-4 > * + * {
+    margin-top: 12px;
+  }
+  .space-y-6 > * + * {
+    margin-top: 16px;
+  }
+}
+
+/* ── Performance ────────────────────────────────────────────────────────── */
+
+/* Lazy image loading */
+img[loading="lazy"] {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+img[loading="lazy"].loaded,
+img[loading="lazy"]:not([data-src]) {
+  opacity: 1;
+}
+
+/* Reduce paint for complex animations */
+.will-change-transform {
+  will-change: transform;
+}
+.will-change-opacity {
+  will-change: opacity;
 }

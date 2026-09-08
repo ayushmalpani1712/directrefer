@@ -281,7 +281,7 @@ function AppSidebar() {
                         <Link
                           to={item.href}
                           className={cn(
-                            'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-colors duration-200 min-h-[44px] relative',
+                            'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-200 min-h-[44px] relative active:scale-[0.98]',
                             isActive
                               ? 'bg-primary/10 text-primary font-semibold shadow-[0_0_12px_-4px_var(--card-glow)] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-primary'
                               : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground hover:translate-x-[1px]',
@@ -292,7 +292,7 @@ function AppSidebar() {
                         </Link>
                       </SidebarMenuButton>
                       {item.badge && (
-                        <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary badge-shine">
+                        <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary badge-shine" aria-label={`${item.badge} pending`}>
                           {item.badge}
                         </SidebarMenuBadge>
                       )}
@@ -403,7 +403,7 @@ function Topbar() {
   const navigate = useNavigate()
   return (
     <header className="glass sticky top-0 z-30 flex h-14 items-center gap-1.5 border-b border-border/50 px-2 sm:px-4 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
-      <SidebarTrigger className="md:hidden h-11 w-11 shrink-0 touch-target" />
+      <SidebarTrigger className="md:hidden h-11 w-11 shrink-0 touch-target" aria-label="Toggle navigation menu" />
       <a href="/" onClick={(e) => { e.preventDefault(); window.location.assign('/') }} className="flex items-center shrink-0 md:hidden" aria-label="Direct Refer — Go to homepage">
         <svg viewBox="0 0 512 385" className="h-8 w-auto shrink-0" aria-hidden="true">
           <image href="/logo-emblem.png" width="512" height="385" />
@@ -444,7 +444,7 @@ function Topbar() {
         >
           <MessageSquare className="h-[18px] w-[18px]" />
           {unreadMessages > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground badge-pulse" aria-hidden="true">
               {unreadMessages}
             </span>
           )}
@@ -456,7 +456,7 @@ function Topbar() {
         >
           <Bell className="h-[18px] w-[18px]" />
           {unreadNotifs > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white badge-pulse" aria-hidden="true">
               {unreadNotifs}
             </span>
           )}
