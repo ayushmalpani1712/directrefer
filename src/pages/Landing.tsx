@@ -531,13 +531,13 @@ export default function Landing() {
           </nav>
           <div className="flex items-center gap-1.5 sm:gap-2">
             {user ? (
-              <Button size="sm" className="rounded-[14px] bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] shadow-sm text-xs sm:text-sm" asChild>
+              <Button size="sm" className="rounded-lg bg-primary shadow-sm text-xs sm:text-sm" asChild>
                 <Link to="/dashboard">Go to Dashboard <ArrowRight className="ml-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" /></Link>
               </Button>
             ) : (
               <>
                 <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild><Link to="/login">Sign in</Link></Button>
-                <Button size="sm" className="rounded-[14px] bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] shadow-sm text-xs sm:text-sm" asChild>
+                <Button size="sm" className="rounded-lg bg-primary shadow-sm text-xs sm:text-sm" asChild>
                   <Link to="/login">Get started <ArrowRight className="ml-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" /></Link>
                 </Button>
               </>
@@ -570,27 +570,26 @@ export default function Landing() {
       <main id="main-content">
         {/* ── 1. Hero ── */}
         <section className="relative overflow-hidden px-4 pb-14 pt-10 sm:px-6 sm:pb-24 sm:pt-20 lg:px-8">
-          <div className="absolute inset-0 bg-premium-grid opacity-30" />
+          <div className="absolute inset-0 bg-dots opacity-30" />
           <div className="absolute left-1/2 top-0 -z-10 h-[400px] w-[700px] -translate-x-1/2 rounded-full bg-primary/[0.03] blur-[100px]" />
-          <div className="absolute right-0 top-1/2 -z-10 h-[250px] w-[350px] rounded-full bg-secondary/[0.02] blur-[80px]" />
           <div className="mx-auto max-w-3xl text-center relative z-10">
             <div className="hero-anim-1">
-              <Badge variant="outline" className="gap-1.5 rounded-full border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary  badge-shine">
+              <Badge variant="outline" className="gap-1.5 rounded-full border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary">
                 <Sparkles className="h-3 w-3" /> <span>Ask for the referral, without the awkward cold DM</span>
               </Badge>
             </div>
-              <h1 className="hero-anim-2 font-display mt-6 text-2xl font-bold leading-[1.08] tracking-tight sm:text-4xl lg:text-6xl">
+              <h1 className="hero-anim-2 font-display mt-6 text-3xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
               Get referred into<br className="hidden sm:block" /> your dream company
             </h1>
-            <p className="hero-anim-3 mx-auto mt-5 max-w-xl text-sm sm:text-lg text-muted-foreground">
-              Stop sending resumes into the void. Find verified professionals at real companies &mdash; then request a referral in two clicks.
+            <p className="hero-anim-3 mx-auto mt-5 max-w-xl text-base sm:text-lg text-muted-foreground leading-relaxed">
+              Stop sending resumes into the void. Find verified professionals at real companies, then request a referral in two clicks.
             </p>
             <div className="hero-anim-4 mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button size="lg" className="rounded-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] px-6 sm:px-8 text-white shadow-glow hover:shadow-[0_4px_30px_-4px_rgba(99,102,241,0.5)] transition-all duration-300 text-sm sm:text-base" asChild>
+              <Button size="lg" className="rounded-lg bg-primary px-6 sm:px-8 text-white shadow-sm hover:shadow-md transition-all duration-200 text-sm sm:text-base" asChild>
                 <Link to={user ? '/dashboard' : '/login'}><GraduationCap className="mr-2 h-4 w-4" /> {user ? 'Go to Dashboard' : "Find a professional \u2014 it's free"} <ArrowRight className="ml-1 h-4 w-4" /></Link>
               </Button>
             </div>
-            <p className="hero-anim-4 mt-4 text-xs text-muted-foreground/70">
+            <p className="hero-anim-4 mt-4 text-xs text-muted-foreground/60">
               Free for job seekers. No spam. Request limits protect every professional.
             </p>
             <div className="hero-anim-4 mt-5">
@@ -630,12 +629,12 @@ export default function Landing() {
                 { step: '3', title: 'Know where you stand', desc: 'Track your referral from sent to accepted. No more guessing.', icon: TrendingUp },
               ].map((s, i) => (
                 <FadeIn key={s.step} delay={i * 0.12} className="text-center group h-full flex flex-col items-center">
-                  <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] text-white shadow-glow-lg group-hover:scale-110 transition-transform duration-300" style={{ animationDelay: `${i * 0.5}s` }}>
-                    <s.icon className="h-7 w-7" />
-                    <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-background text-xs font-bold text-primary border-2 border-primary/20">{s.step}</div>
+                  <div className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-white shadow-sm group-hover:shadow-md transition-all duration-200">
+                    <s.icon className="h-6 w-6" />
+                    <div className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-background text-[10px] font-bold text-primary border border-primary/20">{s.step}</div>
                   </div>
-                  <h3 className="mt-5 text-base sm:text-[18px] font-semibold text-foreground">{s.title}</h3>
-                  <p className="mt-2 text-xs sm:text-[14px] text-muted-foreground max-w-xs mx-auto">{s.desc}</p>
+                  <h3 className="mt-5 text-base font-semibold text-foreground">{s.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground max-w-xs mx-auto">{s.desc}</p>
                 </FadeIn>
               ))}
             </div>
@@ -827,18 +826,18 @@ export default function Landing() {
 
         {/* ── 10. CTA ── */}
         <section className="relative overflow-hidden border-t border-border/50 px-4 py-12 text-center sm:px-6 sm:py-20 lg:px-8">
-          <div className="absolute inset-0 bg-premium-grid opacity-20" />
-          <div className="absolute left-1/2 top-1/2 -z-10 h-[380px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.05] blur-[100px]" />
+          <div className="absolute inset-0 bg-dots opacity-20" />
+          <div className="absolute left-1/2 top-1/2 -z-10 h-[380px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.04] blur-[100px]" />
           <FadeIn>
             <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px] text-foreground">
-              Don&rsquo;t just apply.<br /><span className="text-gradient">Get referred.</span>
+              Don&rsquo;t just apply.<br /><span className="text-primary">Get referred.</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-md text-muted-foreground">Referred candidates are 13× more likely to be hired. Your next role starts with one intro.</p>
+            <p className="mx-auto mt-4 max-w-md text-muted-foreground">Referred candidates are 13x more likely to be hired. Your next role starts with one intro.</p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Button size="lg" className="rounded-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] px-6 sm:px-8 text-white shadow-glow hover:shadow-[0_4px_30px_-4px_rgba(99,102,241,0.5)] transition-all duration-300 text-sm sm:text-base" asChild>
+              <Button size="lg" className="rounded-lg bg-primary px-6 sm:px-8 text-white shadow-sm hover:shadow-md transition-all duration-200 text-sm sm:text-base" asChild>
                 <Link to={user ? '/dashboard' : '/login'}>{user ? 'Go to Dashboard' : 'Find a professional'} <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
-              <Button size="lg" variant="outline" className="rounded-full px-6 sm:px-8 text-sm sm:text-base border-border/60 hover:border-primary/30 hover:bg-muted/30" asChild>
+              <Button size="lg" variant="outline" className="rounded-lg px-6 sm:px-8 text-sm sm:text-base" asChild>
                 <Link to="/referral-jobs">Browse referral jobs</Link>
               </Button>
             </div>
