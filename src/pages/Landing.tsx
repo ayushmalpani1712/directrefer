@@ -26,15 +26,13 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { GAvatar } from '@/components/ui-kit'
 import { Logo } from '@/components/layout'
 import { FadeIn } from '@/components/FadeIn'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { profileUrl, RECRUITER_VISIBLE } from '@/data/mock'
-import { GlowCard } from '@/components/GlowCard'
-import { SpotlightCard } from '@/components/SpotlightCard'
 import { captureUTMFromURL, storeUTMParams, trackPageVisit } from '@/lib/analytics'
 
 const ROLES = [
@@ -669,11 +667,11 @@ export default function Landing() {
                 { icon: FileText, title: 'Honest outcomes', desc: 'A referral is an opportunity, not a guarantee. No fabricated jobs, users, or success stories.' },
               ].map((t, i) => (
                 <FadeIn key={t.title} delay={i * 0.08}>
-                  <SpotlightCard className="h-full rounded-2xl border border-border/60 bg-card p-4 sm:p-5 glass-premium gradient-border transition-[border-color,box-shadow] duration-300 hover:border-primary/20 hover:shadow-[0_8px_32px_-8px_var(--card-glow)]">
-                    <div className="icon-gradient flex h-10 w-10 items-center justify-center rounded-xl text-primary"><t.icon className="h-5 w-5" /></div>
+                  <Card className="h-full rounded-xl border border-border/60 bg-card p-4 sm:p-5 transition-[border-color,box-shadow] duration-300 hover:border-border/80 hover:shadow-sm">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><t.icon className="h-5 w-5" /></div>
                     <h3 className="mt-4 text-sm sm:text-base font-semibold text-foreground">{t.title}</h3>
                     <p className="mt-1.5 text-xs sm:text-[14px] text-muted-foreground leading-relaxed">{t.desc}</p>
-                  </SpotlightCard>
+                  </Card>
                 </FadeIn>
               ))}
             </div>
@@ -684,11 +682,11 @@ export default function Landing() {
                 { stat: '46%', label: 'Higher retention rate', source: 'Employee Referrals Benchmark' },
                 { stat: '2.6\u00d7', label: 'Higher offer acceptance', source: 'Jobvite' },
               ].map(item => (
-                <GlowCard key={item.label} className="p-5 bg-card">
-                  <div className="font-display text-3xl sm:text-4xl font-extrabold text-gradient">{item.stat}</div>
+                <Card key={item.label} className="p-5 bg-card rounded-xl border border-border/60">
+                  <div className="font-display text-3xl sm:text-4xl font-extrabold text-primary">{item.stat}</div>
                   <div className="mt-2 text-xs sm:text-[13px] text-muted-foreground">{item.label}</div>
                   <div className="mt-1 text-[10px] text-muted-foreground/60">Source: {item.source}</div>
-                </GlowCard>
+                </Card>
               ))}
             </div>
           </div>
@@ -708,8 +706,8 @@ export default function Landing() {
                 { icon: Send, title: 'Cold DMs get ignored', problem: 'The average LinkedIn InMail gets a 10-15% response rate. Most referral asks disappear into the void.', solution: "DirectRefer requests are structured, professional, and include your resume + note. Professionals have capacity limits \u2014 so they actually read them." },
               ].map((item, i) => (
                 <FadeIn key={item.title} delay={i * 0.1}>
-                  <SpotlightCard className="flex flex-col h-full rounded-2xl border border-border/60 bg-card p-5 sm:p-6">
-                    <div className="icon-gradient flex h-10 w-10 items-center justify-center rounded-xl text-primary"><item.icon className="h-5 w-5" /></div>
+                  <Card className="flex flex-col h-full rounded-xl border border-border/60 bg-card p-5 sm:p-6 transition-[border-color,box-shadow] duration-300 hover:border-border/80 hover:shadow-sm">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><item.icon className="h-5 w-5" /></div>
                     <h3 className="mt-4 text-sm sm:text-base font-semibold text-foreground">{item.title}</h3>
                     <div className="mt-4 flex flex-1 flex-col gap-2">
                       <div className="flex-1 rounded-lg bg-rose-500/5 border border-rose-500/10 p-3">
@@ -721,7 +719,7 @@ export default function Landing() {
                         <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{item.solution}</p>
                       </div>
                     </div>
-                  </SpotlightCard>
+                  </Card>
                 </FadeIn>
               ))}
             </div>
@@ -736,7 +734,7 @@ export default function Landing() {
                 <h2 className="font-display text-2xl font-bold tracking-tight sm:text-[30px] lg:text-[34px]">Your next referral is one click away</h2>
                 <p className="mt-3 max-w-xl text-muted-foreground">Verified insiders from the companies you actually want to work at.</p>
               </div>
-              <Button variant="outline" className="rounded-full border-border/60 hover:border-primary/30 hover:bg-muted/30" asChild>
+              <Button variant="outline" className="rounded-lg border-border/60 hover:border-primary/30 hover:bg-muted/30" asChild>
                 <Link to={user ? '/dashboard' : '/login'}>Browse all professionals <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
               </Button>
             </FadeIn>
@@ -744,22 +742,22 @@ export default function Landing() {
               {professionals.slice(0, 4).map((p, i) => (
                 <FadeIn key={p.id} delay={i * 0.08}>
                   <Link to={profileUrl('professional', p.id, p.slug)}>
-                    <GlowCard className="h-full shadow-soft cursor-pointer transition-[border-color,box-shadow] duration-300 hover:shadow-glow group">
+                    <Card className="h-full rounded-xl border border-border/60 bg-card cursor-pointer transition-[border-color,box-shadow] duration-300 hover:border-border/80 hover:shadow-sm group">
                       <CardContent className="p-5">
                         <div className="flex items-center gap-3">
                           <GAvatar name={p.name} color={p.gradient} className="h-12 w-12 text-sm ring-2 ring-background group-hover:ring-primary/30 transition-all" />
                           <div className="min-w-0">
-                            <div className="flex items-center gap-1 truncate text-xs sm:text-[14px] font-semibold text-foreground">{p.name} <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#34D399]" /></div>
+                            <div className="flex items-center gap-1 truncate text-xs sm:text-[14px] font-semibold text-foreground">{p.name} <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-500" /></div>
                             <div className="truncate text-xs sm:text-[13px] text-muted-foreground">{p.designation}</div>
                           </div>
                         </div>
                         <div className="mt-3 flex items-center justify-between text-xs sm:text-[13px] text-muted-foreground">
-                          <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-[#E8B44C] text-[#E8B44C]" /> {p.rating}</span>
+                          <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /> {p.rating}</span>
                           <span>{p.referralsCompleted} referrals</span>
-                          <span className="text-[#34D399]">{p.responseRate}% replies</span>
+                          <span className="text-emerald-500">{p.responseRate}% replies</span>
                         </div>
                       </CardContent>
-                    </GlowCard>
+                    </Card>
                   </Link>
                 </FadeIn>
               ))}
@@ -777,9 +775,9 @@ export default function Landing() {
             <div className="mt-12 grid gap-5 md:grid-cols-3 items-stretch">
               {ROLES.map((r, i) => (
                 <FadeIn key={r.title} delay={i * 0.1}>
-                  <GlowCard className="h-full shadow-soft transition-[border-color,box-shadow] duration-300 hover:shadow-glow group">
+                  <Card className="h-full rounded-xl border border-border/60 bg-card transition-[border-color,box-shadow] duration-300 hover:border-border/80 hover:shadow-sm group">
                     <CardContent className="p-6">
-                      <div className="icon-gradient flex h-12 w-12 items-center justify-center rounded-xl text-primary group-hover:scale-110 transition-transform">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
                         <r.icon className="h-6 w-6" />
                       </div>
                       <h3 className="mt-4 text-base sm:text-[18px] font-semibold text-foreground">{r.title}</h3>
@@ -787,12 +785,12 @@ export default function Landing() {
                       <ul className="mt-4 space-y-2.5">
                         {r.points.map(p => (
                           <li key={p} className="flex items-center gap-2 text-sm">
-                            <CheckCircle2 className="h-4 w-4 text-[#34D399] shrink-0" /> {p}
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" /> {p}
                           </li>
                         ))}
                       </ul>
                     </CardContent>
-                  </GlowCard>
+                  </Card>
                 </FadeIn>
               ))}
             </div>
@@ -814,10 +812,10 @@ export default function Landing() {
                 { q: 'Are referrals guaranteed?', a: 'No. A referral is an opportunity to be considered, not a guarantee of a job or interview. Professionals participate voluntarily and within their employer policies.' },
               ].map((item, i) => (
                 <FadeIn key={item.q} delay={i * 0.06}>
-                  <GlowCard className="p-4 sm:p-5 transition-all duration-300">
+                  <Card className="rounded-xl border border-border/60 bg-card p-4 sm:p-5 transition-[border-color,box-shadow] duration-300 hover:border-border/80 hover:shadow-sm">
                     <h3 className="text-sm sm:text-[15px] font-semibold text-foreground">{item.q}</h3>
                     <p className="mt-2 text-xs sm:text-[14px] leading-relaxed text-muted-foreground">{item.a}</p>
-                  </GlowCard>
+                  </Card>
                 </FadeIn>
               ))}
             </div>
@@ -858,13 +856,13 @@ export default function Landing() {
               </Link>
               <p className="max-w-[220px] text-center text-xs text-muted-foreground leading-relaxed sm:text-left">Ask for the referral, without the awkward cold DM.</p>
               <div className="flex items-center gap-2">
-                <a href="https://linkedin.com/in/direct-refer" target="_blank" rel="noopener noreferrer" className="flex h-11 w-11 items-center justify-center rounded-lg border border-border/60 text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground hover:bg-muted" aria-label="LinkedIn">
+                <a href="https://linkedin.com/in/direct-refer" target="_blank" rel="noopener noreferrer" className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-all hover:text-foreground hover:bg-muted" aria-label="LinkedIn">
                   <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
                 </a>
-                <a href="https://x.com/directrefer" target="_blank" rel="noopener noreferrer" className="flex h-11 w-11 items-center justify-center rounded-lg border border-border/60 text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground hover:bg-muted" aria-label="X (Twitter)">
+                <a href="https://x.com/directrefer" target="_blank" rel="noopener noreferrer" className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-all hover:text-foreground hover:bg-muted" aria-label="X (Twitter)">
                   <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
                 </a>
-                <a href="mailto:hello@directrefer.in" className="flex h-11 w-11 items-center justify-center rounded-lg border border-border/60 text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground hover:bg-muted" aria-label="Email">
+                <a href="mailto:hello@directrefer.in" className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-all hover:text-foreground hover:bg-muted" aria-label="Email">
                   <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
                 </a>
               </div>
