@@ -2281,7 +2281,7 @@ export async function fetchSystemHealth(): Promise<SystemHealth> {
 
 // ── Client Error Logging ─────────────────────────────────────
 
-let _errorBuffer: { message: string; source: string; severity: string; page: string | null; stack?: string }[] = []
+const _errorBuffer: { message: string; source: string; severity: string; page: string | null; stack?: string }[] = []
 let _flushTimer: ReturnType<typeof setTimeout> | null = null
 
 async function flushErrorBuffer() {

@@ -24,7 +24,6 @@ export function useVersionCheck() {
   const dismissedRef = useRef(false)
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>
     let active = true
 
     async function check() {
@@ -58,7 +57,7 @@ export function useVersionCheck() {
     }
 
     check()
-    timer = setInterval(check, CHECK_INTERVAL)
+    const timer = setInterval(check, CHECK_INTERVAL)
 
     return () => {
       active = false

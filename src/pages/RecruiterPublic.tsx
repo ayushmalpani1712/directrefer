@@ -46,8 +46,6 @@ export default function RecruiterPublic() {
   const [bannerTheme, setBannerTheme] = useState<string | null>(null)
   const [loadingData, setLoadingData] = useState(true)
 
-  if (!RECRUITER_VISIBLE) return <Navigate to="/" replace />
-
   useEffect(() => {
     if (!paramId) return
     const load = async () => {
@@ -92,6 +90,8 @@ export default function RecruiterPublic() {
     }
     load()
   }, [paramId])
+
+  if (!RECRUITER_VISIBLE) return <Navigate to="/" replace />
 
   if (loading || loadingData) {
     return (
