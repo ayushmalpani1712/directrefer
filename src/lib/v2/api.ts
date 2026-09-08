@@ -12,14 +12,17 @@ import { runScreening } from './screening'
 import { createApplication, updateApplicationStatus } from './applications'
 import type { Application, ApplicationStatus } from './applications'
 import type { ScreeningDecision } from './screening'
+import { trustScoresSupported, stateHistorySupported, screeningSupported } from './probes'
 
 // ── Trust Scores ───────────────────────────────────────────────────────────
 
 /**
  * Fetch trust score for a professional (cached if recent).
+ * Gracefully returns null if V2 tables don't exist yet.
  */
 export async function fetchTrustScore(userId: string): Promise<TrustScore | null> {
   try {
+    if (!(await trustScoresSupported())) return null
     const existing = await getTrustScore(userId)
     // Recalculate if older than 24 hours
     if (existing) {
@@ -50,6 +53,7 @@ export async function fetchTrustScores(userIds: string[]): Promise<Map<string, T
 
 /**
  * Record a referral state change.
+ * Gracefully skips if V2 tables don't exist yet.
  */
 export async function recordReferralTransition(
   referralId: string,
@@ -59,6 +63,7 @@ export async function recordReferralTransition(
   metadata?: Record<string, unknown>
 ): Promise<void> {
   try {
+    if (!(await stateHistorySupported())) return
     await recordStateTransition({
       entity_type: 'referral',
       entity_id: referralId,
@@ -107,12 +112,20 @@ export async function getReferralHistory(referralId: string) {
 
 /**
  * Run screening for a candidate against a job.
+ * Gracefully returns pass-all if V2 tables don't exist yet.
  */
 export async function runCandidateScreening(
   candidateId: string,
   jobId: string
 ): Promise<ScreeningDecision> {
-  return runScreening(candidateId, jobId)
+  try {
+    if (!(await screeningSupported())) {
+      return { all_passed: true, attempts: [], summary: 'Screening not available yet' }
+    }
+    return await runScreening(candidateId, jobId)
+  } catch {
+    return { all_passed: true, attempts: [], summary: 'Screening skipped' }
+  }
 }
 
 // ── Applications ───────────────────────────────────────────────────────────

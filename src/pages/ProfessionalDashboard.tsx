@@ -18,6 +18,7 @@ import { useFilteredProMonthly, useFilteredProResponseTime, hasData } from '@/ho
 import type { Professional } from '@/data/mock'
 import { getMessagesPath, ROLE_ROUTE, getRoleFromPath, profileUrl } from '@/data/mock'
 import { generateInviteCode, fetchUserInviteStats, getInviteUrl } from '@/lib/invites'
+import { OnboardingChecklist } from '@/components/OnboardingChecklist'
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color?: string }>; label?: string }) {
   if (!active || !payload?.length) return null
@@ -133,6 +134,9 @@ export default function ProfessionalDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* V2 Onboarding Checklist */}
+      <OnboardingChecklist />
 
       {/* Stats */}
       <div className="flex items-center justify-end">
