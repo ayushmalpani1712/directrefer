@@ -1,0 +1,928 @@
+openapi: 3.1.0
+info:
+  title: DirectRefer V2.0 API
+  version: 2.0.0
+  description: |
+    REST API for DirectRefer V2.0 — the professional referral network.
+    Authentication: JWT Bearer token (Supabase Auth).
+    Base URL: https://www.directrefer.in/api
+
+servers:
+  - url: https://www.directrefer.in/api
+    description: Production
+  - url: http://localhost:3001/api
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        full_name: { type: string }
+        role: { type: string, enum: [job_seeker, professional, recruiter, admin] }
+        verified: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    ProfessionalProfile:
+      type: object
+      properties:
+        user_id: { type: string, format: uuid }
+        company_name: { type: string }
+        job_title: { type: string }
+        department: { type: string }
+        years_experience: { type: integer }
+        open_for_referrals: { type: boolean }
+        referral_capacity: { type: integer }
+        referrals_used: { type: integer }
+        skills: { type: array, items: { type: string } }
+        response_rate: { type: number }
+        rating: { type: number }
+        profile_completeness: { type: integer }
+
+    JobSeekerProfile:
+      type: object
+      properties:
+        user_id: { type: string, format: uuid }
+        headline: { type: string }
+        skills: { type: array, items: { type: string } }
+        experience_years: { type: integer }
+        is_open_to_work: { type: boolean }
+        preferred_track: { type: string, enum: [internship, early_career, experienced, leadership] }
+        screening_status: { type: string }
+        profile_completeness: { type: integer }
+
+    Job:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        recruiter_id: { type: string, format: uuid }
+        company_id: { type: string, format: uuid }
+        title: { type: string }
+        department: { type: string }
+        location: { type: string }
+        type: { type: string }
+        track: { type: string }
+        salary_range: { type: string }
+        description: { type: string }
+        status: { type: string, enum: [draft, active, paused, closed] }
+        posted_at: { type: string, format: date-time }
+        applicant_count: { type: integer }
+
+    Referral:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        requester_id: { type: string, format: uuid }
+        professional_id: { type: string, format: uuid }
+        job_id: { type: string, format: uuid }
+        job_title: { type: string }
+        status: { type: string, enum: [requested, under_review, accepted, declined, referral_submitted, application_submitted, closed, expired] }
+        pipeline_stage: { type: string }
+        progress: { type: integer }
+        relationship_type: { type: string }
+        created_at: { type: string, format: date-time }
+
+    Match:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        job_id: { type: string, format: uuid }
+        candidate_id: { type: string, format: uuid }
+        match_score: { type: number }
+        skills_score: { type: number }
+        role_score: { type: number }
+        source: { type: string }
+        track: { type: string }
+
+    Application:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        job_id: { type: string, format: uuid }
+        candidate_id: { type: string, format: uuid }
+        status: { type: string, enum: [submitted, screening, shortlisted, interview, offered, accepted, rejected, withdrawn] }
+        submitted_at: { type: string, format: date-time }
+
+    TrustScore:
+      type: object
+      properties:
+        user_id: { type: string, format: uuid }
+        score: { type: number }
+        tier: { type: string, enum: [verified, provisional, unverified] }
+        calculated_at: { type: string, format: date-time }
+
+    Notification:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string }
+        title: { type: string }
+        description: { type: string }
+        read: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    Message:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        conversation_id: { type: string, format: uuid }
+        sender_id: { type: string, format: uuid }
+        content: { type: string }
+        is_read: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    StateHistory:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        entity_type: { type: string }
+        entity_id: { type: string, format: uuid }
+        field: { type: string }
+        old_value: { type: string }
+        new_value: { type: string }
+        changed_by: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+
+    Skill:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        category: { type: string }
+        slug: { type: string }
+        popularity: { type: integer }
+
+    Company:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        size: { type: string }
+        industry: { type: string }
+        open_positions: { type: integer }
+
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        message: { type: string }
+
+    Pagination:
+      type: object
+      properties:
+        page: { type: integer }
+        per_page: { type: integer }
+        total: { type: integer }
+        total_pages: { type: integer }
+
+paths:
+  # ── Auth ───────────────────────────────────────────────────────────────────
+  /auth/me:
+    get:
+      summary: Get current user
+      tags: [Auth]
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+  # ── Users ──────────────────────────────────────────────────────────────────
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      tags: [Users]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: User
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+  /users/{id}:
+    patch:
+      summary: Update user
+      tags: [Users]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name: { type: string }
+                city: { type: string }
+                state: { type: string }
+                country: { type: string }
+                linkedin: { type: string }
+      responses:
+        '200':
+          description: Updated user
+
+  # ── Professional Profiles ──────────────────────────────────────────────────
+  /professionals:
+    get:
+      summary: List professionals (discovery)
+      tags: [Professionals]
+      parameters:
+        - { name: company, in: query, schema: { type: string } }
+        - { name: skill, in: query, schema: { type: string } }
+        - { name: track, in: query, schema: { type: string } }
+        - { name: open_for_referrals, in: query, schema: { type: boolean } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: per_page, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        '200':
+          description: List of professionals
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/ProfessionalProfile' } }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+
+  /professionals/{id}:
+    get:
+      summary: Get professional profile
+      tags: [Professionals]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Professional profile
+
+  /professionals/{id}:
+    patch:
+      summary: Update professional profile
+      tags: [Professionals]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                job_title: { type: string }
+                company_name: { type: string }
+                bio: { type: string }
+                open_for_referrals: { type: boolean }
+                referral_capacity: { type: integer }
+                skills: { type: array, items: { type: string } }
+      responses:
+        '200':
+          description: Updated profile
+
+  # ── Job Seeker Profiles ────────────────────────────────────────────────────
+  /job-seekers:
+    get:
+      summary: List job seekers (for professionals)
+      tags: [JobSeekers]
+      parameters:
+        - { name: skill, in: query, schema: { type: string } }
+        - { name: track, in: query, schema: { type: string } }
+        - { name: open_to_work, in: query, schema: { type: boolean } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: per_page, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        '200':
+          description: List of job seekers
+
+  /job-seekers/{id}:
+    get:
+      summary: Get job seeker profile
+      tags: [JobSeekers]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Job seeker profile
+
+  # ── Jobs ───────────────────────────────────────────────────────────────────
+  /jobs:
+    get:
+      summary: List jobs
+      tags: [Jobs]
+      parameters:
+        - { name: title, in: query, schema: { type: string } }
+        - { name: company, in: query, schema: { type: string } }
+        - { name: location, in: query, schema: { type: string } }
+        - { name: track, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: per_page, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        '200':
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Job' } }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+
+  /jobs:
+    post:
+      summary: Create a job
+      tags: [Jobs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, location, type]
+              properties:
+                title: { type: string }
+                department: { type: string }
+                location: { type: string }
+                type: { type: string }
+                track: { type: string }
+                salary_range: { type: string }
+                description: { type: string }
+                requirements: { type: string }
+                application_url: { type: string }
+                skill_ids: { type: array, items: { type: string } }
+      responses:
+        '201':
+          description: Created job
+
+  /jobs/{id}:
+    get:
+      summary: Get job by ID
+      tags: [Jobs]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Job details
+
+  /jobs/{id}:
+    patch:
+      summary: Update job
+      tags: [Jobs]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                status: { type: string }
+                description: { type: string }
+      responses:
+        '200':
+          description: Updated job
+
+  /jobs/{id}:
+    delete:
+      summary: Delete job
+      tags: [Jobs]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204':
+          description: Deleted
+
+  # ── Referrals ──────────────────────────────────────────────────────────────
+  /referrals:
+    get:
+      summary: List referrals
+      tags: [Referrals]
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: role, in: query, description: 'Filter by user role in referral', schema: { type: string, enum: [requester, professional] } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+      responses:
+        '200':
+          description: List of referrals
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Referral' } }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+
+  /referrals:
+    post:
+      summary: Create referral request
+      tags: [Referrals]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [professional_id, job_title]
+              properties:
+                professional_id: { type: string, format: uuid }
+                job_id: { type: string, format: uuid }
+                job_title: { type: string }
+                note: { type: string }
+                relationship_type: { type: string }
+                relationship_note: { type: string }
+      responses:
+        '201':
+          description: Created referral
+
+  /referrals/{id}:
+    get:
+      summary: Get referral
+      tags: [Referrals]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Referral details
+
+  /referrals/{id}/status:
+    patch:
+      summary: Update referral status
+      tags: [Referrals]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [under_review, accepted, declined, referral_submitted, application_submitted, closed] }
+                reason: { type: string }
+      responses:
+        '200':
+          description: Updated referral
+
+  /referrals/{id}/history:
+    get:
+      summary: Get referral state history
+      tags: [Referrals]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: State history
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/StateHistory' }
+
+  # ── Applications ───────────────────────────────────────────────────────────
+  /applications:
+    get:
+      summary: List applications
+      tags: [Applications]
+      parameters:
+        - { name: job_id, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+      responses:
+        '200':
+          description: List of applications
+
+  /applications:
+    post:
+      summary: Submit application
+      tags: [Applications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [job_id]
+              properties:
+                job_id: { type: string, format: uuid }
+                resume_url: { type: string }
+                cover_letter: { type: string }
+      responses:
+        '201':
+          description: Created application
+
+  /applications/{id}/status:
+    patch:
+      summary: Update application status
+      tags: [Applications]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string }
+      responses:
+        '200':
+          description: Updated application
+
+  # ── Matches ────────────────────────────────────────────────────────────────
+  /matches:
+    get:
+      summary: List matches
+      tags: [Matches]
+      parameters:
+        - { name: job_id, in: query, schema: { type: string } }
+        - { name: min_score, in: query, schema: { type: number } }
+        - { name: track, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+      responses:
+        '200':
+          description: List of matches
+
+  /matches/{id}/accept:
+    post:
+      summary: Accept a match
+      tags: [Matches]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Match accepted
+
+  /matches/{id}/reject:
+    post:
+      summary: Reject a match
+      tags: [Matches]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Match rejected
+
+  # ── Trust & Verification ───────────────────────────────────────────────────
+  /trust-scores/{user_id}:
+    get:
+      summary: Get trust score
+      tags: [Trust]
+      parameters:
+        - { name: user_id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Trust score
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TrustScore' }
+
+  /verifications:
+    post:
+      summary: Submit verification request
+      tags: [Verification]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type: { type: string, enum: [email_otp, id_card, linkedin, employer_verification] }
+                work_email: { type: string }
+                id_card_url: { type: string }
+                linkedin_url: { type: string }
+      responses:
+        '201':
+          description: Verification request created
+
+  /verifications/{id}/approve:
+    post:
+      summary: Approve verification (admin)
+      tags: [Verification]
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Verification approved
+
+  /verifications/{id}/reject:
+    post:
+      summary: Reject verification (admin)
+      tags: [Verification]
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Verification rejected
+
+  # ── Notifications ──────────────────────────────────────────────────────────
+  /notifications:
+    get:
+      summary: List notifications
+      tags: [Notifications]
+      parameters:
+        - { name: unread_only, in: query, schema: { type: boolean } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+      responses:
+        '200':
+          description: List of notifications
+
+  /notifications/{id}/read:
+    patch:
+      summary: Mark notification as read
+      tags: [Notifications]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Notification marked as read
+
+  /notifications/read-all:
+    post:
+      summary: Mark all notifications as read
+      tags: [Notifications]
+      responses:
+        '200':
+          description: All notifications marked as read
+
+  /notification-preferences:
+    get:
+      summary: Get notification preferences
+      tags: [Notifications]
+      responses:
+        '200':
+          description: User's notification preferences
+
+  /notification-preferences:
+    put:
+      summary: Update notification preferences
+      tags: [Notifications]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  type: { type: string }
+                  channel: { type: string }
+                  enabled: { type: boolean }
+      responses:
+        '200':
+          description: Preferences updated
+
+  # ── Messages ───────────────────────────────────────────────────────────────
+  /conversations:
+    get:
+      summary: List conversations
+      tags: [Messages]
+      responses:
+        '200':
+          description: List of conversations
+
+  /conversations/{id}/messages:
+    get:
+      summary: List messages in conversation
+      tags: [Messages]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: before, in: query, description: 'Cursor for pagination', schema: { type: string } }
+      responses:
+        '200':
+          description: List of messages
+
+  /conversations/{id}/messages:
+    post:
+      summary: Send message
+      tags: [Messages]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string }
+      responses:
+        '201':
+          description: Message sent
+
+  # ── Skills ─────────────────────────────────────────────────────────────────
+  /skills:
+    get:
+      summary: List all skills
+      tags: [Skills]
+      parameters:
+        - { name: category, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: List of skills
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Skill' }
+
+  # ── Companies ──────────────────────────────────────────────────────────────
+  /companies:
+    get:
+      summary: List companies
+      tags: [Companies]
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: industry, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: List of companies
+
+  /companies/{id}:
+    get:
+      summary: Get company
+      tags: [Companies]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Company details
+
+  # ── Bookmarks ──────────────────────────────────────────────────────────────
+  /bookmarks:
+    get:
+      summary: List bookmarks
+      tags: [Bookmarks]
+      parameters:
+        - { name: entity_type, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: List of bookmarks
+
+  /bookmarks:
+    post:
+      summary: Create bookmark
+      tags: [Bookmarks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entity_type, entity_id]
+              properties:
+                entity_type: { type: string }
+                entity_id: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Bookmark created
+
+  /bookmarks/{id}:
+    delete:
+      summary: Remove bookmark
+      tags: [Bookmarks]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '204':
+          description: Bookmark removed
+
+  # ── Admin ──────────────────────────────────────────────────────────────────
+  /admin/users:
+    get:
+      summary: List all users (admin)
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: role, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+      responses:
+        '200':
+          description: List of users
+
+  /admin/users/{id}/role:
+    patch:
+      summary: Change user role (admin)
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { type: string }
+      responses:
+        '200':
+          description: Role updated
+
+  /admin/users/{id}/status:
+    patch:
+      summary: Suspend/activate user (admin)
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [active, suspended, deactivated] }
+      responses:
+        '200':
+          description: Status updated
+
+  /admin/audit-log:
+    get:
+      summary: Get audit log (admin)
+      tags: [Admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+      responses:
+        '200':
+          description: Audit log entries
+
+  # ── Health ─────────────────────────────────────────────────────────────────
+  /health:
+    get:
+      summary: Health check
+      tags: [System]
+      security: []
+      responses:
+        '200':
+          description: API is healthy
+
+tags:
+  - name: Auth
+    description: Authentication & session
+  - name: Users
+    description: User management
+  - name: Professionals
+    description: Professional/referrer profiles
+  - name: JobSeekers
+    description: Candidate/job seeker profiles
+  - name: Jobs
+    description: Job postings
+  - name: Referrals
+    description: Referral lifecycle
+  - name: Applications
+    description: Job applications
+  - name: Matches
+    description: Candidate-job matching
+  - name: Trust
+    description: Trust scoring & verification
+  - name: Verification
+    description: Identity verification
+  - name: Notifications
+    description: Notifications & preferences
+  - name: Messages
+    description: Messaging & conversations
+  - name: Skills
+    description: Skills vocabulary
+  - name: Companies
+    description: Company profiles
+  - name: Bookmarks
+    description: User bookmarks
+  - name: Admin
+    description: Admin operations
+  - name: System
+    description: Health & status

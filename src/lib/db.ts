@@ -219,7 +219,7 @@ export async function fetchProfessionals(_currentUserId?: string): Promise<Profe
       profileMap.set(String(p.user_id), p)
     }
 
-    return usersRes.data.map((row): Professional => {
+    const professionals = usersRes.data.map((row): Professional => {
       const profile = profileMap.get(row.id) as {
         company_name: string
         job_title: string
@@ -304,6 +304,23 @@ export async function fetchProfessionals(_currentUserId?: string): Promise<Profe
         return pro
       })()
     })
+
+    // Batch fetch trust scores for all professionals
+    try {
+      const { fetchTrustScores } = await import('@/lib/v2/api')
+      const trustScores = await fetchTrustScores(professionals.map((p: Professional) => p.id))
+      for (const pro of professionals) {
+        const ts = trustScores.get(pro.id)
+        if (ts) {
+          pro.trustScore = ts.score
+          pro.trustTier = ts.tier
+        }
+      }
+    } catch {
+      // Trust scores are optional — continue without them
+    }
+
+    return professionals
   } catch (err) {
     console.error('fetchProfessionals failed:', err)
     return []

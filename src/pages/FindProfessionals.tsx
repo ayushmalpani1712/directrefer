@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { TrustBadge } from '@/components/TrustBadge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -73,13 +74,16 @@ export function ProfessionalCard({ p, index }: { p: Professional; index: number 
         </div>
 
         {/* Tags: Professional + Available + Reputation */}
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">Professional</span>
           {p.openForReferrals && (
             <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
               Available
             </span>
+          )}
+          {p.trustTier && (
+            <TrustBadge tier={p.trustTier} score={p.trustScore} showScore />
           )}
           {p.activityScore >= 70 && (
             <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600" title={`Reputation score: ${p.activityScore}/100`}>

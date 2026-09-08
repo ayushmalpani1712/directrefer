@@ -80,6 +80,8 @@ export interface Professional {
   linkedinUrl: string
   githubUrl: string
   college?: string
+  trustScore?: number
+  trustTier?: 'verified' | 'provisional' | 'unverified'
 }
 
 /** Official DirectRefer Avatar/Identity Accent Set — solid colors only, no gradients */

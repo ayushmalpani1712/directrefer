@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress'
 
 import { SkeletonCard } from '@/components/ui/skeleton'
 import { CompanyChip, GAvatar, ReportDialog } from '@/components/ui-kit'
+import { TrustBadge } from '@/components/TrustBadge'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
@@ -27,6 +28,7 @@ interface PublicProfessional {
   referralsCompleted: number; rating: number; linkedinUrl: string; githubUrl: string
   email: string; phone: string; whatsapp: string
   responseRate?: number; successRate?: number; joinedDaysAgo?: number; referralPolicy?: string
+  trustScore?: number; trustTier?: 'verified' | 'provisional' | 'unverified'
 }
 
 function toProfessional(p: PublicProfessional): Professional {
@@ -114,6 +116,16 @@ export default function ProfessionalPublic() {
           phone: userData?.mobile || '',
           whatsapp: userData?.mobile || '',
         })
+        // Fetch trust score
+        try {
+          const { fetchTrustScore } = await import('@/lib/v2/api')
+          const ts = await fetchTrustScore(userId)
+          if (ts) {
+            setPro(prev => prev ? { ...prev, trustScore: ts.score, trustTier: ts.tier } : prev)
+          }
+        } catch {
+          // Non-critical
+        }
       } catch {
         setPro(null)
       }
@@ -163,6 +175,9 @@ export default function ProfessionalPublic() {
                   <h1 className="font-display flex items-center gap-2 text-2xl font-bold tracking-tight truncate">
                     {pro.name} {pro.verified && <BadgeCheck className="h-5.5 w-5.5 text-sky-500 shrink-0" />}
                   </h1>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    {pro.trustTier && <TrustBadge tier={pro.trustTier} score={pro.trustScore} showScore />}
+                  </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
                     <span>{pro.designation}</span><span>·</span>
                     <span className="flex items-center gap-1.5"><CompanyChip name={pro.company} className="h-5 w-5 text-[8px]" />{pro.company}</span>

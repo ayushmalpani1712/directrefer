@@ -1141,10 +1141,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         relationship_type: r.relationshipType,
         relationship_note: r.relationshipNote,
         policy_acknowledged: r.policyAcknowledged,
-      }).then((newRequest) => {
+      }).then(async (newRequest) => {
         // Replace local optimistic request with server-returned one (has real UUID)
         if (newRequest) {
           setRequests((prev) => prev.map((req) => req.id === r.id ? { ...req, id: newRequest.id, status: newRequest.status, pipelineStage: newRequest.pipelineStage } : req))
+          // V2: Record initial state transition
+          try {
+            const { recordReferralTransition } = await import('@/lib/v2/api')
+            recordReferralTransition(newRequest.id, null, 'requested', user?.id ?? '', { job_title: r.role })
+          } catch {
+            // Non-critical
+          }
           // Notification for the professional — only after successful referral creation
           supabase.from('notifications').insert({
             user_id: r.professionalId,
@@ -1230,6 +1237,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (status === 'accepted') {
         setNpsOpen(true)
       }
+      // V2: Record state transition in state_history
+      try {
+        const { recordReferralTransition } = await import('@/lib/v2/api')
+        const fromState = req.pipelineStage || 'requested'
+        recordReferralTransition(id, fromState, status, user?.id ?? '', { reason: passReason })
+      } catch {
+        // Non-critical — don't block UI
+      }
       if (req.studentEmail) {
         const professional = professionals.find((p) => p.id === req.professionalId)
         const proName = professional?.name || 'the professional'
@@ -1306,6 +1321,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return { ...r, status: 'accepted' as ReferralStatus, pipelineStage: 'accepted' as PipelineStage, progress: 75 }
       }))
     })
+    // V2: Record state transition
+    try {
+      const { recordReferralTransition } = await import('@/lib/v2/api')
+      recordReferralTransition(id, 'accepted', 'referral_submitted', user?.id ?? '')
+    } catch {
+      // Non-critical
+    }
     if (req?.requesterId) {
       supabase.from('notifications').insert({
         user_id: req.requesterId,
