@@ -3,5 +3,13 @@ Allow: /
 Disallow: /admin
 Disallow: /settings
 Disallow: /auth
+Disallow: /login
+Disallow: /signup
+Disallow: /verify-email
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /job-seeker/
+Disallow: /professional/
+Disallow: /recruiter/
 
 Sitemap: https://www.directrefer.in/sitemap.xml

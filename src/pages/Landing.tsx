@@ -525,7 +525,7 @@ export default function Landing() {
           <Logo />
           <nav className="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex">
             <Link to="/referral-jobs" className="hover:text-foreground">Referral Jobs</Link>
-            <Link to="/browse-professionals" className="hover:text-foreground">Professionals</Link>
+            <Link to="/job-seeker/professionals" className="hover:text-foreground">Professionals</Link>
             <button type="button" onClick={() => scrollTo('how-it-works')} className="hover:text-foreground">How it works</button>
             <button type="button" onClick={() => scrollTo('trust')} className="hover:text-foreground">Why Trust</button>
           </nav>
@@ -556,7 +556,7 @@ export default function Landing() {
           <div className="border-t border-border/50 bg-background px-4 pb-4 pt-2 md:hidden">
             <nav className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
               <Link to="/referral-jobs" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 min-h-[44px] flex items-center hover:bg-muted hover:text-foreground">Referral Jobs</Link>
-              <Link to="/browse-professionals" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 min-h-[44px] flex items-center hover:bg-muted hover:text-foreground">Professionals</Link>
+              <Link to="/job-seeker/professionals" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 min-h-[44px] flex items-center hover:bg-muted hover:text-foreground">Professionals</Link>
               <button type="button" onClick={() => { scrollTo('how-it-works'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">How it works</button>
               <button type="button" onClick={() => { scrollTo('trust'); setMobileMenuOpen(false) }} className="rounded-lg px-3 py-3 min-h-[44px] text-left hover:bg-muted hover:text-foreground">Why Trust</button>
               {!user && (
@@ -872,7 +872,7 @@ export default function Landing() {
             </div>
             <div className="flex flex-col items-center gap-2.5 sm:items-start">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">Product</p>
-              <Link to="/browse-professionals" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5">Browse Professionals</Link>
+              <Link to="/job-seeker/professionals" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5">Browse Professionals</Link>
               <Link to="/referral-jobs" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5">Referral Jobs</Link>
               <Link to="/data-hub" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5">Data Hub</Link>
               <Link to="/guides" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5">Guides</Link>
@@ -880,8 +880,8 @@ export default function Landing() {
             <div className="flex flex-col items-center gap-2.5 sm:items-start">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">Company</p>
               <Link to="/about" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5">About Us</Link>
-              <Link to="/careers" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5">Careers</Link>
-              <Link to="/pricing" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5">Pricing</Link>
+              <Link to="/success-stories" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5">Success Stories</Link>
+              <Link to="/contact" className="text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5">Contact</Link>
             </div>
             <div className="flex flex-col items-center gap-2.5 sm:items-start">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/50">Support</p>

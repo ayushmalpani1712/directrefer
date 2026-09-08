@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Chip, CompanyChip, EmptyState, SectionHeader } from '@/components/ui-kit'
+import { MatchScore } from '@/components/MatchScore'
 import { supabase } from '@/lib/supabase'
 import { applicationUrlSupported, professionalCollegeSupported } from '@/lib/db'
 import { SocialShareButtons } from '@/components/SocialShareButtons'
@@ -381,9 +382,12 @@ export default function ReferralJobs() {
                             </p>
                           </div>
                           {job.hasReferrer ? (
-                            <Badge variant="outline" className="shrink-0 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                              <BadgeCheck className="mr-1 h-3 w-3" /> Professional available
-                            </Badge>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                                <BadgeCheck className="mr-1 h-3 w-3" /> Professional available
+                              </Badge>
+                              <MatchScore score={75} />
+                            </div>
                           ) : (
                             <Badge variant="outline" className="shrink-0 border-muted text-muted-foreground">No professional yet</Badge>
                           )}

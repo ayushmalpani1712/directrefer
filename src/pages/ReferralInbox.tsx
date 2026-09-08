@@ -194,6 +194,12 @@ export default function ReferralInbox() {
                           Policy not yet acknowledged — remind candidate if needed
                         </div>
                       )}
+                      {r.status === 'accepted' && (
+                        <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-violet-500/5 px-2.5 py-1.5 text-[11px] text-violet-600 dark:text-violet-400">
+                          <FileCheck className="h-3 w-3 shrink-0" />
+                          Accepted — ready to submit referral when you have the candidate's details
+                        </div>
+                      )}
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">
                       {r.status === 'requested' || r.status === 'under_review' ? (
