@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import {
   ArrowRight, CheckCheck, ChevronRight, Clock, Copy, Inbox,
-  MessageSquare, Search, Share2, TrendingUp, XCircle,
+  MessageSquare, Search, Share2, Shield, TrendingUp, XCircle,
 } from 'lucide-react'
 import { LazyArea, LazyAreaChart, LazyBar, LazyBarChart, LazyCartesianGrid, LazyResponsiveContainer, LazyTooltip, LazyXAxis, LazyYAxis } from '@/components/Charts'
 import { toast } from 'sonner'
@@ -142,10 +142,11 @@ export default function ProfessionalDashboard() {
       <div className="flex items-center justify-end">
         <DateRangeSelector value={range} onChange={setRange} />
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 items-stretch">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 items-stretch">
         <StatCard icon={Inbox} label="Pending requests" value={pending.length} delta={pending.length} deltaLabel="pending" delay={0.05} href="/professional/referrals" />
         <StatCard icon={CheckCheck} label="Referrals this month" value={ME.usedThisMonth} delta={ME.usedThisMonth} deltaLabel="this month" delay={0.1} href="/professional/referrals" />
         <StatCard icon={TrendingUp} label="Acceptance rate" value={`${ME.successRate}%`} delta={ME.successRate} deltaLabel="% rate" delay={0.15} href="/analytics" />
+        <StatCard icon={Shield} label="Trust score" value={ME.trustScore ? `${ME.trustScore}/100` : '—'} delta={ME.trustTier === 'verified' ? 100 : ME.trustTier === 'provisional' ? 50 : 0} deltaLabel={ME.trustTier || 'unverified'} delay={0.2} href="/professional/profile" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">

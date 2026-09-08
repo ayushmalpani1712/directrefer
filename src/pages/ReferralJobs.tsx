@@ -280,6 +280,12 @@ export default function ReferralJobs() {
           (r) => r.company_name && normalizeCompany(r.company_name) === normalizeCompany(job.department),
         )
         const available = matches.filter((r) => r.open_for_referrals)
+        // Calculate real match score based on skill overlap
+        const jobSkills = parseSkills(job.description, job.skills).map(s => s.toLowerCase())
+        const matchingSkills = jobSkills.filter(s => studentSkills.includes(s))
+        const skillScore = jobSkills.length > 0 ? Math.round((matchingSkills.length / jobSkills.length) * 60) : 0
+        const referrerScore = available.length > 0 ? 25 : 0
+        const matchScore = Math.min(95, skillScore + referrerScore + (job.type === student?.preferredRoles?.[0] ? 15 : 0))
         return {
           ...job,
           company: job.department,
@@ -287,9 +293,11 @@ export default function ReferralJobs() {
           referrers: available,
           referrerCount: matches.length,
           hasReferrer: available.length > 0,
+          matchScore,
+          matchingSkills,
         }
       }),
-    [jobs, referrers],
+    [jobs, referrers, studentSkills, student?.preferredRoles],
   )
 
   const types = useMemo(() => [...new Set(enrichedJobs.map((j) => j.type).filter(Boolean))] as string[], [enrichedJobs])
@@ -386,7 +394,7 @@ export default function ReferralJobs() {
                               <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                                 <BadgeCheck className="mr-1 h-3 w-3" /> Professional available
                               </Badge>
-                              <MatchScore score={75} />
+                              {job.matchScore > 0 && <MatchScore score={job.matchScore} />}
                             </div>
                           ) : (
                             <Badge variant="outline" className="shrink-0 border-muted text-muted-foreground">No professional yet</Badge>
@@ -412,7 +420,15 @@ export default function ReferralJobs() {
 
                     {job.skillsList.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-1.5">
-                        {job.skillsList.map((s) => <Chip key={s}>{s}</Chip>)}
+                        {job.skillsList.map((s) => {
+                          const isMatching = studentSkills.includes(s.toLowerCase())
+                          return (
+                            <Chip key={s} tone={isMatching ? 'primary' : 'default'}>
+                              {isMatching && <CheckCircle2 className="mr-1 h-2.5 w-2.5" />}
+                              {s}
+                            </Chip>
+                          )
+                        })}
                       </div>
                     )}
 
