@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCheck, ChevronRight, FileText, Inbox, MessageSquare, Search, Share2, ShieldCheck, Users, XCircle, Send, FileCheck } from 'lucide-react'
 import { toast } from 'sonner'
@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router'
 import { cn } from '@/lib/utils'
 import { ListSkeleton } from '@/components/ui/skeleton'
 import ResumePreview from '@/components/ResumePreview'
+import { runCandidateScreening } from '@/lib/v2/api'
 
 const TABS: { key: ReferralStatus | 'all'; label: string }[] = [
   { key: 'requested', label: 'New' },
@@ -99,6 +100,8 @@ export default function ReferralInbox() {
   const [viewingResume, setViewingResume] = useState<{ url: string; name: string } | null>(null)
   const [passDialog, setPassDialog] = useState<{ requestId: string; studentName: string } | null>(null)
   const [passReason, setPassReason] = useState('')
+  const [screeningResults, setScreeningResults] = useState<Record<string, { passed: boolean; summary: string }>>({})
+  const [screeningLoading, setScreeningLoading] = useState<string | null>(null)
   const navigate = useNavigate()
 
   const ME = professionals.find((p) => p.id === user?.id) ?? { id: user?.id ?? '', name: student.name || (user?.email?.split('@')[0] ?? 'User'), email: user?.email ?? '' }
@@ -108,6 +111,26 @@ export default function ReferralInbox() {
     [inbox, tab, q],
   )
   const counts = (s: ReferralStatus) => inbox.filter((r) => r.status === s).length
+
+  const handleAcceptWithScreening = useCallback(async (requestId: string, studentName: string, requesterId?: string) => {
+    setRequestStatus(requestId, 'accepted')
+    toast.success(`Accepted ${studentName} — they'll be notified`)
+    // Run screening in background
+    if (requesterId) {
+      setScreeningLoading(requestId)
+      try {
+        const result = await runCandidateScreening(requesterId, requestId)
+        setScreeningResults(prev => ({
+          ...prev,
+          [requestId]: { passed: result.all_passed, summary: result.summary }
+        }))
+      } catch {
+        // Screening is optional — don't block UI
+      } finally {
+        setScreeningLoading(null)
+      }
+    }
+  }, [setRequestStatus])
 
   if (loading) return <ListSkeleton count={5} />
 
@@ -200,12 +223,26 @@ export default function ReferralInbox() {
                           Accepted — ready to submit referral when you have the candidate's details
                         </div>
                       )}
+                      {screeningResults[r.id] && (
+                        <div className={`mt-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] ${
+                          screeningResults[r.id].passed
+                            ? 'bg-emerald-500/5 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-amber-500/5 text-amber-600 dark:text-amber-400'
+                        }`}>
+                          <ShieldCheck className="h-3 w-3 shrink-0" />
+                          Screening: {screeningResults[r.id].passed ? 'Passed' : 'Review needed'} — {screeningResults[r.id].summary}
+                        </div>
+                      )}
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">
                       {r.status === 'requested' || r.status === 'under_review' ? (
                         <>
-                          <Button size="sm" className="rounded-lg bg-emerald-600 hover:bg-emerald-700" onClick={() => { setRequestStatus(r.id, 'accepted'); toast.success(`Accepted ${r.student} — they'll be notified`) }}>
-                            <CheckCheck className="mr-1.5 h-3.5 w-3.5" /> Accept
+                          <Button size="sm" className="rounded-lg bg-emerald-600 hover:bg-emerald-700" disabled={screeningLoading === r.id} onClick={() => handleAcceptWithScreening(r.id, r.student, r.requesterId)}>
+                            {screeningLoading === r.id ? (
+                              <>Processing...</>
+                            ) : (
+                              <><CheckCheck className="mr-1.5 h-3.5 w-3.5" /> Accept</>
+                            )}
                           </Button>
                           <Button size="sm" variant="outline" className="rounded-lg" onClick={() => setPassDialog({ requestId: r.id, studentName: r.student })}>
                             <XCircle className="mr-1.5 h-3.5 w-3.5" /> Decline
