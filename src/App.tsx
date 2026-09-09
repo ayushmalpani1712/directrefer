@@ -57,6 +57,7 @@ const ActivityPage = lazyWithRetry(() => import('@/pages/Network').then((m) => (
 const JobDetailPage = lazyWithRetry(() => import('@/pages/JobDetail'))
 const ScreeningSubmit = lazyWithRetry(() => import('@/pages/ScreeningSubmit'))
 const RecruiterScreening = lazyWithRetry(() => import('@/pages/RecruiterScreening'))
+const ScreeningAnalyticsPage = lazyWithRetry(() => import('@/pages/ScreeningAnalytics'))
 const NotFound = lazyWithRetry(() => import('@/pages/NotFound'))
 const AuthCallback = lazyWithRetry(() => import('@/pages/AuthCallback'))
 const PrivacyPolicy = lazyWithRetry(() => import('@/pages/PrivacyPolicy'))
@@ -308,6 +309,7 @@ export default function App() {
                   <Route path="/recruiter/talent" element={<RequireRole allowed={['recruiter', 'admin']}><TalentSearch /></RequireRole>} />
                   <Route path="/recruiter/screening" element={<RequireRole allowed={['recruiter', 'admin']}><RecruiterScreening /></RequireRole>} />
                   <Route path="/recruiter/screening/:jobId" element={<RequireRole allowed={['recruiter', 'admin']}><RecruiterScreening /></RequireRole>} />
+                  <Route path="/recruiter/screening/analytics" element={<RequireRole allowed={['recruiter', 'admin']}><ScreeningAnalyticsPage /></RequireRole>} />
 
                   {/* ── Admin routes (modular) ── */}
                   <Route path="/admin" element={<RequireRole allowed={['admin']}><AdminShell /></RequireRole>}>

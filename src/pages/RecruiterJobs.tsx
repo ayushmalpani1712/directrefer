@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  Briefcase, ChevronRight, Clock, MapPin, Pause, Play, Plus, Search, Star, Trash2, Pencil, Users, X, Bookmark, BookmarkCheck, Share2, AlertTriangle, FileText,
+  Briefcase, ChevronRight, Clock, MapPin, Pause, Play, Plus, Search, Star, Trash2, Pencil, Users, X, Bookmark, BookmarkCheck, Share2, AlertTriangle, FileText, CalendarClock, CheckSquare, Square,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -45,6 +45,19 @@ export function BrowseJobsView() {
   const [recruiterNames, setRecruiterNames] = useState<Record<string, string>>({})
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set())
   const loadedRef = useRef(false)
+
+  useEffect(() => {
+    const autoCloseExpired = async () => {
+      const now = new Date()
+      const expiredJobs = jobs.filter(j => j.stage === 'Active' && j.expires_at && new Date(j.expires_at) < now)
+      for (const job of expiredJobs) {
+        try {
+          await supabase.from('jobs').update({ stage: 'closed' }).eq('id', job.id)
+        } catch { /* best effort */ }
+      }
+    }
+    if (jobs.length > 0) autoCloseExpired()
+  }, [jobs])
 
   useEffect(() => {
     const loadRecruiters = async () => {
@@ -183,6 +196,19 @@ export function BrowseJobsView() {
                         return null
                       })()}
                     </div>
+                    {j.expires_at && (() => {
+                      const deadline = new Date(j.expires_at)
+                      const daysLeft = Math.ceil((deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                      if (daysLeft > 0 && daysLeft <= 14) {
+                        return (
+                          <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+                            <CalendarClock className="h-3 w-3" />
+                            Deadline: {deadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </div>
+                        )
+                      }
+                      return null
+                    })()}
                     <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {j.applicants} applicants</span>
                       <span className="flex items-center gap-1 text-primary"><Star className="h-3.5 w-3.5" /> {j.referrals} referrals</span>
@@ -293,6 +319,7 @@ function RecruiterJobsManager() {
   const [editTitle, setEditTitle] = useState('')
   const [editSalary, setEditSalary] = useState('')
   const [editLocation, setEditLocation] = useState('')
+  const [editDeadline, setEditDeadline] = useState('')
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const [pauseTargetId, setPauseTargetId] = useState<string | null>(null)
   const [addingToStage, setAddingToStage] = useState<string | null>(null)
@@ -301,6 +328,8 @@ function RecruiterJobsManager() {
   const [mobileStage, setMobileStage] = useState<string>(STAGES[0])
   const [showTemplateMenu, setShowTemplateMenu] = useState(false)
   const templateMenuRef = useRef<HTMLDivElement>(null)
+  const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set())
+  const [bulkAction, setBulkAction] = useState<'pause' | 'close' | 'delete' | null>(null)
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -360,11 +389,17 @@ function RecruiterJobsManager() {
     setEditTitle(job.title)
     setEditSalary(job.salary)
     setEditLocation(job.location)
+    setEditDeadline(job.expires_at ? job.expires_at.split('T')[0] : '')
   }
 
   const saveEdit = () => {
     if (!editingJobId) return
-    updateJob(editingJobId, { title: editTitle, salary: editSalary, location: editLocation })
+    updateJob(editingJobId, {
+      title: editTitle,
+      salary: editSalary,
+      location: editLocation,
+      expires_at: editDeadline ? new Date(editDeadline).toISOString() : undefined,
+    })
     toast.success('Job updated')
     setEditingJobId(null)
   }
@@ -386,6 +421,28 @@ function RecruiterJobsManager() {
     const newStage = job.stage === 'Active' ? 'Paused' : 'Active'
     updateJob(jobId, { stage: newStage })
     toast.success(`Job ${newStage === 'Paused' ? 'paused' : 'resumed'}`)
+  }
+
+  const toggleSelectJob = (jobId: string) => {
+    setSelectedJobIds(prev => {
+      const next = new Set(prev)
+      if (next.has(jobId)) next.delete(jobId)
+      else next.add(jobId)
+      return next
+    })
+  }
+
+  const handleBulkAction = () => {
+    if (!bulkAction || selectedJobIds.size === 0) return
+    const count = selectedJobIds.size
+    for (const id of selectedJobIds) {
+      if (bulkAction === 'pause') updateJob(id, { stage: 'Paused' })
+      else if (bulkAction === 'close') updateJob(id, { stage: 'Closed' })
+      else if (bulkAction === 'delete') updateJob(id, { stage: 'Closed' })
+    }
+    toast.success(`${count} job${count > 1 ? 's' : ''} ${bulkAction === 'delete' ? 'deleted' : bulkAction === 'pause' ? 'paused' : 'closed'}`)
+    setSelectedJobIds(new Set())
+    setBulkAction(null)
   }
 
   const handlePostJob = async (template?: JobTemplate) => {
@@ -465,9 +522,25 @@ function RecruiterJobsManager() {
 
         {/* ── Jobs list ── */}
         <TabsContent value="jobs" className="mt-5 space-y-4">
-          <div className="relative sm:max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search jobs…" className="pl-9" />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1 sm:max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search jobs…" className="pl-9" />
+            </div>
+            {selectedJobIds.size > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{selectedJobIds.size} selected</span>
+                <Button size="sm" variant="outline" onClick={() => setBulkAction('pause')}>
+                  <Pause className="mr-1 h-3.5 w-3.5" /> Pause
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setBulkAction('close')}>
+                  <CheckSquare className="mr-1 h-3.5 w-3.5" /> Close
+                </Button>
+                <Button size="sm" variant="outline" className="text-destructive" onClick={() => setBulkAction('delete')}>
+                  <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
+                </Button>
+              </div>
+            )}
           </div>
           {jobs.length === 0 ? (
             <EmptyState
@@ -497,7 +570,18 @@ function RecruiterJobsManager() {
                 <Card className="transition-colors hover:border-primary/20">
                 <CardContent className="p-5">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                    <CompanyChip name={recruiterCompany.name} className="h-11 w-11 rounded-xl text-xs" />
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => toggleSelectJob(j.id)}
+                        className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {selectedJobIds.has(j.id)
+                          ? <CheckSquare className="h-4 w-4 text-primary" />
+                          : <Square className="h-4 w-4" />
+                        }
+                      </button>
+                      <CompanyChip name={recruiterCompany.name} className="h-11 w-11 rounded-xl text-xs" />
+                    </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         {editingJobId === j.id ? (
@@ -539,6 +623,15 @@ function RecruiterJobsManager() {
                               onChange={(e) => setEditSalary(e.target.value)}
                               className="h-6 w-40 text-xs"
                             />
+                            <div className="flex items-center gap-1">
+                              <CalendarClock className="h-3 w-3 text-muted-foreground" />
+                              <input
+                                type="date"
+                                value={editDeadline}
+                                onChange={(e) => setEditDeadline(e.target.value)}
+                                className="h-6 w-36 rounded border border-border bg-background px-1.5 text-xs"
+                              />
+                            </div>
                           </>
                         ) : (
                           <>
@@ -795,6 +888,15 @@ function RecruiterJobsManager() {
           if (pauseTargetId) handlePauseResume(pauseTargetId)
           setPauseTargetId(null)
         }}
+      />
+
+      <ConfirmDialog
+        open={bulkAction !== null}
+        onOpenChange={(open) => { if (!open) setBulkAction(null) }}
+        title={bulkAction === 'delete' ? 'Delete selected jobs' : bulkAction === 'pause' ? 'Pause selected jobs' : 'Close selected jobs'}
+        description={`This will ${bulkAction === 'delete' ? 'permanently remove' : bulkAction === 'pause' ? 'pause' : 'close'} ${selectedJobIds.size} job posting${selectedJobIds.size > 1 ? 's' : ''}. ${bulkAction === 'delete' ? 'This action cannot be undone.' : ''}`}
+        confirmLabel={bulkAction === 'delete' ? 'Delete' : bulkAction === 'pause' ? 'Pause' : 'Close'}
+        onConfirm={handleBulkAction}
       />
     </div>
   )

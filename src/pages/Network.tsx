@@ -7,7 +7,9 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Pagination } from '@/components/ui/pagination'
 import { EmptyState, SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { ROLE_ROUTE, getRoleFromPath, type AppNotification } from '@/data/mock'
@@ -45,6 +47,28 @@ function getDateGroup(timeStr: string): string {
   return 'Earlier'
 }
 
+function getRelativeTime(timeStr: string): string {
+  const lower = timeStr.toLowerCase().trim()
+  if (lower.includes('just now') || lower.includes('seconds ago')) return 'Just now'
+  const minMatch = lower.match(/(\d+)\s*min/)
+  if (minMatch) return `${minMatch[1]} min ago`
+  const hrMatch = lower.match(/(\d+)\s*hour/)
+  if (hrMatch) return `${hrMatch[1]} hr ago`
+  const dayMatch = lower.match(/(\d+)\s*day/)
+  if (dayMatch) {
+    const d = parseInt(dayMatch[1])
+    return d === 1 ? 'Yesterday' : `${d} days ago`
+  }
+  const weekMatch = lower.match(/(\d+)\s*week/)
+  if (weekMatch) {
+    const w = parseInt(weekMatch[1])
+    return w === 1 ? '1 week ago' : `${w} weeks ago`
+  }
+  return timeStr
+}
+
+const PAGE_SIZE = 8
+
 const DATE_ORDER = ['Today', 'Yesterday', 'This Week', 'Earlier']
 
 function groupNotifications(notifications: AppNotification[]) {
@@ -62,9 +86,21 @@ export function NotificationsPage() {
   const { pathname } = useLocation()
   const prefix = ROLE_ROUTE[getRoleFromPath(pathname) || 'student']
   const [filter, setFilter] = useState('all')
-  const shown = filter === 'all' ? notifications : filter === 'unread' ? notifications.filter((n) => !n.read) : notifications.filter((n) => n.type === filter)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [page, setPage] = useState(1)
 
-  const groups = useMemo(() => groupNotifications(shown), [shown])
+  const shown = useMemo(() => {
+    let result = filter === 'all' ? notifications : filter === 'unread' ? notifications.filter((n) => !n.read) : notifications.filter((n) => n.type === filter)
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter((n) => n.title.toLowerCase().includes(q) || n.description.toLowerCase().includes(q))
+    }
+    return result
+  }, [notifications, filter, searchQuery])
+
+  const totalPages = Math.max(1, Math.ceil(shown.length / PAGE_SIZE))
+  const paginated = shown.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const groups = useMemo(() => groupNotifications(paginated), [paginated])
 
   if (loading) return <ListSkeleton count={5} />
 
@@ -78,7 +114,17 @@ export function NotificationsPage() {
         </div>
       </div>
 
-      <Tabs value={filter} onValueChange={setFilter}>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={searchQuery}
+          onChange={(e) => { setSearchQuery(e.target.value); setPage(1) }}
+          placeholder="Search notifications..."
+          className="pl-9"
+        />
+      </div>
+
+      <Tabs value={filter} onValueChange={(v) => { setFilter(v); setPage(1) }}>
         <TabsList className="h-auto flex-wrap">
           {['all', 'unread', 'accepted', 'rejected', 'message', 'system'].map((t) => (
             <TabsTrigger key={t} value={t} className="capitalize">{t}</TabsTrigger>
@@ -115,7 +161,7 @@ export function NotificationsPage() {
                         {!n.read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
                       </div>
                       <p className="mt-0.5 text-sm text-muted-foreground">{n.description}</p>
-                      <span className="mt-1 block text-xs text-muted-foreground/70">{n.time}</span>
+                      <span className="mt-1 block text-xs text-muted-foreground/70">{getRelativeTime(n.time)}</span>
                     </div>
                   </motion.button>
                 )
@@ -123,6 +169,10 @@ export function NotificationsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {totalPages > 1 && (
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       )}
     </div>
   )

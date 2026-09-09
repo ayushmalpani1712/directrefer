@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { motion } from 'framer-motion'
-import { Eye, CheckCircle2, XCircle, FileText, Search } from 'lucide-react'
+import { Eye, CheckCircle2, XCircle, FileText, Search, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SectionHeader } from '@/components/ui-kit'
@@ -14,6 +15,11 @@ import { cn } from '@/lib/utils'
 import { ListSkeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { notifyScreeningUpdate } from '@/lib/notifications'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface ScreeningAttempt {
   id: string
@@ -41,6 +47,9 @@ export default function RecruiterScreening() {
   const [q, setQ] = useState('')
   const [tab, setTab] = useState('pending')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
+  const [bulkAction, setBulkAction] = useState<'pass' | 'fail' | null>(null)
 
   useEffect(() => {
     loadAttempts()
@@ -132,6 +141,53 @@ export default function RecruiterScreening() {
     }
   }
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filtered.map((a) => a.id)))
+    }
+  }
+
+  const executeBulkAction = async () => {
+    if (!user || !bulkAction) return
+    try {
+      const pendingSelected = filtered.filter((a) => selectedIds.has(a.id) && a.result === 'pending')
+      await Promise.all(
+        pendingSelected.map(async (attempt) => {
+          await supabase
+            .from('screening_attempts')
+            .update({
+              result: bulkAction,
+              status: bulkAction === 'pass' ? 'ready' : 'not_ready',
+              reviewed_by: user.id,
+              reviewed_at: new Date().toISOString(),
+            })
+            .eq('id', attempt.id)
+          notifyScreeningUpdate(attempt.candidate_name ?? 'Candidate', attempt.job_title ?? 'a job', bulkAction)
+        })
+      )
+      toast.success(`${pendingSelected.length} candidate${pendingSelected.length !== 1 ? 's' : ''} ${bulkAction === 'pass' ? 'approved' : 'rejected'}`)
+      setSelectedIds(new Set())
+      loadAttempts()
+    } catch (err) {
+      console.error('Bulk action failed:', err)
+      toast.error('Failed to complete bulk action')
+    } finally {
+      setBulkDialogOpen(false)
+      setBulkAction(null)
+    }
+  }
+
   const filtered = attempts
     .filter(a => {
       if (tab === 'pending') return a.result === 'pending'
@@ -164,6 +220,30 @@ export default function RecruiterScreening() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by candidate, job, or criteria..." className="pl-9" />
         </div>
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{selectedIds.size} selected</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400"
+              onClick={() => { setBulkAction('pass'); setBulkDialogOpen(true) }}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" /> Approve
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400"
+              onClick={() => { setBulkAction('fail'); setBulkDialogOpen(true) }}
+            >
+              <XCircle className="h-3.5 w-3.5" /> Reject
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
@@ -183,7 +263,17 @@ export default function RecruiterScreening() {
               </CardContent>
             </Card>
           ) : (
-            filtered.map((attempt, i) => (
+            <>
+              {tab === 'pending' && (
+                <div className="flex items-center gap-2 px-1">
+                  <Checkbox
+                    checked={selectedIds.size === filtered.length && filtered.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  <span className="text-xs text-muted-foreground">Select all pending</span>
+                </div>
+              )}
+              {filtered.map((attempt, i) => (
               <motion.div
                 key={attempt.id}
                 initial={{ opacity: 0, y: 12 }}
@@ -193,24 +283,33 @@ export default function RecruiterScreening() {
                 <Card className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-semibold truncate">{attempt.candidate_name}</h3>
-                          <Badge variant="outline" className={cn(
-                            'text-[10px] capitalize',
-                            attempt.result === 'pass' && 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500',
-                            attempt.result === 'fail' && 'border-rose-500/25 bg-rose-500/10 text-rose-500',
-                            attempt.result === 'pending' && 'border-amber-500/25 bg-amber-500/10 text-amber-500',
-                          )}>
-                            {attempt.result}
-                          </Badge>
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        {attempt.result === 'pending' && (
+                          <Checkbox
+                            checked={selectedIds.has(attempt.id)}
+                            onCheckedChange={() => toggleSelect(attempt.id)}
+                            className="mt-0.5"
+                          />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-semibold truncate">{attempt.candidate_name}</h3>
+                            <Badge variant="outline" className={cn(
+                              'text-[10px] capitalize',
+                              attempt.result === 'pass' && 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500',
+                              attempt.result === 'fail' && 'border-rose-500/25 bg-rose-500/10 text-rose-500',
+                              attempt.result === 'pending' && 'border-amber-500/25 bg-amber-500/10 text-amber-500',
+                            )}>
+                              {attempt.result}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {attempt.job_title} — {attempt.criteria_name}
+                          </p>
+                          <p className="text-xs text-muted-foreground/70 mt-1">
+                            {new Date(attempt.created_at).toLocaleString()}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {attempt.job_title} — {attempt.criteria_name}
-                        </p>
-                        <p className="text-xs text-muted-foreground/70 mt-1">
-                          {new Date(attempt.created_at).toLocaleString()}
-                        </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button
@@ -258,10 +357,32 @@ export default function RecruiterScreening() {
                   </CardContent>
                 </Card>
               </motion.div>
-            ))
+            ))}
+            </>
           )}
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bulkAction === 'pass' ? 'Bulk Approve' : 'Bulk Reject'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction === 'pass'
+                ? `Approve ${selectedIds.size} pending screening attempt${selectedIds.size !== 1 ? 's' : ''}? This action cannot be undone.`
+                : `Reject ${selectedIds.size} pending screening attempt${selectedIds.size !== 1 ? 's' : ''}? This action cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeBulkAction}>
+              {bulkAction === 'pass' ? 'Approve All' : 'Reject All'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

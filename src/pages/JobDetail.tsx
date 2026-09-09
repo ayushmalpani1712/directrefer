@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import {
   Briefcase, MapPin, Clock, DollarSign, Building2, ArrowLeft,
   Bookmark, BookmarkCheck, Share2, Users, Star, ExternalLink, Copy,
+  CalendarClock, AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -223,6 +224,33 @@ export default function JobDetailPage() {
               <span className="flex items-center gap-1 text-primary"><Star className="h-4 w-4" /> {job.referrals} referrals</span>
               <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> Posted {postedDate} ({daysAgo}d ago)</span>
             </div>
+
+            {job.expires_at && (() => {
+              const deadline = new Date(job.expires_at)
+              const now = new Date()
+              const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+              const isExpired = daysLeft <= 0
+              const isUrgent = daysLeft > 0 && daysLeft <= 7
+              return (
+                <div className={`mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${
+                  isExpired
+                    ? 'border-rose-500/25 bg-rose-500/5 text-rose-500'
+                    : isUrgent
+                    ? 'border-amber-500/25 bg-amber-500/5 text-amber-500'
+                    : 'border-border bg-muted/30 text-foreground'
+                }`}>
+                  {isExpired ? <AlertTriangle className="h-4 w-4 shrink-0" /> : <CalendarClock className="h-4 w-4 shrink-0" />}
+                  <span className="font-medium">
+                    {isExpired
+                      ? 'Application deadline has passed'
+                      : isUrgent
+                      ? `Application deadline in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`
+                      : `Application deadline: ${deadline.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+                    }
+                  </span>
+                </div>
+              )
+            })()}
           </CardContent>
         </Card>
       </motion.div>
@@ -321,11 +349,17 @@ export default function JobDetailPage() {
                 <Separator />
                 {role === 'student' && (
                   <>
-                    <Link to="/job-seeker/request-referral" className="block">
-                      <Button className="w-full bg-primary text-white shadow-sm hover:shadow-md transition-all duration-200">
-                        Request Referral
+                    {job.expires_at && new Date(job.expires_at) < new Date() ? (
+                      <Button className="w-full" disabled>
+                        Applications Closed
                       </Button>
-                    </Link>
+                    ) : (
+                      <Link to="/job-seeker/request-referral" className="block">
+                        <Button className="w-full bg-primary text-white shadow-sm hover:shadow-md transition-all duration-200">
+                          Request Referral
+                        </Button>
+                      </Link>
+                    )}
                     <Link to="/job-seeker/professionals" className="block">
                       <Button variant="outline" className="w-full">
                         Find a Professional

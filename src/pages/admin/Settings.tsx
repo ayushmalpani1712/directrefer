@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Shield, Clock, Megaphone, ToggleLeft, Globe, Mail, FileText,
   Briefcase, MessageSquare, Wrench, ExternalLink, Plus, Send, Trash2, Award,
-  ShieldCheck,
+  ShieldCheck, Filter,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,8 +20,9 @@ import {
 import { TrustBadge } from '@/components/TrustBadge'
 import { manualOverrideTrustScore, type TrustTier } from '@/lib/v2/trust-score'
 import { supabase } from '@/lib/supabase'
+import { screeningTemplates } from '@/data/screeningTemplates'
 
-type SettingsTab = 'feature-flags' | 'rate-limits' | 'auto-deletion' | 'announcements' | 'trust-scores' | 'gdpr'
+type SettingsTab = 'feature-flags' | 'rate-limits' | 'auto-deletion' | 'announcements' | 'trust-scores' | 'gdpr' | 'screening-criteria'
 
 const SETTINGS_TABS: { key: SettingsTab; label: string; icon: typeof Shield }[] = [
   { key: 'feature-flags', label: 'Feature Flags', icon: ToggleLeft },
@@ -29,6 +30,7 @@ const SETTINGS_TABS: { key: SettingsTab; label: string; icon: typeof Shield }[] 
   { key: 'auto-deletion', label: 'Auto-Deletion', icon: Clock },
   { key: 'announcements', label: 'Announcements', icon: Megaphone },
   { key: 'trust-scores', label: 'Trust Scores', icon: Award },
+  { key: 'screening-criteria', label: 'Screening Criteria', icon: Filter },
   { key: 'gdpr', label: 'GDPR', icon: ShieldCheck },
 ]
 
@@ -60,6 +62,11 @@ export default function AdminSettings() {
   const [gdprNoTerms, setGdprNoTerms] = useState<Array<{ id: string; full_name: string; email: string; created_at: string }>>([])
   const [gdprRetention, setGdprRetention] = useState<Array<{ id: string; full_name: string; email: string; data_retention_until: string }>>([])
   const [gdprLoading, setGdprLoading] = useState(false)
+
+  const [screeningCriteria, setScreeningCriteria] = useState<Array<{ id: string; name: string; category: string; job_id: string | null; is_active: boolean }>>([])
+  const [applyingTemplate, setApplyingTemplate] = useState<string | null>(null)
+  const [templateJobId, setTemplateJobId] = useState('')
+  const [screeningJobs, setScreeningJobs] = useState<Array<{ id: string; title: string }>>([])
 
   const loadSettings = useCallback(async () => {
     try {
@@ -150,6 +157,52 @@ export default function AdminSettings() {
     setGdprLoading(false)
   }, [])
 
+  const loadScreeningData = useCallback(async () => {
+    try {
+      const [criteriaRes, jobsRes] = await Promise.all([
+        supabase
+          .from('screening_criteria')
+          .select('id, name, category, job_id, is_active')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('jobs')
+          .select('id, title')
+          .order('created_at', { ascending: false }),
+      ])
+      setScreeningCriteria(criteriaRes.data ?? [])
+      setScreeningJobs(jobsRes.data ?? [])
+    } catch {
+      toast.error('Failed to load screening data')
+    }
+  }, [])
+
+  const handleApplyTemplate = async (templateId: string) => {
+    const template = screeningTemplates.find(t => t.id === templateId)
+    if (!template) return
+    try {
+      const inserts = template.criteria.map(c => ({
+        name: c.name,
+        category: c.category,
+        criterion_type: c.criterion_type,
+        criterion_key: c.criterion_key,
+        criterion_value: c.criterion_value,
+        weight: c.weight,
+        job_id: templateJobId || null,
+        is_active: true,
+      }))
+      const { error } = await supabase.from('screening_criteria').insert(inserts)
+      if (error) throw error
+      toast.success(`Applied "${template.name}" template`)
+      logAdminAction('applied_screening_template', undefined, { template: template.name, job_id: templateJobId })
+      setApplyingTemplate(null)
+      setTemplateJobId('')
+      loadScreeningData()
+    } catch (err) {
+      console.error('Failed to apply template:', err)
+      toast.error('Failed to apply template')
+    }
+  }
+
   const handleExportUserData = async (userId: string, email: string) => {
     try {
       const [userRes, proRes, seekerRes, recRes, refsRes] = await Promise.all([
@@ -206,7 +259,8 @@ export default function AdminSettings() {
     if (settingsTab === 'announcements') loadAnnouncements()
     if (settingsTab === 'trust-scores') loadTrustScores()
     if (settingsTab === 'gdpr') loadGdprData()
-  }, [settingsTab, loadSettings, loadAnnouncements, loadTrustScores, loadGdprData])
+    if (settingsTab === 'screening-criteria') loadScreeningData()
+  }, [settingsTab, loadSettings, loadAnnouncements, loadTrustScores, loadGdprData, loadScreeningData])
 
   const handleSaveSetting = async (key: string, value: unknown) => {
     const ok = await updatePlatformSetting(key, value)
@@ -566,6 +620,90 @@ export default function AdminSettings() {
                 <div className="flex items-center gap-2">
                   <Button size="sm" onClick={() => handleOverrideTrustScore(overrideUserId)}>Save Override</Button>
                   <Button variant="ghost" size="sm" onClick={() => setOverrideUserId(null)}>Cancel</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {settingsTab === 'screening-criteria' && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Filter className="h-4 w-4 text-primary" /> Screening Criteria Templates</CardTitle></CardHeader>
+            <CardContent>
+              <p className="mb-4 text-sm text-muted-foreground">Apply predefined screening criteria sets to jobs. Choose a template and optionally assign it to a specific job.</p>
+              <div className="space-y-3">
+                {screeningTemplates.map((template) => (
+                  <div key={template.id} className="flex items-center justify-between rounded-xl border border-border p-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold">{template.name}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{template.description}</div>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {template.criteria.map((c, i) => (
+                          <Badge key={i} variant="outline" className="text-[10px]">{c.name} ({c.weight}%)</Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setApplyingTemplate(template.id)}
+                    >
+                      Use Template
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {applyingTemplate && (
+            <Card className="border-primary/20">
+              <CardHeader><CardTitle className="text-base">Apply Template</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Applying: {screeningTemplates.find(t => t.id === applyingTemplate)?.name}
+                </p>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Assign to job (optional)</label>
+                  <select
+                    value={templateJobId}
+                    onChange={(e) => setTemplateJobId(e.target.value)}
+                    className="w-full max-w-md rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">All jobs (global criteria)</option>
+                    {screeningJobs.map((j) => (
+                      <option key={j.id} value={j.id}>{j.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={() => handleApplyTemplate(applyingTemplate)}>Apply Template</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setApplyingTemplate(null); setTemplateJobId('') }}>Cancel</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {screeningCriteria.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Existing criteria ({screeningCriteria.length})</CardTitle></CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {screeningCriteria.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between rounded-xl border border-border p-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium">{c.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          Category: {c.category} {c.job_id ? `· Job: ${screeningJobs.find(j => j.id === c.job_id)?.title ?? 'Unknown'}` : '· Global'}
+                        </div>
+                      </div>
+                      <Badge variant="outline" className={c.is_active ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500' : 'text-muted-foreground'}>
+                        {c.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

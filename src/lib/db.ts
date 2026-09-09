@@ -814,6 +814,7 @@ export async function updateJob(
     type?: string
     salary_range?: string
     stage?: 'active' | 'paused' | 'draft' | 'closed'
+    expires_at?: string | null
   }
 ): Promise<boolean> {
   try {
