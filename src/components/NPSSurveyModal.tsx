@@ -191,7 +191,7 @@ export function NPSSurveyModal({ open, onOpenChange, userId }: NPSSurveyModalPro
             {/* Actions */}
             <div className="mt-6 flex flex-col gap-2.5">
               <Button
-                className="w-full rounded-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white shadow-sm hover:opacity-90"
+                className="w-full rounded-full bg-primary text-white shadow-sm hover:shadow-md transition-all duration-200"
                 onClick={handleSubmit}
                 disabled={score === null || submitting}
               >

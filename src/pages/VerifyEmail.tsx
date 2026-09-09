@@ -102,7 +102,7 @@ export default function VerifyEmail() {
 
   if (verifying) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#6366F1] to-[#8B5CF6]">
+      <div className="flex min-h-screen items-center justify-center bg-primary">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-2xl bg-white p-10 text-center shadow-2xl">
           <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
           <h2 className="mt-6 text-xl font-bold">Verifying your email…</h2>
@@ -113,7 +113,7 @@ export default function VerifyEmail() {
 
   if (verified) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#6366F1] to-[#8B5CF6]">
+      <div className="flex min-h-screen items-center justify-center bg-primary">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-2xl bg-white p-10 text-center shadow-2xl">
           <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
           <h2 className="mt-6 text-xl font-bold">Email Verified!</h2>
@@ -124,7 +124,7 @@ export default function VerifyEmail() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#6366F1] to-[#8B5CF6]">
+    <div className="flex min-h-screen items-center justify-center bg-primary">
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md rounded-2xl bg-white p-10 shadow-2xl">
         <div className="mb-6 flex justify-center"><Logo /></div>
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">

@@ -12,7 +12,7 @@ export default function NotFound() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
-        <div className="font-display bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] bg-clip-text text-[96px] font-extrabold leading-none text-transparent">
+        <div className="font-display bg-primary bg-clip-text text-[96px] font-extrabold leading-none text-transparent">
           404
         </div>
         <h1 className="font-display mt-4 text-2xl font-bold">This page took a wrong turn</h1>

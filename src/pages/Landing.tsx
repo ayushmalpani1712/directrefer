@@ -184,7 +184,7 @@ function RequestScene({ active }: { active: boolean }) {
     <div className="flex flex-col gap-4 px-2 sm:px-4 py-4 sm:py-8">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 8 }} transition={{ delay: 0.15 }} className="rounded-xl border border-border/40 bg-card p-4 space-y-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] text-white text-[10px] font-bold">PS</div>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold">PS</div>
           <div>
             <div className="text-xs font-semibold text-foreground">Priya Sharma <ShieldCheck className="inline h-3 w-3 text-emerald-400" /></div>
             <div className="text-[10px] text-muted-foreground">SDE-2 {'\u2022'} Google</div>

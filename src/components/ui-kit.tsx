@@ -153,11 +153,11 @@ export function EmptyState({
   const hasPrimary = primaryCtaLabel && (primaryCtaHref || onPrimaryCtaClick)
 
   const primaryButton = primaryCtaLabel && primaryCtaHref ? (
-    <Button className="rounded-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white shadow-sm hover:opacity-90" asChild>
+    <Button className="rounded-full bg-primary text-white shadow-sm hover:shadow-md transition-all duration-200" asChild>
       <Link to={primaryCtaHref}>{primaryCtaLabel}</Link>
     </Button>
   ) : primaryCtaLabel && onPrimaryCtaClick ? (
-    <Button className="rounded-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white shadow-sm hover:opacity-90" onClick={onPrimaryCtaClick}>
+    <Button className="rounded-full bg-primary text-white shadow-sm hover:shadow-md transition-all duration-200" onClick={onPrimaryCtaClick}>
       {primaryCtaLabel}
     </Button>
   ) : null

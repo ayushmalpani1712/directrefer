@@ -46,7 +46,7 @@ export function Logo({ compact }: { compact?: boolean }) {
         <image href="/logo-emblem.png" width="512" height="385" />
       </svg>
       {!compact && (
-        <span className="font-display text-[21px] font-bold tracking-tight text-gradient">
+        <span className="font-display text-[21px] font-bold tracking-tight text-primary">
           DirectRefer
         </span>
       )}

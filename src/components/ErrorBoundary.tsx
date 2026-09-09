@@ -167,7 +167,7 @@ export function ErrorFallback({
 
         <div className="mt-6 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
           <Button
-            className="rounded-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white shadow-sm hover:opacity-90"
+            className="rounded-full bg-primary text-white shadow-sm hover:shadow-md transition-all duration-200"
             onClick={handleReload}
             aria-label="Reload page"
           >
