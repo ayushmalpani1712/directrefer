@@ -9,6 +9,7 @@ import '@fontsource/inter/latin-700.css'
 import './index.css'
 import App from './App.tsx'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { reportWebVitals } from '@/lib/vitals'
 
 // ── Global error handlers (catch errors outside React tree) ─
 window.addEventListener('error', (event) => {
@@ -46,3 +47,6 @@ createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </StrictMode>,
 )
+
+// ── Web Vitals ──────────────────────────────────────────────
+reportWebVitals()

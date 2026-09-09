@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Shield, Clock, Megaphone, ToggleLeft, Globe, Mail, FileText,
   Briefcase, MessageSquare, Wrench, ExternalLink, Plus, Send, Trash2, Award,
+  ShieldCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,7 +21,7 @@ import { TrustBadge } from '@/components/TrustBadge'
 import { manualOverrideTrustScore, type TrustTier } from '@/lib/v2/trust-score'
 import { supabase } from '@/lib/supabase'
 
-type SettingsTab = 'feature-flags' | 'rate-limits' | 'auto-deletion' | 'announcements' | 'trust-scores'
+type SettingsTab = 'feature-flags' | 'rate-limits' | 'auto-deletion' | 'announcements' | 'trust-scores' | 'gdpr'
 
 const SETTINGS_TABS: { key: SettingsTab; label: string; icon: typeof Shield }[] = [
   { key: 'feature-flags', label: 'Feature Flags', icon: ToggleLeft },
@@ -28,6 +29,7 @@ const SETTINGS_TABS: { key: SettingsTab; label: string; icon: typeof Shield }[] 
   { key: 'auto-deletion', label: 'Auto-Deletion', icon: Clock },
   { key: 'announcements', label: 'Announcements', icon: Megaphone },
   { key: 'trust-scores', label: 'Trust Scores', icon: Award },
+  { key: 'gdpr', label: 'GDPR', icon: ShieldCheck },
 ]
 
 export default function AdminSettings() {
@@ -54,6 +56,10 @@ export default function AdminSettings() {
   const [overrideUserId, setOverrideUserId] = useState<string | null>(null)
   const [overrideScore, setOverrideScore] = useState<number>(50)
   const [overrideTier, setOverrideTier] = useState<TrustTier>('provisional')
+
+  const [gdprNoTerms, setGdprNoTerms] = useState<Array<{ id: string; full_name: string; email: string; created_at: string }>>([])
+  const [gdprRetention, setGdprRetention] = useState<Array<{ id: string; full_name: string; email: string; data_retention_until: string }>>([])
+  const [gdprLoading, setGdprLoading] = useState(false)
 
   const loadSettings = useCallback(async () => {
     try {
@@ -112,11 +118,95 @@ export default function AdminSettings() {
     }
   }, [])
 
+  const loadGdprData = useCallback(async () => {
+    setGdprLoading(true)
+    try {
+      const [noTermsRes, retentionRes] = await Promise.all([
+        supabase
+          .from('users')
+          .select('id, full_name, email, created_at')
+          .is('terms_accepted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(100),
+        supabase
+          .from('users')
+          .select('id, full_name, email, data_retention_until')
+          .not('data_retention_until', 'is', null)
+          .order('data_retention_until', { ascending: true })
+          .limit(100),
+      ])
+
+      setGdprNoTerms(noTermsRes.data ?? [])
+
+      const now30 = new Date(Date.now() + 30 * 86_400_000)
+      setGdprRetention(
+        (retentionRes.data ?? []).filter(
+          (u) => new Date(u.data_retention_until) < now30
+        )
+      )
+    } catch {
+      toast.error('Failed to load GDPR data')
+    }
+    setGdprLoading(false)
+  }, [])
+
+  const handleExportUserData = async (userId: string, email: string) => {
+    try {
+      const [userRes, proRes, seekerRes, recRes, refsRes] = await Promise.all([
+        supabase.from('users').select('*').eq('id', userId).single(),
+        supabase.from('profiles_professional').select('*').eq('user_id', userId).maybeSingle(),
+        supabase.from('profiles_job_seeker').select('*').eq('user_id', userId).maybeSingle(),
+        supabase.from('profiles_recruiter').select('*').eq('user_id', userId).maybeSingle(),
+        supabase.from('referrals').select('*').or(`requester_id.eq.${userId},professional_id.eq.${userId}`),
+      ])
+
+      const exportData = {
+        user: userRes.data,
+        professional_profile: proRes.data,
+        job_seeker_profile: seekerRes.data,
+        recruiter_profile: recRes.data,
+        referrals: refsRes.data,
+        exported_at: new Date().toISOString(),
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `gdpr-export-${email || userId}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('User data exported')
+      logAdminAction('gdpr_data_export', userId, { email })
+    } catch {
+      toast.error('Failed to export user data')
+    }
+  }
+
+  const handleRequestDeletion = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ data_retention_until: new Date().toISOString() })
+        .eq('id', userId)
+      if (error) {
+        toast.error('Failed to request deletion')
+        return
+      }
+      toast.success('Deletion request recorded')
+      logAdminAction('gdpr_deletion_request', userId)
+      loadGdprData()
+    } catch {
+      toast.error('Failed to request deletion')
+    }
+  }
+
   useEffect(() => {
     if (settingsTab === 'feature-flags' || settingsTab === 'rate-limits' || settingsTab === 'auto-deletion') loadSettings()
     if (settingsTab === 'announcements') loadAnnouncements()
     if (settingsTab === 'trust-scores') loadTrustScores()
-  }, [settingsTab, loadSettings, loadAnnouncements, loadTrustScores])
+    if (settingsTab === 'gdpr') loadGdprData()
+  }, [settingsTab, loadSettings, loadAnnouncements, loadTrustScores, loadGdprData])
 
   const handleSaveSetting = async (key: string, value: unknown) => {
     const ok = await updatePlatformSetting(key, value)
@@ -480,6 +570,74 @@ export default function AdminSettings() {
               </CardContent>
             </Card>
           )}
+        </div>
+      )}
+
+      {settingsTab === 'gdpr' && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2 text-base"><ShieldCheck className="h-4 w-4 text-primary" /> GDPR Compliance</CardTitle></CardHeader>
+            <CardContent>
+              <p className="mb-4 text-sm text-muted-foreground">Monitor user consent status and data retention compliance.</p>
+              {gdprLoading ? (
+                <p className="text-sm text-muted-foreground">Loading...</p>
+              ) : (
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">Users without accepted terms ({gdprNoTerms.length})</h4>
+                    {gdprNoTerms.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">All users have accepted terms.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {gdprNoTerms.map((u) => (
+                          <div key={u.id} className="flex items-center justify-between rounded-xl border border-border p-3">
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium">{u.full_name}</div>
+                              <div className="text-xs text-muted-foreground">{u.email} — Joined {new Date(u.created_at).toLocaleDateString()}</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => handleExportUserData(u.id, u.email)}>
+                                Export Data
+                              </Button>
+                              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRequestDeletion(u.id)}>
+                                Request Deletion
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">Data retention approaching ({gdprRetention.length})</h4>
+                    <p className="text-xs text-muted-foreground mb-2">Users whose data retention expires within 30 days.</p>
+                    {gdprRetention.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No users with upcoming data retention deadlines.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {gdprRetention.map((u) => (
+                          <div key={u.id} className="flex items-center justify-between rounded-xl border border-border p-3">
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium">{u.full_name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {u.email} — Retention expires {new Date(u.data_retention_until).toLocaleDateString()}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => handleExportUserData(u.id, u.email)}>
+                                Export Data
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
 

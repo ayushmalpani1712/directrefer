@@ -52,6 +52,7 @@ export interface MatchResult {
     recency: number
   }
   confidence: 'high' | 'medium' | 'low'
+  explanation: string[]
 }
 
 // ── Scoring Algorithm ──────────────────────────────────────────────────────
@@ -131,6 +132,40 @@ export function calculateMatchScore(
     totalScore >= 70 ? 'high' :
     totalScore >= 45 ? 'medium' : 'low'
 
+  const explanation: string[] = []
+
+  const skillPct = jobRequired.size > 0 ? Math.round((matchingRequired.length / jobRequired.size) * 100) : 0
+  if (skillPct >= 60) {
+    explanation.push(`Strong skill overlap (${skillPct}%)`)
+  } else if (skillPct >= 30) {
+    explanation.push(`Moderate skill overlap (${skillPct}%)`)
+  }
+
+  if (experienceScore >= 20) {
+    explanation.push('Similar experience level')
+  } else if (experienceScore >= 10) {
+    explanation.push('Compatible experience range')
+  }
+
+  if (jobIndustries && professional.industries.length > 0) {
+    const industryOverlap = jobIndustries.filter(i =>
+      professional.industries.includes(i)
+    ).length
+    if (industryOverlap > 0) {
+      explanation.push('Same industry preference')
+    }
+  }
+
+  if (locationScore >= 8) {
+    explanation.push('Location match')
+  } else if (locationScore >= 5) {
+    explanation.push('Nearby location')
+  }
+
+  if (recencyScore >= 3) {
+    explanation.push('Active professional')
+  }
+
   return {
     candidate_id: candidate.user_id,
     professional_id: professional.user_id,
@@ -144,6 +179,7 @@ export function calculateMatchScore(
       recency: recencyScore,
     },
     confidence,
+    explanation,
   }
 }
 
@@ -392,6 +428,7 @@ export async function storeMatches(matches: MatchResult[]): Promise<void> {
     score: m.score,
     breakdown: m.breakdown,
     confidence: m.confidence,
+    explanation: m.explanation,
   }))
 
   const { error } = await supabase

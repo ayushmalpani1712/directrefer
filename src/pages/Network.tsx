@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useLocation } from 'react-router'
 import { motion } from 'framer-motion'
 import {
@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState, SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
-import { ROLE_ROUTE, getRoleFromPath } from '@/data/mock'
+import { ROLE_ROUTE, getRoleFromPath, type AppNotification } from '@/data/mock'
 import { cn } from '@/lib/utils'
 import { ProfessionalCard } from '@/pages/FindProfessionals'
 import { ListSkeleton } from '@/components/ui/skeleton'
@@ -24,12 +24,47 @@ const ICONS: Record<string, { icon: typeof Bell; cls: string }> = {
   system: { icon: Sparkles, cls: 'bg-[#8B5CF6]/10 text-[#8B5CF6]' },
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  accepted: 'Referral',
+  rejected: 'Referral',
+  declined: 'Referral',
+  referral_submitted: 'Referral',
+  application_submitted: 'Referral',
+  closed: 'Referral',
+  message: 'Message',
+  view: 'System',
+  reminder: 'System',
+  system: 'System',
+}
+
+function getDateGroup(timeStr: string): string {
+  const lower = timeStr.toLowerCase()
+  if (lower.includes('just now') || lower.includes('seconds') || lower.includes('minute') || lower.includes('hour')) return 'Today'
+  if (lower.includes('yesterday') || lower.includes('1 day')) return 'Yesterday'
+  if (lower.includes('days') || lower.includes('a week') || lower.includes('week')) return 'This Week'
+  return 'Earlier'
+}
+
+const DATE_ORDER = ['Today', 'Yesterday', 'This Week', 'Earlier']
+
+function groupNotifications(notifications: AppNotification[]) {
+  const groups: Record<string, AppNotification[]> = {}
+  for (const n of notifications) {
+    const group = getDateGroup(n.time)
+    if (!groups[group]) groups[group] = []
+    groups[group].push(n)
+  }
+  return DATE_ORDER.filter(g => groups[g]?.length).map(g => ({ label: g, items: groups[g] }))
+}
+
 export function NotificationsPage() {
   const { notifications, markNotificationRead, markAllNotificationsRead, loading } = useApp()
   const { pathname } = useLocation()
   const prefix = ROLE_ROUTE[getRoleFromPath(pathname) || 'student']
   const [filter, setFilter] = useState('all')
   const shown = filter === 'all' ? notifications : filter === 'unread' ? notifications.filter((n) => !n.read) : notifications.filter((n) => n.type === filter)
+
+  const groups = useMemo(() => groupNotifications(shown), [shown])
 
   if (loading) return <ListSkeleton count={5} />
 
@@ -54,30 +89,39 @@ export function NotificationsPage() {
       {shown.length === 0 ? (
         <EmptyState icon={Bell} title="All caught up" description="No notifications in this category right now." />
       ) : (
-        <div className="space-y-2.5">
-          {shown.map((n, i) => {
-            const cfg = ICONS[n.type] ?? { icon: Bell, cls: 'bg-muted text-muted-foreground' }
-            return (
-              <motion.button
-                key={n.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                onClick={() => markNotificationRead(n.id)}
-                className={cn('flex w-full items-start gap-3.5 rounded-xl border p-4 text-left transition-all hover:border-primary/30', n.read ? 'border-border bg-card' : 'border-primary/25 bg-primary/[0.03]')}
-              >
-                <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', cfg.cls)}><cfg.icon className="h-4.5 w-4.5" /></div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-sm font-semibold">{n.title}</span>
-                    {!n.read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
-                  </div>
-                  <p className="mt-0.5 text-sm text-muted-foreground">{n.description}</p>
-                  <span className="mt-1 block text-xs text-muted-foreground/70">{n.time}</span>
-                </div>
-              </motion.button>
-            )
-          })}
+        <div className="space-y-6">
+          {groups.map((group) => (
+            <div key={group.label} className="space-y-2.5">
+              <div className="flex items-center gap-3 px-1">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group.label}</span>
+                <div className="h-px flex-1 bg-border/60" />
+              </div>
+              {group.items.map((n, i) => {
+                const cfg = ICONS[n.type] ?? { icon: Bell, cls: 'bg-muted text-muted-foreground' }
+                return (
+                  <motion.button
+                    key={n.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    onClick={() => markNotificationRead(n.id)}
+                    className={cn('flex w-full items-start gap-3.5 rounded-xl border p-4 text-left transition-all hover:border-primary/30', n.read ? 'border-border bg-card' : 'border-primary/25 bg-primary/[0.03]')}
+                  >
+                    <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', cfg.cls)}><cfg.icon className="h-4.5 w-4.5" /></div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-sm font-semibold">{n.title}</span>
+                        <span className="inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">{TYPE_LABELS[n.type] ?? 'Other'}</span>
+                        {!n.read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                      </div>
+                      <p className="mt-0.5 text-sm text-muted-foreground">{n.description}</p>
+                      <span className="mt-1 block text-xs text-muted-foreground/70">{n.time}</span>
+                    </div>
+                  </motion.button>
+                )
+              })}
+            </div>
+          ))}
         </div>
       )}
     </div>
