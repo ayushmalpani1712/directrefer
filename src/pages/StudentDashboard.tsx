@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import {
   ArrowRight, Briefcase, CheckCircle2, ChevronRight, Circle,
@@ -18,6 +18,7 @@ import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/
 import { EmptyChart } from '@/components/analytics/EmptyChart'
 import { useFilteredStudentWeekly, hasData } from '@/hooks/useAnalytics'
 import { ROLE_ROUTE, getRoleFromPath, profileUrl } from '@/data/mock'
+import { recommendJobsForCandidate, type JobRecommendation } from '@/lib/v2/matching'
 
 const RATE_LIMIT = 3
 
@@ -61,6 +62,12 @@ export default function StudentDashboard() {
     const { from, to } = getPresetRange('6m')
     return { preset: '6m', from, to }
   })
+  const [jobRecs, setJobRecs] = useState<JobRecommendation[]>([])
+
+  useEffect(() => {
+    if (!user?.id) return
+    recommendJobsForCandidate(user.id, 5).then(setJobRecs).catch(() => {})
+  }, [user?.id])
 
   const PROFILE_CHECKLIST = useMemo(() => [
     { label: 'Basic Information', done: !!student.name },
@@ -288,6 +295,44 @@ export default function StudentDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Job recommendations */}
+          {jobRecs.length > 0 && (
+            <Card className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-[15px] font-semibold">Recommended jobs</CardTitle>
+                <span data-slot="card-action" className="shrink-0">
+                  <Button variant="ghost" size="sm" className="h-7 text-xs text-primary hover:text-primary/70" asChild>
+                    <Link to="/job-seeker/browse-jobs">Browse all <ArrowRight className="ml-1 h-3 w-3" /></Link>
+                  </Button>
+                </span>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  {jobRecs.slice(0, 4).map((j) => (
+                    <Link to={`/job-seeker/job/${j.job_id}`} key={j.job_id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-border/80 hover:bg-card">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Briefcase className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[14px] font-medium text-foreground truncate">{j.title}</div>
+                        <div className="text-[13px] text-muted-foreground">{j.company} · {j.location}</div>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {j.matching_skills.slice(0, 3).map((s) => (
+                            <span key={s} className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{s}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-sm font-bold text-primary">{j.score}%</div>
+                        <div className="text-[10px] text-muted-foreground">match</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Right column */}

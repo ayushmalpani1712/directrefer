@@ -19,6 +19,7 @@ import type { Professional } from '@/data/mock'
 import { getMessagesPath, ROLE_ROUTE, getRoleFromPath, profileUrl } from '@/data/mock'
 import { generateInviteCode, fetchUserInviteStats, getInviteUrl } from '@/lib/invites'
 import { OnboardingChecklist } from '@/components/OnboardingChecklist'
+import { TrustScoreHistory } from '@/components/TrustScoreHistory'
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color?: string }>; label?: string }) {
   if (!active || !payload?.length) return null
@@ -138,6 +139,9 @@ export default function ProfessionalDashboard() {
 
       {/* V2 Onboarding Checklist */}
       <OnboardingChecklist />
+
+      {/* Trust Score History */}
+      {user?.id && <TrustScoreHistory userId={user.id} />}
 
       {/* Stats */}
       <div className="flex items-center justify-end">

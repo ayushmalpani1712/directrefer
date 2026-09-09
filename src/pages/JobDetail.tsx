@@ -17,6 +17,8 @@ import { useAuth } from '@/context/AuthContext'
 import { ListSkeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { profileUrl } from '@/data/mock'
+import { submitApplication } from '@/lib/v2/api'
+import { getSkillGap } from '@/lib/v2/matching'
 
 interface JobDetail {
   id: string
@@ -48,6 +50,9 @@ export default function JobDetailPage() {
   const [bookmarked, setBookmarked] = useState(false)
   const [bookmarkLoading, setBookmarkLoading] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [applying, setApplying] = useState(false)
+  const [applied, setApplied] = useState(false)
+  const [skillGap, setSkillGap] = useState<{ matching: string[]; missing: string[]; gap_score: number } | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -92,6 +97,32 @@ export default function JobDetailPage() {
           recruiter_name: recruiterName,
           recruiter_slug: recruiterSlug,
         })
+
+        if (user?.id && jobRow.id) {
+          const { data: profileSkills } = await supabase
+            .from('profile_skills')
+            .select('skill_id')
+            .eq('profile_id', user.id)
+          const candidateSkillIds = (profileSkills ?? []).map((s: { skill_id: string }) => s.skill_id)
+
+          const { data: jobSkills } = await supabase
+            .from('job_skills')
+            .select('skill_id')
+            .eq('job_id', jobRow.id)
+          const jobSkillIds = (jobSkills ?? []).map((s: { skill_id: string }) => s.skill_id)
+
+          if (candidateSkillIds.length > 0 && jobSkillIds.length > 0) {
+            setSkillGap(getSkillGap(candidateSkillIds, jobSkillIds))
+          }
+
+          const { data: existingApp } = await supabase
+            .from('applications')
+            .select('id')
+            .eq('candidate_id', user.id)
+            .eq('job_id', jobRow.id)
+            .maybeSingle()
+          if (existingApp) setApplied(true)
+        }
       } catch (err) {
         console.error('Failed to load job:', err)
         toast.error('Failed to load job details')
@@ -148,6 +179,20 @@ export default function JobDetailPage() {
       navigator.share({ title: job.title, url: window.location.href })
     } else {
       copyLink()
+    }
+  }
+
+  const handleApply = async () => {
+    if (!user?.id || !id || applying || applied) return
+    setApplying(true)
+    try {
+      await submitApplication({ candidateId: user.id, jobId: id })
+      setApplied(true)
+      toast.success('Application submitted!')
+    } catch {
+      toast.error('Failed to submit application')
+    } finally {
+      setApplying(false)
     }
   }
 
@@ -349,17 +394,28 @@ export default function JobDetailPage() {
                 <Separator />
                 {role === 'student' && (
                   <>
-                    {job.expires_at && new Date(job.expires_at) < new Date() ? (
+                    {applied ? (
+                      <Button className="w-full" disabled variant="outline">
+                        Application Submitted
+                      </Button>
+                    ) : job.expires_at && new Date(job.expires_at) < new Date() ? (
                       <Button className="w-full" disabled>
                         Applications Closed
                       </Button>
                     ) : (
-                      <Link to="/job-seeker/request-referral" className="block">
-                        <Button className="w-full bg-primary text-white shadow-sm hover:shadow-md transition-all duration-200">
-                          Request Referral
-                        </Button>
-                      </Link>
+                      <Button
+                        className="w-full bg-primary text-white shadow-sm hover:shadow-md transition-all duration-200"
+                        onClick={handleApply}
+                        disabled={applying}
+                      >
+                        {applying ? 'Submitting…' : 'Apply via DirectRefer'}
+                      </Button>
                     )}
+                    <Link to="/job-seeker/request-referral" className="block">
+                      <Button variant="outline" className="w-full">
+                        Request Referral
+                      </Button>
+                    </Link>
                     <Link to="/job-seeker/professionals" className="block">
                       <Button variant="outline" className="w-full">
                         Find a Professional
@@ -384,6 +440,43 @@ export default function JobDetailPage() {
               </CardContent>
             </Card>
           </motion.div>
+
+          {skillGap && role === 'student' && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}>
+              <Card className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
+                <CardContent className="p-6 space-y-3">
+                  <h2 className="text-base font-semibold">Skill match</h2>
+                  <Separator />
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Match score</span>
+                    <span className={`font-bold ${skillGap.gap_score >= 70 ? 'text-emerald-500' : skillGap.gap_score >= 40 ? 'text-amber-500' : 'text-rose-500'}`}>
+                      {skillGap.gap_score}%
+                    </span>
+                  </div>
+                  {skillGap.matching.length > 0 && (
+                    <div>
+                      <div className="text-xs font-medium text-emerald-600 mb-1.5">Matching skills</div>
+                      <div className="flex flex-wrap gap-1">
+                        {skillGap.matching.map((s) => (
+                          <span key={s} className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600">{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {skillGap.missing.length > 0 && (
+                    <div>
+                      <div className="text-xs font-medium text-rose-600 mb-1.5">Missing skills</div>
+                      <div className="flex flex-wrap gap-1">
+                        {skillGap.missing.map((s) => (
+                          <span key={s} className="rounded-md bg-rose-500/10 px-2 py-0.5 text-[11px] font-medium text-rose-600">{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
           {job.recruiter_id && (
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>

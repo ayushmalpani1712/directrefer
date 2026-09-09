@@ -21,6 +21,7 @@ import { supabase } from '@/lib/supabase'
 import { cn, getBannerStyle } from '@/lib/utils'
 import { BannerColorModal } from '@/components/BannerColorModal'
 import { ProfileSkeleton } from '@/components/ui/skeleton'
+import { TrustScoreHistory } from '@/components/TrustScoreHistory'
 
 export default function ProfessionalProfile() {
   const { professionals, updateProfessional, student, toggleProfessionalOpenForReferrals, toggleProfessionalOpenToWork } = useApp()
@@ -579,6 +580,8 @@ export default function ProfessionalProfile() {
               </div>
             </CardContent>
           </Card>
+
+          {user?.id && <TrustScoreHistory userId={user.id} />}
         </div>
       </div>
 
