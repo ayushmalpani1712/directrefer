@@ -72,7 +72,7 @@ export function StatCard({
 }) {
   const inner = (
     <div className="h-full transition-all duration-200">
-      <Card className={cn('shadow-soft flex h-full flex-col transition-all duration-200', href && 'hover:border-primary/15 hover:translate-y-[-1px]')}>
+      <Card className={cn('flex h-full flex-col transition-all duration-200', href && 'hover:border-border/80 hover:translate-y-[-1px]')}>
         <CardContent className="flex flex-1 flex-col p-5">
           <div className="flex items-start justify-between">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">

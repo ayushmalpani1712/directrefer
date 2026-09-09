@@ -154,7 +154,7 @@ export function OnboardingOverlay() {
       aria-label="Onboarding"
     >
       <div className={`transition-all duration-300 ease-out ${visible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-[0.97]'}`}>
-        <Card className="w-full max-w-md shadow-2xl shadow-soft">
+        <Card className="w-full max-w-md shadow-2xl ">
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div className="text-sm font-medium text-muted-foreground">

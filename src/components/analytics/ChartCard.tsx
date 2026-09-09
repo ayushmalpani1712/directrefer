@@ -18,7 +18,7 @@ export function ChartCard({ title, children, data, filename, headerRight }: Char
   const ref = useRef<HTMLDivElement>(null)
 
   return (
-    <Card className="shadow-soft">
+    <Card className="">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">{title}</CardTitle>
@@ -56,7 +56,7 @@ export function ChartCardGrid({ title, children, data, filename, span }: ChartCa
   const ref = useRef<HTMLDivElement>(null)
 
   return (
-    <Card className={`shadow-soft ${span || ''}`}>
+    <Card className={`${span || ''}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">{title}</CardTitle>
