@@ -1,5 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
 /**
  * In-memory rate limit store for serverless functions.
  * Resets on cold start, but sufficient for per-request throttling.
