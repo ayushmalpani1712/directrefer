@@ -24,11 +24,12 @@ interface FunnelStage { stage: string; value: number; fill: string }
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color?: string }>; label?: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background: '#13141A', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '10px 14px', fontSize: 12, color: '#F2F2F5' }}>
-      {label && <div style={{ marginBottom: 4, fontWeight: 600, color: '#F2F2F5' }}>{label}</div>}
+    <div className="rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-xs shadow-md">
+      {label && <div className="mb-1 font-semibold text-foreground">{label}</div>}
       {payload.map((p, i) => (
-        <div key={i} style={{ color: p.color || '#F2F2F5' }}>
-          {p.name} : {p.value}
+        <div key={i} className="text-muted-foreground">
+          <span className="inline-block h-2 w-2 rounded-full mr-1.5" style={{ backgroundColor: p.color }} />
+          {p.name}: {p.value}
         </div>
       ))}
     </div>
@@ -156,7 +157,7 @@ export default function RecruiterDashboard() {
     <div className="space-y-6">
       {/* Welcome */}
       <div>
-        <Card className="overflow-hidden border border-border bg-card shadow-soft">
+        <Card className="overflow-hidden border border-border bg-card">
           <CardContent className="relative p-4 sm:p-5">
             <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
@@ -172,7 +173,7 @@ export default function RecruiterDashboard() {
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
-                <Button className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white shadow-sm hover:translate-y-[-1px]" asChild><Link to="/recruiter/jobs"><Plus className="mr-1.5 h-4 w-4" /> Post a job</Link></Button>
+                <Button className="bg-primary text-white shadow-sm hover:shadow-md transition-all duration-200" asChild><Link to="/recruiter/jobs"><Plus className="mr-1.5 h-4 w-4" /> Post a job</Link></Button>
                 <Button variant="outline" className="border-border bg-transparent text-foreground hover:bg-muted/30" asChild><Link to="/recruiter/talent"><Search className="mr-1.5 h-4 w-4" /> Search talent</Link></Button>
               </div>
             </div>
@@ -193,7 +194,7 @@ export default function RecruiterDashboard() {
 
       {/* Discover Job Seekers */}
       <Link to={`${prefix}/talent`} className="block">
-      <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
+      <Card className="cursor-pointer transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
         <CardHeader className="">
           <CardTitle className="text-[15px] font-semibold">Discover Job Seekers</CardTitle>
           <span data-slot="card-action" className="shrink-0"><Button variant="ghost" size="sm" className="h-9 text-primary">Browse all <ArrowRight className="ml-1 h-3.5 w-3.5" /></Button></span>
@@ -224,7 +225,7 @@ export default function RecruiterDashboard() {
           {/* Funnel + weekly */}
           <div className="grid gap-6 md:grid-cols-2 items-stretch">
             <Link to={`${prefix}/analytics`} className="block h-full">
-            <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15 h-full">
+            <Card className="cursor-pointer transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm h-full">
               <CardHeader className="">
                 <CardTitle className="text-[15px] font-semibold">Hiring funnel</CardTitle>
                 <p className="text-[13px] text-muted-foreground">All active jobs · Q3</p>
@@ -236,7 +237,7 @@ export default function RecruiterDashboard() {
                     <LazyTooltip content={<ChartTooltip />} />
                     <LazyFunnel dataKey="value" data={funnelData} isAnimationActive>
                       {funnelData.map((f) => <LazyCell key={f.stage} fill={f.fill} />)}
-                      <LazyLabelList position="right" fill="#9A9BA8" stroke="none" dataKey="stage" fontSize={11} />
+                      <LazyLabelList position="right" fill="hsl(var(--muted-foreground))" stroke="none" dataKey="stage" fontSize={11} />
                     </LazyFunnel>
                   </LazyFunnelChart>
                 </LazyResponsiveContainer>
@@ -245,7 +246,7 @@ export default function RecruiterDashboard() {
             </Card>
             </Link>
             <Link to={`${prefix}/analytics`} className="block h-full">
-            <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15 h-full">
+            <Card className="cursor-pointer transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm h-full">
               <CardHeader className="">
                 <CardTitle className="text-[15px] font-semibold">Applications & hires</CardTitle>
                 <p className="text-[13px] text-muted-foreground">Last 8 weeks</p>
@@ -255,12 +256,12 @@ export default function RecruiterDashboard() {
                 <div className="h-[220px]">
                 <LazyResponsiveContainer width="100%" height={220}>
                   <LazyBarChart data={recruiterWeekly} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                    <LazyCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                    <LazyXAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#9A9BA8', fontSize: 12 }} />
-                    <LazyYAxis axisLine={false} tickLine={false} tick={{ fill: '#9A9BA8', fontSize: 12 }} />
-                    <LazyTooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                    <LazyBar dataKey="applications" radius={[4, 4, 0, 0]} fill="#6366F1" name="Applications" />
-                    <LazyBar dataKey="hires" radius={[4, 4, 0, 0]} fill="#34D399" name="Hires" />
+                    <LazyCartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <LazyXAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                    <LazyYAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                    <LazyTooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
+                    <LazyBar dataKey="applications" radius={[4, 4, 0, 0]} fill="hsl(var(--primary))" name="Applications" />
+                    <LazyBar dataKey="hires" radius={[4, 4, 0, 0]} fill="hsl(160 84% 39%)" name="Hires" />
                   </LazyBarChart>
                 </LazyResponsiveContainer>
                 </div>
@@ -272,7 +273,7 @@ export default function RecruiterDashboard() {
 
           {/* Jobs */}
           <Link to="/recruiter/jobs" className="block">
-          <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
+          <Card className="cursor-pointer transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
             <CardHeader className="">
               <CardTitle className="text-[15px] font-semibold">Open jobs</CardTitle>
               <span data-slot="card-action" className="shrink-0"><Button variant="ghost" size="sm" className="h-9 text-primary">Manage all <ArrowRight className="ml-1 h-3.5 w-3.5" /></Button></span>
@@ -304,7 +305,7 @@ export default function RecruiterDashboard() {
         <div className="flex flex-col gap-6">
           {/* Saved candidates */}
           <Link to={`${prefix}/talent`} className="block">
-          <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
+          <Card className="cursor-pointer transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
             <CardHeader className="">
               <CardTitle className="flex items-center gap-2 text-base"><Star className="h-4 w-4 text-primary" /> Saved candidates</CardTitle>
               <span data-slot="card-action" className="shrink-0"><Button variant="ghost" size="sm" className="h-9 text-primary">All</Button></span>
@@ -326,7 +327,7 @@ export default function RecruiterDashboard() {
 
           {/* Recent activity */}
           <Link to={`${prefix}/analytics`} className="block flex-1">
-          <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15 h-full">
+          <Card className="cursor-pointer transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm h-full">
             <CardHeader className="">              <CardTitle className="flex items-center gap-2 text-base"><FileText className="h-4 w-4 text-primary" /> Recent activity</CardTitle></CardHeader>
             <CardContent className="space-y-3.5 pt-2">
               {activity.length === 0 ? (

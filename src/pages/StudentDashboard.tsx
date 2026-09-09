@@ -32,11 +32,12 @@ function getGreeting(): string {
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color?: string }>; label?: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background: '#13141A', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '10px 14px', fontSize: 12, color: '#F2F2F5' }}>
-      {label && <div style={{ marginBottom: 4, fontWeight: 600, color: '#F2F2F5' }}>{label}</div>}
+    <div className="rounded-xl border border-border/60 bg-card px-3.5 py-2.5 text-xs shadow-md">
+      {label && <div className="mb-1 font-semibold text-foreground">{label}</div>}
       {payload.map((p, i) => (
-        <div key={i} style={{ color: p.color || '#F2F2F5' }}>
-          {p.name} : {p.value}
+        <div key={i} className="text-muted-foreground">
+          <span className="inline-block h-2 w-2 rounded-full mr-1.5" style={{ backgroundColor: p.color }} />
+          {p.name}: {p.value}
         </div>
       ))}
     </div>
@@ -149,7 +150,7 @@ export default function StudentDashboard() {
         <div className="flex flex-col gap-5 lg:col-span-2">
           {/* Application momentum chart */}
           <Link to={`${prefix}/analytics`} className="block">
-            <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
+            <Card className="cursor-pointer transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
               <CardHeader className="pb-2">
                 <div>
                   <CardTitle className="text-[15px] font-semibold">Application momentum</CardTitle>
@@ -168,20 +169,20 @@ export default function StudentDashboard() {
                     <LazyAreaChart data={studentWeekly} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                       <defs>
                         <linearGradient id="gApp" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#6366F1" stopOpacity={0.15} />
-                          <stop offset="100%" stopColor="#6366F1" stopOpacity={0} />
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                         </linearGradient>
                         <linearGradient id="gInt" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.10} />
-                          <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0} />
+                          <stop offset="0%" stopColor="hsl(160 84% 39%)" stopOpacity={0.10} />
+                          <stop offset="100%" stopColor="hsl(160 84% 39%)" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <LazyCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                      <LazyXAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#9A9BA8', fontSize: 11 }} />
-                      <LazyYAxis axisLine={false} tickLine={false} tick={{ fill: '#9A9BA8', fontSize: 11 }} />
+                      <LazyCartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <LazyXAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                      <LazyYAxis axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
                       <LazyTooltip content={<ChartTooltip />} />
-                      <LazyArea type="monotone" dataKey="applications" stroke="#6366F1" strokeWidth={2} fill="url(#gApp)" name="Referrals sent" />
-                      <LazyArea type="monotone" dataKey="responses" stroke="#34D399" strokeWidth={2} fill="url(#gInt)" name="Referrals accepted" />
+                      <LazyArea type="monotone" dataKey="applications" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#gApp)" name="Referrals sent" />
+                      <LazyArea type="monotone" dataKey="responses" stroke="hsl(160 84% 39%)" strokeWidth={2} fill="url(#gInt)" name="Referrals accepted" />
                     </LazyAreaChart>
                   </LazyResponsiveContainer>
                   </div>
@@ -192,7 +193,7 @@ export default function StudentDashboard() {
 
           {/* Referral requests */}
           <Link to="/job-seeker/applications" className="block">
-            <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
+            <Card className="cursor-pointer transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-[15px] font-semibold">Referral requests</CardTitle>
                 <span data-slot="card-action" className="shrink-0">
@@ -231,7 +232,7 @@ export default function StudentDashboard() {
           </Link>
 
           {/* Recommended professionals */}
-          <Card className="shadow-soft">
+          <Card className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-[15px] font-semibold">Recommended professionals</CardTitle>
               <span data-slot="card-action" className="shrink-0">
@@ -245,7 +246,7 @@ export default function StudentDashboard() {
                 {recommended.map((p) => (
                   <div key={p.id} className="h-full">
                     <Link to={profileUrl('professional', p.id, p.slug)} className="block h-full">
-                      <Card className="group h-full cursor-pointer transition-all duration-200 hover:border-primary/15 hover:bg-card">
+                      <Card className="group h-full cursor-pointer transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
                         <CardContent className="flex h-full flex-col p-5 text-center">
                           <div className="flex justify-center">
                             <GAvatar name={p.name} color={p.gradient} className="h-14 w-14 text-sm" />
@@ -253,7 +254,7 @@ export default function StudentDashboard() {
                           <div className="mt-3">
                             <div className="flex items-center justify-center gap-1.5">
                               <span className="text-sm font-medium text-foreground">{p.name}</span>
-                              {p.verified && <ShieldCheck className="h-3.5 w-3.5 text-[#34D399]" />}
+                              {p.verified && <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />}
                             </div>
                             <div className="mt-0.5 text-xs text-muted-foreground">{p.designation}</div>
                             <div className="text-xs text-muted-foreground/60">{p.company}</div>
@@ -275,7 +276,7 @@ export default function StudentDashboard() {
                           </div>
                           <div className="mt-auto pt-4">
                             <div className="mb-3 border-t border-border/50" />
-                            <Button className="w-full rounded-lg h-11 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white hover:opacity-90" asChild>
+                            <Button className="w-full rounded-lg h-11 bg-primary text-white shadow-sm hover:shadow-md transition-all duration-200" asChild>
                               <Link to={`/job-seeker/request-referral/${p.id}`}><Send className="mr-1.5 h-3.5 w-3.5" /> Request referral</Link>
                             </Button>
                           </div>
@@ -293,7 +294,7 @@ export default function StudentDashboard() {
         <div className="flex flex-col gap-5">
           {/* Profile completion */}
           <Link to="/job-seeker/profile" className="block">
-            <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
+            <Card className="cursor-pointer transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-[15px] font-semibold">Profile Completion</CardTitle>
               </CardHeader>
@@ -318,7 +319,7 @@ export default function StudentDashboard() {
                     <div key={item.label} className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/15">
                       <div className="flex items-center gap-2.5 text-sm">
                         {item.done ? (
-                          <CheckCircle2 className="h-4 w-4 shrink-0 text-[#34D399]" />
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
                         ) : (
                           <Circle className="h-4 w-4 shrink-0 text-muted-foreground/30" />
                         )}
@@ -335,7 +336,7 @@ export default function StudentDashboard() {
           {/* Saved professionals */}
           {saved.length > 0 && (
             <Link to={`${prefix}/bookmarks`} className="block">
-              <Card className="shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
+              <Card className="cursor-pointer transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-[15px] font-semibold">Saved professionals</CardTitle>
                 </CardHeader>
@@ -348,7 +349,7 @@ export default function StudentDashboard() {
                           <div className="truncate text-sm font-medium text-foreground">{p.name}</div>
                           <div className="truncate text-xs text-muted-foreground">{p.company}</div>
                         </div>
-                        <Badge variant="outline" className={p.openForReferrals ? 'border-[#34D399]/25 bg-[#34D399]/10 text-[#34D399]' : 'border-border text-muted-foreground/50'}>
+                        <Badge variant="outline" className={p.openForReferrals ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500' : 'border-border text-muted-foreground/50'}>
                           {p.openForReferrals ? 'Open' : 'Full'}
                         </Badge>
                       </Link>
@@ -361,7 +362,7 @@ export default function StudentDashboard() {
 
           {/* Recent activity */}
           <Link to={`${prefix}/activity`} className="block flex-1">
-            <Card className="flex h-full flex-col shadow-soft cursor-pointer transition-all duration-200 hover:border-primary/15">
+            <Card className="flex h-full flex-col cursor-pointer transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-[15px] font-semibold">Recent activity</CardTitle>
               </CardHeader>
