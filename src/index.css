@@ -365,33 +365,6 @@
   background: hsl(var(--muted) / 0.5);
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    hsl(var(--muted)) 25%,
-    hsl(var(--muted) / 0.6) 50%,
-    hsl(var(--muted)) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.8s ease-in-out infinite;
-  border-radius: var(--radius);
-}
-
-.dark .skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    hsl(var(--muted) / 0.4) 25%,
-    hsl(var(--muted) / 0.2) 50%,
-    hsl(var(--muted) / 0.4) 75%
-  );
-  background-size: 200% 100%;
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
    SAFE AREA (Mobile)
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -434,23 +407,9 @@
   to { opacity: 1; transform: scale(1); }
 }
 
-@keyframes shimmer-sweep {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
 @keyframes badge-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.08); }
-}
-
-@keyframes progress-fill {
-  from { width: 0%; }
-}
-
-@keyframes dot-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
 }
 
 /* ── Animation utilities ──────────────────────────────────────── */
