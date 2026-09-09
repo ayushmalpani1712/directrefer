@@ -32,6 +32,7 @@ import {
 } from '@/data/mock'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { MobileBottomNav } from '@/components/MobileBottomNav'
 
 // ── Logo ────────────────────────────────────────────────────
 export function Logo({ compact }: { compact?: boolean }) {
@@ -257,7 +258,7 @@ function AppSidebar() {
       <div className="flex-none">
         <SidebarHeader className="h-14 justify-center border-b border-sidebar-border px-4">
           {state === 'collapsed' ? (
-            <Link to="/" className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-glow" aria-label="Direct Refer — Go to homepage">
+            <Link to="/" className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground" aria-label="Direct Refer — Go to homepage">
               <Zap className="h-4.5 w-4.5 fill-white text-white" />
             </Link>
           ) : (
@@ -283,7 +284,7 @@ function AppSidebar() {
                           className={cn(
                             'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-200 min-h-[44px] relative active:scale-[0.98]',
                             isActive
-                              ? 'bg-primary/10 text-primary font-semibold shadow-[0_0_12px_-4px_var(--card-glow)] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-primary'
+                              ? 'bg-primary/10 text-primary font-semibold before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-primary'
                               : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground hover:translate-x-[1px]',
                           )}
                         >
@@ -292,7 +293,7 @@ function AppSidebar() {
                         </Link>
                       </SidebarMenuButton>
                       {item.badge && (
-                        <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary badge-shine" aria-label={`${item.badge} pending`}>
+                        <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary" aria-label={`${item.badge} pending`}>
                           {item.badge}
                         </SidebarMenuBadge>
                       )}
@@ -332,10 +333,9 @@ function AppSidebar() {
             </SidebarMenuItem>
           </SidebarMenu>
           {state !== 'collapsed' && (
-            <div className="mt-2 rounded-xl bg-gradient-to-br from-primary/5 via-muted/50 to-secondary/5 p-3 border border-border/50 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.03] to-secondary/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative flex items-center gap-2.5">
-                <GAvatar name={user.name} color={user.gradient} className="h-9 w-9 text-xs ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all" />
+            <div className="mt-2 rounded-xl bg-muted/50 p-3 border border-border/50">
+              <div className="flex items-center gap-2.5">
+                <GAvatar name={user.name} color={user.gradient} className="h-9 w-9 text-xs ring-2 ring-background" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px] font-semibold">{user.name}</div>
                   <div className="truncate text-[11px] text-muted-foreground">{ROLE_META[urlRole].label}</div>
@@ -416,7 +416,7 @@ function Topbar() {
           Object.defineProperty(e, 'ctrlKey', { value: true })
           document.dispatchEvent(e)
         }}
-        className="hidden h-9 flex-1 items-center gap-2.5 rounded-xl border border-border/60 bg-muted/50 px-4 text-[14px] text-muted-foreground transition-[border-color,box-shadow] duration-300 hover:border-primary/30 hover:bg-muted/50 hover:shadow-[0_0_20px_-4px_var(--card-glow)] focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-[0_0_20px_-4px_var(--card-glow-hover)] sm:flex sm:max-w-md dark:bg-white/[0.04] dark:border-white/[0.08] dark:hover:border-primary/30 dark:hover:bg-white/[0.06] dark:focus:border-primary/40"
+        className="hidden h-9 flex-1 items-center gap-2.5 rounded-xl border border-border/60 bg-muted/50 px-4 text-[14px] text-muted-foreground transition-[border-color] duration-300 hover:border-primary/30 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 sm:flex sm:max-w-md dark:bg-white/[0.04] dark:border-white/[0.08] dark:hover:border-primary/30 dark:focus:border-primary/40"
         aria-label="Search (Ctrl+K)"
       >
         <Search className="h-4 w-4" />
@@ -425,7 +425,7 @@ function Topbar() {
           <Command className="h-3 w-3" />K
         </kbd>
       </button>
-      <Badge variant="outline" className="hidden sm:inline-flex h-6 shrink-0 rounded-full border-primary/40 bg-primary/5 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-primary badge-shine">
+      <Badge variant="outline" className="hidden sm:inline-flex h-6 shrink-0 rounded-full border-primary/40 bg-primary/5 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
         {ROLE_META[urlRole].label}
       </Badge>
       <div className="flex-1 sm:hidden" />
@@ -482,11 +482,12 @@ export default function AppShell() {
       <AppSidebar aria-label="Main navigation" />
       <SidebarInset className="bg-background flex flex-col min-w-0 min-h-0 overflow-y-auto overflow-x-hidden">
         <Topbar />
-        <main id="main-content" className="mx-auto w-full min-w-0 max-w-7xl min-h-0 px-4 py-6 sm:px-6 lg:px-8 overflow-x-hidden" role="main">
+        <main id="main-content" className="mx-auto w-full min-w-0 max-w-7xl min-h-0 px-4 py-6 sm:px-6 lg:px-8 overflow-x-hidden pb-24 md:pb-6" role="main">
           <Breadcrumbs />
           <AnimatedOutlet />
         </main>
       </SidebarInset>
+      <MobileBottomNav />
       <LazyCommandPalette />
     </SidebarProvider>
   )
