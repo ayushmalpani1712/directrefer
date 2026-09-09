@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { handleCors } from './_lib.js';
+import { checkRateLimit, getClientIp } from './lib/rateLimit.js';
 
 export default async function handler(req, res) {
   if (handleCors(req, res)) return;
@@ -10,6 +11,16 @@ export default async function handler(req, res) {
     const { email } = req.body;
     if (!email || typeof email !== 'string') {
       return res.status(400).json({ error: 'Valid email is required' });
+    }
+
+    const ip = getClientIp(req);
+    const rateKey = `forgot-password:${ip}:${email.toLowerCase().trim()}`;
+    const { allowed, retryAfterMs } = checkRateLimit(rateKey, 3, 10);
+    if (!allowed) {
+      return res.status(429).json({
+        error: 'Too many requests. Please try again later.',
+        retryAfterMs,
+      });
     }
 
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;

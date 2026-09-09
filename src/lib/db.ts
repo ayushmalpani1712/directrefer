@@ -741,7 +741,7 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
   try {
     let query = supabase
       .from('jobs')
-      .select('id, title, department, location, type, salary_range, applicants, referrals, stage, posted_at, recruiter_id, description')
+      .select('id, title, department, location, type, salary_range, applicants, referrals, stage, posted_at, recruiter_id, description, expires_at')
       .order('posted_at', { ascending: false })
 
     if (recruiterId) {
@@ -796,6 +796,7 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
         pipeline: Object.entries(counts).map(([stage, count]) => ({ stage, count })),
         recruiterId: row.recruiter_id,
         recruiterSlug: rUser?.slug ?? undefined,
+        expires_at: row.expires_at ?? undefined,
       }
     })
   } catch (err) {

@@ -42,4 +42,50 @@ export function notifyReferralUpdate(studentName: string, status: string, jobTit
   })
 }
 
+export async function notifyScreeningUpdate(
+  candidateName: string,
+  jobTitle: string,
+  result: string,
+) {
+  const { supabase } = await import('@/lib/supabase')
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (user) {
+    await supabase.from('notifications').insert({
+      user_id: user.id,
+      type: 'screening_update',
+      title: `Screening ${result === 'pass' ? 'Passed' : 'Failed'}`,
+      description: `${candidateName}'s screening for ${jobTitle} has been ${result}.`,
+    })
+  }
+
+  showNotification(`Screening ${result === 'pass' ? 'Passed' : 'Failed'}`, {
+    body: `${candidateName}'s screening for ${jobTitle} has been ${result}.`,
+    tag: 'screening-update',
+  })
+}
+
+export async function notifyNewMatch(
+  candidateName: string,
+  jobTitle: string,
+  score: number,
+) {
+  const { supabase } = await import('@/lib/supabase')
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (user) {
+    await supabase.from('notifications').insert({
+      user_id: user.id,
+      type: 'match_found',
+      title: 'New Match Found',
+      description: `${candidateName} matched with ${jobTitle} (score: ${score}).`,
+    })
+  }
+
+  showNotification('New Match Found', {
+    body: `${candidateName} matched with ${jobTitle} (score: ${score}).`,
+    tag: 'new-match',
+  })
+}
+
 

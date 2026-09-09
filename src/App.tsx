@@ -10,6 +10,7 @@ import { HeadManager } from '@/components/HeadManager'
 import { lazyWithRetry } from '@/lib/lazyWithRetry'
 import { useVersionCheck } from '@/lib/useVersionCheck'
 import { ROLE_ROUTE, ROLE_MESSAGES_ROUTE, getRoleFromPath, type Role } from '@/data/mock'
+import { SessionTimeout } from '@/components/SessionTimeout'
 
 const AppShell = lazyWithRetry(() => import('@/components/layout'))
 const OnboardingOverlay = lazyWithRetry(() => import('@/components/OnboardingOverlay').then(m => ({ default: m.OnboardingOverlay })))
@@ -30,7 +31,7 @@ const ProfessionalPublic = lazyWithRetry(() => import('@/pages/ProfessionalPubli
 const RecruiterPublic = lazyWithRetry(() => import('@/pages/RecruiterPublic'))
 const JobSeekerPublic = lazyWithRetry(() => import('@/pages/JobSeekerPublic'))
 const RequestReferral = lazyWithRetry(() => import('@/pages/RequestReferral'))
-const MyReferrals = lazyWithRetry(() => import('@/pages/MyReferrals'))
+
 const ReferralInbox = lazyWithRetry(() => import('@/pages/ReferralInbox'))
 
 const RecruiterJobs = lazyWithRetry(() => import('@/pages/RecruiterJobs'))
@@ -52,6 +53,9 @@ const AdminReferrals = lazyWithRetry(() => import('@/pages/admin/Referrals'))
 const NotificationsPage = lazyWithRetry(() => import('@/pages/Network').then((m) => ({ default: m.NotificationsPage })))
 const BookmarksPage = lazyWithRetry(() => import('@/pages/Network').then((m) => ({ default: m.BookmarksPage })))
 const ActivityPage = lazyWithRetry(() => import('@/pages/Network').then((m) => ({ default: m.ActivityPage })))
+const JobDetailPage = lazyWithRetry(() => import('@/pages/JobDetail'))
+const ScreeningSubmit = lazyWithRetry(() => import('@/pages/ScreeningSubmit'))
+const RecruiterScreening = lazyWithRetry(() => import('@/pages/RecruiterScreening'))
 const NotFound = lazyWithRetry(() => import('@/pages/NotFound'))
 const AuthCallback = lazyWithRetry(() => import('@/pages/AuthCallback'))
 const PrivacyPolicy = lazyWithRetry(() => import('@/pages/PrivacyPolicy'))
@@ -63,6 +67,7 @@ const VerifyEmail = lazyWithRetry(() => import('@/pages/VerifyEmail'))
 const ForgotPassword = lazyWithRetry(() => import('@/pages/ForgotPassword'))
 const ResetPassword = lazyWithRetry(() => import('@/pages/ResetPassword'))
 const ReferralJobs = lazyWithRetry(() => import('@/pages/ReferralJobs'))
+const Applications = lazyWithRetry(() => import('@/pages/Applications'))
 const CompanyReferral = lazyWithRetry(() => import('@/pages/CompanyReferral'))
 const AudiencePage = lazyWithRetry(() => import('@/pages/AudiencePage').then(m => ({ default: m.default })))
 const GuidesPage = lazyWithRetry(() => import('@/pages/GuidesPage'))
@@ -258,6 +263,9 @@ export default function App() {
                 <Route path="/professionals/:id" element={<ProfessionalPublic />} />
                 <Route path="/company/:id" element={<RecruiterPublic />} />
 
+                {/* ── Public job detail page ── */}
+                <Route path="/jobs/:id" element={<RequireAuth><JobDetailPage /></RequireAuth>} />
+
                 {/* ── Programmatic SEO referral pages ── */}
                 <Route path="/referral" element={<CompanyReferral />} />
                 <Route path="/referral/:company" element={<CompanyReferral />} />
@@ -272,11 +280,12 @@ export default function App() {
                   <Route path="/job-seeker" element={<Navigate to="/job-seeker/dashboard" replace />} />
                   <Route path="/job-seeker/dashboard" element={<RequireRole allowed={['student', 'admin']}><StudentDashboard /></RequireRole>} />
                   <Route path="/job-seeker/profile" element={<RequireRole allowed={['student', 'admin']}><Profile /></RequireRole>} />
-                  <Route path="/job-seeker/applications" element={<RequireRole allowed={['student', 'admin']}><MyReferrals /></RequireRole>} />
+                  <Route path="/job-seeker/applications" element={<RequireRole allowed={['student', 'admin']}><Applications /></RequireRole>} />
                   <Route path="/job-seeker/professionals" element={<RequireRole allowed={['student', 'admin']}><FindProfessionals /></RequireRole>} />
                   <Route path="/job-seeker/browse-jobs" element={<RequireRole allowed={['student', 'admin']}><BrowseJobs /></RequireRole>} />
                   <Route path="/job-seeker/request-referral" element={<RequireRole allowed={['student', 'admin']}><RequestReferral /></RequireRole>} />
                   <Route path="/job-seeker/request-referral/:id" element={<RequireRole allowed={['student', 'admin']}><RequestReferral /></RequireRole>} />
+                  <Route path="/job-seeker/screening/:jobId" element={<RequireRole allowed={['student', 'admin']}><ScreeningSubmit /></RequireRole>} />
 
                   {/* ── Professional routes ── */}
                   <Route path="/professional" element={<Navigate to="/professional/dashboard" replace />} />
@@ -293,6 +302,8 @@ export default function App() {
                   <Route path="/recruiter/profile" element={<RequireRole allowed={['recruiter', 'admin']}><Profile /></RequireRole>} />
                   <Route path="/recruiter/jobs" element={<RequireRole allowed={['recruiter', 'admin']}><RecruiterJobs /></RequireRole>} />
                   <Route path="/recruiter/talent" element={<RequireRole allowed={['recruiter', 'admin']}><TalentSearch /></RequireRole>} />
+                  <Route path="/recruiter/screening" element={<RequireRole allowed={['recruiter', 'admin']}><RecruiterScreening /></RequireRole>} />
+                  <Route path="/recruiter/screening/:jobId" element={<RequireRole allowed={['recruiter', 'admin']}><RecruiterScreening /></RequireRole>} />
 
                   {/* ── Admin routes (modular) ── */}
                   <Route path="/admin" element={<RequireRole allowed={['admin']}><AdminShell /></RequireRole>}>
@@ -346,6 +357,7 @@ export default function App() {
             </ErrorBoundary>
             <Toaster richColors position="bottom-right" />
             <NPSModal />
+            <SessionTimeout />
             <Suspense fallback={null}><CookieConsentBanner /></Suspense>
           </AppProvider>
         </AuthProvider>

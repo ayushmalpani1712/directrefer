@@ -29,6 +29,50 @@ import { toast } from 'sonner'
 import { captureUTMFromURL, storeUTMParams } from '@/lib/analytics'
 import { validateInviteCode, recordInviteUse } from '@/lib/invites'
 
+const BRUTE_FORCE_KEY = 'dr_login_attempts'
+const MAX_ATTEMPTS = 5
+const LOCKOUT_MS = 15 * 60 * 1000
+
+interface LoginAttempts {
+  count: number
+  lockedUntil: number
+}
+
+function getLoginAttempts(email: string): LoginAttempts {
+  try {
+    const raw = localStorage.getItem(`${BRUTE_FORCE_KEY}:${email.toLowerCase()}`)
+    if (!raw) return { count: 0, lockedUntil: 0 }
+    return JSON.parse(raw)
+  } catch {
+    return { count: 0, lockedUntil: 0 }
+  }
+}
+
+function setLoginAttempts(email: string, attempts: LoginAttempts) {
+  try {
+    localStorage.setItem(`${BRUTE_FORCE_KEY}:${email.toLowerCase()}`, JSON.stringify(attempts))
+  } catch { /* ignore */ }
+}
+
+function clearLoginAttempts(email: string) {
+  try {
+    localStorage.removeItem(`${BRUTE_FORCE_KEY}:${email.toLowerCase()}`)
+  } catch { /* ignore */ }
+}
+
+function getLockoutTimeRemaining(lockedUntil: number): number {
+  const remaining = lockedUntil - Date.now()
+  return remaining > 0 ? remaining : 0
+}
+
+function formatTimeRemaining(ms: number): string {
+  const totalSec = Math.ceil(ms / 1000)
+  const min = Math.floor(totalSec / 60)
+  const sec = totalSec % 60
+  if (min > 0) return `${min}m ${sec}s`
+  return `${sec}s`
+}
+
 const ROLE_CARDS: { role: Role; icon: typeof GraduationCap; label: string; description: string }[] = [
   { role: 'student', icon: GraduationCap, label: 'Job Seeker', description: 'Find jobs and get referred' },
   { role: 'professional', icon: Briefcase, label: 'Professional', description: 'Refer candidates to opportunities' },
@@ -56,6 +100,23 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null)
   const [readyToNavigate, setReadyToNavigate] = useState(false)
   const preventNavRef = useRef(false)
+  const [lockoutRemaining, setLockoutRemaining] = useState(0)
+
+  useEffect(() => {
+    if (!email) { setLockoutRemaining(0); return }
+    const attempts = getLoginAttempts(email)
+    if (attempts.lockedUntil > Date.now()) {
+      setLockoutRemaining(getLockoutTimeRemaining(attempts.lockedUntil))
+      const interval = setInterval(() => {
+        const remaining = getLockoutTimeRemaining(attempts.lockedUntil)
+        setLockoutRemaining(remaining)
+        if (remaining <= 0) clearInterval(interval)
+      }, 1000)
+      return () => clearInterval(interval)
+    } else {
+      setLockoutRemaining(0)
+    }
+  }, [email])
 
   useEffect(() => {
     const utm = captureUTMFromURL()
@@ -89,6 +150,15 @@ export default function Login() {
     }
     setLoading(true)
     try {
+      if (!isSignUp) {
+        const attempts = getLoginAttempts(email)
+        if (attempts.lockedUntil > Date.now()) {
+          const remaining = formatTimeRemaining(getLockoutTimeRemaining(attempts.lockedUntil))
+          setError(`Account temporarily locked due to too many failed attempts. Try again in ${remaining}.`)
+          setLoading(false)
+          return
+        }
+      }
       if (isSignUp) {
         if (password.length < 6) {
           setError('Password must be at least 6 characters.')
@@ -119,7 +189,17 @@ export default function Login() {
         if (signInError) {
           const msg = signInError.toLowerCase()
           if (msg.includes('invalid login') || msg.includes('invalid credentials') || msg.includes('wrong password')) {
-            setError('Invalid email or password. Please try again.')
+            const attempts = getLoginAttempts(email)
+            const newCount = attempts.count + 1
+            if (newCount >= MAX_ATTEMPTS) {
+              const lockedUntil = Date.now() + LOCKOUT_MS
+              setLoginAttempts(email, { count: newCount, lockedUntil })
+              setLockoutRemaining(LOCKOUT_MS)
+              setError(`Too many failed attempts. Account locked for 15 minutes.`)
+            } else {
+              setLoginAttempts(email, { count: newCount, lockedUntil: 0 })
+              setError(`Invalid email or password. ${MAX_ATTEMPTS - newCount} attempts remaining.`)
+            }
           } else if (msg.includes('email not confirmed')) {
             setError('Please verify your email first. Check your inbox.')
           } else {
@@ -128,6 +208,7 @@ export default function Login() {
           setLoading(false)
           return
         }
+        clearLoginAttempts(email)
         preventNavRef.current = true
         setReadyToNavigate(true)
       }
@@ -265,6 +346,17 @@ export default function Login() {
               </motion.div>
             )}
 
+            {lockoutRemaining > 0 && !error && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3 text-sm text-amber-300"
+              >
+                <Clock className="h-4 w-4 shrink-0" />
+                <span>Account locked due to too many attempts. Try again in {formatTimeRemaining(lockoutRemaining)}.</span>
+              </motion.div>
+            )}
+
             {isSignUp && (
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-slate-300">Full name</Label>
@@ -372,7 +464,7 @@ export default function Login() {
             <div className="pt-2">
               <Button
                 type="submit"
-                disabled={loading || !selected}
+                disabled={loading || !selected || (!isSignUp && lockoutRemaining > 0)}
                 className={cn(
                   'relative h-11 w-full rounded-xl bg-indigo-500 font-semibold text-white shadow-lg shadow-indigo-500/25 transition-[box-shadow] duration-300',
                   'hover:bg-indigo-600 hover:shadow-indigo-500/30',

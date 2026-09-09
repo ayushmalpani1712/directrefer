@@ -194,3 +194,74 @@ export function getTierColor(tier: TrustTier): string {
     case 'unverified': return 'text-muted-foreground'
   }
 }
+
+export interface TrustScoreHistoryEntry {
+  score: number
+  tier: TrustTier
+  calculated_at: string
+  version: number
+}
+
+/**
+ * Get trust score history for a user, ordered by version ascending.
+ */
+export async function getTrustScoreHistory(userId: string): Promise<TrustScoreHistoryEntry[]> {
+  const { data } = await supabase
+    .from('trust_scores')
+    .select('score, tier, calculated_at, version')
+    .eq('user_id', userId)
+    .order('version', { ascending: true })
+
+  return (data ?? []) as TrustScoreHistoryEntry[]
+}
+
+// ── Admin Manual Override ─────────────────────────────────────────────────
+
+export async function manualOverrideTrustScore(
+  userId: string,
+  score: number,
+  tier: string,
+  adminId: string,
+): Promise<boolean> {
+  try {
+    const clampedScore = Math.max(0, Math.min(100, Math.round(score)))
+    const validatedTier = (['verified', 'provisional', 'unverified'].includes(tier) ? tier : getTier(clampedScore)) as TrustTier
+
+    const { data: existing } = await supabase
+      .from('trust_scores')
+      .select('version')
+      .eq('user_id', userId)
+      .single()
+
+    const newVersion = (existing?.version ?? 0) + 1
+
+    const { error: upsertError } = await supabase
+      .from('trust_scores')
+      .upsert({
+        user_id: userId,
+        score: clampedScore,
+        tier: validatedTier,
+        response_reliability: 0,
+        acceptance_rate: 0,
+        referral_quality: 0,
+        profile_quality: 0,
+        calculated_at: new Date().toISOString(),
+        version: newVersion,
+      }, { onConflict: 'user_id' })
+
+    if (upsertError) throw upsertError
+
+    await supabase
+      .from('admin_logs')
+      .insert({
+        admin_id: adminId,
+        action: 'manual_trust_override',
+        target_id: userId,
+        details: { score: clampedScore, tier: validatedTier, previous_version: (existing?.version ?? 0) },
+      })
+
+    return true
+  } catch {
+    return false
+  }
+}

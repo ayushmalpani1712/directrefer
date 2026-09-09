@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  Briefcase, ChevronRight, Clock, MapPin, Pause, Play, Plus, Search, Star, Trash2, Pencil, Users, X,
+  Briefcase, ChevronRight, Clock, MapPin, Pause, Play, Plus, Search, Star, Trash2, Pencil, Users, X, Bookmark, BookmarkCheck, Share2, AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -38,9 +38,11 @@ function nextStage(stage: string): string | null {
 
 export function BrowseJobsView() {
   const { jobs, loading } = useApp()
+  const { user } = useAuth()
   const [q, setQ] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [recruiterNames, setRecruiterNames] = useState<Record<string, string>>({})
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set())
   const loadedRef = useRef(false)
 
   useEffect(() => {
@@ -64,8 +66,50 @@ export function BrowseJobsView() {
     loadRecruiters()
   }, [])
 
+  useEffect(() => {
+    if (!user) return
+    const loadBookmarks = async () => {
+      const { data } = await supabase
+        .from('bookmarks')
+        .select('job_id')
+        .eq('user_id', user.id)
+        .not('job_id', 'is', null)
+      if (data) setBookmarkedIds(new Set(data.map((b: { job_id: string }) => b.job_id)))
+    }
+    loadBookmarks()
+  }, [user])
+
+  const toggleBookmark = async (jobId: string) => {
+    if (!user) return
+    try {
+      if (bookmarkedIds.has(jobId)) {
+        await supabase.from('bookmarks').delete().eq('user_id', user.id).eq('job_id', jobId)
+        setBookmarkedIds(prev => { const n = new Set(prev); n.delete(jobId); return n })
+        toast.success('Bookmark removed')
+      } else {
+        await supabase.from('bookmarks').insert({ user_id: user.id, job_id: jobId })
+        setBookmarkedIds(prev => new Set(prev).add(jobId))
+        toast.success('Job bookmarked')
+      }
+    } catch {
+      toast.error('Failed to update bookmark')
+    }
+  }
+
+  const shareJob = (e: React.MouseEvent, jobId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const url = `${window.location.origin}/jobs/${jobId}`
+    navigator.clipboard.writeText(url)
+    toast.success('Link copied to clipboard')
+  }
+
   const filtered = jobs
     .filter((j) => j.stage === 'Active')
+    .filter((j) => {
+      if (j.expires_at && new Date(j.expires_at) < new Date()) return false
+      return true
+    })
     .filter((j) => j.title.toLowerCase().includes(q.toLowerCase()) || j.location.toLowerCase().includes(q.toLowerCase()))
     .filter((j) => typeFilter === 'all' || j.type.toLowerCase() === typeFilter)
 
@@ -103,41 +147,71 @@ export function BrowseJobsView() {
         <div className="grid gap-4 md:grid-cols-2">
           {filtered.map((j, i) => (
             <motion.div key={j.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-              <Card className="h-full transition-colors hover:border-primary/20">
-                <CardContent className="flex flex-col p-5">
-                  <div className="flex items-start gap-3">
-                    {j.recruiterId ? (
-                      <Link to={profileUrl('recruiter', j.recruiterId ?? '', j.recruiterSlug)}>
-                        <CompanyChip name={recruiterNames[j.recruiterId ?? ''] ?? 'Co'} className="h-10 w-10 rounded-xl text-xs hover:ring-2 hover:ring-primary/30 transition-all" />
-                      </Link>
-                    ) : (
-                      <CompanyChip name={recruiterNames[j.recruiterId ?? ''] ?? 'Co'} className="h-10 w-10 rounded-xl text-xs" />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold">{j.title}</h3>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {j.location}</span>
-                        <span className="flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" /> {j.type}</span>
-                        {j.salary && <span>{j.salary}</span>}
-                        <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {j.postedDaysAgo}d ago</span>
+              <Link to={`/jobs/${j.id}`} className="block">
+                <Card className="h-full transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
+                  <CardContent className="flex flex-col p-5">
+                    <div className="flex items-start gap-3">
+                      {j.recruiterId ? (
+                        <div onClick={(e) => e.preventDefault()}>
+                          <Link to={profileUrl('recruiter', j.recruiterId ?? '', j.recruiterSlug)}>
+                            <CompanyChip name={recruiterNames[j.recruiterId ?? ''] ?? 'Co'} className="h-10 w-10 rounded-xl text-xs hover:ring-2 hover:ring-primary/30 transition-all" />
+                          </Link>
+                        </div>
+                      ) : (
+                        <CompanyChip name={recruiterNames[j.recruiterId ?? ''] ?? 'Co'} className="h-10 w-10 rounded-xl text-xs" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold group-hover:text-primary transition-colors">{j.title}</h3>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {j.location}</span>
+                          <span className="flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" /> {j.type}</span>
+                          {j.salary && <span>{j.salary}</span>}
+                          <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {j.postedDaysAgo}d ago</span>
+                        </div>
                       </div>
+                      <Badge variant="outline" className="border-emerald-500/25 bg-emerald-500/10 text-emerald-500 text-[10px]">Active</Badge>
+                      {j.expires_at && (() => {
+                        const daysLeft = Math.ceil((new Date(j.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                        if (daysLeft <= 7 && daysLeft > 0) {
+                          return (
+                            <Badge variant="outline" className="border-amber-500/25 bg-amber-500/10 text-amber-500 text-[10px] gap-1">
+                              <AlertTriangle className="h-2.5 w-2.5" /> Expiring in {daysLeft}d
+                            </Badge>
+                          )
+                        }
+                        return null
+                      })()}
                     </div>
-                    <Badge variant="outline" className="border-emerald-500/25 bg-emerald-500/10 text-emerald-500 text-[10px]">Active</Badge>
-                  </div>
-                  <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {j.applicants} applicants</span>
-                    <span className="flex items-center gap-1 text-primary"><Star className="h-3.5 w-3.5" /> {j.referrals} referrals</span>
-                  </div>
-                  <div className="mt-auto flex gap-2 pt-4">
-                    <Link to="/job-seeker/request-referral" className="flex-1">
-                      <Button size="sm" className="w-full rounded-full bg-primary  text-xs">Request Referral</Button>
-                    </Link>
-                    <Link to="/job-seeker/professionals" className="flex-1">
-                      <Button size="sm" variant="outline" className="w-full rounded-full text-xs">Find Professional</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {j.applicants} applicants</span>
+                      <span className="flex items-center gap-1 text-primary"><Star className="h-3.5 w-3.5" /> {j.referrals} referrals</span>
+                    </div>
+                    <div className="mt-auto flex gap-2 pt-4">
+                      <div className="flex-1">
+                        <Button size="sm" className="w-full rounded-full bg-primary text-xs shadow-sm hover:shadow-md transition-all duration-200" onClick={(e) => e.preventDefault()}>
+                          View Details
+                        </Button>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full px-3"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleBookmark(j.id) }}
+                      >
+                        {bookmarkedIds.has(j.id) ? <BookmarkCheck className="h-3.5 w-3.5 text-primary fill-primary" /> : <Bookmark className="h-3.5 w-3.5" />}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full px-3"
+                        onClick={(e) => shareJob(e, j.id)}
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             </motion.div>
           ))}
         </div>
@@ -363,16 +437,22 @@ function RecruiterJobsManager() {
               primaryCtaLabel="Post your first job"
               onPrimaryCtaClick={handlePostJob}
             />
-          ) : jobs.filter((j) => j.title.toLowerCase().includes(q.toLowerCase())).length === 0 ? (
+          ) : jobs.filter((j) => {
+            if (j.expires_at && new Date(j.expires_at) < new Date()) return false
+            return j.title.toLowerCase().includes(q.toLowerCase())
+          }).length === 0 ? (
             <EmptyState
               illustration={<JobIllustration />}
-              title="No jobs match your search"
-              description="Try adjusting your search terms to find the job posting you're looking for."
-              primaryCtaLabel="Clear search"
-              onPrimaryCtaClick={() => setQ('')}
+              title={q ? "No jobs match your search" : "No active jobs yet"}
+              description={q ? "Try adjusting your search terms to find the job posting you're looking for." : "Publish your first open position to start receiving referrals and building your candidate pipeline."}
+              primaryCtaLabel={q ? "Clear search" : "Post your first job"}
+              onPrimaryCtaClick={q ? () => setQ('') : handlePostJob}
             />
           ) : (
-            jobs.filter((j) => j.title.toLowerCase().includes(q.toLowerCase())).map((j, i) => (
+            jobs.filter((j) => {
+              if (j.expires_at && new Date(j.expires_at) < new Date()) return false
+              return j.title.toLowerCase().includes(q.toLowerCase())
+            }).map((j, i) => (
               <motion.div key={j.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
                 <Card className="transition-colors hover:border-primary/20">
                 <CardContent className="p-5">
@@ -394,6 +474,17 @@ function RecruiterJobsManager() {
                           j.stage === 'Paused' && 'border-amber-500/25 bg-amber-500/10 text-amber-500',
                           j.stage === 'Draft' && 'text-muted-foreground',
                         )}>{j.stage}</Badge>
+                        {j.expires_at && (() => {
+                          const daysLeft = Math.ceil((new Date(j.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                          if (daysLeft <= 7 && daysLeft > 0) {
+                            return (
+                              <Badge variant="outline" className="border-amber-500/25 bg-amber-500/10 text-amber-500 text-[10px] gap-1">
+                                <AlertTriangle className="h-2.5 w-2.5" /> Expiring in {daysLeft}d
+                              </Badge>
+                            )
+                          }
+                          return null
+                        })()}
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                         {editingJobId === j.id ? (

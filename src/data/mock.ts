@@ -311,6 +311,7 @@ export interface Job {
   pipeline: { stage: string; count: number }[]
   recruiterId?: string
   recruiterSlug?: string
+  expires_at?: string
 }
 
 export interface Message { id: string; from: 'me' | 'them'; text: string; time: string; is_read: boolean; read_at?: string; kind?: 'text' | 'file' }

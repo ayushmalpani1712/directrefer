@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, FileText, FileUp, Github, Globe, Briefcase, Link2, Linkedin, Loader2,
+  ArrowLeft, ArrowRight, AlertTriangle, Info, Check, CheckCircle2, Clock, FileText, FileUp, Github, Globe, Briefcase, Link2, Linkedin, Loader2,
   MessageSquare, PartyPopper, Save, Search, Send, ShieldCheck, Sparkles, User, UserX, Users, Handshake,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -118,6 +118,10 @@ export default function RequestReferral() {
 
   const pro = professionals.find((p) => p.id === draft.professionalId)
 
+  const proTrustTier = pro?.trustTier as 'verified' | 'provisional' | 'unverified' | undefined
+  const isUnverified = proTrustTier === 'unverified'
+  const isProvisional = proTrustTier === 'provisional'
+
   if (id && !loading && !pro) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -127,7 +131,7 @@ export default function RequestReferral() {
   }
 
   const canNext =
-    step === 1 ? !!draft.professionalId
+    step === 1 ? !!draft.professionalId && !isUnverified
     : step === 2 ? !!draft.relationshipType && draft.policyAcknowledged
     : step === 3 ? !!draft.resumeName
     : step === 4 ? true
@@ -246,6 +250,24 @@ export default function RequestReferral() {
               <CardContent className="p-6">
                 <h2 className="font-display text-xl font-bold">Who would you like a referral from?</h2>
                 <p className="mt-1 text-sm text-muted-foreground">Pick a verified professional with open capacity.</p>
+                {isUnverified && (
+                  <div className="mt-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/5 p-4">
+                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+                    <div>
+                      <div className="text-sm font-semibold text-red-700 dark:text-red-400">Referral request blocked</div>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">This professional has an unverified trust tier. You cannot submit a referral request until their trust score improves.</p>
+                    </div>
+                  </div>
+                )}
+                {isProvisional && !isUnverified && (
+                  <div className="mt-4 flex items-start gap-3 rounded-xl border border-sky-500/30 bg-sky-500/5 p-4">
+                    <Info className="mt-0.5 h-5 w-5 shrink-0 text-sky-500" />
+                    <div>
+                      <div className="text-sm font-semibold text-sky-700 dark:text-sky-400">Provisional professional</div>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">This professional is still building their trust score. Their response rate and referral quality may vary.</p>
+                    </div>
+                  </div>
+                )}
                 <div className="relative mt-4">
                   <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search professionals…" className="h-11 rounded-xl pl-10" />

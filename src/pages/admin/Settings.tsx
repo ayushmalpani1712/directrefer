@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Shield, Clock, Megaphone, ToggleLeft, Globe, Mail, FileText,
-  Briefcase, MessageSquare, Wrench, ExternalLink, Plus, Send, Trash2,
+  Briefcase, MessageSquare, Wrench, ExternalLink, Plus, Send, Trash2, Award,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,14 +16,18 @@ import {
   logAdminAction,
   type Announcement,
 } from '@/lib/db'
+import { TrustBadge } from '@/components/TrustBadge'
+import { manualOverrideTrustScore, type TrustTier } from '@/lib/v2/trust-score'
+import { supabase } from '@/lib/supabase'
 
-type SettingsTab = 'feature-flags' | 'rate-limits' | 'auto-deletion' | 'announcements'
+type SettingsTab = 'feature-flags' | 'rate-limits' | 'auto-deletion' | 'announcements' | 'trust-scores'
 
 const SETTINGS_TABS: { key: SettingsTab; label: string; icon: typeof Shield }[] = [
   { key: 'feature-flags', label: 'Feature Flags', icon: ToggleLeft },
   { key: 'rate-limits', label: 'Rate Limits', icon: Shield },
   { key: 'auto-deletion', label: 'Auto-Deletion', icon: Clock },
   { key: 'announcements', label: 'Announcements', icon: Megaphone },
+  { key: 'trust-scores', label: 'Trust Scores', icon: Award },
 ]
 
 export default function AdminSettings() {
@@ -46,6 +50,10 @@ export default function AdminSettings() {
   const [newAnnType, setNewAnnType] = useState('info')
   const [newAnnTarget, setNewAnnTarget] = useState('all')
   const [deleteAnnId, setDeleteAnnId] = useState<string | null>(null)
+  const [professionals, setProfessionals] = useState<Array<{ user_id: string; full_name: string; trust_score: number; trust_tier: string; version: number }>>([])
+  const [overrideUserId, setOverrideUserId] = useState<string | null>(null)
+  const [overrideScore, setOverrideScore] = useState<number>(50)
+  const [overrideTier, setOverrideTier] = useState<TrustTier>('provisional')
 
   const loadSettings = useCallback(async () => {
     try {
@@ -73,10 +81,42 @@ export default function AdminSettings() {
     }
   }, [])
 
+  const loadTrustScores = useCallback(async () => {
+    try {
+      const { data: trustData } = await supabase
+        .from('trust_scores')
+        .select('user_id, score, tier, version')
+
+      const userIds = [...new Set((trustData ?? []).map((t) => t.user_id))]
+      if (userIds.length === 0) { setProfessionals([]); return }
+
+      const { data: profiles } = await supabase
+        .from('profiles_professional')
+        .select('user_id, full_name')
+        .in('user_id', userIds)
+
+      const nameMap = new Map<string, string>()
+      for (const p of profiles ?? []) nameMap.set(p.user_id, p.full_name)
+
+      setProfessionals(
+        (trustData ?? []).map((t) => ({
+          user_id: t.user_id,
+          full_name: nameMap.get(t.user_id) ?? 'Unknown',
+          trust_score: t.score,
+          trust_tier: t.tier,
+          version: t.version,
+        }))
+      )
+    } catch {
+      toast.error('Failed to load trust scores')
+    }
+  }, [])
+
   useEffect(() => {
     if (settingsTab === 'feature-flags' || settingsTab === 'rate-limits' || settingsTab === 'auto-deletion') loadSettings()
     if (settingsTab === 'announcements') loadAnnouncements()
-  }, [settingsTab, loadSettings, loadAnnouncements])
+    if (settingsTab === 'trust-scores') loadTrustScores()
+  }, [settingsTab, loadSettings, loadAnnouncements, loadTrustScores])
 
   const handleSaveSetting = async (key: string, value: unknown) => {
     const ok = await updatePlatformSetting(key, value)
@@ -136,6 +176,20 @@ export default function AdminSettings() {
       toast.success(active ? 'Announcement activated' : 'Announcement deactivated')
     } catch {
       toast.error('Failed to update announcement')
+    }
+  }
+
+  const handleOverrideTrustScore = async (userId: string) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { toast.error('Not authenticated'); return }
+    const ok = await manualOverrideTrustScore(userId, overrideScore, overrideTier, user.id)
+    if (ok) {
+      toast.success('Trust score overridden')
+      logAdminAction('manual_trust_override', userId, { score: overrideScore, tier: overrideTier })
+      setOverrideUserId(null)
+      loadTrustScores()
+    } else {
+      toast.error('Failed to override trust score')
     }
   }
 
@@ -337,6 +391,94 @@ export default function AdminSettings() {
                 </CardContent>
               </Card>
             ))
+          )}
+        </div>
+      )}
+
+      {settingsTab === 'trust-scores' && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Award className="h-4 w-4 text-primary" /> Trust Score Management</CardTitle></CardHeader>
+            <CardContent>
+              <p className="mb-4 text-sm text-muted-foreground">View and manually override professional trust scores.</p>
+              {professionals.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No professionals with trust scores found.</p>
+              ) : (
+                <div className="space-y-3">
+                  {professionals.map((pro) => (
+                    <div key={pro.user_id} className="flex items-center justify-between rounded-xl border border-border p-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold">{pro.full_name}</div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-muted-foreground">Score: {pro.trust_score}</span>
+                          <TrustBadge tier={pro.trust_tier as TrustTier} score={pro.trust_score} showScore />
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setOverrideUserId(pro.user_id)
+                          setOverrideScore(pro.trust_score)
+                          setOverrideTier(pro.trust_tier as TrustTier)
+                        }}
+                      >
+                        Override
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {overrideUserId && (
+            <Card className="border-primary/20">
+              <CardHeader><CardTitle className="text-base">Override Trust Score</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Editing: {professionals.find((p) => p.user_id === overrideUserId)?.full_name}
+                </p>
+                <div className="flex items-center gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Score (0-100)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={overrideScore}
+                      onChange={(e) => {
+                        const v = Number(e.target.value)
+                        setOverrideScore(v)
+                        if (v >= 80) setOverrideTier('verified')
+                        else if (v >= 50) setOverrideTier('provisional')
+                        else setOverrideTier('unverified')
+                      }}
+                      className="w-24 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Tier</label>
+                    <select
+                      value={overrideTier}
+                      onChange={(e) => setOverrideTier(e.target.value as TrustTier)}
+                      className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="verified">Verified</option>
+                      <option value="provisional">Provisional</option>
+                      <option value="unverified">Unverified</option>
+                    </select>
+                  </div>
+                  <div className="mt-5">
+                    <TrustBadge tier={overrideTier} score={overrideScore} showScore />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={() => handleOverrideTrustScore(overrideUserId)}>Save Override</Button>
+                  <Button variant="ghost" size="sm" onClick={() => setOverrideUserId(null)}>Cancel</Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       )}

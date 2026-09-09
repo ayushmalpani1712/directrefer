@@ -7,7 +7,13 @@
 // ============================================================================
 
 import { supabase } from '@/lib/supabase'
-import { getTrustScore, type TrustScore } from './trust-score'
+import { getTrustScore, type TrustScore, type TrustTier } from './trust-score'
+
+const TIER_ORDER: Record<TrustTier, number> = {
+  unverified: 0,
+  provisional: 1,
+  verified: 2,
+}
 
 export interface MatchCandidate {
   user_id: string
@@ -149,7 +155,8 @@ export function calculateMatchScore(
 export async function findMatchesForJobSeeker(
   candidateId: string,
   jobId: string,
-  limit = 10
+  limit = 10,
+  minTrustTier?: TrustTier
 ): Promise<MatchResult[]> {
   // Get candidate profile
   const { data: seekerProfile } = await supabase
@@ -206,6 +213,22 @@ export async function findMatchesForJobSeeker(
     const proSkillIds = (proSkills ?? []).map(s => s.skill_id)
     const trustScore = await getTrustScore(pro.user_id)
 
+    // Trust-tier filtering
+    if (minTrustTier && trustScore) {
+      if (TIER_ORDER[trustScore.tier] < TIER_ORDER[minTrustTier]) continue
+    } else if (minTrustTier && !trustScore) {
+      continue
+    }
+
+    // Capacity checking
+    const { data: capacity } = await supabase
+      .from('professional_capacities')
+      .select('max_capacity, used')
+      .eq('user_id', pro.user_id)
+      .single()
+
+    if (capacity && capacity.used >= capacity.max_capacity) continue
+
     const matchCandidate: MatchCandidate = {
       user_id: candidateId,
       full_name: seekerProfile.full_name ?? '',
@@ -261,6 +284,15 @@ export async function findMatchesForProfessional(
     .single()
 
   if (!proProfile) throw new Error('Professional profile not found')
+
+  // Check capacity for this professional
+  const { data: capacity } = await supabase
+    .from('professional_capacities')
+    .select('max_capacity, used')
+    .eq('user_id', professionalId)
+    .single()
+
+  if (capacity && capacity.used >= capacity.max_capacity) return []
 
   // Get professional skills
   const { data: proSkills } = await supabase
@@ -367,6 +399,27 @@ export async function storeMatches(matches: MatchResult[]): Promise<void> {
     .upsert(rows, { onConflict: 'candidate_id,professional_id,job_id' })
 
   if (error) throw error
+
+  try {
+    const { notifyNewMatch } = await import('@/lib/notifications')
+    for (const m of matches) {
+      const { data: candidateProfile } = await supabase
+        .from('profiles_job_seeker')
+        .select('full_name')
+        .eq('user_id', m.candidate_id)
+        .single()
+      const { data: job } = await supabase
+        .from('jobs')
+        .select('title')
+        .eq('id', m.job_id)
+        .single()
+      if (candidateProfile?.full_name && job?.title) {
+        notifyNewMatch(candidateProfile.full_name, job.title, m.score)
+      }
+    }
+  } catch {
+    // Non-critical — notification failure should not break match storage
+  }
 }
 
 /**

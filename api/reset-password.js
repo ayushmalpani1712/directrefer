@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { handleCors } from './_lib.js';
+import { checkRateLimit, getClientIp } from './lib/rateLimit.js';
 
 export default async function handler(req, res) {
   if (handleCors(req, res)) return;
@@ -12,6 +13,16 @@ export default async function handler(req, res) {
     }
     if (password.length < 8) {
       return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    const ip = getClientIp(req);
+    const rateKey = `reset-password:${ip}`;
+    const { allowed, retryAfterMs } = checkRateLimit(rateKey, 5, 20);
+    if (!allowed) {
+      return res.status(429).json({
+        error: 'Too many requests. Please try again later.',
+        retryAfterMs,
+      });
     }
 
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
