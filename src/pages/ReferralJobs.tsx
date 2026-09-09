@@ -377,7 +377,7 @@ export default function ReferralJobs() {
               : undefined
             return (
               <motion.div key={job.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="h-full">
-                <Card className="h-full shadow-soft">
+                <Card className="h-full ">
                   <CardContent className="flex h-full flex-col p-5">
                     <div className="flex items-start gap-3">
                       <CompanyChip name={job.company ?? ''} />
@@ -452,7 +452,7 @@ export default function ReferralJobs() {
                           <Link to="/job-seeker/applications">Track this referral <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link>
                         </Button>
                       ) : job.hasReferrer ? (
-                        <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={() => {
+                        <Button size="sm" className="rounded-full bg-primary " onClick={() => {
                           if (!user) { navigate('/login'); return }
                           navigate(`/job-seeker/request-referral/${topReferrer?.user_id}?role=${encodeURIComponent(job.title)}`)
                         }}>

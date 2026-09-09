@@ -473,7 +473,7 @@ export default function Messages() {
               placeholder={`Message ${active.name.split(' ')[0]}…`}
               className="h-10 rounded-full"
             />
-            <Button size="icon" className="h-11 w-11 shrink-0 rounded-full bg-primary shadow-glow" onClick={() => send()} disabled={!draft.trim() || uploading}>
+            <Button size="icon" className="h-11 w-11 shrink-0 rounded-full bg-primary " onClick={() => send()} disabled={!draft.trim() || uploading}>
               <Send className="h-4 w-4" />
             </Button>
           </div>

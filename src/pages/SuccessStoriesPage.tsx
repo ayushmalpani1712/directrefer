@@ -174,7 +174,7 @@ export default function SuccessStoriesPage() {
       <section className="mx-auto max-w-5xl px-4 pb-16">
         <div className="grid gap-6 sm:grid-cols-2 items-stretch">
           {STORIES.map(story => (
-            <Link key={story.slug} to={`/success-stories/${story.slug}`} className="group flex flex-col rounded-xl border border-border/50 bg-card p-6 shadow-soft hover:shadow-md transition-shadow h-full">
+            <Link key={story.slug} to={`/success-stories/${story.slug}`} className="group flex flex-col rounded-xl border border-border/50 bg-card p-6 hover:shadow-md transition-shadow h-full">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Building2 className="h-3.5 w-3.5" /> {story.company}
               </div>

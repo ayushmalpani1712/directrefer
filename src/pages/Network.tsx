@@ -19,7 +19,7 @@ const ICONS: Record<string, { icon: typeof Bell; cls: string }> = {
   accepted: { icon: CheckCheck, cls: 'bg-emerald-500/10 text-emerald-500' },
   rejected: { icon: Mail, cls: 'bg-rose-500/10 text-rose-500' },
   message: { icon: MessageSquare, cls: 'bg-sky-500/10 text-sky-500' },
-  view: { icon: Search, cls: 'bg-[#6366F1]/10 text-[#6366F1]' },
+  view: { icon: Search, cls: 'bg-primary/10 text-primary' },
   reminder: { icon: Bell, cls: 'bg-amber-500/10 text-amber-500' },
   system: { icon: Sparkles, cls: 'bg-[#8B5CF6]/10 text-[#8B5CF6]' },
 }
@@ -124,7 +124,7 @@ export function ActivityPage() {
   return (
     <div className="space-y-6">
       <SectionHeader title="Activity feed" subtitle="A timeline of everything happening on your account" />
-      <Card className="shadow-soft">
+      <Card className="">
         <CardContent className="p-6">
           {activity.length === 0 ? (
             <EmptyState

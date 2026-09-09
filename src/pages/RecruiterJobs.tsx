@@ -103,7 +103,7 @@ export function BrowseJobsView() {
         <div className="grid gap-4 md:grid-cols-2">
           {filtered.map((j, i) => (
             <motion.div key={j.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-              <Card className="shadow-soft h-full transition-colors hover:border-primary/20">
+              <Card className="h-full transition-colors hover:border-primary/20">
                 <CardContent className="flex flex-col p-5">
                   <div className="flex items-start gap-3">
                     {j.recruiterId ? (
@@ -130,7 +130,7 @@ export function BrowseJobsView() {
                   </div>
                   <div className="mt-auto flex gap-2 pt-4">
                     <Link to="/job-seeker/request-referral" className="flex-1">
-                      <Button size="sm" className="w-full rounded-full bg-primary shadow-glow text-xs">Request Referral</Button>
+                      <Button size="sm" className="w-full rounded-full bg-primary  text-xs">Request Referral</Button>
                     </Link>
                     <Link to="/job-seeker/professionals" className="flex-1">
                       <Button size="sm" variant="outline" className="w-full rounded-full text-xs">Find Professional</Button>
@@ -340,7 +340,7 @@ function RecruiterJobsManager() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <SectionHeader title="Jobs & pipeline" subtitle="Manage postings and move candidates through the funnel" />
-        <Button className="rounded-full bg-primary shadow-glow" onClick={handlePostJob}><Plus className="mr-1.5 h-4 w-4" /> Post a job</Button>
+        <Button className="rounded-full bg-primary " onClick={handlePostJob}><Plus className="mr-1.5 h-4 w-4" /> Post a job</Button>
       </div>
 
       <Tabs defaultValue="jobs">
@@ -374,7 +374,7 @@ function RecruiterJobsManager() {
           ) : (
             jobs.filter((j) => j.title.toLowerCase().includes(q.toLowerCase())).map((j, i) => (
               <motion.div key={j.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <Card className="shadow-soft transition-colors hover:border-primary/20">
+                <Card className="transition-colors hover:border-primary/20">
                 <CardContent className="p-5">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                     <CompanyChip name={recruiterCompany.name} className="h-11 w-11 rounded-xl text-xs" />
@@ -612,7 +612,7 @@ function RecruiterJobsManager() {
                   <div className="space-y-2.5">
                     {cands.map((c) => (
                       <motion.div key={c.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                        <Card className="shadow-soft card-hover cursor-grab active:cursor-grabbing">
+                        <Card className="card-hover cursor-grab active:cursor-grabbing">
                           <CardContent className="p-3.5">
                             <div className="flex items-center gap-2.5">
                             <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-[10px]" />

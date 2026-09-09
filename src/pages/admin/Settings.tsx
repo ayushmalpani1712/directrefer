@@ -191,7 +191,7 @@ export default function AdminSettings() {
             { key: 'linkedin_oauth_enabled', label: 'LinkedIn OAuth', desc: 'Allow users to sign in with LinkedIn.', icon: ExternalLink },
             { key: 'email_auth_enabled', label: 'Email/Password Auth', desc: 'Allow email and password sign in.', icon: Mail },
           ].map((f) => (
-            <Card key={f.key} className={`shadow-soft ${f.destructive && settings[f.key] === true ? 'border-rose-500/40 bg-rose-500/5' : ''}`}>
+            <Card key={f.key} className={`${f.destructive && settings[f.key] === true ? 'border-rose-500/40 bg-rose-500/5' : ''}`}>
               <CardContent className="flex items-center gap-4 p-4">
                 <f.icon className={`h-5 w-5 shrink-0 ${f.destructive && settings[f.key] === true ? 'text-rose-500' : 'text-primary'}`} />
                 <div className="min-w-0 flex-1">
@@ -222,7 +222,7 @@ export default function AdminSettings() {
 
       {settingsTab === 'rate-limits' && (
         <div className="space-y-4">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader><CardTitle className="text-base">Referral Rate Limits</CardTitle></CardHeader>
             <CardContent className="pt-2">
               <p className="mb-4 text-sm text-muted-foreground">Enforce rate limits per role.</p>
@@ -247,7 +247,7 @@ export default function AdminSettings() {
 
       {settingsTab === 'auto-deletion' && (
         <div className="space-y-4">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Clock className="h-4 w-4 text-primary" /> Auto-Deletion Settings</CardTitle></CardHeader>
             <CardContent className="space-y-4 pt-2">
               <div className="flex items-center justify-between rounded-xl border border-border p-4">
@@ -290,7 +290,7 @@ export default function AdminSettings() {
           </div>
 
           {showNewAnnouncement && (
-            <Card className="shadow-soft border-primary/20">
+            <Card className="border-primary/20">
               <CardHeader><CardTitle className="text-base">Create Announcement</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 <input type="text" placeholder="Title" value={newAnnTitle} onChange={(e) => setNewAnnTitle(e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
@@ -316,10 +316,10 @@ export default function AdminSettings() {
           )}
 
           {announcements.length === 0 ? (
-            <Card className="shadow-soft"><CardContent className="flex items-center justify-center p-8"><p className="text-sm text-muted-foreground">No announcements yet</p></CardContent></Card>
+            <Card className=""><CardContent className="flex items-center justify-center p-8"><p className="text-sm text-muted-foreground">No announcements yet</p></CardContent></Card>
           ) : (
             announcements.map((a) => (
-              <Card key={a.id} className="shadow-soft">
+              <Card key={a.id} className="">
                 <CardContent className="flex items-center gap-4 p-4">
                   <Megaphone className="h-5 w-5 text-muted-foreground shrink-0" />
                   <div className="min-w-0 flex-1">

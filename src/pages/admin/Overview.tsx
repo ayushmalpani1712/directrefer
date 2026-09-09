@@ -73,7 +73,7 @@ export default function AdminOverview() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="shadow-soft">
+        <Card className="">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Platform Health</CardTitle>
             <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={loadData}>
@@ -124,7 +124,7 @@ export default function AdminOverview() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-soft">
+        <Card className="">
           <CardHeader><CardTitle className="text-base">Alerts & Actions</CardTitle></CardHeader>
           <CardContent className="space-y-3 pt-2">
             {flaggedAccounts.length > 0 && (
@@ -155,7 +155,7 @@ export default function AdminOverview() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-soft">
+        <Card className="">
           <CardHeader><CardTitle className="text-base">Recent Errors</CardTitle></CardHeader>
           <CardContent className="space-y-3 pt-2">
             {systemHealth && systemHealth.recentErrors.length > 0 ? (
@@ -187,7 +187,7 @@ export default function AdminOverview() {
         </Card>
       </div>
 
-      <Card className="shadow-soft">
+      <Card className="">
         <CardHeader><CardTitle className="text-base">Referral Conversion Funnel</CardTitle></CardHeader>
         <CardContent className="space-y-4 pt-2">
           <div className="flex items-center gap-8">

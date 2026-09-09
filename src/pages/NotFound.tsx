@@ -20,7 +20,7 @@ export default function NotFound() {
           The page you're looking for doesn't exist or has been moved. Let's get you back on track.
         </p>
         <div className="mt-6 flex flex-col justify-center gap-2.5 sm:flex-row">
-          <Button className="rounded-full bg-primary shadow-glow" asChild>
+          <Button className="rounded-full bg-primary " asChild>
             <Link to="/dashboard"><Home className="mr-1.5 h-4 w-4" /> Back to dashboard</Link>
           </Button>
           <Button variant="outline" className="rounded-full" asChild>

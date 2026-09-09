@@ -202,7 +202,7 @@ function RequestScene({ active }: { active: boolean }) {
         )}
         {showSend && (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center justify-between">
-            <Button size="sm" className="rounded-full bg-primary text-white text-xs h-8 shadow-glow"><Send className="mr-1.5 h-3 w-3" /> Send Request</Button>
+            <Button size="sm" className="rounded-full bg-primary text-white text-xs h-8 "><Send className="mr-1.5 h-3 w-3" /> Send Request</Button>
             <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
               <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />{elapsed}s elapsed
             </div>
@@ -268,7 +268,7 @@ function GetReferredScene({ active }: { active: boolean }) {
       <motion.h3 initial={{ opacity: 0, y: 10 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 10 }} transition={{ delay: 0.5 }} className="font-display text-lg sm:text-xl font-bold text-foreground text-center">Stop applying into the void.</motion.h3>
       <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 8 }} transition={{ delay: 0.8 }} className="text-sm text-muted-foreground text-center max-w-xs">Get referred into your next role. It&rsquo;s free for job seekers.</motion.p>
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 8 }} transition={{ delay: 1.1 }}>
-        <Button size="lg" className="rounded-full bg-primary px-8 shadow-glow text-sm">Find a professional {'\u2014'} it&rsquo;s free</Button>
+        <Button size="lg" className="rounded-full bg-primary px-8  text-sm">Find a professional {'\u2014'} it&rsquo;s free</Button>
       </motion.div>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: active ? 1 : 0 }} transition={{ delay: 1.5 }}>
         <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary text-[10px]">Pre-launch {'\u2022'} Early access</Badge>
@@ -357,38 +357,38 @@ function DashboardTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-sm text-[#9A9BA8]">Good morning,</div>
+          <div className="text-sm text-muted-foreground">Good morning,</div>
           <div className="font-display text-lg font-bold text-white">Alex</div>
         </div>
         <div className="flex gap-4">
           <div className="text-center">
-            <div className="font-display text-2xl font-bold text-[#6366F1]">12</div>
-            <div className="text-[10px] text-[#9A9BA8]">Referrals sent</div>
+            <div className="font-display text-2xl font-bold text-primary">12</div>
+            <div className="text-[10px] text-muted-foreground">Referrals sent</div>
           </div>
           <div className="h-10 w-px bg-[rgba(255,255,255,0.07)]" />
           <div className="text-center">
-            <div className="font-display text-2xl font-bold text-[#34D399]">78</div>
-            <div className="text-[10px] text-[#9A9BA8]">Profile score</div>
+            <div className="font-display text-2xl font-bold text-emerald-500">78</div>
+            <div className="text-[10px] text-muted-foreground">Profile score</div>
           </div>
           <div className="h-10 w-px bg-[rgba(255,255,255,0.07)]" />
           <div className="text-center">
-            <div className="font-display text-2xl font-bold text-[#E8B44C]">3</div>
-            <div className="text-[10px] text-[#9A9BA8]">Interviews</div>
+            <div className="font-display text-2xl font-bold text-amber-400">3</div>
+            <div className="text-[10px] text-muted-foreground">Interviews</div>
           </div>
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-[#34D399] text-[10px]">Accepted {'\u2022'} Flipkart</Badge>
-        <Badge className="border border-[rgba(99, 102, 241,0.2)] bg-[rgba(99, 102, 241,0.1)] text-[#6366F1] text-[10px]">Applied {'\u2022'} Razorpay</Badge>
-        <Badge className="border border-[rgba(232,180,76,0.2)] bg-[rgba(232,180,76,0.1)] text-[#E8B44C] text-[10px]">Under Review {'\u2022'} Google</Badge>
+        <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-emerald-500 text-[10px]">Accepted {'\u2022'} Flipkart</Badge>
+        <Badge className="border border-[rgba(99, 102, 241,0.2)] bg-[rgba(99, 102, 241,0.1)] text-primary text-[10px]">Applied {'\u2022'} Razorpay</Badge>
+        <Badge className="border border-[rgba(232,180,76,0.2)] bg-[rgba(232,180,76,0.1)] text-amber-400 text-[10px]">Under Review {'\u2022'} Google</Badge>
       </div>
       <div className="rounded-xl bg-[rgba(255,255,255,0.05)] p-4">
-        <div className="text-xs font-medium text-[#9A9BA8] mb-3">Pipeline</div>
+        <div className="text-xs font-medium text-muted-foreground mb-3">Pipeline</div>
         <div className="flex gap-3">
           {['Request Sent', 'Under Review', 'Accepted', 'Submitted', 'Hired'].map((step, i) => (
             <div key={step} className="flex-1 text-center">
-              <div className={`h-1.5 rounded-full mb-1.5 ${i <= 2 ? 'bg-[#6366F1]' : 'bg-[rgba(255,255,255,0.07)]'}`} />
-              <span className={`text-[9px] ${i <= 2 ? 'text-[#6366F1]' : 'text-[#5C5D66]'}`}>{step}</span>
+              <div className={`h-1.5 rounded-full mb-1.5 ${i <= 2 ? 'bg-primary' : 'bg-[rgba(255,255,255,0.07)]'}`} />
+              <span className={`text-[9px] ${i <= 2 ? 'text-primary' : 'text-muted-foreground/50'}`}>{step}</span>
             </div>
           ))}
         </div>
@@ -407,18 +407,18 @@ function ProfessionalsTab() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 rounded-lg bg-[rgba(255,255,255,0.05)] px-3 py-2">
-        <Search className="h-3.5 w-3.5 text-[#5C5D66]" />
-        <span className="text-xs text-[#5C5D66]">Search by company, skill, or role...</span>
+        <Search className="h-3.5 w-3.5 text-muted-foreground/50" />
+        <span className="text-xs text-muted-foreground/50">Search by company, skill, or role...</span>
       </div>
       {pros.map(p => (
         <div key={p.name} className="flex items-center gap-3 rounded-xl bg-[rgba(255,255,255,0.05)] p-3">
           <div className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br text-white text-xs font-bold ${p.gradient}`}>{p.name.split(' ').map(n => n[0]).join('')}</div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-white">{p.name} <ShieldCheck className="h-3 w-3 text-[#34D399]" /></div>
-            <div className="text-[11px] text-[#9A9BA8]">{p.role} {'\u2022'} {p.company}</div>
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-white">{p.name} <ShieldCheck className="h-3 w-3 text-emerald-500" /></div>
+            <div className="text-[11px] text-muted-foreground">{p.role} {'\u2022'} {p.company}</div>
           </div>
-          <div className="flex items-center gap-3 text-[10px] text-[#9A9BA8]">
-            <span className="flex items-center gap-0.5"><Star className="h-3 w-3 fill-[#E8B44C] text-[#E8B44C]" />{p.rating}</span>
+          <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-0.5"><Star className="h-3 w-3 fill-amber-400 text-amber-400" />{p.rating}</span>
             <span>{p.referrals} referrals</span>
           </div>
           <Button size="sm" variant="outline" className="shrink-0 rounded-full border-[rgba(255,255,255,0.06)] text-[10px] text-white hover:bg-[rgba(255,255,255,0.05)]">Request</Button>
@@ -438,24 +438,24 @@ function ReferralsTab() {
     <div className="space-y-3">
       {jobs.map(j => (
         <div key={j.company + j.role} className="flex items-center gap-3 rounded-xl bg-[rgba(255,255,255,0.05)] p-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[rgba(255,255,255,0.05)]"><Briefcase className="h-4.5 w-4.5 text-[#9A9BA8]" /></div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[rgba(255,255,255,0.05)]"><Briefcase className="h-4.5 w-4.5 text-muted-foreground" /></div>
           <div className="flex-1 min-w-0">
             <div className="text-xs font-semibold text-white">{j.role}</div>
-            <div className="text-[11px] text-[#9A9BA8]">{j.company}</div>
+            <div className="text-[11px] text-muted-foreground">{j.company}</div>
           </div>
           <div className="text-right">
             <div className="text-[9px] font-medium" style={{ color: j.color }}>{j.stage}</div>
-            <div className="mt-0.5 text-[9px] text-[#5C5D66]">{j.date}</div>
+            <div className="mt-0.5 text-[9px] text-muted-foreground/50">{j.date}</div>
           </div>
         </div>
       ))}
       <div className="rounded-xl bg-[rgba(255,255,255,0.05)] p-3">
-        <div className="text-[10px] font-medium text-[#9A9BA8] mb-2">Pipeline Progress</div>
+        <div className="text-[10px] font-medium text-muted-foreground mb-2">Pipeline Progress</div>
         <div className="flex items-center gap-1">
           {['Sent', 'Review', 'Accepted', 'Submitted', 'Hired'].map((step, i) => (
             <div key={step} className="flex-1">
-              <div className={`h-1 rounded-full ${i < 2 ? 'bg-[#34D399]' : 'bg-[rgba(255,255,255,0.07)]'}`} />
-              <span className={`text-[8px] mt-1 block ${i < 2 ? 'text-[#34D399]' : 'text-[#5C5D66]'}`}>{step}</span>
+              <div className={`h-1 rounded-full ${i < 2 ? 'bg-emerald-500' : 'bg-[rgba(255,255,255,0.07)]'}`} />
+              <span className={`text-[8px] mt-1 block ${i < 2 ? 'text-emerald-500' : 'text-muted-foreground/50'}`}>{step}</span>
             </div>
           ))}
         </div>
@@ -481,7 +481,7 @@ function InteractiveMock() {
         </div>
         <div className="flex border-b border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.01)] px-2 gap-1">
           {MOCK_TABS.map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 rounded-t-lg px-3 py-2 text-[11px] font-medium transition-all ${activeTab === tab.id ? 'bg-[rgba(255,255,255,0.05)] text-white border-t border-x border-[rgba(255,255,255,0.06)]' : 'text-[#5C5D66] hover:text-[#9A9BA8]'}`}>
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 rounded-t-lg px-3 py-2 text-[11px] font-medium transition-all ${activeTab === tab.id ? 'bg-[rgba(255,255,255,0.05)] text-white border-t border-x border-[rgba(255,255,255,0.06)]' : 'text-muted-foreground/50 hover:text-muted-foreground'}`}>
               <tab.icon className="h-3 w-3" />
               <span className="hidden sm:inline">{tab.label}</span>
             </button>

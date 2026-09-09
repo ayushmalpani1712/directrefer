@@ -26,7 +26,7 @@ import { BannerColorModal } from '@/components/BannerColorModal'
 
 function Section({ title, icon: Icon, children, onAdd, actions, className }: { title: string; icon: typeof Award; children: React.ReactNode; onAdd?: () => void; actions?: React.ReactNode; className?: string }) {
   return (
-    <Card className={cn('shadow-soft w-full max-w-full overflow-hidden', className)}>
+    <Card className={cn('w-full max-w-full overflow-hidden', className)}>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2 text-base min-w-0"><Icon className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">{title}</span></CardTitle>
         <div className="flex items-center gap-1 shrink-0">
@@ -863,7 +863,7 @@ export default function StudentProfile() {
         {/* Right column */}
         <div className="flex flex-col gap-6">
           {/* Profile completion */}
-          <Card className="shadow-soft w-full max-w-full overflow-hidden">
+          <Card className="w-full max-w-full overflow-hidden">
             <CardContent className="flex items-center gap-4 p-5">
               <div className="shrink-0"><ProgressRing value={s.profileCompletion} size={64} /></div>
               <div className="min-w-0">
@@ -878,7 +878,7 @@ export default function StudentProfile() {
           </Card>
 
           {/* Privacy & visibility */}
-          <Card className="shadow-soft w-full max-w-full overflow-hidden">
+          <Card className="w-full max-w-full overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base min-w-0"><Eye className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">Privacy</span></CardTitle>
             </CardHeader>
@@ -895,7 +895,7 @@ export default function StudentProfile() {
           </Card>
 
           {/* Skills */}
-          <Card className="shadow-soft w-full max-w-full overflow-hidden">
+          <Card className="w-full max-w-full overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base min-w-0"><Zap className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">Skills</span></CardTitle>
               <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary shrink-0" onClick={() => setShowSkillInput(!showSkillInput)}><Plus className="h-3.5 w-3.5" /></Button>
@@ -923,7 +923,7 @@ export default function StudentProfile() {
           </Card>
 
           {/* Preferences */}
-          <Card className="shadow-soft w-full max-w-full overflow-hidden">
+          <Card className="w-full max-w-full overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base min-w-0"><Target className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">Career preferences</span></CardTitle>
               {!showCareerEdit && (
@@ -990,7 +990,7 @@ export default function StudentProfile() {
           </Card>
 
           {/* Job preferences (Phase 2) */}
-          <Card className="shadow-soft w-full max-w-full overflow-hidden">
+          <Card className="w-full max-w-full overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base min-w-0"><Briefcase className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">Job preferences</span></CardTitle>
               {!showJobPrefEdit && (
@@ -1059,7 +1059,7 @@ export default function StudentProfile() {
           </Card>
 
           {/* Resume */}
-          <Card className="shadow-soft flex-1 w-full max-w-full overflow-hidden">
+          <Card className="flex-1 w-full max-w-full overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base min-w-0"><FileText className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">Resume</span></CardTitle>
               <div data-slot="card-action" className="flex items-center gap-1 shrink-0">

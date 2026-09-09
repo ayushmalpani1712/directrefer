@@ -180,7 +180,7 @@ export default function ProfessionalPublic() {
               </div>
               <div className="flex flex-wrap gap-2 sm:pb-1">
                 <Button
-                  className="rounded-full bg-primary shadow-glow"
+                  className="rounded-full bg-primary "
                   disabled={!pro.openForReferrals}
                   asChild={pro.openForReferrals}
                 >
@@ -229,7 +229,7 @@ export default function ProfessionalPublic() {
         if (rep.badges.length === 0) return null
         return (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <Card className="shadow-soft">
+            <Card className="">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Star className="h-4 w-4 text-amber-500" />
@@ -275,7 +275,7 @@ export default function ProfessionalPublic() {
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">
           {/* About */}
-          <Card className="shadow-soft">
+          <Card className="">
             <CardContent className="p-6">
               <h2 className="text-base font-semibold">About</h2>
               <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{pro.bio}</p>
@@ -283,7 +283,7 @@ export default function ProfessionalPublic() {
           </Card>
 
           {/* Skills */}
-          <Card className="shadow-soft">
+          <Card className="">
             <CardContent className="p-6">
               <h2 className="text-base font-semibold">Skills & technologies</h2>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -296,7 +296,7 @@ export default function ProfessionalPublic() {
 
           {/* Current Openings */}
           {pro.openPositions.length > 0 && (
-            <Card className="shadow-soft">
+            <Card className="">
               <CardContent className="p-6">
                 <h2 className="text-base font-semibold">Current openings</h2>
                 <div className="mt-3 space-y-2.5">
@@ -318,7 +318,7 @@ export default function ProfessionalPublic() {
           )}
 
           {/* Referral Availability */}
-          <Card className="shadow-soft flex-1">
+          <Card className="flex-1">
             <CardContent className="p-6">
               <h2 className="text-base font-semibold">Referral availability</h2>
               <div className="mt-3 flex items-center gap-3 rounded-xl border border-border p-4">
@@ -340,7 +340,7 @@ export default function ProfessionalPublic() {
 
         {/* Right column */}
         <div className="flex flex-col gap-6">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardContent className="space-y-3 p-6">
               <h3 className="text-sm font-semibold">Capacity this month</h3>
               <div className="flex items-center justify-between text-sm">
@@ -359,7 +359,7 @@ export default function ProfessionalPublic() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-soft flex-1">
+          <Card className="flex-1">
             <CardContent className="space-y-4 p-6">
               <h3 className="text-sm font-semibold">Contact Information</h3>
               {hasAcceptedReferral ? (

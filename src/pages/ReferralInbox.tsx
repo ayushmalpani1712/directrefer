@@ -178,7 +178,7 @@ export default function ReferralInbox() {
         <div className="space-y-3.5">
           {filtered.map((r, i) => (
             <motion.div key={r.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-              <Card className="shadow-soft">
+              <Card className="">
                 <CardContent className="p-5">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                     <GAvatar name={r.student} color="#5C5D66" className="h-12 w-12 text-sm" />

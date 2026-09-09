@@ -147,7 +147,7 @@ function StatTicker({ label, value, prefix = '', suffix = '', icon: Icon, sparkl
   const v = useStatTicker(value)
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary badge-shine">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary ">
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">
@@ -318,7 +318,7 @@ export default function DataHub() {
               </Badge>
               <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
                 Market Intelligence<br />
-                <span className="text-gradient">for Smarter Career Decisions</span>
+                <span className="text-primary">for Smarter Career Decisions</span>
               </h1>
               <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
                 Real-time job market data, financial insights, and public API Directory — all in one interactive workspace. Make data-driven career moves.
@@ -368,7 +368,7 @@ export default function DataHub() {
                 {/* Charts */}
                 <div className="grid gap-6 lg:grid-cols-2">
                   <FadeIn delay={0.05}>
-                    <Card className="glass-card shadow-soft">
+                    <Card className=" ">
                       <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><LineChartIcon className="h-4 w-4 text-primary" /> Salary Trends (2024)</CardTitle></CardHeader>
                       <CardContent>
                         <LazyResponsiveContainer width="100%" height={280}>
@@ -387,7 +387,7 @@ export default function DataHub() {
                     </Card>
                   </FadeIn>
                   <FadeIn delay={0.1}>
-                    <Card className="glass-card shadow-soft">
+                    <Card className=" ">
                       <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> Growth Rate by Role</CardTitle></CardHeader>
                       <CardContent>
                         <LazyResponsiveContainer width="100%" height={280}>
@@ -406,7 +406,7 @@ export default function DataHub() {
 
                 {/* Table */}
                 <FadeIn delay={0.15}>
-                  <Card className="glass-card shadow-soft">
+                  <Card className=" ">
                     <CardHeader><CardTitle className="text-sm font-semibold">Role Details & Salary Benchmarks</CardTitle></CardHeader>
                     <CardContent>
                       <DataTable
@@ -427,7 +427,7 @@ export default function DataHub() {
 
                 {/* Market Trends Chart */}
                 <FadeIn delay={0.2}>
-                  <Card className="glass-card shadow-soft">
+                  <Card className=" ">
                     <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> Monthly Hiring & Referral Volume</CardTitle></CardHeader>
                     <CardContent>
                       <LazyResponsiveContainer width="100%" height={300}>
@@ -467,7 +467,7 @@ export default function DataHub() {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
                   {FINANCE_DATA.slice(0, 4).map((stock, i) => (
                     <FadeIn key={stock.symbol} delay={i * 0.05}>
-                      <Card className="glass-card shadow-soft h-full">
+                      <Card className=" h-full">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">
                             <div>
@@ -491,7 +491,7 @@ export default function DataHub() {
 
                 {/* Stock Chart */}
                 <FadeIn delay={0.1}>
-                  <Card className="glass-card shadow-soft">
+                  <Card className=" ">
                     <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><LineChartIcon className="h-4 w-4 text-primary" /> Price Comparison</CardTitle></CardHeader>
                     <CardContent>
                       <LazyResponsiveContainer width="100%" height={300}>
@@ -509,7 +509,7 @@ export default function DataHub() {
 
                 {/* Finance Table */}
                 <FadeIn delay={0.15}>
-                  <Card className="glass-card shadow-soft">
+                  <Card className=" ">
                     <CardHeader><CardTitle className="text-sm font-semibold">All Stocks</CardTitle></CardHeader>
                     <CardContent>
                       <DataTable
@@ -531,7 +531,7 @@ export default function DataHub() {
                 {/* P/E Pie */}
                 <div className="grid gap-6 lg:grid-cols-2">
                   <FadeIn delay={0.2}>
-                    <Card className="glass-card shadow-soft">
+                    <Card className=" ">
                       <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><PieChartIcon className="h-4 w-4 text-primary" /> Market Cap Distribution</CardTitle></CardHeader>
                       <CardContent>
                         <LazyResponsiveContainer width="100%" height={280}>
@@ -546,7 +546,7 @@ export default function DataHub() {
                     </Card>
                   </FadeIn>
                   <FadeIn delay={0.25}>
-                    <Card className="glass-card shadow-soft">
+                    <Card className=" ">
                       <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> P/E Ratio Comparison</CardTitle></CardHeader>
                       <CardContent>
                         <LazyResponsiveContainer width="100%" height={280}>
@@ -584,7 +584,7 @@ export default function DataHub() {
                 { icon: Zap, title: 'Lightning Fast', desc: 'Optimized loading with skeleton states, lazy charts, and incremental data hydration.' },
               ].map((f, i) => (
                 <FadeIn key={f.title} delay={i * 0.06}>
-                  <Card className="h-full glass-card shadow-soft transition-all duration-200 hover:border-primary/15">
+                  <Card className="h-full  transition-all duration-200 hover:border-border/80">
                     <CardContent className="p-5">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                         <f.icon className="h-5 w-5" />
@@ -614,7 +614,7 @@ export default function DataHub() {
                 { icon: FileText, title: 'API Documentation', desc: 'Each public API entry links to official docs so you can build on top of the same data.' },
               ].map((t, i) => (
                 <FadeIn key={t.title} delay={i * 0.08}>
-                  <div className="flex gap-3 rounded-xl border border-border bg-card p-4 shadow-soft">
+                  <div className="flex gap-3 rounded-xl border border-border bg-card p-4 ">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><t.icon className="h-4 w-4" /></div>
                     <div>
                       <h3 className="text-sm font-semibold">{t.title}</h3>

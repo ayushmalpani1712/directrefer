@@ -126,7 +126,7 @@ export default function AdminModeration() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <Card key={i} className="shadow-soft">
+            <Card key={i} className="">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
                 <div className="flex-1 space-y-2">
@@ -138,7 +138,7 @@ export default function AdminModeration() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <Card className="shadow-soft">
+        <Card className="">
           <CardContent className="flex items-center justify-center p-12">
             <div className="text-center">
               <Flag className="mx-auto h-12 w-12 text-muted-foreground/50" />
@@ -154,7 +154,7 @@ export default function AdminModeration() {
       ) : (
         <div className="space-y-3">
           {filtered.map(report => (
-            <Card key={report.id} className="shadow-soft">
+            <Card key={report.id} className="">
               <CardContent className="flex items-start gap-4 p-4">
                 <GAvatar
                   name={report.reporter_name}

@@ -131,7 +131,7 @@ export default function StudentDashboard() {
           <button
             key={a.label}
             onClick={() => navigate(a.href)}
-            className="group flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 text-left transition-all duration-200 hover:border-primary/15 hover:translate-y-[-1px]"
+            className="group flex items-center gap-3.5 rounded-2xl border border-border bg-card p-4 text-left transition-all duration-200 hover:border-border/80 hover:translate-y-[-1px]"
           >
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <a.icon className="h-5 w-5" />
@@ -211,7 +211,7 @@ export default function StudentDashboard() {
                       const p = professionals.find((x) => x.id === r.professionalId)
                       if (!p) return null
                       return (
-                        <Link to={profileUrl('professional', p.id, p.slug)} key={r.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/15 hover:bg-card">
+                        <Link to={profileUrl('professional', p.id, p.slug)} key={r.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-border/80 hover:bg-card">
                           <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-[10px]" />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">

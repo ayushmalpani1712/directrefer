@@ -42,7 +42,7 @@ export default function AdminAuditLog() {
       </div>
 
       {auditLogs.length === 0 ? (
-        <Card className="shadow-soft">
+        <Card className="">
           <CardContent className="flex items-center justify-center p-8">
             <p className="text-sm text-muted-foreground">{loading ? 'Loading audit logs...' : 'No audit logs yet'}</p>
           </CardContent>
@@ -52,7 +52,7 @@ export default function AdminAuditLog() {
           {/* Mobile: card view */}
           <div className="space-y-3 md:hidden">
             {auditLogs.map((log) => (
-              <Card key={log.id} className="shadow-soft">
+              <Card key={log.id} className="">
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{log.admin_name}</span>
@@ -73,7 +73,7 @@ export default function AdminAuditLog() {
           </div>
 
           {/* Desktop: table view */}
-          <Card className="shadow-soft hidden md:block">
+          <Card className="hidden md:block">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

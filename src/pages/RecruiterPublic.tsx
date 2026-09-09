@@ -160,14 +160,14 @@ export default function RecruiterPublic() {
 
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className=""><CardTitle className="text-base">About {c.company_name}</CardTitle></CardHeader>
             <CardContent className="pt-0">
               <p className="text-sm leading-relaxed text-muted-foreground">{c.company_description || 'No description provided yet.'}</p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className="">
               <CardTitle className="flex items-center gap-2 text-base"><Briefcase className="h-4 w-4 text-primary" /> Open positions ({activeJobs.length})</CardTitle>
             </CardHeader>
@@ -190,7 +190,7 @@ export default function RecruiterPublic() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className=""><CardTitle className="text-base">Benefits & perks</CardTitle></CardHeader>
             <CardContent className="pt-0">
               <div className="flex flex-wrap gap-2">
@@ -205,7 +205,7 @@ export default function RecruiterPublic() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className=""><CardTitle className="text-base">Hiring stats</CardTitle></CardHeader>
             <CardContent className="space-y-3 pt-0">
               <div className="rounded-xl bg-muted/50 p-3 text-center">
@@ -225,7 +225,7 @@ export default function RecruiterPublic() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-soft border-primary/25 bg-gradient-to-br from-primary/[0.05] to-[#8B5CF6]/[0.05]">
+          <Card className="border-primary/25 bg-gradient-to-br from-primary/[0.05] to-[#8B5CF6]/[0.05]">
             <CardContent className="p-5">
               <div className="flex items-center gap-2 text-sm font-semibold"><BadgeCheck className="h-4 w-4 text-sky-500" /> Verified employer</div>
               <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">

@@ -187,7 +187,7 @@ export default function JobSeekerPublic() {
                 </div>
                 {!isOwnProfile && (
                   <div className="flex flex-wrap gap-2 sm:pb-1">
-                    <Button className="rounded-full bg-primary shadow-glow" onClick={() => {
+                    <Button className="rounded-full bg-primary " onClick={() => {
                       const pro = professionals?.find((p) => p.id === user?.id)
                       if (!pro) return
                       addRequest({
@@ -223,7 +223,7 @@ export default function JobSeekerPublic() {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Row 1: Skills + Education */}
           {seeker.skills.length > 0 && (
-            <Card className="lg:col-span-2 shadow-soft">
+            <Card className="lg:col-span-2 ">
               <CardContent className="p-6">
                 <h3 className="mb-3 text-sm font-semibold">Skills</h3>
                 <div className="flex flex-wrap gap-2">{seeker.skills.map((s) => <Chip key={s}>{s}</Chip>)}</div>
@@ -231,7 +231,7 @@ export default function JobSeekerPublic() {
             </Card>
           )}
           {seeker.education.length > 0 && (
-            <Card className="shadow-soft">
+            <Card className="">
               <CardContent className="p-6">
                 <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold"><GraduationCap className="h-4 w-4 text-primary" /> Education</h3>
                 <div className="space-y-3">
@@ -250,7 +250,7 @@ export default function JobSeekerPublic() {
           {(() => {
             const validExp = seeker.experience.filter((e) => (e.title && e.title.trim() && e.title.trim() !== '.') || (e.org && e.org.trim() && e.org.trim() !== '.'))
             return validExp.length > 0 && (
-              <Card className="lg:col-span-2 shadow-soft">
+              <Card className="lg:col-span-2 ">
                 <CardContent className="p-6">
                   <h3 className="mb-3 text-sm font-semibold">Experience</h3>
                   <div className="space-y-4">
@@ -274,7 +274,7 @@ export default function JobSeekerPublic() {
             )
           })()}
           {seeker.certifications.length > 0 && (
-            <Card className="shadow-soft">
+            <Card className="">
               <CardContent className="p-6">
                 <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold"><Star className="h-4 w-4 text-amber-400" /> Certifications</h3>
                 <ul className="space-y-1.5 text-[13px] text-muted-foreground">
@@ -286,7 +286,7 @@ export default function JobSeekerPublic() {
 
           {/* Row 3: Projects + Achievements/Links */}
           {seeker.projects.length > 0 && (
-            <Card className="lg:col-span-2 shadow-soft">
+            <Card className="lg:col-span-2 ">
               <CardContent className="p-6">
                 <h3 className="mb-3 text-sm font-semibold">Projects</h3>
                 <div className="space-y-4">
@@ -306,7 +306,7 @@ export default function JobSeekerPublic() {
           {(seeker.achievements.length > 0 || seeker.links.linkedin || seeker.links.github || seeker.links.website) && (
             <div className="space-y-6">
               {seeker.achievements.length > 0 && (
-                <Card className="shadow-soft">
+                <Card className="">
                   <CardContent className="p-6">
                     <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold"><Trophy className="h-4 w-4 text-primary" /> Achievements</h3>
                     <ul className="space-y-1.5 text-[13px] text-muted-foreground">
@@ -316,7 +316,7 @@ export default function JobSeekerPublic() {
                 </Card>
               )}
               {(seeker.links.linkedin || seeker.links.github || seeker.links.website) && (
-                <Card className="shadow-soft">
+                <Card className="">
                   <CardContent className="p-6">
                     <h3 className="mb-3 text-sm font-semibold">Links</h3>
                     <div className="space-y-2">

@@ -352,7 +352,7 @@ export default function AdminUsers() {
       </div>
 
       {filteredUsers.length === 0 ? (
-        <Card className="shadow-soft">
+        <Card className="">
           <CardContent className="flex items-center justify-center p-8">
             <p className="text-sm text-muted-foreground">{usersLoading ? 'Loading users...' : 'No users found'}</p>
           </CardContent>
@@ -380,7 +380,7 @@ export default function AdminUsers() {
 
           {filteredUsers.map((u) => (
             <motion.div key={u.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} layout>
-              <Card className="shadow-soft">
+              <Card className="">
                 <CardContent className="flex items-center gap-4 p-4">
                   <input
                     type="checkbox"

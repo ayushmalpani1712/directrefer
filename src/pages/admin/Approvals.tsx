@@ -135,7 +135,7 @@ export default function AdminApprovals() {
       </div>
 
       {requests.length === 0 ? (
-        <Card className="shadow-soft">
+        <Card className="">
           <CardContent className="flex items-center justify-center p-12">
             <div className="text-center">
               <BadgeCheck className="mx-auto h-12 w-12 text-muted-foreground/50" />
@@ -147,7 +147,7 @@ export default function AdminApprovals() {
       ) : (
         <div className="space-y-3">
           {requests.map(r => (
-            <Card key={r.id} className={`shadow-soft ${r.status === 'pending' ? 'border-amber-500/20' : ''}`}>
+            <Card key={r.id} className={`${r.status === 'pending' ? 'border-amber-500/20' : ''}`}>
               <CardContent className="flex items-center gap-4 p-4">
                 <GAvatar
                   name={r.full_name}

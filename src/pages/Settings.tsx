@@ -522,7 +522,7 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="notifications" className="mt-5">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader><CardTitle className="text-base">Notification preferences</CardTitle></CardHeader>
             <CardContent className="divide-y divide-border">
               {([
@@ -545,7 +545,7 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="privacy" className="mt-5">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader><CardTitle className="text-base">Privacy</CardTitle></CardHeader>
             <CardContent className="divide-y divide-border">
               <Row title="Public profile" desc="Appear in search results for professionals and recruiters"><Switch checked={privacy.public_profile} onCheckedChange={(v) => handlePrivacyChange('public_profile', v)} /></Row>
@@ -557,7 +557,7 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="security" className="mt-5 space-y-5">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader><CardTitle className="text-base">Password</CardTitle></CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-1.5"><Label>Current password</Label><Input type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} /></div>
@@ -566,7 +566,7 @@ export default function Settings() {
               <div><Button className="mt-1" onClick={handleUpdatePassword} disabled={passwordLoading}><KeyRound className="mr-1.5 h-4 w-4" /> {passwordLoading ? 'Updating...' : 'Update password'}</Button></div>
             </CardContent>
           </Card>
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader><CardTitle className="text-base">Active sessions</CardTitle></CardHeader>
             <CardContent>
               {sessions.map((s) => (
@@ -580,7 +580,7 @@ export default function Settings() {
               ))}
             </CardContent>
           </Card>
-          <Card className="shadow-soft border-rose-500/30">
+          <Card className="border-rose-500/30">
             <CardHeader><CardTitle className="flex items-center gap-2 text-base text-rose-500"><Trash2 className="h-4 w-4" /> Danger zone</CardTitle></CardHeader>
             <CardContent className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
               <p className="min-w-0 text-sm text-muted-foreground">Permanently delete your account and all referral history. This cannot be undone.</p>
@@ -593,7 +593,7 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="appearance" className="mt-5 space-y-5">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Globe className="h-4 w-4 text-primary" /> Language & region</CardTitle></CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
@@ -622,7 +622,7 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="billing" className="mt-5">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted"><CreditCard className="h-6 w-6 text-muted-foreground" /></div>
               <h3 className="mt-4 text-lg font-semibold">Billing & Payments</h3>
@@ -689,7 +689,7 @@ function WorkspaceVerificationCard() {
 
   return (
     <>
-      <Card className="shadow-soft">
+      <Card className="">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Building2 className="h-4 w-4 text-primary" /> Work Identity Verification

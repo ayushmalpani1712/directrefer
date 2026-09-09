@@ -242,7 +242,7 @@ export default function RequestReferral() {
         >
           {/* STEP 1 — choose professional */}
           {step === 1 && (
-            <Card className="shadow-soft">
+            <Card className="">
               <CardContent className="p-6">
                 <h2 className="font-display text-xl font-bold">Who would you like a referral from?</h2>
                 <p className="mt-1 text-sm text-muted-foreground">Pick a verified professional with open capacity.</p>
@@ -279,7 +279,7 @@ export default function RequestReferral() {
 
           {/* STEP 2 — relationship type & policy */}
           {step === 2 && (
-            <Card className="shadow-soft">
+            <Card className="">
               <CardContent className="p-6">
                 <h2 className="font-display text-xl font-bold">How do you know {pro?.name?.split(' ')[0]}?</h2>
                 <p className="mt-1 text-sm text-muted-foreground">This helps the professional understand your connection and decide faster.</p>
@@ -341,7 +341,7 @@ export default function RequestReferral() {
 
           {/* STEP 3 — resume */}
           {step === 3 && (
-            <Card className="shadow-soft">
+            <Card className="">
               <CardContent className="p-6">
                 <h2 className="font-display text-xl font-bold">Attach your resume</h2>
                 <p className="mt-1 text-sm text-muted-foreground">PDF up to 10MB. We'll attach your resume automatically.</p>
@@ -380,7 +380,7 @@ export default function RequestReferral() {
 
           {/* STEP 4 — portfolio */}
           {step === 4 && (
-            <Card className="shadow-soft">
+            <Card className="">
               <CardContent className="p-6">
                 <h2 className="font-display text-xl font-bold">Portfolio & links <span className="text-sm font-normal text-muted-foreground">(optional but recommended)</span></h2>
                 <p className="mt-1 text-sm text-muted-foreground">Pre-filled from your profile. Edit if needed.</p>
@@ -429,7 +429,7 @@ export default function RequestReferral() {
 
           {/* STEP 5 — message */}
           {step === 5 && (
-            <Card className="shadow-soft">
+            <Card className="">
               <CardContent className="p-6">
                 <h2 className="font-display text-xl font-bold">Your referral message</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -459,7 +459,7 @@ export default function RequestReferral() {
 
           {/* STEP 6 — review */}
           {step === 6 && pro && (
-            <Card className="shadow-soft">
+            <Card className="">
               <CardContent className="p-6">
                 <h2 className="font-display text-xl font-bold">Review & send</h2>
                 <p className="mt-1 text-sm text-muted-foreground">Make sure everything looks right — this lands directly in {pro.name.split(' ')[0]}'s inbox.</p>
@@ -597,11 +597,11 @@ export default function RequestReferral() {
         <div className="flex items-center justify-between">
           <div className="text-xs text-muted-foreground">Step {step} of {STEPS.length - 1}</div>
           {step < 6 ? (
-            <Button onClick={next} disabled={!canNext} className="rounded-full bg-primary shadow-glow px-6">
+            <Button onClick={next} disabled={!canNext} className="rounded-full bg-primary  px-6">
               Continue <ArrowRight className="ml-1.5 h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={submit} disabled={sending} className="rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-glow px-6">
+            <Button onClick={submit} disabled={sending} className="rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white  px-6">
               {sending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />}
               {sending ? 'Sending…' : 'Send referral request'}
             </Button>

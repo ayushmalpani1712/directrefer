@@ -278,7 +278,7 @@ export default function RecruiterProfile() {
 
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><Info className="h-4 w-4 text-primary" /> About {c.name}</CardTitle>
               {editingCard !== 'about' && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setEditHighlights(highlights.join(', ')); setEditingCard('about') }}><Pencil className="h-3.5 w-3.5" /></Button>}
@@ -310,7 +310,7 @@ export default function RecruiterProfile() {
                   </div>
                   <div className="flex gap-2 pt-1">
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => setEditingCard(null)}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
-                    <Button size="sm" className="rounded-full bg-primary shadow-glow" disabled={savingAbout} onClick={async () => {
+                    <Button size="sm" className="rounded-full bg-primary " disabled={savingAbout} onClick={async () => {
                       setSavingAbout(true)
                       try {
                         const parsedHighlights = editHighlights.split(',').map((h) => h.trim()).filter(Boolean)
@@ -336,7 +336,7 @@ export default function RecruiterProfile() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><Briefcase className="h-4 w-4 text-primary" /> Open positions ({jobs.filter((j) => j.stage === 'Active').length})</CardTitle>
               <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { toast.success('Opening job creation form — fill in the role details, requirements, and benefits'); navigate('/recruiter/jobs') }}><Plus className="h-3.5 w-3.5" /></Button>
@@ -357,7 +357,7 @@ export default function RecruiterProfile() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><Heart className="h-4 w-4 text-primary" /> Benefits & perks</CardTitle>
               {editingCard !== 'benefits' && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setEditBenefits(benefits.join(', ')); setEditingCard('benefits') }}><Pencil className="h-3.5 w-3.5" /></Button>}
@@ -376,7 +376,7 @@ export default function RecruiterProfile() {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => setEditingCard(null)}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
-                    <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={async () => {
+                    <Button size="sm" className="rounded-full bg-primary " onClick={async () => {
                       const newBenefits = editBenefits.split(',').map((b) => b.trim()).filter(Boolean)
                       const prevBenefits = [...benefits]
                       setBenefits(newBenefits)
@@ -397,7 +397,7 @@ export default function RecruiterProfile() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><MapPin className="h-4 w-4 text-primary" /> Office locations</CardTitle>
               {editingCard !== 'locations' && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setEditLocations(locations.join(', ')); setEditingCard('locations') }}><Pencil className="h-3.5 w-3.5" /></Button>}
@@ -418,7 +418,7 @@ export default function RecruiterProfile() {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => setEditingCard(null)}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
-                    <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={async () => {
+                    <Button size="sm" className="rounded-full bg-primary " onClick={async () => {
                       const newLocations = editLocations.split(',').map((l) => l.trim()).filter(Boolean)
                       const prevLocations = [...locations]
                       setLocations(newLocations)
@@ -439,7 +439,7 @@ export default function RecruiterProfile() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><Trophy className="h-4 w-4 text-primary" /> Selected candidates</CardTitle>
             </CardHeader>
@@ -467,7 +467,7 @@ export default function RecruiterProfile() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><Clock className="h-4 w-4 text-primary" /> Recent activity</CardTitle>
             </CardHeader>

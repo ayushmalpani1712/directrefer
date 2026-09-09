@@ -135,7 +135,7 @@ export default function MyReferrals() {
           <Button variant="outline" className="rounded-full" onClick={() => { exportReferralsCSV(mine); toast.success('Referrals exported as CSV') }}>
             <Download className="mr-1.5 h-4 w-4" /> Export CSV
           </Button>
-          <Button className="rounded-full bg-primary shadow-glow" asChild>
+          <Button className="rounded-full bg-primary " asChild>
             <Link to="/job-seeker/professionals"><Send className="mr-1.5 h-4 w-4" /> New request</Link>
           </Button>
         </div>
@@ -180,7 +180,7 @@ export default function MyReferrals() {
             if (!p) return null
             return (
               <motion.div key={r.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <Card className="shadow-soft transition-colors hover:border-primary/20">
+                <Card className="transition-colors hover:border-primary/20">
                   <CardContent className="p-5">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                       <Link to={profileUrl('professional', p.id, p.slug)} className="flex min-w-0 flex-1 items-center gap-3.5 group">

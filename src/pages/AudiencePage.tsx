@@ -179,7 +179,7 @@ export default function AudiencePage({ audience }: AudiencePageProps) {
           <h2 className="text-center text-2xl font-bold sm:text-3xl">Why referrals work for {audience.replace('-', ' ')}</h2>
           <div className="mt-10 grid gap-8 sm:grid-cols-3 items-stretch">
             {config.benefits.map((b) => (
-              <div key={b.title} className="rounded-xl border border-border/50 bg-card p-6 shadow-soft">
+              <div key={b.title} className="rounded-xl border border-border/50 bg-card p-6 ">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                   <b.icon className="h-5 w-5 text-primary" />
                 </div>
@@ -217,7 +217,7 @@ export default function AudiencePage({ audience }: AudiencePageProps) {
           <h2 className="text-center text-2xl font-bold sm:text-3xl">Frequently asked questions</h2>
           <div className="mt-8 space-y-4">
             {config.faqs.map((faq) => (
-              <details key={faq.q} className="group rounded-xl border border-border/50 bg-card p-5 shadow-soft [&_summary]:cursor-pointer">
+              <details key={faq.q} className="group rounded-xl border border-border/50 bg-card p-5 [&_summary]:cursor-pointer">
                 <summary className="font-medium">{faq.q}</summary>
                 <p className="mt-3 text-sm text-muted-foreground">{faq.a}</p>
               </details>

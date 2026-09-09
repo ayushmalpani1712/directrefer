@@ -47,7 +47,7 @@ export default function AdminAnalytics() {
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
-            <Card key={i} className="shadow-soft">
+            <Card key={i} className="">
               <CardContent className="p-6">
                 <div className="h-4 w-24 animate-pulse rounded bg-muted" />
                 <div className="mt-2 h-8 w-16 animate-pulse rounded bg-muted" />
@@ -66,7 +66,7 @@ export default function AdminAnalytics() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <motion.div {...fadeUp} transition={{ delay: 0 }}>
           <Link to="/admin/users">
-            <Card className="shadow-soft cursor-pointer transition-colors hover:bg-muted/50">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
                   <Users className="h-5 w-5 text-blue-500" />
@@ -81,7 +81,7 @@ export default function AdminAnalytics() {
         </motion.div>
         <motion.div {...fadeUp} transition={{ delay: 0.05 }}>
           <Link to="/admin/referrals">
-            <Card className="shadow-soft cursor-pointer transition-colors hover:bg-muted/50">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10">
                   <Target className="h-5 w-5 text-emerald-500" />
@@ -96,7 +96,7 @@ export default function AdminAnalytics() {
         </motion.div>
         <motion.div {...fadeUp} transition={{ delay: 0.1 }}>
           <Link to="/admin/messages">
-            <Card className="shadow-soft cursor-pointer transition-colors hover:bg-muted/50">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/10">
                   <MessageSquare className="h-5 w-5 text-purple-500" />
@@ -110,7 +110,7 @@ export default function AdminAnalytics() {
           </Link>
         </motion.div>
         <motion.div {...fadeUp} transition={{ delay: 0.15 }}>
-          <Card className="shadow-soft cursor-default">
+          <Card className="cursor-default">
             <CardContent className="flex items-center gap-4 p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
                 <Briefcase className="h-5 w-5 text-amber-500" />
@@ -124,7 +124,7 @@ export default function AdminAnalytics() {
         </motion.div>
         <motion.div {...fadeUp} transition={{ delay: 0.2 }}>
           <Link to="/admin/users">
-            <Card className="shadow-soft cursor-pointer transition-colors hover:bg-muted/50">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/10">
                   <Clock className="h-5 w-5 text-cyan-500" />
@@ -139,7 +139,7 @@ export default function AdminAnalytics() {
         </motion.div>
         <motion.div {...fadeUp} transition={{ delay: 0.25 }}>
           <Link to="/admin/referrals">
-            <Card className="shadow-soft cursor-pointer transition-colors hover:bg-muted/50">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-500/10">
                   <TrendingUp className="h-5 w-5 text-rose-500" />
@@ -156,7 +156,7 @@ export default function AdminAnalytics() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <motion.div {...fadeUp} transition={{ delay: 0.3 }}>
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader><CardTitle className="text-base">Users by Role</CardTitle></CardHeader>
             <CardContent className="space-y-3 pt-2">
               {analytics.usersByRole.length === 0 ? (
@@ -184,7 +184,7 @@ export default function AdminAnalytics() {
         </motion.div>
 
         <motion.div {...fadeUp} transition={{ delay: 0.35 }}>
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader>
               <CardTitle className="text-base">Referral Status Breakdown</CardTitle>
             </CardHeader>
@@ -210,7 +210,7 @@ export default function AdminAnalytics() {
 
       {analytics.conversionRate > 0 && (
         <motion.div {...fadeUp} transition={{ delay: 0.4 }}>
-          <Card className="shadow-soft border-primary/20 bg-gradient-to-br from-primary/[0.03] to-[#8B5CF6]/[0.03]">
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/[0.03] to-[#8B5CF6]/[0.03]">
             <CardContent className="flex items-center gap-4 p-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
                 <TrendingUp className="h-6 w-6 text-primary" />

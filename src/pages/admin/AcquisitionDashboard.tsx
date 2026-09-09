@@ -181,7 +181,7 @@ export default function AcquisitionDashboard() {
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(8)].map((_, i) => (
-            <Card key={i} className="shadow-soft"><CardContent className="p-6"><div className="h-4 w-24 animate-pulse rounded bg-muted" /><div className="mt-2 h-8 w-16 animate-pulse rounded bg-muted" /></CardContent></Card>
+            <Card key={i} className=""><CardContent className="p-6"><div className="h-4 w-24 animate-pulse rounded bg-muted" /><div className="mt-2 h-8 w-16 animate-pulse rounded bg-muted" /></CardContent></Card>
           ))}
         </div>
       </div>
@@ -198,7 +198,7 @@ export default function AcquisitionDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <motion.div {...fadeUp} transition={{ delay: 0 }}>
           <Link to="/admin/users">
-            <Card className="shadow-soft cursor-pointer transition-colors hover:bg-muted/50">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
                   <Users className="h-5 w-5 text-blue-500" />
@@ -213,7 +213,7 @@ export default function AcquisitionDashboard() {
         </motion.div>
         <motion.div {...fadeUp} transition={{ delay: 0.05 }}>
           <Link to="/admin/users">
-            <Card className="shadow-soft cursor-pointer transition-colors hover:bg-muted/50">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10">
                   <Target className="h-5 w-5 text-emerald-500" />
@@ -228,7 +228,7 @@ export default function AcquisitionDashboard() {
         </motion.div>
         <motion.div {...fadeUp} transition={{ delay: 0.1 }}>
           <Link to="/admin/users">
-            <Card className="shadow-soft cursor-pointer transition-colors hover:bg-muted/50">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/10">
                   <Users className="h-5 w-5 text-violet-500" />
@@ -243,7 +243,7 @@ export default function AcquisitionDashboard() {
         </motion.div>
         <motion.div {...fadeUp} transition={{ delay: 0.15 }}>
           <Link to="/admin/referrals">
-            <Card className="shadow-soft cursor-pointer transition-colors hover:bg-muted/50">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
                   <TrendingUp className="h-5 w-5 text-amber-500" />
@@ -258,7 +258,7 @@ export default function AcquisitionDashboard() {
         </motion.div>
         <motion.div {...fadeUp} transition={{ delay: 0.2 }}>
           <Link to="/admin/referrals">
-            <Card className="shadow-soft cursor-pointer transition-colors hover:bg-muted/50">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardContent className="flex items-center gap-4 p-4">
                 <div>
                   <div className="text-2xl font-bold text-emerald-600">{metrics.acceptedRequests}</div>
@@ -270,7 +270,7 @@ export default function AcquisitionDashboard() {
         </motion.div>
         <motion.div {...fadeUp} transition={{ delay: 0.25 }}>
           <Link to="/admin/referrals">
-            <Card className="shadow-soft cursor-pointer transition-colors hover:bg-muted/50">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardContent className="flex items-center gap-4 p-4">
                 <div>
                   <div className="text-2xl font-bold text-primary">{metrics.completedReferrals}</div>
@@ -281,7 +281,7 @@ export default function AcquisitionDashboard() {
           </Link>
         </motion.div>
         <motion.div {...fadeUp} transition={{ delay: 0.3 }}>
-          <Card className="shadow-soft cursor-default">
+          <Card className="cursor-default">
             <CardContent className="flex items-center gap-4 p-4">
               <div>
                 <div className="text-2xl font-bold">{metrics.referrerRepeatRate}%</div>
@@ -291,7 +291,7 @@ export default function AcquisitionDashboard() {
           </Card>
         </motion.div>
         <motion.div {...fadeUp} transition={{ delay: 0.35 }}>
-          <Card className="shadow-soft cursor-default">
+          <Card className="cursor-default">
             <CardContent className="flex items-center gap-4 p-4">
               <div>
                 <div className="text-2xl font-bold">{metrics.organicTrafficPages}</div>
@@ -303,7 +303,7 @@ export default function AcquisitionDashboard() {
       </div>
 
       {/* Weekly Signups Chart */}
-      <Card className="shadow-soft">
+      <Card className="">
         <CardHeader>
           <CardTitle className="text-base">Weekly Signups</CardTitle>
         </CardHeader>
@@ -336,7 +336,7 @@ export default function AcquisitionDashboard() {
 
       {/* Source Breakdown */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card className="shadow-soft">
+        <Card className="">
           <CardHeader>
             <CardTitle className="text-base">Acquisition Sources</CardTitle>
           </CardHeader>
@@ -368,7 +368,7 @@ export default function AcquisitionDashboard() {
         </Card>
 
         {/* Funnel */}
-        <Card className="shadow-soft">
+        <Card className="">
           <CardHeader>
             <CardTitle className="text-base">Conversion Funnel</CardTitle>
           </CardHeader>
@@ -401,7 +401,7 @@ export default function AcquisitionDashboard() {
 
       {/* Company Demand/Supply Balance */}
       {metrics.companyDemand.length > 0 && (
-        <Card className="shadow-soft">
+        <Card className="">
           <CardHeader>
             <CardTitle className="text-base">Company Demand vs Supply</CardTitle>
           </CardHeader>
@@ -434,7 +434,7 @@ export default function AcquisitionDashboard() {
       )}
 
       {/* Diagnostic Rules */}
-      <Card className="shadow-soft">
+      <Card className="">
         <CardHeader>
           <CardTitle className="text-base">Diagnostic Rules</CardTitle>
         </CardHeader>

@@ -40,7 +40,7 @@ export default function Help() {
 
       {/* Email support — premium card */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="overflow-hidden border-0 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white shadow-glow">
+        <Card className="overflow-hidden border-0 bg-primary text-white ">
           <CardContent className="flex flex-col items-start justify-between gap-6 p-8 sm:flex-row sm:items-center">
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
@@ -69,7 +69,7 @@ export default function Help() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={searchQ} onChange={(e) => setSearchQ(e.target.value)} placeholder="Search FAQs…" className="h-10 pl-9" />
         </div>
-        <Card className="shadow-soft">
+        <Card className="">
           <CardContent className="px-5 py-2">
             <Accordion type="single" collapsible>
               {filteredFaqs.map((f, i) => (
@@ -84,7 +84,7 @@ export default function Help() {
       </div>
 
       {/* Contact form */}
-      <Card className="shadow-soft">
+      <Card className="">
         <CardContent className="p-6">
           <h3 className="flex items-center gap-2 text-base font-semibold"><LifeBuoy className="h-4.5 w-4.5 text-primary" /> Contact support</h3>
           {sent ? (
@@ -110,7 +110,7 @@ export default function Help() {
                 <div className="space-y-1.5"><Label>Category</Label><Input required placeholder="e.g. Referrals" value={category} onChange={(e) => setCategory(e.target.value)} /></div>
               </div>
               <div className="space-y-1.5"><Label>Describe the issue</Label><Textarea required rows={4} placeholder="Tell us what happened and what you expected…" className="resize-none" value={message} onChange={(e) => setMessage(e.target.value)} /></div>
-              <Button className="w-fit rounded-full bg-primary shadow-glow"><Send className="mr-1.5 h-4 w-4" /> Submit ticket</Button>
+              <Button className="w-fit rounded-full bg-primary "><Send className="mr-1.5 h-4 w-4" /> Submit ticket</Button>
             </form>
           )}
         </CardContent>

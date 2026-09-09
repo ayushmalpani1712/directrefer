@@ -180,7 +180,7 @@ export default function GuidesPage() {
             <h2 className="mb-4 font-display text-2xl font-bold tracking-tight">{cat}</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
               {GUIDES.filter(g => g.category === cat).map(guide => (
-                <Link key={guide.slug} to={`/guides/${guide.slug}`} className="group flex flex-col rounded-xl border border-border/50 bg-card p-5 shadow-soft hover:shadow-md transition-shadow h-full">
+                <Link key={guide.slug} to={`/guides/${guide.slug}`} className="group flex flex-col rounded-xl border border-border/50 bg-card p-5 hover:shadow-md transition-shadow h-full">
                   <h3 className="font-semibold group-hover:text-primary transition-colors">{guide.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{guide.description}</p>
                   <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">

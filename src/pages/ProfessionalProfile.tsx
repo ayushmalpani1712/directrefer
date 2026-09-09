@@ -302,7 +302,7 @@ export default function ProfessionalProfile() {
       <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         <div className="flex flex-col gap-6 lg:col-span-2">
           {/* About */}
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><Info className="h-4 w-4 text-primary" /> About</CardTitle>
               {!editingAbout && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => { setBio(ME.bio); setEditingAbout(true) }}><Pencil className="h-3.5 w-3.5" /></Button>}
@@ -313,7 +313,7 @@ export default function ProfessionalProfile() {
                   <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4} className="resize-none text-sm leading-relaxed" />
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => { setBio(ME.bio); setEditingAbout(false) }}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
-                    <Button size="sm" className="rounded-full bg-primary shadow-glow" onClick={() => { updateProfessional(ME.id, { bio }); setEditingAbout(false); toast.success('About section saved') }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
+                    <Button size="sm" className="rounded-full bg-primary " onClick={() => { updateProfessional(ME.id, { bio }); setEditingAbout(false); toast.success('About section saved') }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
                   </div>
                 </div>
               ) : (
@@ -334,7 +334,7 @@ export default function ProfessionalProfile() {
           </Card>
 
           {/* Visibility */}
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base">{showOnFind ? <Eye className="h-4 w-4 text-primary" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />} Profile visibility</CardTitle>
             </CardHeader>
@@ -358,7 +358,7 @@ export default function ProfessionalProfile() {
           </Card>
 
           {/* Referral settings */}
-          <Card className="shadow-soft border-primary/25">
+          <Card className="border-primary/25">
             <CardHeader className=""><CardTitle className="flex items-center gap-2 text-base"><ShieldCheck className="h-4 w-4 text-primary" /> Referral settings</CardTitle></CardHeader>
             <CardContent className="space-y-5 pt-0">
               <div className="flex items-center justify-between rounded-xl border border-border p-4">
@@ -453,7 +453,7 @@ export default function ProfessionalProfile() {
 
         {/* Right column */}
         <div className="flex flex-col gap-6">
-          <Card className="shadow-soft">
+          <Card className="">
             <CardHeader className="flex flex-row items-center justify-between"><CardTitle className="flex items-center gap-2 text-base"><Building2 className="h-4 w-4 text-primary" /> Company</CardTitle></CardHeader>
             <CardContent className="pt-0">
               <div className="flex items-center gap-3">
@@ -471,7 +471,7 @@ export default function ProfessionalProfile() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-soft flex-1">
+          <Card className="flex-1">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base"><Wrench className="h-4 w-4 text-primary" /> Skills & technologies</CardTitle>
               <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => setShowSkillInput(true)}><Plus className="h-3.5 w-3.5" /></Button>
