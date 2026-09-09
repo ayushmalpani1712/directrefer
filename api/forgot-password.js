@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
-import { handleCors } from './_lib.js';
-import { checkRateLimit, getClientIp } from './lib/rateLimit.js';
+import { handleCors, checkRateLimit, getClientIp } from './_lib.js';
 
 export default async function handler(req, res) {
   if (handleCors(req, res)) return;
