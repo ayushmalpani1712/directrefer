@@ -385,6 +385,7 @@ export default function Settings() {
   const [notifPrefs, setNotifPrefs] = useState({
     referral_updates: true, new_messages: true, profile_views: true,
     completion_reminders: true, product_announcements: false, weekly_digest: false, email_opt_out: false,
+    notification_sound: true,
   })
   const [privacy, setPrivacy] = useState({
     public_profile: true, show_salary: false, activity_status: true, search_indexing: false,
@@ -539,6 +540,9 @@ export default function Settings() {
               ))}
               <Row title="Email notifications off" desc="Disable all email notifications (in-app notifications still work)">
                 <Switch checked={notifPrefs.email_opt_out} onCheckedChange={(v) => handleNotifPrefChange('email_opt_out', v)} />
+              </Row>
+              <Row title="Notification sound" desc="Play a subtle sound when new in-app notifications arrive">
+                <Switch checked={notifPrefs.notification_sound} onCheckedChange={(v) => handleNotifPrefChange('notification_sound', v)} />
               </Row>
             </CardContent>
           </Card>

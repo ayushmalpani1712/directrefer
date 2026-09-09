@@ -84,6 +84,7 @@ function navFor(role: Role, pendingCount: number, prefix: string): { group: stri
         { label: 'Dashboard', href: '/job-seeker/dashboard', icon: LayoutDashboard },
         { label: 'Find Professionals', href: '/job-seeker/professionals', icon: Users },
         { label: 'Browse Jobs', href: '/job-seeker/browse-jobs', icon: Briefcase },
+        { label: 'Job Alerts', href: '/job-seeker/job-alerts', icon: Bell },
         { label: 'My Referrals', href: '/job-seeker/applications', icon: FileText, badge: pendingCount > 0 ? String(pendingCount) : undefined },
         { label: 'My Profile', href: '/job-seeker/profile', icon: User },
       ],

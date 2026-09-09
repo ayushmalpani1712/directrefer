@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  Briefcase, ChevronRight, Clock, MapPin, Pause, Play, Plus, Search, Star, Trash2, Pencil, Users, X, Bookmark, BookmarkCheck, Share2, AlertTriangle,
+  Briefcase, ChevronRight, Clock, MapPin, Pause, Play, Plus, Search, Star, Trash2, Pencil, Users, X, Bookmark, BookmarkCheck, Share2, AlertTriangle, FileText,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +20,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { ListSkeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { profileUrl } from '@/data/mock'
+import { jobTemplates, type JobTemplate } from '@/data/jobTemplates'
 
 const STAGE_COLORS: Record<string, string> = {
   Applied: 'border-t-slate-400',
@@ -298,6 +299,20 @@ function RecruiterJobsManager() {
   const [addCandidateQuery, setAddCandidateQuery] = useState('')
   const [extraCandidates, setExtraCandidates] = useState<typeof candidates>([])
   const [mobileStage, setMobileStage] = useState<string>(STAGES[0])
+  const [showTemplateMenu, setShowTemplateMenu] = useState(false)
+  const templateMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (templateMenuRef.current && !templateMenuRef.current.contains(e.target as Node)) {
+        setShowTemplateMenu(false)
+      }
+    }
+    if (showTemplateMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showTemplateMenu])
 
   const allCandidates = [...candidates, ...extraCandidates]
 
@@ -373,15 +388,16 @@ function RecruiterJobsManager() {
     toast.success(`Job ${newStage === 'Paused' ? 'paused' : 'resumed'}`)
   }
 
-  const handlePostJob = async () => {
+  const handlePostJob = async (template?: JobTemplate) => {
     try {
       const { data, error } = await supabase.from('jobs').insert({
         recruiter_id: user?.id,
-        title: 'New Job Posting',
-        department: 'Engineering',
+        title: template?.title ?? 'New Job Posting',
+        department: template?.department ?? 'Engineering',
         location: 'Remote',
         type: 'Full-time',
         stage: 'draft',
+        description: template?.description ?? '',
       }).select('*').single()
       if (error) throw error
       if (data) {
@@ -400,7 +416,7 @@ function RecruiterJobsManager() {
           recruiterId: data.recruiter_id,
         }
         setJobs((prev) => [newJob, ...prev])
-        toast.success('Job draft created! Edit it to add details.')
+        toast.success(template ? `Job draft created from "${template.title}" template` : 'Job draft created! Edit it to add details.')
       }
     } catch (err) {
       console.error('Failed to create job:', err)
@@ -414,7 +430,31 @@ function RecruiterJobsManager() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <SectionHeader title="Jobs & pipeline" subtitle="Manage postings and move candidates through the funnel" />
-        <Button className="rounded-full bg-primary " onClick={handlePostJob}><Plus className="mr-1.5 h-4 w-4" /> Post a job</Button>
+        <div className="flex gap-2 relative" ref={templateMenuRef}>
+          <div className="relative">
+            <Button variant="outline" className="rounded-full" onClick={() => setShowTemplateMenu(!showTemplateMenu)}>
+              <FileText className="mr-1.5 h-4 w-4" /> Use Template
+            </Button>
+            {showTemplateMenu && (
+              <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-xl border border-border bg-background p-1.5 shadow-lg">
+                {jobTemplates.map((t) => (
+                  <button
+                    key={t.title}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+                    onClick={() => { handlePostJob(t); setShowTemplateMenu(false) }}
+                  >
+                    <Briefcase className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <div>
+                      <div className="font-medium">{t.title}</div>
+                      <div className="text-[10px] text-muted-foreground">{t.department}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <Button className="rounded-full bg-primary " onClick={() => handlePostJob()}><Plus className="mr-1.5 h-4 w-4" /> Post a job</Button>
+        </div>
       </div>
 
       <Tabs defaultValue="jobs">

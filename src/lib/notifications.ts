@@ -28,14 +28,64 @@ export function showNotification(title: string, options?: NotificationOptions) {
   }
 }
 
+let audioContext: AudioContext | null = null
+
+function getAudioContext(): AudioContext | null {
+  if (!('AudioContext' in window || 'webkitAudioContext' in window)) return null
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+  }
+  return audioContext
+}
+
+export function playNotificationSound() {
+  const enabled = localStorage.getItem('dr_notif_prefs')
+  if (enabled) {
+    try {
+      const prefs = JSON.parse(enabled)
+      if (prefs.notification_sound === false) return
+    } catch { /* play by default */ }
+  }
+
+  const ctx = getAudioContext()
+  if (!ctx) return
+
+  const now = ctx.currentTime
+
+  const osc1 = ctx.createOscillator()
+  const gain1 = ctx.createGain()
+  osc1.type = 'sine'
+  osc1.frequency.setValueAtTime(880, now)
+  gain1.gain.setValueAtTime(0.15, now)
+  gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.15)
+  osc1.connect(gain1)
+  gain1.connect(ctx.destination)
+  osc1.start(now)
+  osc1.stop(now + 0.15)
+
+  const osc2 = ctx.createOscillator()
+  const gain2 = ctx.createGain()
+  osc2.type = 'sine'
+  osc2.frequency.setValueAtTime(1108, now + 0.1)
+  gain2.gain.setValueAtTime(0, now)
+  gain2.gain.setValueAtTime(0.12, now + 0.1)
+  gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.3)
+  osc2.connect(gain2)
+  gain2.connect(ctx.destination)
+  osc2.start(now + 0.1)
+  osc2.stop(now + 0.3)
+}
+
 export function notifyNewMessage(senderName: string, text: string) {
+  playNotificationSound()
   showNotification(`New message from ${senderName}`, {
-    body: text.length > 100 ? text.slice(0, 100) + '…' : text,
+    body: text.length > 100 ? text.slice(0, 100) + '\u2026' : text,
     tag: 'new-message',
   })
 }
 
 export function notifyReferralUpdate(studentName: string, status: string, jobTitle: string) {
+  playNotificationSound()
   showNotification(`Referral ${status}`, {
     body: `${studentName}'s referral for ${jobTitle} has been ${status}.`,
     tag: 'referral-update',
@@ -59,6 +109,7 @@ export async function notifyScreeningUpdate(
     })
   }
 
+  playNotificationSound()
   showNotification(`Screening ${result === 'pass' ? 'Passed' : 'Failed'}`, {
     body: `${candidateName}'s screening for ${jobTitle} has been ${result}.`,
     tag: 'screening-update',
@@ -82,10 +133,9 @@ export async function notifyNewMatch(
     })
   }
 
+  playNotificationSound()
   showNotification('New Match Found', {
     body: `${candidateName} matched with ${jobTitle} (score: ${score}).`,
     tag: 'new-match',
   })
 }
-
-

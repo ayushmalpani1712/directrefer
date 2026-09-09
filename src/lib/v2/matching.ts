@@ -472,3 +472,124 @@ export async function getJobMatches(jobId: string): Promise<MatchResult[]> {
   if (error) throw error
   return (data ?? []) as MatchResult[]
 }
+
+// ── Job Recommendation Engine ───────────────────────────────────────────────
+
+export interface JobRecommendation {
+  job_id: string
+  title: string
+  company: string
+  location: string
+  score: number
+  matching_skills: string[]
+  skill_overlap_pct: number
+  experience_fit: number
+}
+
+/**
+ * Recommend jobs for a candidate based on skill overlap and experience fit.
+ */
+export async function recommendJobsForCandidate(
+  candidateId: string,
+  limit = 10
+): Promise<JobRecommendation[]> {
+  const { data: profileSkills } = await supabase
+    .from('profile_skills')
+    .select('skill_id')
+    .eq('profile_id', candidateId)
+
+  const candidateSkills = (profileSkills ?? []).map((s) => s.skill_id)
+  if (candidateSkills.length === 0) return []
+
+  const { data: seekerProfile } = await supabase
+    .from('profiles_job_seeker')
+    .select('experience_years')
+    .eq('user_id', candidateId)
+    .single()
+
+  const candidateExp = seekerProfile?.experience_years ?? 0
+
+  const { data: jobs } = await supabase
+    .from('jobs')
+    .select('id, title, company_name, location, min_experience_years, max_experience_years')
+    .eq('status', 'open')
+    .is('deleted_at', null)
+
+  if (!jobs) return []
+
+  const recommendations: JobRecommendation[] = []
+
+  for (const job of jobs) {
+    const { data: jobSkills } = await supabase
+      .from('job_skills')
+      .select('skill_id, skills(name)')
+      .eq('job_id', job.id)
+
+    const jobRequiredSkills = (jobSkills ?? []).map((s) => s.skill_id)
+    const jobSkillNames = (jobSkills ?? [])
+      .map((s) => (s.skills as unknown as { name: string } | null)?.name)
+      .filter(Boolean) as string[]
+
+    if (jobRequiredSkills.length === 0) continue
+
+    const matchingSkills = jobRequiredSkills.filter((s) => candidateSkills.includes(s))
+    const skillOverlapPct = Math.round((matchingSkills.length / jobRequiredSkills.length) * 100)
+
+    let experienceFit = 1.0
+    const minExp = job.min_experience_years ?? 0
+    const maxExp = job.max_experience_years ?? Infinity
+    if (candidateExp < minExp) {
+      experienceFit = Math.max(0.3, candidateExp / minExp)
+    } else if (candidateExp > maxExp && maxExp !== Infinity) {
+      experienceFit = Math.max(0.5, maxExp / candidateExp)
+    }
+
+    const score = Math.round(skillOverlapPct * 0.7 + experienceFit * 30)
+
+    if (skillOverlapPct > 0) {
+      recommendations.push({
+        job_id: job.id,
+        title: job.title,
+        company: job.company_name ?? '',
+        location: job.location ?? '',
+        score,
+        matching_skills: jobSkillNames.filter((_, i) => matchingSkills.includes(jobRequiredSkills[i])),
+        skill_overlap_pct: skillOverlapPct,
+        experience_fit: experienceFit,
+      })
+    }
+  }
+
+  recommendations.sort((a, b) => b.score - a.score)
+  return recommendations.slice(0, limit)
+}
+
+// ── Skill Gap Analysis ──────────────────────────────────────────────────────
+
+export interface SkillGapResult {
+  matching: string[]
+  missing: string[]
+  extra: string[]
+  gap_score: number
+}
+
+/**
+ * Analyze skill gap between candidate skills and job required skills.
+ */
+export function getSkillGap(
+  candidateSkills: string[],
+  jobRequiredSkills: string[]
+): SkillGapResult {
+  const candidateSet = new Set(candidateSkills.map((s) => s.toLowerCase()))
+  const requiredSet = new Set(jobRequiredSkills.map((s) => s.toLowerCase()))
+
+  const matching = jobRequiredSkills.filter((s) => candidateSet.has(s.toLowerCase()))
+  const missing = jobRequiredSkills.filter((s) => !candidateSet.has(s.toLowerCase()))
+  const extra = candidateSkills.filter((s) => !requiredSet.has(s.toLowerCase()))
+
+  const gapScore = jobRequiredSkills.length > 0
+    ? Math.round((matching.length / jobRequiredSkills.length) * 100)
+    : 100
+
+  return { matching, missing, extra, gap_score: gapScore }
+}

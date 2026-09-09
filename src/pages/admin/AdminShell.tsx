@@ -2,6 +2,7 @@ import { Outlet, Link, useLocation } from 'react-router'
 import { LayoutDashboard, Users, ShieldCheck, BarChart3, Settings, History, Flag, BadgeCheck, TrendingUp, Send } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
+import AdminNotifications from '@/components/AdminNotifications'
 
 const NAV_ITEMS = [
   { to: '/admin/overview', label: 'Dashboard', icon: LayoutDashboard },
@@ -53,6 +54,7 @@ export default function AdminShell() {
           )
         })}
       </div>
+      <AdminNotifications />
       <Outlet />
     </div>
   )

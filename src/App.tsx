@@ -71,6 +71,7 @@ const ReferralJobs = lazyWithRetry(() => import('@/pages/ReferralJobs'))
 const Applications = lazyWithRetry(() => import('@/pages/Applications'))
 const JobAnalytics = lazyWithRetry(() => import('@/pages/JobAnalytics'))
 const CompanyReferral = lazyWithRetry(() => import('@/pages/CompanyReferral'))
+const JobAlerts = lazyWithRetry(() => import('@/pages/JobAlerts'))
 const AudiencePage = lazyWithRetry(() => import('@/pages/AudiencePage').then(m => ({ default: m.default })))
 const GuidesPage = lazyWithRetry(() => import('@/pages/GuidesPage'))
 const DataHub = lazyWithRetry(() => import('@/pages/DataHub'))
@@ -288,6 +289,7 @@ export default function App() {
                   <Route path="/job-seeker/request-referral" element={<RequireRole allowed={['student', 'admin']}><RequestReferral /></RequireRole>} />
                   <Route path="/job-seeker/request-referral/:id" element={<RequireRole allowed={['student', 'admin']}><RequestReferral /></RequireRole>} />
                   <Route path="/job-seeker/screening/:jobId" element={<RequireRole allowed={['student', 'admin']}><ScreeningSubmit /></RequireRole>} />
+                  <Route path="/job-seeker/job-alerts" element={<RequireRole allowed={['student', 'admin']}><JobAlerts /></RequireRole>} />
 
                   {/* ── Professional routes ── */}
                   <Route path="/professional" element={<Navigate to="/professional/dashboard" replace />} />

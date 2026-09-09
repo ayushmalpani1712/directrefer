@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Building2, Check, Github, GraduationCap, Info, Linkedin, MapPin, Pencil, Plus,
+  Building2, Check, Clock, Github, GraduationCap, History, Info, Linkedin, MapPin, Pencil, Plus,
   ShieldCheck, Wrench, X, Palette, Eye, EyeOff,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -92,6 +92,61 @@ export default function ProfessionalProfile() {
   const [selectedAvatarColor] = useState<string>(ME.gradient)
   const [bannerModalOpen, setBannerModalOpen] = useState(false)
   const [showOnFind, setShowOnFind] = useState(true)
+  const [profileHistory, setProfileHistory] = useState<{ snapshot: Record<string, unknown>; created_at: string }[]>([])
+
+  const saveProfileSnapshot = useCallback(async (snapshot: Record<string, unknown>) => {
+    if (!user?.id) return
+    try {
+      const { error } = await supabase.from('profile_history').insert({
+        user_id: user.id,
+        snapshot,
+      })
+      if (error) {
+        const historyKey = `dr_profile_history_${user.id}`
+        const raw = localStorage.getItem(historyKey)
+        const existing: { snapshot: Record<string, unknown>; created_at: string }[] = raw ? JSON.parse(raw) : []
+        const entry = { snapshot, created_at: new Date().toISOString() }
+        const next = [entry, ...existing].slice(0, 20)
+        localStorage.setItem(historyKey, JSON.stringify(next))
+      }
+    } catch {
+      const historyKey = `dr_profile_history_${user.id}`
+      const raw = localStorage.getItem(historyKey)
+      const existing: { snapshot: Record<string, unknown>; created_at: string }[] = raw ? JSON.parse(raw) : []
+      const entry = { snapshot, created_at: new Date().toISOString() }
+      const next = [entry, ...existing].slice(0, 20)
+      localStorage.setItem(historyKey, JSON.stringify(next))
+    }
+  }, [user?.id])
+
+  const loadProfileHistory = useCallback(async () => {
+    if (!user?.id) return
+    try {
+      const { data, error } = await supabase
+        .from('profile_history')
+        .select('snapshot, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5)
+      if (!error && data && data.length > 0) {
+        setProfileHistory(data as { snapshot: Record<string, unknown>; created_at: string }[])
+      } else {
+        const historyKey = `dr_profile_history_${user.id}`
+        const raw = localStorage.getItem(historyKey)
+        if (raw) {
+          const existing: { snapshot: Record<string, unknown>; created_at: string }[] = JSON.parse(raw)
+          setProfileHistory(existing.slice(0, 5))
+        }
+      }
+    } catch {
+      const historyKey = `dr_profile_history_${user.id}`
+      const raw = localStorage.getItem(historyKey)
+      if (raw) {
+        const existing: { snapshot: Record<string, unknown>; created_at: string }[] = JSON.parse(raw)
+        setProfileHistory(existing.slice(0, 5))
+      }
+    }
+  }, [user?.id])
 
   // Load banner theme and visibility from DB on mount
   useEffect(() => {
@@ -100,7 +155,8 @@ export default function ProfessionalProfile() {
       .then(({ data }) => setBannerTheme(data?.banner_theme ?? null))
     supabase.from('profiles_professional').select('show_on_find').eq('user_id', user.id).single()
       .then(({ data }) => setShowOnFind(data?.show_on_find ?? true))
-  }, [user?.id])
+    loadProfileHistory()
+  }, [user?.id, loadProfileHistory])
 
   // Sync local state when ME changes (DB data loads)
   useEffect(() => {
@@ -228,6 +284,16 @@ export default function ProfessionalProfile() {
                         linkedinUrl,
                         githubUrl,
                       })
+                      saveProfileSnapshot({
+                        name: editName,
+                        designation: editDesignation,
+                        company: editCompany,
+                        location: editLocation,
+                        industry: editIndustry,
+                        college: editCollege.trim() || undefined,
+                        linkedinUrl,
+                        githubUrl,
+                      })
                       setEditingHeader(false)
                       toast.success('Profile saved')
                     }}><Check className="mr-1.5 h-4 w-4" /> Save</Button>
@@ -313,7 +379,7 @@ export default function ProfessionalProfile() {
                   <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4} className="resize-none text-sm leading-relaxed" />
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="rounded-full" onClick={() => { setBio(ME.bio); setEditingAbout(false) }}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
-                    <Button size="sm" className="rounded-full bg-primary " onClick={() => { updateProfessional(ME.id, { bio }); setEditingAbout(false); toast.success('About section saved') }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
+                    <Button size="sm" className="rounded-full bg-primary " onClick={() => { updateProfessional(ME.id, { bio }); saveProfileSnapshot({ bio }); setEditingAbout(false); toast.success('About section saved') }}><Check className="mr-1 h-3.5 w-3.5" /> Save</Button>
                   </div>
                 </div>
               ) : (
@@ -533,6 +599,37 @@ export default function ProfessionalProfile() {
           setDeleteConfirm({ open: false, type: 'skill', value: '' })
         }}
       />
+
+      {profileHistory.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base"><History className="h-4 w-4 text-primary" /> Change History</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                {profileHistory.map((entry, i) => {
+                  const snapshot = entry.snapshot as Record<string, unknown>
+                  const fields = Object.keys(snapshot).filter((k) => snapshot[k] !== undefined && snapshot[k] !== '')
+                  return (
+                    <div key={i} className="rounded-xl border border-border p-3.5">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>{new Date(entry.created_at).toLocaleString()}</span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {fields.map((f) => (
+                          <Chip key={f} tone="default">{f}: {String(snapshot[f]).slice(0, 30)}</Chip>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
     </div>
   )
 }

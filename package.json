@@ -16,7 +16,8 @@
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:analyze": "set BUILD_ANALYZE=true && vite build"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

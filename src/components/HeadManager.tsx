@@ -10,6 +10,7 @@ const PAGE_META: Record<string, { title: string; description: string }> = {
   '/job-seeker/profile': { title: 'My Profile', description: 'Manage your professional profile, resume, and referral preferences on Direct Refer.' },
   '/job-seeker/professionals': { title: 'Browse Verified Professionals', description: 'Find verified professionals at top companies who can refer you. Filter by company, skills, location, and referral availability.' },
   '/job-seeker/applications': { title: 'My Referrals', description: 'Track your referral requests from submission to interview.' },
+  '/job-seeker/job-alerts': { title: 'Job Alerts', description: 'Save job searches and get notified when new matching positions are posted.' },
   '/professional/referrals': { title: 'Referral Requests', description: 'Review and manage incoming referral requests.' },
   '/job-seeker/messages': { title: 'Messages', description: 'Chat with verified professionals in real-time.' },
   '/professional/messages': { title: 'Messages', description: 'Chat with candidates and professionals in real-time.' },
