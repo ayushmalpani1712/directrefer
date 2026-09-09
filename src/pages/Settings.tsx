@@ -370,7 +370,7 @@ function Row({ title, desc, children }: { title: string; desc?: string; children
 
 export default function Settings() {
   const { role, student, logout } = useApp()
-  const { signOut } = useAuth()
+  const { signOut, user } = useAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') || 'workspace'
@@ -387,6 +387,36 @@ export default function Settings() {
     completion_reminders: true, product_announcements: false, weekly_digest: false, email_opt_out: false,
     notification_sound: true,
   })
+
+  useEffect(() => {
+    if (!user) return
+    const loadPrefs = async () => {
+      const { data } = await supabase
+        .from('notification_preferences')
+        .select('type, channel, enabled')
+        .eq('user_id', user.id)
+      if (!data) return
+      const map: Record<string, boolean> = {}
+      for (const row of data) {
+        if (row.channel === 'in_app') {
+          if (row.type === 'referral_update') map.referral_updates = row.enabled
+          if (row.type === 'message') map.new_messages = row.enabled
+          if (row.type === 'profile_view') map.profile_views = row.enabled
+          if (row.type === 'completion_reminder') map.completion_reminders = row.enabled
+        }
+        if (row.channel === 'email') {
+          if (row.type === 'product_announcement') map.product_announcements = row.enabled
+          if (row.type === 'weekly_digest') map.weekly_digest = row.enabled
+          if (row.type === 'all_email') map.email_opt_out = !row.enabled
+        }
+      }
+      setNotifPrefs((prev) => ({ ...prev, ...map }))
+      const sound = localStorage.getItem('dr_notif_prefs_sound')
+      if (sound !== null) setNotifPrefs((prev) => ({ ...prev, notification_sound: sound === 'true' }))
+    }
+    loadPrefs()
+  }, [user])
+
   const [privacy, setPrivacy] = useState({
     public_profile: true, show_salary: false, activity_status: true, search_indexing: false,
   })
@@ -395,8 +425,6 @@ export default function Settings() {
 
   useEffect(() => {
     try {
-      const prefs = localStorage.getItem('dr_notif_prefs')
-      if (prefs) setNotifPrefs((prev) => ({ ...prev, ...JSON.parse(prefs) }))
       const priv = localStorage.getItem('dr_privacy_settings')
       if (priv) setPrivacy((prev) => ({ ...prev, ...JSON.parse(priv) }))
       const lang = localStorage.getItem('dr_language')
@@ -410,7 +438,6 @@ export default function Settings() {
 
   const saveSettings = async (patch: Record<string, unknown>) => {
     try {
-      if ('notification_prefs' in patch) localStorage.setItem('dr_notif_prefs', JSON.stringify(patch.notification_prefs))
       if ('privacy_settings' in patch) localStorage.setItem('dr_privacy_settings', JSON.stringify(patch.privacy_settings))
       if ('language' in patch) localStorage.setItem('dr_language', String(patch.language))
       if ('timezone' in patch) localStorage.setItem('dr_timezone', String(patch.timezone))
@@ -421,10 +448,32 @@ export default function Settings() {
     }
   }
 
+  const upsertNotifPref = async (type: string, channel: string, enabled: boolean) => {
+    if (!user) return
+    await supabase
+      .from('notification_preferences')
+      .upsert({ user_id: user.id, type, channel, enabled }, { onConflict: 'user_id,type,channel' })
+  }
+
   const handleNotifPrefChange = (key: string, value: boolean) => {
     const next = { ...notifPrefs, [key]: value }
     setNotifPrefs(next)
-    saveSettings({ notification_prefs: next })
+    if (key === 'notification_sound') {
+      localStorage.setItem('dr_notif_prefs_sound', String(value))
+      return
+    }
+    const typeMap: Record<string, { type: string; channel: string }> = {
+      referral_updates: { type: 'referral_update', channel: 'in_app' },
+      new_messages: { type: 'message', channel: 'in_app' },
+      profile_views: { type: 'profile_view', channel: 'in_app' },
+      completion_reminders: { type: 'completion_reminder', channel: 'in_app' },
+      product_announcements: { type: 'product_announcement', channel: 'email' },
+      weekly_digest: { type: 'weekly_digest', channel: 'email' },
+      email_opt_out: { type: 'all_email', channel: 'email' },
+    }
+    const mapping = typeMap[key]
+    if (mapping) upsertNotifPref(mapping.type, mapping.channel, key === 'email_opt_out' ? !value : value)
+    toast.success('Settings saved')
   }
 
   const handlePrivacyChange = (key: string, value: boolean) => {

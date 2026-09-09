@@ -19,6 +19,7 @@ import { ProfileSkeleton } from '@/components/ui/skeleton'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
+import { useProfileDraft } from '@/hooks/useProfileDraft'
 import { uploadResume, deleteResume } from '@/lib/db'
 
 import { cn, getBannerStyle } from '@/lib/utils'
@@ -101,6 +102,25 @@ export default function StudentProfile() {
   const [editLocation, setEditLocation] = useState(s.location)
   const [editLinkedin, setEditLinkedin] = useState(s.links.linkedin)
   const [editGithub, setEditGithub] = useState(s.links.github)
+
+  const { loadDraft, markSaved } = useProfileDraft(user?.id, {
+    name: editName, headline: editHeadline, location: editLocation,
+    linkedin: editLinkedin, github: editGithub,
+  })
+
+  useEffect(() => {
+    if (!user?.id || editing) return
+    loadDraft().then((draft) => {
+      if (draft && typeof draft === 'object') {
+        if (draft.name) setEditName(String(draft.name))
+        if (draft.headline) setEditHeadline(String(draft.headline))
+        if (draft.location) setEditLocation(String(draft.location))
+        if (draft.linkedin) setEditLinkedin(String(draft.linkedin))
+        if (draft.github) setEditGithub(String(draft.github))
+        setEditing(true)
+      }
+    })
+  }, [user?.id])
 
   const resumeInputRef = useRef<HTMLInputElement>(null)
 
@@ -186,6 +206,7 @@ export default function StudentProfile() {
     }
     updateStudent({ name: editName.trim(), headline: editHeadline.trim(), location: editLocation.trim(), links: { linkedin: editLinkedin.trim(), github: editGithub.trim(), website: s.links.website } })
     setEditing(false)
+    markSaved()
     toast.success('Profile updated')
   }
 
@@ -196,6 +217,7 @@ export default function StudentProfile() {
     setEditLinkedin(s.links.linkedin)
     setEditGithub(s.links.github)
     setEditing(false)
+    markSaved()
   }
 
   function handleSaveCareer() {

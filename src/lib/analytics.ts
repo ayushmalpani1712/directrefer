@@ -80,3 +80,23 @@ export function getPageVisits(): Array<Record<string, string>> {
     return []
   }
 }
+
+export async function persistUTMEvent(userId?: string | null): Promise<void> {
+  if (typeof window === 'undefined') return
+  const utm = getStoredUTMParams()
+  if (Object.keys(utm).length === 0 && !document.referrer) return
+  const { supabase } = await import('@/lib/supabase')
+  const sessionId = sessionStorage.getItem('session_id') || crypto.randomUUID()
+  sessionStorage.setItem('session_id', sessionId)
+  await supabase.from('utm_events').insert({
+    user_id: userId || null,
+    session_id: sessionId,
+    utm_source: utm.source || null,
+    utm_medium: utm.medium || null,
+    utm_campaign: utm.campaign || null,
+    utm_term: utm.term || null,
+    utm_content: utm.content || null,
+    referrer_source: getReferrerSource(),
+    landing_page: window.location.pathname,
+  })
+}

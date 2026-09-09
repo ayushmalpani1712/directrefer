@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { ROLE_ROUTE, type Role } from '@/data/mock'
+import { persistUTMEvent } from '@/lib/analytics'
 
 async function getRoleRoute(): Promise<string> {
   try {
@@ -86,6 +87,8 @@ export default function AuthCallback() {
             setError('Login failed. Please try again.')
             return
           }
+          const { data: { user: authUser } } = await supabase.auth.getUser()
+          persistUTMEvent(authUser?.id)
           goToDashboard()
           return
         }
@@ -97,6 +100,8 @@ export default function AuthCallback() {
             setError('Login failed. Please try again.')
             return
           }
+          const { data: { user: authUser } } = await supabase.auth.getUser()
+          persistUTMEvent(authUser?.id)
           goToDashboard()
           return
         }

@@ -33,7 +33,7 @@ import { FadeIn } from '@/components/FadeIn'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { profileUrl, RECRUITER_VISIBLE } from '@/data/mock'
-import { captureUTMFromURL, storeUTMParams, trackPageVisit } from '@/lib/analytics'
+import { captureUTMFromURL, storeUTMParams, trackPageVisit, persistUTMEvent } from '@/lib/analytics'
 
 const ROLES = [
   {
@@ -513,6 +513,7 @@ export default function Landing() {
     const utm = captureUTMFromURL()
     storeUTMParams(utm)
     trackPageVisit('/')
+    persistUTMEvent()
   }, [])
 
   return (

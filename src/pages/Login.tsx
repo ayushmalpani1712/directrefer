@@ -26,7 +26,7 @@ import GoogleSignInButton from '@/components/GoogleSignInButton'
 import { ROLE_META, ROLE_ROUTE, RECRUITER_VISIBLE, type Role } from '@/data/mock'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import { captureUTMFromURL, storeUTMParams } from '@/lib/analytics'
+import { captureUTMFromURL, storeUTMParams, persistUTMEvent } from '@/lib/analytics'
 import { validateInviteCode, recordInviteUse } from '@/lib/invites'
 
 const BRUTE_FORCE_KEY = 'dr_login_attempts'
@@ -121,6 +121,7 @@ export default function Login() {
   useEffect(() => {
     const utm = captureUTMFromURL()
     storeUTMParams(utm)
+    persistUTMEvent()
     const params = new URLSearchParams(window.location.search)
     const code = params.get('invite')
     if (code) {
