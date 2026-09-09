@@ -24,19 +24,16 @@ import {
 interface ScreeningAttempt {
   id: string
   candidate_id: string
-  job_id: string
   criteria_id: string
-  result: string
-  status: string
-  details: Record<string, unknown>
+  score: number
+  max_score: number
+  passed: boolean
+  evidence: Record<string, unknown>
   created_at: string
   reviewed_at: string | null
   reviewed_by: string | null
-  admin_notes: string | null
   candidate_name?: string
-  job_title?: string
   criteria_name?: string
-  criteria_category?: string
 }
 
 export default function RecruiterScreening() {
@@ -59,14 +56,10 @@ export default function RecruiterScreening() {
     if (!user) return
     setLoading(true)
     try {
-      let query = supabase
+      const query = supabase
         .from('screening_attempts')
-        .select('id, candidate_id, job_id, criteria_id, result, status, details, created_at, reviewed_at, reviewed_by, admin_notes')
+        .select('id, candidate_id, criteria_id, score, max_score, passed, evidence, created_at, reviewed_at, reviewed_by')
         .order('created_at', { ascending: false })
-
-      if (jobId) {
-        query = query.eq('job_id', jobId)
-      }
 
       const { data: attemptsData, error } = await query
       if (error || !attemptsData) {
@@ -75,15 +68,11 @@ export default function RecruiterScreening() {
       }
 
       const candidateIds = [...new Set(attemptsData.map(a => a.candidate_id))]
-      const jobIds = [...new Set(attemptsData.map(a => a.job_id))]
       const criteriaIds = [...new Set(attemptsData.map(a => a.criteria_id).filter(Boolean))]
 
-      const [candidatesRes, jobsRes, criteriaRes] = await Promise.all([
+      const [candidatesRes, criteriaRes] = await Promise.all([
         candidateIds.length > 0
           ? supabase.from('users').select('id, full_name').in('id', candidateIds)
-          : { data: [] },
-        jobIds.length > 0
-          ? supabase.from('jobs').select('id, title').in('id', jobIds)
           : { data: [] },
         criteriaIds.length > 0
           ? supabase.from('screening_criteria').select('id, name, category').in('id', criteriaIds)
@@ -92,17 +81,13 @@ export default function RecruiterScreening() {
 
       const nameMap = new Map<string, string>()
       for (const u of (candidatesRes.data ?? [])) nameMap.set(u.id, u.full_name)
-      const jobMap = new Map<string, string>()
-      for (const j of (jobsRes.data ?? [])) jobMap.set(j.id, j.title)
       const critMap = new Map<string, { name: string; category: string }>()
       for (const c of (criteriaRes.data ?? [])) critMap.set(c.id, { name: c.name, category: c.category })
 
       setAttempts(attemptsData.map(a => ({
         ...a,
         candidate_name: nameMap.get(a.candidate_id) ?? 'Unknown',
-        job_title: jobMap.get(a.job_id) ?? 'Unknown',
         criteria_name: critMap.get(a.criteria_id)?.name ?? 'Unknown',
-        criteria_category: critMap.get(a.criteria_id)?.category ?? 'general',
       })))
     } catch (err) {
       console.error('Failed to load screening attempts:', err)
@@ -112,26 +97,26 @@ export default function RecruiterScreening() {
     }
   }
 
-  const reviewAttempt = async (attemptId: string, result: 'pass' | 'fail', notes?: string) => {
+  const reviewAttempt = async (attemptId: string, passed: boolean, notes?: string) => {
     if (!user) return
     try {
       const attempt = attempts.find((a) => a.id === attemptId)
       await supabase
         .from('screening_attempts')
         .update({
-          result,
-          status: result === 'pass' ? 'ready' : 'not_ready',
+          passed,
+          score: passed ? 100 : 0,
           reviewed_by: user.id,
           reviewed_at: new Date().toISOString(),
-          admin_notes: notes ?? null,
+          evidence: { admin_notes: notes ?? null },
         })
         .eq('id', attemptId)
-      toast.success(`Candidate ${result === 'pass' ? 'approved' : 'rejected'}`)
+      toast.success(`Candidate ${passed ? 'approved' : 'rejected'}`)
       if (attempt) {
         notifyScreeningUpdate(
           attempt.candidate_name ?? 'Candidate',
-          attempt.job_title ?? 'a job',
-          result,
+          'screening',
+          passed ? 'pass' : 'fail',
         )
       }
       loadAttempts()
@@ -161,19 +146,20 @@ export default function RecruiterScreening() {
   const executeBulkAction = async () => {
     if (!user || !bulkAction) return
     try {
-      const pendingSelected = filtered.filter((a) => selectedIds.has(a.id) && a.result === 'pending')
+      const pendingSelected = filtered.filter((a) => selectedIds.has(a.id) && !a.reviewed_at)
       await Promise.all(
         pendingSelected.map(async (attempt) => {
+          const isPass = bulkAction === 'pass'
           await supabase
             .from('screening_attempts')
             .update({
-              result: bulkAction,
-              status: bulkAction === 'pass' ? 'ready' : 'not_ready',
+              passed: isPass,
+              score: isPass ? 100 : 0,
               reviewed_by: user.id,
               reviewed_at: new Date().toISOString(),
             })
             .eq('id', attempt.id)
-          notifyScreeningUpdate(attempt.candidate_name ?? 'Candidate', attempt.job_title ?? 'a job', bulkAction)
+          notifyScreeningUpdate(attempt.candidate_name ?? 'Candidate', 'screening', bulkAction)
         })
       )
       toast.success(`${pendingSelected.length} candidate${pendingSelected.length !== 1 ? 's' : ''} ${bulkAction === 'pass' ? 'approved' : 'rejected'}`)
@@ -190,21 +176,20 @@ export default function RecruiterScreening() {
 
   const filtered = attempts
     .filter(a => {
-      if (tab === 'pending') return a.result === 'pending'
-      if (tab === 'pass') return a.result === 'pass'
-      if (tab === 'fail') return a.result === 'fail'
+      if (tab === 'pending') return !a.reviewed_at
+      if (tab === 'pass') return a.passed
+      if (tab === 'fail') return !a.passed && a.reviewed_at
       return true
     })
     .filter(a =>
       q === '' ||
       a.candidate_name?.toLowerCase().includes(q.toLowerCase()) ||
-      a.job_title?.toLowerCase().includes(q.toLowerCase()) ||
       a.criteria_name?.toLowerCase().includes(q.toLowerCase())
     )
 
-  const pendingCount = attempts.filter(a => a.result === 'pending').length
-  const passCount = attempts.filter(a => a.result === 'pass').length
-  const failCount = attempts.filter(a => a.result === 'fail').length
+  const pendingCount = attempts.filter(a => !a.reviewed_at).length
+  const passCount = attempts.filter(a => a.passed).length
+  const failCount = attempts.filter(a => !a.passed && a.reviewed_at).length
 
   if (loading) return <div className="space-y-6 p-6"><ListSkeleton count={4} /></div>
 
@@ -284,7 +269,7 @@ export default function RecruiterScreening() {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0 flex-1">
-                        {attempt.result === 'pending' && (
+                        {!attempt.reviewed_at && (
                           <Checkbox
                             checked={selectedIds.has(attempt.id)}
                             onCheckedChange={() => toggleSelect(attempt.id)}
@@ -296,15 +281,15 @@ export default function RecruiterScreening() {
                             <h3 className="text-sm font-semibold truncate">{attempt.candidate_name}</h3>
                             <Badge variant="outline" className={cn(
                               'text-[10px] capitalize',
-                              attempt.result === 'pass' && 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500',
-                              attempt.result === 'fail' && 'border-rose-500/25 bg-rose-500/10 text-rose-500',
-                              attempt.result === 'pending' && 'border-amber-500/25 bg-amber-500/10 text-amber-500',
+                              attempt.passed && 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500',
+                              !attempt.passed && attempt.reviewed_at && 'border-rose-500/25 bg-rose-500/10 text-rose-500',
+                              !attempt.reviewed_at && 'border-amber-500/25 bg-amber-500/10 text-amber-500',
                             )}>
-                              {attempt.result}
+                              {!attempt.reviewed_at ? 'pending' : attempt.passed ? 'pass' : 'fail'}
                             </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {attempt.job_title} — {attempt.criteria_name}
+                            {attempt.criteria_name}
                           </p>
                           <p className="text-xs text-muted-foreground/70 mt-1">
                             {new Date(attempt.created_at).toLocaleString()}
@@ -319,13 +304,13 @@ export default function RecruiterScreening() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {attempt.result === 'pending' && (
+                        {!attempt.reviewed_at && (
                           <>
                             <Button
                               variant="outline"
                               size="sm"
                               className="gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400"
-                              onClick={() => reviewAttempt(attempt.id, 'pass')}
+                              onClick={() => reviewAttempt(attempt.id, true)}
                             >
                               <CheckCircle2 className="h-3.5 w-3.5" /> Pass
                             </Button>
@@ -333,7 +318,7 @@ export default function RecruiterScreening() {
                               variant="outline"
                               size="sm"
                               className="gap-1 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400"
-                              onClick={() => reviewAttempt(attempt.id, 'fail')}
+                              onClick={() => reviewAttempt(attempt.id, false)}
                             >
                               <XCircle className="h-3.5 w-3.5" /> Fail
                             </Button>
@@ -343,14 +328,14 @@ export default function RecruiterScreening() {
                     </div>
                     {expandedId === attempt.id && (
                       <div className="mt-3 pt-3 border-t border-border/60">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Answer:</p>
-                        <p className="text-sm text-foreground whitespace-pre-wrap">
-                          {(attempt.details as Record<string, string>)?.answer ?? 'No answer provided'}
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Score:</p>
+                        <p className="text-sm text-foreground">
+                          {attempt.score}/{attempt.max_score} ({attempt.passed ? 'Passed' : 'Failed'})
                         </p>
-                        {attempt.admin_notes && (
-                          <p className="text-xs text-muted-foreground mt-2">
-                            <span className="font-medium">Notes:</span> {attempt.admin_notes}
-                          </p>
+                        {attempt.evidence && Object.keys(attempt.evidence).length > 0 && (
+                          <pre className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap overflow-x-auto">
+                            {JSON.stringify(attempt.evidence, null, 2)}
+                          </pre>
                         )}
                       </div>
                     )}

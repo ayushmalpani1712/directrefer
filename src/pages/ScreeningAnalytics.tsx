@@ -30,8 +30,9 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
 
 interface ScreeningRow {
   id: string
-  result: string
-  status: string
+  passed: boolean
+  score: number
+  max_score: number
   created_at: string
   reviewed_at: string | null
   criteria_id: string | null
@@ -49,7 +50,7 @@ export default function ScreeningAnalytics() {
     try {
       const { data: attemptsData, error } = await supabase
         .from('screening_attempts')
-        .select('id, result, status, created_at, reviewed_at, criteria_id')
+        .select('id, passed, score, max_score, created_at, reviewed_at, criteria_id')
         .order('created_at', { ascending: false })
 
       if (error || !attemptsData) {
@@ -85,9 +86,8 @@ export default function ScreeningAnalytics() {
   if (loading) return <DashboardSkeleton />
 
   const total = attempts.length
-  const passed = attempts.filter(a => a.result === 'pass').length
-  const failed = attempts.filter(a => a.result === 'fail').length
-  const pending = attempts.filter(a => a.result === 'pending').length
+  const passed = attempts.filter(a => a.passed).length
+  const failed = attempts.filter(a => !a.passed).length
   const passRate = total > 0 ? Math.round((passed / total) * 100) : 0
   const failRate = total > 0 ? Math.round((failed / total) * 100) : 0
 
@@ -100,15 +100,14 @@ export default function ScreeningAnalytics() {
       }, 0) / reviewed.length * 10) / 10
     : 0
 
-  const categoryMap = new Map<string, { pass: number; fail: number; pending: number; total: number }>()
+  const categoryMap = new Map<string, { pass: number; fail: number; total: number }>()
   for (const a of attempts) {
     const cat = a.criteria_category
-    if (!categoryMap.has(cat)) categoryMap.set(cat, { pass: 0, fail: 0, pending: 0, total: 0 })
+    if (!categoryMap.has(cat)) categoryMap.set(cat, { pass: 0, fail: 0, total: 0 })
     const entry = categoryMap.get(cat)!
     entry.total++
-    if (a.result === 'pass') entry.pass++
-    else if (a.result === 'fail') entry.fail++
-    else entry.pending++
+    if (a.passed) entry.pass++
+    else entry.fail++
   }
 
   const categoryData = Array.from(categoryMap.entries()).map(([category, counts]) => ({
@@ -119,12 +118,10 @@ export default function ScreeningAnalytics() {
   const pieData = [
     { name: 'Passed', value: passed, color: 'hsl(160 84% 39%)' },
     { name: 'Failed', value: failed, color: 'hsl(350 89% 60%)' },
-    { name: 'Pending', value: pending, color: 'hsl(38 92% 50%)' },
   ].filter(d => d.value > 0)
 
   const funnelData = [
     { stage: 'Submitted', count: total },
-    { stage: 'Pending Review', count: pending },
     { stage: 'Passed', count: passed },
     { stage: 'Failed', count: failed },
   ]
@@ -209,8 +206,7 @@ export default function ScreeningAnalytics() {
                   <LazyTooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
                   <LazyLegend wrapperStyle={{ fontSize: 12, color: '#9A9BA8' }} />
                   <LazyBar dataKey="pass" stackId="a" fill="hsl(160 84% 39%)" name="Passed" />
-                  <LazyBar dataKey="fail" stackId="a" fill="hsl(350 89% 60%)" name="Failed" />
-                  <LazyBar dataKey="pending" stackId="a" fill="hsl(38 92% 50%)" name="Pending" radius={[4, 4, 0, 0]} />
+                  <LazyBar dataKey="fail" stackId="a" fill="hsl(350 89% 60%)" name="Failed" radius={[4, 4, 0, 0]} />
                 </LazyBarChart>
               </LazyResponsiveContainer>
             )}
@@ -239,7 +235,6 @@ export default function ScreeningAnalytics() {
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>{cat.pass} passed</span>
                       <span>{cat.fail} failed</span>
-                      <span>{cat.pending} pending</span>
                     </div>
                   </div>
                 )

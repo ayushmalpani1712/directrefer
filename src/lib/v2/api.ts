@@ -136,18 +136,16 @@ export async function runCandidateScreening(
 export async function submitApplication(params: {
   candidateId: string
   jobId: string
-  matchId?: string
-  resumeSnapshot?: string
+  resumeUrl?: string
   coverLetter?: string
-  answers?: Record<string, string>
+  notes?: string
 }): Promise<Application> {
   return createApplication({
     candidate_id: params.candidateId,
     job_id: params.jobId,
-    match_id: params.matchId,
-    resume_snapshot: params.resumeSnapshot,
+    resume_url: params.resumeUrl,
     cover_letter: params.coverLetter,
-    answers: params.answers,
+    notes: params.notes,
   })
 }
 

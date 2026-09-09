@@ -8,30 +8,27 @@
 import { supabase } from '@/lib/supabase'
 import { recordStateTransition } from './state-history'
 
-export type ApplicationStatus = 'draft' | 'submitted' | 'under_review' | 'shortlisted' | 'rejected' | 'withdrawn' | 'hired'
+export type ApplicationStatus = 'submitted' | 'screening' | 'shortlisted' | 'interview' | 'offered' | 'accepted' | 'rejected' | 'withdrawn'
 
 export interface Application {
   id: string
   candidate_id: string
   job_id: string
-  match_id: string | null
-  resume_snapshot: string | null
-  cover_letter: string | null
-  answers: Record<string, string> | null
   status: ApplicationStatus
-  recruiter_notes: string | null
+  resume_url: string | null
+  cover_letter: string | null
+  notes: string | null
   submitted_at: string
-  created_at: string
   updated_at: string
+  deleted_at: string | null
 }
 
 export interface ApplicationCreate {
   candidate_id: string
   job_id: string
-  match_id?: string
-  resume_snapshot?: string
+  resume_url?: string
   cover_letter?: string
-  answers?: Record<string, string>
+  notes?: string
 }
 
 // ── CRUD Operations ────────────────────────────────────────────────────────
@@ -46,19 +43,16 @@ export async function createApplication(input: ApplicationCreate): Promise<Appli
     .insert({
       candidate_id: input.candidate_id,
       job_id: input.job_id,
-      match_id: input.match_id ?? null,
-      resume_snapshot: input.resume_snapshot ?? null,
+      resume_url: input.resume_url ?? null,
       cover_letter: input.cover_letter ?? null,
-      answers: input.answers ?? null,
+      notes: input.notes ?? null,
       status: 'submitted',
-      submitted_at: new Date().toISOString(),
     })
     .select()
     .single()
 
   if (error) throw error
 
-  // Record state transition
   await recordStateTransition({
     entity_type: 'application',
     entity_id: data.id,
@@ -149,8 +143,7 @@ export async function updateApplicationStatus(
     .from('applications')
     .update({
       status: newStatus,
-      recruiter_notes: notes ?? app.recruiter_notes,
-      updated_at: new Date().toISOString(),
+      notes: notes ?? app.notes,
     })
     .eq('id', applicationId)
     .select()
@@ -158,7 +151,6 @@ export async function updateApplicationStatus(
 
   if (error) throw error
 
-  // Record state transition
   await recordStateTransition({
     entity_type: 'application',
     entity_id: applicationId,
@@ -211,22 +203,20 @@ export async function rejectApplication(
 export async function getCandidateStats(candidateId: string): Promise<{
   total: number
   submitted: number
-  under_review: number
+  screening: number
   shortlisted: number
   rejected: number
   withdrawn: number
-  hired: number
 }> {
   const apps = await getCandidateApplications(candidateId)
 
   return {
     total: apps.length,
     submitted: apps.filter(a => a.status === 'submitted').length,
-    under_review: apps.filter(a => a.status === 'under_review').length,
+    screening: apps.filter(a => a.status === 'screening').length,
     shortlisted: apps.filter(a => a.status === 'shortlisted').length,
     rejected: apps.filter(a => a.status === 'rejected').length,
     withdrawn: apps.filter(a => a.status === 'withdrawn').length,
-    hired: apps.filter(a => a.status === 'hired').length,
   }
 }
 
@@ -245,7 +235,6 @@ export async function getJobStats(jobId: string): Promise<{
     byStatus[app.status] = (byStatus[app.status] ?? 0) + 1
   }
 
-  // Calculate average response time
   const reviewedApps = apps.filter(a => a.status !== 'submitted')
   const avgDays = reviewedApps.length > 0
     ? reviewedApps.reduce((sum, a) => {

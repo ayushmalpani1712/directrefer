@@ -89,11 +89,10 @@ export default function JobAnalytics() {
         try {
           const { data: attempts } = await supabase
             .from('screening_attempts')
-            .select('result')
-            .eq('job_id', job.id)
+            .select('passed')
           if (attempts) {
             screeningTotal = attempts.length
-            screeningPassed = attempts.filter(a => a.result === 'pass').length
+            screeningPassed = attempts.filter(a => a.passed).length
           }
         } catch {
           // screening table may not exist

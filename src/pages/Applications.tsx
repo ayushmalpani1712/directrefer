@@ -14,21 +14,24 @@ import type { ApplicationStatus, Application } from '@/lib/v2/applications'
 const STATUS_TABS: { key: string; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'submitted', label: 'Submitted' },
-  { key: 'under_review', label: 'Under Review' },
+  { key: 'screening', label: 'Screening' },
   { key: 'shortlisted', label: 'Shortlisted' },
-  { key: 'hired', label: 'Hired' },
+  { key: 'interview', label: 'Interview' },
+  { key: 'offered', label: 'Offered' },
+  { key: 'accepted', label: 'Accepted' },
   { key: 'rejected', label: 'Rejected' },
   { key: 'withdrawn', label: 'Withdrawn' },
 ]
 
 const STATUS_STYLES: Record<ApplicationStatus, { label: string; cls: string; dot: string }> = {
-  draft: { label: 'Draft', cls: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/25', dot: 'bg-slate-500' },
   submitted: { label: 'Submitted', cls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25', dot: 'bg-blue-500' },
-  under_review: { label: 'Under Review', cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25', dot: 'bg-amber-500' },
+  screening: { label: 'Screening', cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25', dot: 'bg-amber-500' },
   shortlisted: { label: 'Shortlisted', cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25', dot: 'bg-emerald-500' },
+  interview: { label: 'Interview', cls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25', dot: 'bg-violet-500' },
+  offered: { label: 'Offered', cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25', dot: 'bg-emerald-500' },
+  accepted: { label: 'Accepted', cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25', dot: 'bg-emerald-500' },
   rejected: { label: 'Rejected', cls: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25', dot: 'bg-rose-500' },
   withdrawn: { label: 'Withdrawn', cls: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/25', dot: 'bg-slate-500' },
-  hired: { label: 'Hired', cls: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25', dot: 'bg-violet-500' },
 }
 
 function formatDate(dateStr: string): string {
@@ -87,9 +90,9 @@ export default function Applications() {
   const stats = useMemo(() => {
     const total = applications.length
     const submitted = applications.filter((a) => a.status === 'submitted').length
-    const underReview = applications.filter((a) => a.status === 'under_review').length
+    const screening = applications.filter((a) => a.status === 'screening').length
     const shortlisted = applications.filter((a) => a.status === 'shortlisted').length
-    return { total, submitted, underReview, shortlisted }
+    return { total, submitted, screening, shortlisted }
   }, [applications])
 
   const filtered = useMemo(() => {
@@ -155,7 +158,7 @@ export default function Applications() {
         {[
           { label: 'Total Applications', value: stats.total, color: 'text-primary' },
           { label: 'Submitted', value: stats.submitted, color: 'text-blue-400' },
-          { label: 'Under Review', value: stats.underReview, color: 'text-amber-400' },
+          { label: 'Under Review', value: stats.screening, color: 'text-amber-400' },
           { label: 'Shortlisted', value: stats.shortlisted, color: 'text-emerald-400' },
         ].map((stat) => (
           <Card key={stat.label} className="flex flex-col">
@@ -236,10 +239,10 @@ export default function Applications() {
                         <div className="flex items-center gap-3 sm:gap-4">
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Calendar className="h-3.5 w-3.5" />
-                            {formatDate(app.submitted_at || app.created_at)}
+                            {formatDate(app.submitted_at)}
                           </div>
                           <AppStatusBadge status={app.status} />
-                          {(app.status === 'submitted' || app.status === 'under_review') && (
+                          {(app.status === 'submitted' || app.status === 'screening') && (
                             <Button
                               variant="outline"
                               size="sm"

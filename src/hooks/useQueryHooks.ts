@@ -242,7 +242,6 @@ export function useScreeningCriteria(professionalId: string | undefined, enabled
       const { data, error } = await supabase
         .from('screening_criteria')
         .select('*')
-        .eq('professional_id', professionalId)
         .eq('is_active', true)
       if (error || !data) return []
       return data

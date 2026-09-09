@@ -19,7 +19,7 @@ export interface MatchCandidate {
   user_id: string
   full_name: string
   email: string
-  skills: string[]          // skill IDs
+  skills: string[]
   experience_years: number
   education: string
   location: string
@@ -31,7 +31,7 @@ export interface MatchProfessional {
   full_name: string
   company: string
   role: string
-  skills: string[]          // skill IDs
+  skills: string[]
   experience_years: number
   industries: string[]
   locations: string[]
@@ -43,16 +43,14 @@ export interface MatchResult {
   candidate_id: string
   professional_id: string
   job_id: string
-  score: number
-  breakdown: {
-    skill_overlap: number
-    experience_relevance: number
-    preference_fit: number
-    location_proximity: number
-    recency: number
-  }
+  match_score: number
+  skills_score: number
+  role_score: number
+  company_score: number
+  location_score: number
+  reputation_score: number
   confidence: 'high' | 'medium' | 'low'
-  explanation: string[]
+  match_reasons: string[]
 }
 
 // ── Scoring Algorithm ──────────────────────────────────────────────────────
@@ -75,34 +73,28 @@ export function calculateMatchScore(
   const matchingRequired = jobRequiredSkills.filter(s =>
     candidateSkills.has(s) && professionalSkills.has(s)
   )
-  const skillScore = jobRequired.size > 0
+  const skillsScore = jobRequired.size > 0
     ? Math.round((matchingRequired.length / jobRequired.size) * 40)
     : 0
 
   // Experience Relevance (0-25)
   const expDiff = Math.abs(candidate.experience_years - professional.experience_years)
-  const experienceScore = Math.max(0, Math.round(
-    25 * Math.exp(-expDiff / 5)  // decay factor
+  const roleScore = Math.max(0, Math.round(
+    25 * Math.exp(-expDiff / 5)
   ))
 
   // Preference Fit (0-20)
-  let preferenceScore = 0
-  // Industry overlap
+  let companyScore = 0
   if (jobIndustries && professional.industries.length > 0) {
     const industryOverlap = jobIndustries.filter(i =>
       professional.industries.includes(i)
     ).length
-    preferenceScore += Math.round((industryOverlap / jobIndustries.length) * 10)
+    companyScore += Math.round((industryOverlap / jobIndustries.length) * 10)
   }
-  // Location preference
-  if (jobLocation && professional.locations.includes(jobLocation)) {
-    preferenceScore += 5
-  }
-  // Education level match
   if (candidate.education === 'masters' || candidate.education === 'phd') {
-    preferenceScore += 5
+    companyScore += 5
   }
-  preferenceScore = Math.min(20, preferenceScore)
+  companyScore = Math.min(20, companyScore)
 
   // Location Proximity (0-10)
   let locationScore = 0
@@ -114,37 +106,37 @@ export function calculateMatchScore(
     )) {
       locationScore = 6
     } else {
-      locationScore = 3 // assume remote possible
+      locationScore = 3
     }
   } else {
-    locationScore = 7 // no location preference, assume flexible
+    locationScore = 7
   }
 
-  // Recency (0-5) — based on professional's last_active
+  // Recency / Reputation (0-5)
   const daysSinceActive = professional.trust_score?.calculated_at
     ? (Date.now() - new Date(professional.trust_score.calculated_at).getTime()) / (1000 * 60 * 60 * 24)
     : 30
-  const recencyScore = Math.max(0, Math.round(5 * Math.exp(-daysSinceActive / 7)))
+  const reputationScore = Math.max(0, Math.round(5 * Math.exp(-daysSinceActive / 7)))
 
-  const totalScore = skillScore + experienceScore + preferenceScore + locationScore + recencyScore
+  const totalScore = skillsScore + roleScore + companyScore + locationScore + reputationScore
 
   const confidence: MatchResult['confidence'] =
     totalScore >= 70 ? 'high' :
     totalScore >= 45 ? 'medium' : 'low'
 
-  const explanation: string[] = []
+  const matchReasons: string[] = []
 
   const skillPct = jobRequired.size > 0 ? Math.round((matchingRequired.length / jobRequired.size) * 100) : 0
   if (skillPct >= 60) {
-    explanation.push(`Strong skill overlap (${skillPct}%)`)
+    matchReasons.push(`Strong skill overlap (${skillPct}%)`)
   } else if (skillPct >= 30) {
-    explanation.push(`Moderate skill overlap (${skillPct}%)`)
+    matchReasons.push(`Moderate skill overlap (${skillPct}%)`)
   }
 
-  if (experienceScore >= 20) {
-    explanation.push('Similar experience level')
-  } else if (experienceScore >= 10) {
-    explanation.push('Compatible experience range')
+  if (roleScore >= 20) {
+    matchReasons.push('Similar experience level')
+  } else if (roleScore >= 10) {
+    matchReasons.push('Compatible experience range')
   }
 
   if (jobIndustries && professional.industries.length > 0) {
@@ -152,34 +144,32 @@ export function calculateMatchScore(
       professional.industries.includes(i)
     ).length
     if (industryOverlap > 0) {
-      explanation.push('Same industry preference')
+      matchReasons.push('Same industry preference')
     }
   }
 
   if (locationScore >= 8) {
-    explanation.push('Location match')
+    matchReasons.push('Location match')
   } else if (locationScore >= 5) {
-    explanation.push('Nearby location')
+    matchReasons.push('Nearby location')
   }
 
-  if (recencyScore >= 3) {
-    explanation.push('Active professional')
+  if (reputationScore >= 3) {
+    matchReasons.push('Active professional')
   }
 
   return {
     candidate_id: candidate.user_id,
     professional_id: professional.user_id,
     job_id: '',
-    score: totalScore,
-    breakdown: {
-      skill_overlap: skillScore,
-      experience_relevance: experienceScore,
-      preference_fit: preferenceScore,
-      location_proximity: locationScore,
-      recency: recencyScore,
-    },
+    match_score: totalScore,
+    skills_score: skillsScore,
+    role_score: roleScore,
+    company_score: companyScore,
+    location_score: locationScore,
+    reputation_score: reputationScore,
     confidence,
-    explanation,
+    match_reasons: matchReasons,
   }
 }
 
@@ -194,7 +184,6 @@ export async function findMatchesForJobSeeker(
   limit = 10,
   minTrustTier?: TrustTier
 ): Promise<MatchResult[]> {
-  // Get candidate profile
   const { data: seekerProfile } = await supabase
     .from('profiles_job_seeker')
     .select('*')
@@ -203,7 +192,6 @@ export async function findMatchesForJobSeeker(
 
   if (!seekerProfile) throw new Error('Job seeker profile not found')
 
-  // Get candidate skills
   const { data: profileSkills } = await supabase
     .from('profile_skills')
     .select('skill_id')
@@ -211,7 +199,6 @@ export async function findMatchesForJobSeeker(
 
   const candidateSkills = (profileSkills ?? []).map(s => s.skill_id)
 
-  // Get job details
   const { data: job } = await supabase
     .from('jobs')
     .select('*')
@@ -220,7 +207,6 @@ export async function findMatchesForJobSeeker(
 
   if (!job) throw new Error('Job not found')
 
-  // Get job required skills
   const { data: jobSkills } = await supabase
     .from('job_skills')
     .select('skill_id')
@@ -228,7 +214,6 @@ export async function findMatchesForJobSeeker(
 
   const jobRequiredSkills = (jobSkills ?? []).map(s => s.skill_id)
 
-  // Get available professionals
   const { data: professionals } = await supabase
     .from('profiles_professional')
     .select('*')
@@ -237,7 +222,6 @@ export async function findMatchesForJobSeeker(
 
   if (!professionals) return []
 
-  // Get professional skills and trust scores
   const matches: MatchResult[] = []
 
   for (const pro of professionals) {
@@ -249,14 +233,12 @@ export async function findMatchesForJobSeeker(
     const proSkillIds = (proSkills ?? []).map(s => s.skill_id)
     const trustScore = await getTrustScore(pro.user_id)
 
-    // Trust-tier filtering
     if (minTrustTier && trustScore) {
       if (TIER_ORDER[trustScore.tier] < TIER_ORDER[minTrustTier]) continue
     } else if (minTrustTier && !trustScore) {
       continue
     }
 
-    // Capacity checking
     const { data: capacity } = await supabase
       .from('professional_capacities')
       .select('max_capacity, used')
@@ -300,8 +282,7 @@ export async function findMatchesForJobSeeker(
     matches.push(result)
   }
 
-  // Sort by score descending, return top N
-  matches.sort((a, b) => b.score - a.score)
+  matches.sort((a, b) => b.match_score - a.match_score)
   return matches.slice(0, limit)
 }
 
@@ -312,7 +293,6 @@ export async function findMatchesForProfessional(
   professionalId: string,
   limit = 10
 ): Promise<MatchResult[]> {
-  // Get professional profile
   const { data: proProfile } = await supabase
     .from('profiles_professional')
     .select('*')
@@ -321,7 +301,6 @@ export async function findMatchesForProfessional(
 
   if (!proProfile) throw new Error('Professional profile not found')
 
-  // Check capacity for this professional
   const { data: capacity } = await supabase
     .from('professional_capacities')
     .select('max_capacity, used')
@@ -330,7 +309,6 @@ export async function findMatchesForProfessional(
 
   if (capacity && capacity.used >= capacity.max_capacity) return []
 
-  // Get professional skills
   const { data: proSkills } = await supabase
     .from('profile_skills')
     .select('skill_id')
@@ -338,7 +316,6 @@ export async function findMatchesForProfessional(
 
   const proSkillIds = (proSkills ?? []).map(s => s.skill_id)
 
-  // Get open jobs
   const { data: jobs } = await supabase
     .from('jobs')
     .select('*')
@@ -350,7 +327,6 @@ export async function findMatchesForProfessional(
   const matches: MatchResult[] = []
 
   for (const job of jobs) {
-    // Get job required skills
     const { data: jobSkills } = await supabase
       .from('job_skills')
       .select('skill_id')
@@ -358,7 +334,6 @@ export async function findMatchesForProfessional(
 
     const jobRequiredSkills = (jobSkills ?? []).map(s => s.skill_id)
 
-    // Get job seekers who match
     const { data: seekers } = await supabase
       .from('profiles_job_seeker')
       .select('*')
@@ -374,7 +349,6 @@ export async function findMatchesForProfessional(
         .eq('profile_id', seeker.user_id)
 
       const seekerSkillIds = (seekerSkills ?? []).map(s => s.skill_id)
-
       const trustScore = await getTrustScore(professionalId)
 
       const matchCandidate: MatchCandidate = {
@@ -413,7 +387,7 @@ export async function findMatchesForProfessional(
     }
   }
 
-  matches.sort((a, b) => b.score - a.score)
+  matches.sort((a, b) => b.match_score - a.match_score)
   return matches.slice(0, limit)
 }
 
@@ -425,15 +399,20 @@ export async function storeMatches(matches: MatchResult[]): Promise<void> {
     candidate_id: m.candidate_id,
     professional_id: m.professional_id,
     job_id: m.job_id,
-    score: m.score,
-    breakdown: m.breakdown,
-    confidence: m.confidence,
-    explanation: m.explanation,
+    match_score: m.match_score,
+    skills_score: m.skills_score,
+    role_score: m.role_score,
+    company_score: m.company_score,
+    location_score: m.location_score,
+    reputation_score: m.reputation_score,
+    source: 'algorithm' as const,
+    match_reasons: m.match_reasons,
+    job_title: '',
   }))
 
   const { error } = await supabase
     .from('matches')
-    .upsert(rows, { onConflict: 'candidate_id,professional_id,job_id' })
+    .upsert(rows, { onConflict: 'job_id,candidate_id' })
 
   if (error) throw error
 
@@ -451,7 +430,7 @@ export async function storeMatches(matches: MatchResult[]): Promise<void> {
         .eq('id', m.job_id)
         .single()
       if (candidateProfile?.full_name && job?.title) {
-        notifyNewMatch(candidateProfile.full_name, job.title, m.score)
+        notifyNewMatch(candidateProfile.full_name, job.title, m.match_score)
       }
     }
   } catch {
@@ -467,7 +446,7 @@ export async function getJobMatches(jobId: string): Promise<MatchResult[]> {
     .from('matches')
     .select('*')
     .eq('job_id', jobId)
-    .order('score', { ascending: false })
+    .order('match_score', { ascending: false })
 
   if (error) throw error
   return (data ?? []) as MatchResult[]

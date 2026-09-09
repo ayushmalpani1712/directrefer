@@ -1,7 +1,7 @@
 // ============================================================================
 // DirectRefer V2.0 — State History Engine
 // ============================================================================
-// Immutable append-only log for referrals, applications, matches.
+// Immutable append-only audit trail for referrals, applications, matches.
 // Business rule: state_history must never be updated or deleted.
 // ============================================================================
 
@@ -13,9 +13,11 @@ export interface StateHistoryEntry {
   id: string
   entity_type: EntityType
   entity_id: string
-  from_state: string | null
-  to_state: string
-  triggered_by: string | null
+  field: string
+  old_value: string | null
+  new_value: string
+  changed_by: string | null
+  reason: string | null
   metadata: Record<string, unknown> | null
   created_at: string
 }
@@ -38,10 +40,12 @@ export async function recordStateTransition(params: {
     .insert({
       entity_type: params.entity_type,
       entity_id: params.entity_id,
-      from_state: params.from_state,
-      to_state: params.to_state,
-      triggered_by: params.triggered_by ?? null,
-      metadata: params.metadata ?? null,
+      field: 'status',
+      old_value: params.from_state,
+      new_value: params.to_state,
+      changed_by: params.triggered_by ?? null,
+      reason: params.metadata?.reason as string ?? null,
+      metadata: params.metadata ?? {},
     })
     .select()
     .single()
@@ -80,7 +84,7 @@ export async function getUserStateHistory(
   const { data, error } = await supabase
     .from('state_history')
     .select('*')
-    .eq('triggered_by', userId)
+    .eq('changed_by', userId)
     .order('created_at', { ascending: false })
     .limit(limit)
 
@@ -121,7 +125,7 @@ export async function getCurrentState(
 ): Promise<string | null> {
   const { data, error } = await supabase
     .from('state_history')
-    .select('to_state')
+    .select('new_value')
     .eq('entity_type', entityType)
     .eq('entity_id', entityId)
     .order('created_at', { ascending: false })
@@ -129,7 +133,7 @@ export async function getCurrentState(
     .single()
 
   if (error && error.code !== 'PGRST116') throw error
-  return (data as { to_state: string } | null)?.to_state ?? null
+  return (data as { new_value: string } | null)?.new_value ?? null
 }
 
 // ── Analytics ──────────────────────────────────────────────────────────────
@@ -143,7 +147,7 @@ export async function getStateTransitionCounts(
 ): Promise<Record<string, number>> {
   let query = supabase
     .from('state_history')
-    .select('to_state')
+    .select('new_value')
     .eq('entity_type', entityType)
 
   if (since) {
@@ -155,7 +159,7 @@ export async function getStateTransitionCounts(
 
   const counts: Record<string, number> = {}
   for (const row of data ?? []) {
-    counts[row.to_state] = (counts[row.to_state] ?? 0) + 1
+    counts[row.new_value] = (counts[row.new_value] ?? 0) + 1
   }
   return counts
 }
@@ -173,7 +177,7 @@ export async function getAvgTimeInState(
     const from = new Date(history[i].created_at)
     const to = new Date(history[i + 1].created_at)
     const hours = (to.getTime() - from.getTime()) / (1000 * 60 * 60)
-    durations[history[i].to_state] = (durations[history[i].to_state] ?? 0) + hours
+    durations[history[i].new_value] = (durations[history[i].new_value] ?? 0) + hours
   }
 
   return durations

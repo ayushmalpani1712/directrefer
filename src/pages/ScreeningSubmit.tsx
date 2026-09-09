@@ -17,7 +17,6 @@ interface Criteria {
   description: string
   category: string
   weight: number
-  validation_rules: { type: string; params: Record<string, unknown> }[]
 }
 
 interface ScreeningAnswer {
@@ -46,14 +45,13 @@ export default function ScreeningSubmit() {
 
         const { data: existing } = await supabase
           .from('screening_attempts')
-          .select('id, result')
+          .select('id, passed')
           .eq('candidate_id', user.id)
-          .eq('job_id', jobId)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle()
 
-        if (existing && existing.result === 'pass') {
+        if (existing && existing.passed) {
           setExistingAttempt(existing.id)
           setLoading(false)
           return
@@ -61,7 +59,7 @@ export default function ScreeningSubmit() {
 
         const { data: crits } = await supabase
           .from('screening_criteria')
-          .select('id, name, description, category, weight, validation_rules')
+          .select('id, name, description, category, weight')
           .eq('is_active', true)
 
         if (crits) {
