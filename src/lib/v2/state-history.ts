@@ -35,6 +35,9 @@ export async function recordStateTransition(params: {
   triggered_by?: string | null
   metadata?: Record<string, unknown> | null
 }): Promise<StateHistoryEntry> {
+  if (!isValidTransition(params.entity_type, params.from_state, params.to_state)) {
+    console.warn(`Invalid transition: ${params.entity_type} ${params.from_state} → ${params.to_state}`)
+  }
   const { data, error } = await supabase
     .from('state_history')
     .insert({

@@ -25,6 +25,7 @@ interface ScreeningAttempt {
   id: string
   candidate_id: string
   criteria_id: string
+  job_id: string
   score: number
   max_score: number
   passed: boolean
@@ -58,7 +59,7 @@ export default function RecruiterScreening() {
     try {
       const query = supabase
         .from('screening_attempts')
-        .select('id, candidate_id, criteria_id, score, max_score, passed, evidence, created_at, reviewed_at, reviewed_by')
+        .select('id, candidate_id, criteria_id, job_id, score, max_score, passed, evidence, created_at, reviewed_at, reviewed_by')
         .order('created_at', { ascending: false })
 
       const { data: attemptsData, error } = await query
@@ -111,6 +112,20 @@ export default function RecruiterScreening() {
           evidence: { admin_notes: notes ?? null },
         })
         .eq('id', attemptId)
+      if (attempt?.candidate_id && attempt?.job_id) {
+        try {
+          const { data: app } = await supabase
+            .from('applications')
+            .select('id')
+            .eq('candidate_id', attempt.candidate_id)
+            .eq('job_id', attempt.job_id)
+            .maybeSingle()
+          if (app) {
+            const { updateApplicationStatus } = await import('@/lib/v2/applications')
+            await updateApplicationStatus(app.id, passed ? 'shortlisted' : 'rejected', user.id, notes)
+          }
+        } catch { /* non-critical */ }
+      }
       toast.success(`Candidate ${passed ? 'approved' : 'rejected'}`)
       if (attempt) {
         notifyScreeningUpdate(

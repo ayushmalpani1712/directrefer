@@ -97,6 +97,16 @@ export default function ScreeningSubmit() {
           status: 'pending_review',
         })
       }
+      const { data: app } = await supabase
+        .from('applications')
+        .select('id')
+        .eq('candidate_id', user.id)
+        .eq('job_id', jobId)
+        .maybeSingle()
+      if (app) {
+        const { updateApplicationStatus } = await import('@/lib/v2/applications')
+        await updateApplicationStatus(app.id, 'screening', user.id)
+      }
       toast.success('Screening submitted successfully!')
       navigate('/job-seeker/browse-jobs')
     } catch (err) {

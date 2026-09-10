@@ -16,7 +16,7 @@ export default function AdminModeration() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
   const [confirmAction, setConfirmAction] = useState<{
-    type: 'dismiss' | 'ban'
+    type: 'dismiss' | 'ban' | 'resolve'
     report: ReportWithUsers
   } | null>(null)
 
@@ -72,6 +72,24 @@ export default function AdminModeration() {
       }
     } catch {
       toast.error('Failed to ban user')
+    }
+    setConfirmAction(null)
+  }
+
+  const handleResolve = async () => {
+    if (!confirmAction || confirmAction.type !== 'resolve') return
+    const report = confirmAction.report
+    try {
+      const ok = await updateReportStatus(report.id, 'resolved')
+      if (ok) {
+        setReports(prev => prev.filter(r => r.id !== report.id))
+        toast.success('Report resolved')
+        logAdminAction('resolved_report', report.id)
+      } else {
+        toast.error('Failed to resolve report')
+      }
+    } catch {
+      toast.error('Failed to resolve report')
     }
     setConfirmAction(null)
   }
@@ -190,9 +208,16 @@ export default function AdminModeration() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setConfirmAction({ type: 'dismiss', report })}
+                      onClick={() => setConfirmAction({ type: 'resolve', report })}
                     >
                       <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                      Resolve
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmAction({ type: 'dismiss', report })}
+                    >
                       Dismiss
                     </Button>
                     <Button
@@ -219,6 +244,15 @@ export default function AdminModeration() {
         description={`Are you sure you want to dismiss this report against ${confirmAction?.type === 'dismiss' ? confirmAction.report.target_name : ''}?`}
         confirmLabel="Dismiss"
         onConfirm={handleDismiss}
+      />
+
+      <ConfirmDialog
+        open={confirmAction?.type === 'resolve'}
+        onOpenChange={(open) => { if (!open) setConfirmAction(null) }}
+        title="Resolve Report"
+        description={`Mark this report against ${confirmAction?.type === 'resolve' ? confirmAction.report.target_name : ''} as resolved?`}
+        confirmLabel="Resolve"
+        onConfirm={handleResolve}
       />
 
       <ConfirmDialog
