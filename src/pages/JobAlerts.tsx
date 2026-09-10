@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SectionHeader, EmptyState } from '@/components/ui-kit'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/context/AuthContext'
 
 export interface JobAlert {
   id: string
@@ -18,7 +20,7 @@ export interface JobAlert {
 
 const STORAGE_KEY = 'dr_job_alerts'
 
-function loadAlerts(): JobAlert[] {
+function loadAlertsFromStorage(): JobAlert[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     return raw ? JSON.parse(raw) : []
@@ -27,47 +29,120 @@ function loadAlerts(): JobAlert[] {
   }
 }
 
-function saveAlerts(alerts: JobAlert[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts))
+function saveAlertsToStorage(alerts: JobAlert[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts))
+  } catch { /* ignore */ }
+}
+
+function mapDbAlert(row: Record<string, unknown>): JobAlert {
+  return {
+    id: row.id as string,
+    title: (row.keywords as string) || '',
+    location: (row.location as string) || '',
+    type: row.remote_only ? 'Remote' : 'Any',
+    createdAt: row.created_at as string,
+  }
 }
 
 export default function JobAlerts() {
+  const { user } = useAuth()
   const [alerts, setAlerts] = useState<JobAlert[]>([])
   const [showForm, setShowForm] = useState(false)
   const [title, setTitle] = useState('')
   const [location, setLocation] = useState('')
   const [type, setType] = useState('')
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    setAlerts(loadAlerts())
-  }, [])
+    if (!user) {
+      setAlerts(loadAlertsFromStorage())
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const { data, error } = await supabase
+        .from('job_alerts')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+      if (cancelled) return
+      if (error) {
+        setAlerts(loadAlertsFromStorage())
+      } else {
+        const mapped = (data ?? []).map(mapDbAlert)
+        setAlerts(mapped)
+        saveAlertsToStorage(mapped)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [user])
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) {
       toast.error('Please enter a job title')
       return
     }
-    const alert: JobAlert = {
+    setLoading(true)
+    const optimistic: JobAlert = {
       id: crypto.randomUUID(),
       title: title.trim(),
       location: location.trim(),
       type: type.trim() || 'Any',
       createdAt: new Date().toISOString(),
     }
-    const next = [alert, ...alerts]
+    const next = [optimistic, ...alerts]
     setAlerts(next)
-    saveAlerts(next)
     setTitle('')
     setLocation('')
     setType('')
     setShowForm(false)
+
+    if (user) {
+      const { error } = await supabase.from('job_alerts').insert({
+        user_id: user.id,
+        keywords: optimistic.title,
+        location: optimistic.location || null,
+        remote_only: optimistic.type === 'Remote',
+      })
+      if (error) {
+        toast.error('Failed to save alert')
+        setAlerts((prev) => prev.filter((a) => a.id !== optimistic.id))
+        return
+      }
+      const { data } = await supabase
+        .from('job_alerts')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+      if (data) {
+        const mapped = data.map(mapDbAlert)
+        setAlerts(mapped)
+        saveAlertsToStorage(mapped)
+      }
+    } else {
+      saveAlertsToStorage(next)
+    }
     toast.success('Job alert saved')
+    setLoading(false)
   }
 
-  const handleDelete = (id: string) => {
-    const next = alerts.filter((a) => a.id !== id)
-    setAlerts(next)
-    saveAlerts(next)
+  const handleDelete = async (id: string) => {
+    const prev = alerts
+    setAlerts((a) => a.filter((x) => x.id !== id))
+    if (user) {
+      const { error } = await supabase.from('job_alerts').delete().eq('id', id)
+      if (error) {
+        toast.error('Failed to delete alert')
+        setAlerts(prev)
+        return
+      }
+      saveAlertsToStorage(prev.filter((a) => a.id !== id))
+    } else {
+      saveAlertsToStorage(prev.filter((a) => a.id !== id))
+    }
     toast.success('Alert deleted')
   }
 
@@ -111,7 +186,7 @@ export default function JobAlerts() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button onClick={handleSave} className="rounded-full">
+                <Button onClick={handleSave} disabled={loading} className="rounded-full">
                   <Bell className="mr-1.5 h-4 w-4" /> Save Alert
                 </Button>
                 <Button variant="outline" className="rounded-full" onClick={() => { setShowForm(false); setTitle(''); setLocation(''); setType('') }}>

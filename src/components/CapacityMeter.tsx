@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { AlertTriangle, Ban } from "lucide-react"
+import { AlertTriangle, Ban, Pencil, Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/context/AuthContext"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { updateCapacity } from "@/lib/v2/matching"
 
 interface CapacityMeterProps {
-  used: number
-  total: number
+  professionalId?: string
+  used?: number
+  total?: number
   variant?: "circular" | "linear"
   label?: string
   size?: "sm" | "md" | "lg"
@@ -27,12 +33,12 @@ const CIRCULAR_SIZES = {
 } as const
 
 function CircularCapacityMeter({
-  used,
-  total,
+  used = 0,
+  total = 1,
   size = "md",
   label,
   className,
-}: Omit<CapacityMeterProps, "variant">) {
+}: Omit<CapacityMeterProps, "variant" | "professionalId">) {
   const [mounted, setMounted] = useState(false)
   const ratio = total > 0 ? Math.min(used / total, 1) : 0
   const percentage = Math.round(ratio * 100)
@@ -122,11 +128,11 @@ function CircularCapacityMeter({
 }
 
 function LinearCapacityMeter({
-  used,
-  total,
+  used = 0,
+  total = 1,
   label,
   className,
-}: Omit<CapacityMeterProps, "variant" | "size">) {
+}: Omit<CapacityMeterProps, "variant" | "size" | "professionalId">) {
   const [mounted, setMounted] = useState(false)
   const ratio = total > 0 ? Math.min(used / total, 1) : 0
   const percentage = Math.round(ratio * 100)
@@ -182,12 +188,115 @@ function LinearCapacityMeter({
 
 function CapacityMeter({
   variant = "linear",
+  professionalId,
+  used: usedProp,
+  total: totalProp,
   ...props
 }: CapacityMeterProps) {
-  if (variant === "circular") {
-    return <CircularCapacityMeter {...props} />
+  const { user } = useAuth()
+  const [dbUsed, setDbUsed] = useState<number | null>(null)
+  const [dbMax, setDbMax] = useState<number | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [editUsed, setEditUsed] = useState('')
+  const [editMax, setEditMax] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const isOwner = !!user && !!professionalId && user.id === professionalId
+
+  useEffect(() => {
+    if (!professionalId) return
+    let cancelled = false
+    ;(async () => {
+      const today = new Date().toISOString().slice(0, 10)
+      const { data } = await supabase
+        .from('professional_capacities')
+        .select('used, max_capacity')
+        .eq('user_id', professionalId)
+        .lte('period_start', today)
+        .gte('period_end', today)
+        .single()
+      if (!cancelled && data) {
+        setDbUsed(data.used)
+        setDbMax(data.max_capacity)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [professionalId])
+
+  const used = dbUsed !== null ? dbUsed : (usedProp ?? 0)
+  const total = dbMax !== null ? dbMax : (totalProp ?? 1)
+
+  const handleStartEdit = () => {
+    setEditUsed(String(used))
+    setEditMax(String(total))
+    setEditing(true)
   }
-  return <LinearCapacityMeter {...props} />
+
+  const handleSaveEdit = async () => {
+    const newUsed = parseInt(editUsed, 10)
+    const newMax = parseInt(editMax, 10)
+    if (isNaN(newUsed) || isNaN(newMax) || newMax <= 0) return
+    setSaving(true)
+    try {
+      await updateCapacity(professionalId!, { used: newUsed, max_capacity: newMax })
+      setDbUsed(newUsed)
+      setDbMax(newMax)
+      setEditing(false)
+    } catch {
+      // silently fail
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const inner = variant === "circular" ? (
+    <CircularCapacityMeter used={used} total={total} {...props} />
+  ) : (
+    <LinearCapacityMeter used={used} total={total} {...props} />
+  )
+
+  if (!isOwner) return inner
+
+  return (
+    <div className="relative group">
+      {inner}
+      {editing ? (
+        <div className="mt-2 flex items-center gap-1.5">
+          <Input
+            type="number"
+            value={editUsed}
+            onChange={(e) => setEditUsed(e.target.value)}
+            className="h-7 w-16 text-xs px-2"
+            placeholder="Used"
+            min={0}
+          />
+          <span className="text-xs text-muted-foreground">/</span>
+          <Input
+            type="number"
+            value={editMax}
+            onChange={(e) => setEditMax(e.target.value)}
+            className="h-7 w-16 text-xs px-2"
+            placeholder="Max"
+            min={1}
+          />
+          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={handleSaveEdit} disabled={saving}>
+            <Check className="h-3.5 w-3.5 text-emerald-500" />
+          </Button>
+          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditing(false)}>
+            <X className="h-3.5 w-3.5 text-muted-foreground" />
+          </Button>
+        </div>
+      ) : (
+        <button
+          onClick={handleStartEdit}
+          className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-foreground"
+        >
+          <Pencil className="size-3" />
+          Edit capacity
+        </button>
+      )}
+    </div>
+  )
 }
 
 export { CapacityMeter, type CapacityMeterProps }

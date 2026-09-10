@@ -14,21 +14,7 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { getMessagesPath, profileUrl } from '@/data/constants'
-
-function computeSkillOverlap(a: string[], b: string[]): number {
-  if (a.length === 0 || b.length === 0) return 0
-  const setA = new Set(a.map((s) => s.toLowerCase()))
-  const setB = new Set(b.map((s) => s.toLowerCase()))
-  let overlap = 0
-  for (const s of setA) { if (setB.has(s)) overlap++ }
-  return Math.round((overlap / Math.max(setA.size, setB.size)) * 100)
-}
-
-function matchColor(pct: number): string {
-  if (pct >= 70) return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25'
-  if (pct >= 40) return 'bg-amber-500/10 text-amber-600 border-amber-500/25'
-  return 'bg-muted text-muted-foreground border-border'
-}
+import { findMatchesForProfessional, type MatchResult } from '@/lib/v2/matching'
 
 type SortKey = 'match' | 'experience' | 'name'
 
@@ -41,8 +27,24 @@ export default function TalentSearch() {
   const [source, setSource] = useState('all')
   const [minMatch, setMinMatch] = useState('0')
   const [sortBy, setSortBy] = useState<SortKey>('match')
+  const [v2Matches, setV2Matches] = useState<MatchResult[]>([])
 
   useEffect(() => { refreshCandidates() }, [refreshCandidates])
+
+  useEffect(() => {
+    if (role !== 'professional' || !user?.id) return
+    let cancelled = false
+    findMatchesForProfessional(user.id, 50)
+      .then((results) => { if (!cancelled) setV2Matches(results) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [role, user?.id])
+
+  const matchByCandidateId = useMemo(() => {
+    const map = new Map<string, MatchResult>()
+    for (const m of v2Matches) map.set(m.candidate_id, m)
+    return map
+  }, [v2Matches])
 
   const mySkills = useMemo(() => {
     if (role === 'professional') {
@@ -54,8 +56,9 @@ export default function TalentSearch() {
 
   const scored = useMemo(() => candidates.map((c) => ({
     ...c,
-    matchScore: computeSkillOverlap(mySkills, c.skills),
-  })), [candidates, mySkills])
+    matchScore: matchByCandidateId.get(c.id)?.match_score ?? 0,
+    matchReasons: matchByCandidateId.get(c.id)?.match_reasons ?? [],
+  })), [candidates, matchByCandidateId])
 
   const results = useMemo(() => {
     const filtered = scored.filter((c) => {
@@ -115,12 +118,6 @@ export default function TalentSearch() {
         </Select>
       </div>
 
-      {mySkills.length === 0 && (
-        <div className="rounded-lg border border-amber-500/25 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-400">
-          Add skills to your profile to see match scores for each candidate.
-        </div>
-      )}
-
       {loading ? (
         <SkeletonGrid count={6} />
       ) : results.length === 0 ? (
@@ -157,13 +154,20 @@ export default function TalentSearch() {
                       </div>
                       <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {c.location}</span>
-                        {mySkills.length > 0 && (
-                          <Badge variant="outline" className={`gap-1 text-[10px] font-semibold ${matchColor(c.matchScore)}`}>
+                        {c.matchScore > 0 && (
+                          <Badge variant="outline" className={`gap-1 text-[10px] font-semibold ${c.matchScore >= 70 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25' : c.matchScore >= 40 ? 'bg-amber-500/10 text-amber-600 border-amber-500/25' : 'bg-muted text-muted-foreground border-border'}`}>
                             <Target className="h-3 w-3" /> {c.matchScore}% match
                           </Badge>
                         )}
                         <Chip tone={c.source === 'Referral' ? 'primary' : 'default'}>{c.source}</Chip>
                       </div>
+                      {c.matchReasons && c.matchReasons.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {c.matchReasons.map((reason: string) => (
+                            <span key={reason} className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-[10px] font-medium text-primary">{reason}</span>
+                          ))}
+                        </div>
+                      )}
                       <div className="mt-3 flex flex-wrap gap-1.5">{c.skills.map((s) => <Chip key={s} tone={mySkills.some((ms) => ms.toLowerCase() === s.toLowerCase()) ? 'primary' : 'default'}>{s}</Chip>)}</div>
                       <div className="mt-4 flex gap-2">
                         <Button size="sm" className="flex-1 rounded-lg bg-primary" disabled={c.id === user?.id} onClick={async (e) => {

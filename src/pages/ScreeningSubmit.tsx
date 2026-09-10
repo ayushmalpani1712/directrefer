@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
-import { ArrowLeft, CheckCircle2, FileText, AlertCircle, Send, RotateCcw, Clock, Trophy } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, FileText, AlertCircle, Send, RotateCcw, Clock, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,10 @@ import { ListSkeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { onScreeningPassed } from '@/lib/v2/behaviorScore'
+import { ScreeningProgress } from '@/components/ScreeningProgress'
+import { VideoUpload } from '@/components/VideoUpload'
+import { SkillsAssessment } from '@/components/SkillsAssessment'
 
 interface Criteria {
   id: string
@@ -51,6 +55,10 @@ export default function ScreeningSubmit() {
   const [canRetake, setCanRetake] = useState(true)
   const [cooldownRemaining, setCooldownRemaining] = useState('')
   const [attemptNumber, setAttemptNumber] = useState(1)
+  const [currentStep, setCurrentStep] = useState(0)
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [videoDuration, setVideoDuration] = useState<number | null>(null)
+  const [skillsResults, setSkillsResults] = useState<Record<string, unknown> | null>(null)
 
   useEffect(() => {
     if (!jobId || !user) return
@@ -139,6 +147,11 @@ export default function ScreeningSubmit() {
           criteria_id: crit.id,
           result: 'pending',
           details: { answer: answer?.answer ?? '' },
+          evidence: {
+            video_url: videoUrl,
+            video_duration_seconds: videoDuration,
+            skills_results: skillsResults,
+          },
           status: 'pending_review',
         })
       }
@@ -153,6 +166,7 @@ export default function ScreeningSubmit() {
         await updateApplicationStatus(app.id, 'screening', user.id)
       }
       toast.success('Screening submitted successfully!')
+      onScreeningPassed(user.id).catch(() => {})
       navigate('/job-seeker/browse-jobs')
     } catch (err) {
       console.error('Failed to submit screening:', err)
@@ -252,6 +266,13 @@ export default function ScreeningSubmit() {
     )
   }
 
+  const screeningSteps = [
+    { id: 'questionnaire', label: 'Questionnaire', icon: FileText, timeEstimate: '~5 min' },
+    { id: 'skills', label: 'Skills Assessment', icon: Trophy, timeEstimate: '~10 min' },
+    { id: 'video', label: 'Video Interview', icon: Send, timeEstimate: '~15 min' },
+    { id: 'complete', label: 'Submit', icon: CheckCircle2, timeEstimate: '' },
+  ]
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="flex items-center gap-2">
@@ -295,6 +316,12 @@ export default function ScreeningSubmit() {
         </Card>
       </motion.div>
 
+      <ScreeningProgress
+        steps={screeningSteps}
+        currentStepIndex={currentStep}
+        variant="compact"
+      />
+
       {previousAttempts.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <Card className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
@@ -322,51 +349,127 @@ export default function ScreeningSubmit() {
         </motion.div>
       )}
 
-      <div className="space-y-4">
-        {criteria.map((crit, i) => {
-          const answer = answers.find(a => a.criteria_id === crit.id)
-          return (
-            <motion.div
-              key={crit.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 * (i + 1) }}
-            >
-              <Card className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-sm font-semibold">{crit.name}</h3>
-                      {crit.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5">{crit.description}</p>
-                      )}
+      {currentStep === 0 && (
+        <div className="space-y-4">
+          {criteria.map((crit, i) => {
+            const answer = answers.find(a => a.criteria_id === crit.id)
+            return (
+              <motion.div
+                key={crit.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 * (i + 1) }}
+              >
+                <Card className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
+                  <CardContent className="p-5 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-semibold">{crit.name}</h3>
+                        {crit.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{crit.description}</p>
+                        )}
+                      </div>
+                      <Badge variant="secondary" className="shrink-0 text-[10px] capitalize">{crit.category}</Badge>
                     </div>
-                    <Badge variant="secondary" className="shrink-0 text-[10px] capitalize">{crit.category}</Badge>
+                    <Textarea
+                      value={answer?.answer ?? ''}
+                      onChange={(e) => updateAnswer(crit.id, e.target.value)}
+                      placeholder="Type your answer here..."
+                      className="min-h-[100px] text-sm"
+                    />
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
+
+          {criteria.length > 0 && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+              <Card className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
+                <CardContent className="p-5 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {allAnswered ? (
+                      <><CheckCircle2 className="h-4 w-4 text-emerald-500" /> All questions answered</>
+                    ) : (
+                      <><AlertCircle className="h-4 w-4 text-amber-500" /> {answers.filter(a => !a.answer.trim()).length} questions remaining</>
+                    )}
                   </div>
-                  <Textarea
-                    value={answer?.answer ?? ''}
-                    onChange={(e) => updateAnswer(crit.id, e.target.value)}
-                    placeholder="Type your answer here..."
-                    className="min-h-[100px] text-sm"
-                  />
+                  <Button
+                    onClick={() => setCurrentStep(1)}
+                    disabled={!allAnswered}
+                    className="bg-primary text-white shadow-sm hover:shadow-md transition-all duration-200 gap-2"
+                  >
+                    Next <ArrowRight className="h-4 w-4" />
+                  </Button>
                 </CardContent>
               </Card>
             </motion.div>
-          )
-        })}
-      </div>
+          )}
+        </div>
+      )}
 
-      {criteria.length > 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+      {currentStep === 1 && user && jobId && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          <SkillsAssessment
+            jobId={jobId}
+            userId={user.id}
+            onComplete={(results) => {
+              setSkillsResults(results as unknown as Record<string, unknown>)
+              setCurrentStep(2)
+            }}
+            onCancel={() => setCurrentStep(0)}
+          />
+        </motion.div>
+      )}
+
+      {currentStep === 2 && user && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          <VideoUpload
+            userId={user.id}
+            jobId={jobId}
+            onUploadComplete={(url, duration) => {
+              setVideoUrl(url)
+              setVideoDuration(duration)
+              setCurrentStep(3)
+            }}
+            onCancel={() => setCurrentStep(1)}
+          />
+        </motion.div>
+      )}
+
+      {currentStep === 3 && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          <Card className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
+            <CardContent className="p-5 space-y-3">
+              <h3 className="text-sm font-semibold">Review & Submit</h3>
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>{criteria.length} questionnaire answers</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {skillsResults ? (
+                    <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /><span>Skills assessment completed</span></>
+                  ) : (
+                    <><AlertCircle className="h-3.5 w-3.5 text-amber-500" /><span>Skills assessment skipped</span></>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {videoUrl ? (
+                    <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /><span>Video recorded ({videoDuration ?? 0}s)</span></>
+                  ) : (
+                    <><AlertCircle className="h-3.5 w-3.5 text-amber-500" /><span>Video interview skipped</span></>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
             <CardContent className="p-5 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {allAnswered ? (
-                  <><CheckCircle2 className="h-4 w-4 text-emerald-500" /> All questions answered</>
-                ) : (
-                  <><AlertCircle className="h-4 w-4 text-amber-500" /> {answers.filter(a => !a.answer.trim()).length} questions remaining</>
-                )}
-              </div>
+              <Button variant="outline" onClick={() => setCurrentStep(2)} className="gap-1.5">
+                <ArrowLeft className="h-4 w-4" /> Back
+              </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={!allAnswered || submitting}

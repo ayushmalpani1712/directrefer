@@ -53,6 +53,7 @@ const AdminSettingsPage = lazyWithRetry(() => import('@/pages/admin/Settings'))
 const AdminAnalyticsPage = lazyWithRetry(() => import('@/pages/admin/Analytics'))
 const AdminAuditLog = lazyWithRetry(() => import('@/pages/admin/AuditLog'))
 const AdminReferrals = lazyWithRetry(() => import('@/pages/admin/Referrals'))
+const AdminIncentives = lazyWithRetry(() => import('@/pages/admin/IncentiveAdmin'))
 const NotificationsPage = lazyWithRetry(() => import('@/pages/Network').then((m) => ({ default: m.NotificationsPage })))
 const BookmarksPage = lazyWithRetry(() => import('@/pages/Network').then((m) => ({ default: m.BookmarksPage })))
 const ActivityPage = lazyWithRetry(() => import('@/pages/Network').then((m) => ({ default: m.ActivityPage })))
@@ -340,6 +341,7 @@ export default function App() {
                     <Route path="settings" element={<AdminSettingsPage />} />
                     <Route path="audit-log" element={<AdminAuditLog />} />
                     <Route path="referrals" element={<AdminReferrals />} />
+                    <Route path="incentives" element={<AdminIncentives />} />
                     <Route path="screening" element={<AdminScreeningQueue />} />
                     <Route path="scoring" element={<AdminReviewerScoring />} />
                     <Route path="messages" element={<Messages />} />

@@ -450,6 +450,41 @@ export async function getJobMatches(jobId: string): Promise<MatchResult[]> {
   return (data ?? []) as MatchResult[]
 }
 
+// ── Capacity Management ─────────────────────────────────────────────────────
+
+/**
+ * Update a professional's current capacity load.
+ */
+export async function updateCapacity(
+  professionalId: string,
+  updates: Partial<{ used: number; max_capacity: number; period_start: string }>
+): Promise<void> {
+  const today = new Date().toISOString().slice(0, 10)
+  const { error } = await supabase
+    .from('professional_capacities')
+    .update(updates)
+    .eq('user_id', professionalId)
+    .lte('period_start', today)
+    .gte('period_end', today)
+  if (error) throw error
+}
+
+/**
+ * Returns true if the professional has available capacity (used < max_capacity).
+ */
+export async function checkCapacityAvailable(professionalId: string): Promise<boolean> {
+  const today = new Date().toISOString().slice(0, 10)
+  const { data, error } = await supabase
+    .from('professional_capacities')
+    .select('used, max_capacity')
+    .eq('user_id', professionalId)
+    .lte('period_start', today)
+    .gte('period_end', today)
+    .single()
+  if (error || !data) return false
+  return data.used < data.max_capacity
+}
+
 // ── Job Recommendation Engine ───────────────────────────────────────────────
 
 export interface JobRecommendation {

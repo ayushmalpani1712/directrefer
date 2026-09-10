@@ -21,6 +21,8 @@ import { cn } from '@/lib/utils'
 import { ListSkeleton } from '@/components/ui/skeleton'
 import ResumePreview from '@/components/ResumePreview'
 import { runCandidateScreening } from '@/lib/v2/api'
+import { onReferralAccepted, onReferralRejected } from '@/lib/v2/behaviorScore'
+import { autoAwardOnAcceptance } from '@/lib/incentives'
 
 const TABS: { key: ReferralStatus | 'all'; label: string }[] = [
   { key: 'requested', label: 'New' },
@@ -115,6 +117,10 @@ export default function ReferralInbox() {
   const handleAcceptWithScreening = useCallback(async (requestId: string, studentName: string, requesterId?: string) => {
     setRequestStatus(requestId, 'accepted')
     toast.success(`Accepted ${studentName} — they'll be notified`)
+    if (ME.id) {
+      onReferralAccepted(ME.id).catch(() => {})
+      autoAwardOnAcceptance(requestId, ME.id).catch(() => {})
+    }
     // Run screening in background
     if (requesterId) {
       setScreeningLoading(requestId)
@@ -300,6 +306,9 @@ export default function ReferralInbox() {
               if (passDialog) {
                 setRequestStatus(passDialog.requestId, 'declined', passReason || undefined)
                 toast.success(`Declined ${passDialog.studentName}${passReason ? ` — ${DECLINE_REASONS.find((r) => r.value === passReason)?.label || passReason}` : ''}`)
+                if (ME.id) {
+                  onReferralRejected(ME.id).catch(() => {})
+                }
                 setPassDialog(null)
                 setPassReason('')
               }

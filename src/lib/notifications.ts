@@ -229,3 +229,47 @@ export async function notifyJobDeadlineApproaching(jobTitle: string, daysLeft: n
     tag: `job-deadline-${jobTitle}`,
   })
 }
+
+export async function subscribeToNotifications(
+  userId: string,
+  onNotification: (notification: {
+    id: string
+    type: string
+    title: string
+    description: string | null
+    read: boolean
+    created_at: string
+    entity_type?: string | null
+    entity_id?: string | null
+  }) => void
+) {
+  const { supabase } = await import('@/lib/supabase')
+
+  const channel = supabase
+    .channel('notifications-realtime')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload: { new: Record<string, unknown> }) => {
+        const row = payload.new
+        onNotification({
+          id: row.id as string,
+          type: row.type as string,
+          title: row.title as string,
+          description: (row.description as string) ?? null,
+          read: row.read as boolean,
+          created_at: row.created_at as string,
+          entity_type: (row.entity_type as string) ?? null,
+          entity_id: (row.entity_id as string) ?? null,
+        })
+      }
+    )
+    .subscribe()
+
+  return channel
+}

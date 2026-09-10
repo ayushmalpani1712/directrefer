@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { ListSkeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { logAdminAction } from '@/lib/db'
+import { VideoPlayer } from '@/components/VideoPlayer'
 
 interface ScreeningAttempt {
   id: string
@@ -288,7 +289,7 @@ export default function ReviewerScoring() {
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium">Screening Answers</h4>
                     <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs space-y-2">
-                      {Object.entries(selectedAttempt.evidence).filter(([k]) => !['admin_notes', 'admin_score', 'quality_tier'].includes(k)).map(([key, value]) => (
+                      {Object.entries(selectedAttempt.evidence).filter(([k]) => !['admin_notes', 'admin_score', 'quality_tier', 'video_url', 'video_duration_seconds', 'skills_results'].includes(k)).map(([key, value]) => (
                         <div key={key}>
                           <span className="font-medium text-foreground">{key}:</span>
                           <p className="text-muted-foreground mt-0.5">{typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}</p>
@@ -311,6 +312,16 @@ export default function ReviewerScoring() {
                     )}
                   </div>
                 </div>
+
+                {Boolean((selectedAttempt.evidence as Record<string, unknown>)?.video_url) && (
+                  <div className="space-y-3 pt-3 border-t border-border">
+                    <h4 className="text-sm font-medium">Video Interview</h4>
+                    <VideoPlayer
+                      src={(selectedAttempt.evidence as Record<string, unknown>).video_url as string}
+                      className="w-full rounded-lg"
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-3 pt-3 border-t border-border">
                   <h4 className="text-sm font-medium">Scoring</h4>

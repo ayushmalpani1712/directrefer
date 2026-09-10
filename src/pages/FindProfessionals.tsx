@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Bookmark, BookmarkCheck, ChevronDown, ChevronUp, Search, SlidersHorizontal, X } from 'lucide-react'
@@ -16,9 +16,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { SkeletonGrid } from '@/components/ui/skeleton'
 import { EmptyState, GAvatar } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
-import { type Professional, profileUrl, calculateMatchScore } from '@/data/constants'
+import { useAuth } from '@/context/AuthContext'
+import { type Professional, profileUrl } from '@/data/constants'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { cn } from '@/lib/utils'
+import { findMatchesForJobSeeker, type MatchResult } from '@/lib/v2/matching'
 
   type SortKey = 'best_match' | 'recommended' | 'top_rated' | 'fastest' | 'recent' | 'most_referrals'
 
@@ -35,18 +37,9 @@ function toggle(list: string[], v: string) {
   return list.includes(v) ? list.filter((x) => x !== v) : [...list, v]
 }
 
-export function ProfessionalCard({ p, index }: { p: Professional; index: number }) {
-  const { bookmarks, toggleBookmark, student } = useApp()
+export function ProfessionalCard({ p, index, matchResult }: { p: Professional; index: number; matchResult?: MatchResult }) {
+  const { bookmarks, toggleBookmark } = useApp()
   const saved = bookmarks.includes(p.id)
-
-  // Calculate real match score
-  const candidateData = student ? {
-    skills: student.skills,
-    location: student.location,
-    headline: student.headline,
-    whyFit: student.whyFit,
-  } : null
-  const matchResult = candidateData ? calculateMatchScore(candidateData, p, student?.preferredRoles?.[0] || '') : null
 
   return (
     <motion.div
@@ -95,8 +88,8 @@ export function ProfessionalCard({ p, index }: { p: Professional; index: number 
           {p.trustTier && (
             <TrustBadge tier={p.trustTier} score={p.trustScore} showScore />
           )}
-          {matchResult && matchResult.score > 0 && (
-            <MatchScore score={matchResult.score} />
+          {matchResult && matchResult.match_score > 0 && (
+            <MatchScore score={matchResult.match_score} confidence={matchResult.confidence} />
           )}
           {p.activityScore >= 70 && (
             <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600" title={`Reputation score: ${p.activityScore}/100`}>
@@ -109,6 +102,15 @@ export function ProfessionalCard({ p, index }: { p: Professional; index: number 
             </span>
           )}
         </div>
+
+        {/* Match reasons */}
+        {matchResult && matchResult.match_reasons.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {matchResult.match_reasons.map((reason) => (
+              <span key={reason} className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-[10px] font-medium text-primary">{reason}</span>
+            ))}
+          </div>
+        )}
 
         {/* Bio */}
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground line-clamp-2">{p.bio}</p>
@@ -310,7 +312,8 @@ function FilterSheet({ f, setF, companies, allSkills, allLocations }: { f: Filte
 }
 
 export default function FindProfessionals() {
-  const { visibleProfessionals: allProfessionals, student } = useApp()
+  const { visibleProfessionals: allProfessionals } = useApp()
+  const { user } = useAuth()
   const professionals = useMemo(() => allProfessionals.filter((p) => p.openForReferrals), [allProfessionals])
   const ALL_SKILLS = useMemo(() => [...new Set(professionals.flatMap(p => p.skills ?? []))], [professionals])
   const COMPANIES = useMemo(() => [...new Set(professionals.map(p => p.company))], [professionals])
@@ -318,6 +321,23 @@ export default function FindProfessionals() {
   const loading = usePageLoading(300)
   const [f, setF] = useState<Filters>(EMPTY_FILTERS)
   const [sort, setSort] = useState<SortKey>('best_match')
+  const [v2Matches, setV2Matches] = useState<MatchResult[]>([])
+
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+    const jobId = '00000000-0000-0000-0000-000000000000'
+    findMatchesForJobSeeker(user.id, jobId, 50)
+      .then((results) => { if (!cancelled) setV2Matches(results) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [user?.id])
+
+  const matchByProId = useMemo(() => {
+    const map = new Map<string, MatchResult>()
+    for (const m of v2Matches) map.set(m.professional_id, m)
+    return map
+  }, [v2Matches])
 
   const SORT_OPTIONS: { key: SortKey; label: string }[] = [
     { key: 'best_match', label: 'Best Match' },
@@ -341,12 +361,7 @@ export default function FindProfessionals() {
       return true
     })
     const by: Record<SortKey, (a: Professional, b: Professional) => number> = {
-      best_match: (a, b) => {
-        const candidateData = { skills: student?.skills, location: student?.location, headline: student?.headline, whyFit: student?.whyFit }
-        const scoreA = calculateMatchScore(candidateData, a, student?.preferredRoles?.[0] || '').score
-        const scoreB = calculateMatchScore(candidateData, b, student?.preferredRoles?.[0] || '').score
-        return scoreB - scoreA
-      },
+      best_match: (a, b) => (matchByProId.get(b.id)?.match_score ?? 0) - (matchByProId.get(a.id)?.match_score ?? 0),
       recommended: (a, b) => b.responseRate * b.successRate - a.responseRate * a.successRate,
       top_rated: (a, b) => b.rating - a.rating || b.reviews - a.reviews,
       fastest: (a, b) => a.avgReplyHours - b.avgReplyHours,
@@ -354,7 +369,7 @@ export default function FindProfessionals() {
       recent: (a, b) => b.joinedDaysAgo - a.joinedDaysAgo,
     }
     return list.sort(by[sort])
-  }, [f, sort, professionals])
+  }, [f, sort, professionals, matchByProId])
 
   const activeCount = f.companies.length + f.skills.length + f.locations.length
 
@@ -445,7 +460,7 @@ export default function FindProfessionals() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 items-stretch">
           <AnimatePresence mode="popLayout">
-            {results.map((p, i) => <ProfessionalCard key={p.id} p={p} index={i} />)}
+            {results.map((p, i) => <ProfessionalCard key={p.id} p={p} index={i} matchResult={matchByProId.get(p.id)} />)}
           </AnimatePresence>
         </div>
       )}

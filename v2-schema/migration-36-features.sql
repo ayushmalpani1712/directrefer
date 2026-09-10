@@ -139,4 +139,28 @@ CREATE TABLE IF NOT EXISTS connection_stats (
   recorded_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- ── SCRN-001: Add validation_rules to screening_criteria ────────────────────
+ALTER TABLE screening_criteria ADD COLUMN IF NOT EXISTS validation_rules JSONB DEFAULT '[]'::jsonb;
+
+-- ── Job Alerts ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS job_alerts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  keywords TEXT,
+  location TEXT,
+  remote_only BOOLEAN DEFAULT false,
+  min_salary INTEGER,
+  frequency TEXT DEFAULT 'daily' CHECK (frequency IN ('daily', 'weekly')),
+  is_active BOOLEAN DEFAULT true,
+  last_notified_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE job_alerts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage own alerts" ON job_alerts
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_job_alerts_user ON job_alerts(user_id) WHERE is_active = true;
+
 -- ── Schema Complete ─────────────────────────────────────────────────────────

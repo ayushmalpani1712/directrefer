@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import {
   ArrowLeft, ArrowRight, BadgeCheck, Briefcase, Building2, CheckCircle2, Clock, ExternalLink, FileText, GraduationCap, MapPin, Search, Send, Sparkles, Users, X,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -17,6 +18,7 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { PIPELINE_STAGES, type PipelineStage } from '@/data/constants'
 import { cn } from '@/lib/utils'
+import { findMatchesForJobSeeker, storeMatches } from '@/lib/v2/matching'
 
 interface JobRow {
   id: string
@@ -191,6 +193,7 @@ export default function ReferralJobs() {
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
+  const [matchingJobId, setMatchingJobId] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -311,6 +314,24 @@ export default function ReferralJobs() {
       return haystack.includes(term)
     })
   }, [enrichedJobs, q, typeFilter])
+
+  const handleFindMatches = async (jobId: string) => {
+    if (!user) { navigate('/login'); return }
+    setMatchingJobId(jobId)
+    try {
+      const matches = await findMatchesForJobSeeker(user.id, jobId, 10)
+      if (matches.length > 0) {
+        await storeMatches(matches)
+        toast.success(`Found and stored ${matches.length} match${matches.length !== 1 ? 'es' : ''}`)
+      } else {
+        toast.info('No matches found for this job')
+      }
+    } catch {
+      toast.error('Failed to find matches')
+    } finally {
+      setMatchingJobId(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -474,6 +495,9 @@ export default function ReferralJobs() {
                           <a href={job.application_url} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-1.5 h-3.5 w-3.5" /> Apply on company site</a>
                         </Button>
                       )}
+                      <Button size="sm" variant="ghost" className="rounded-full" disabled={matchingJobId === job.id} onClick={() => handleFindMatches(job.id)}>
+                        <Sparkles className="mr-1.5 h-3.5 w-3.5" /> {matchingJobId === job.id ? 'Finding...' : 'Find Matches'}
+                      </Button>
                     </div>
                     <div className="mt-2 pt-2 border-t border-border/30">
                       <SocialShareButtons
