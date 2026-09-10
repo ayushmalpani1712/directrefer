@@ -6,7 +6,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import type { Professional } from '@/data/mock'
+import type { Professional } from '@/data/constants'
 
 // ── Professionals ────────────────────────────────────────────────────────────
 

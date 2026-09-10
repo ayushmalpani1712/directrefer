@@ -17,7 +17,7 @@ import { useTrustScore } from '@/hooks/useTrustScore'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { getMessagesPath, calculateReputationScore, BADGE_DEFINITIONS, type Professional } from '@/data/mock'
+import { getMessagesPath, calculateReputationScore, BADGE_DEFINITIONS, type Professional } from '@/data/constants'
 import { getBannerStyle, getProfileTheme } from '@/lib/utils'
 import NotFound from '@/pages/NotFound'
 

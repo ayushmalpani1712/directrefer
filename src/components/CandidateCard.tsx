@@ -1,7 +1,7 @@
 import { GraduationCap, MapPin, ShieldCheck, Sparkles, User } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Chip } from '@/components/ui-kit'
-import type { ReferralRequest } from '@/data/mock'
+import type { ReferralRequest } from '@/data/constants'
 import { cn } from '@/lib/utils'
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Compass, Home, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useApp } from '@/context/AppContext'
-import { ROLE_ROUTE, RECRUITER_VISIBLE } from '@/data/mock'
+import { ROLE_ROUTE, RECRUITER_VISIBLE } from '@/data/constants'
 
 export default function NotFound() {
   const { role } = useApp()

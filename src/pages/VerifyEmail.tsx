@@ -5,7 +5,7 @@ import { CheckCircle2, Loader2, Mail, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/layout'
 import { supabase } from '@/lib/supabase'
-import { ROLE_ROUTE, type Role } from '@/data/mock'
+import { ROLE_ROUTE, type Role } from '@/data/constants'
 import { toast } from 'sonner'
 
 export default function VerifyEmail() {

@@ -15,7 +15,7 @@ import { useAuth } from '@/context/AuthContext'
 import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
 import { EmptyChart } from '@/components/analytics/EmptyChart'
 import { useFilteredRecruiterWeekly, hasData } from '@/hooks/useAnalytics'
-import { ROLE_ROUTE, getRoleFromPath, profileUrl } from '@/data/mock'
+import { ROLE_ROUTE, getRoleFromPath, profileUrl } from '@/data/constants'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 

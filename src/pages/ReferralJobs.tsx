@@ -15,7 +15,7 @@ import { applicationUrlSupported, professionalCollegeSupported } from '@/lib/db'
 import { SocialShareButtons } from '@/components/SocialShareButtons'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { PIPELINE_STAGES, type PipelineStage } from '@/data/mock'
+import { PIPELINE_STAGES, type PipelineStage } from '@/data/constants'
 import { cn } from '@/lib/utils'
 
 interface JobRow {

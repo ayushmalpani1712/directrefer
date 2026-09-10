@@ -12,7 +12,7 @@ import { Chip, EmptyState, GAvatar, SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
-import { getMessagesPath, profileUrl } from '@/data/mock'
+import { getMessagesPath, profileUrl } from '@/data/constants'
 
 export default function TalentSearch() {
   const loading = usePageLoading(400)

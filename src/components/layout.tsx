@@ -30,7 +30,7 @@ import {
   getRoleFromPath,
   getMessagesPath,
   type Role,
-} from '@/data/mock'
+} from '@/data/constants'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { MobileBottomNav } from '@/components/MobileBottomNav'

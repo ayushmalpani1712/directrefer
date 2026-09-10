@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { GAvatar } from '@/components/ui-kit'
-import { GRADIENTS, RECRUITER_VISIBLE } from '@/data/mock'
+import { GRADIENTS, RECRUITER_VISIBLE } from '@/data/constants'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import {

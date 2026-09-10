@@ -17,7 +17,7 @@ import { useAuth } from '@/context/AuthContext'
 import { DateRangeSelector, type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
 import { EmptyChart } from '@/components/analytics/EmptyChart'
 import { useFilteredStudentWeekly, hasData } from '@/hooks/useAnalytics'
-import { ROLE_ROUTE, getRoleFromPath, profileUrl } from '@/data/mock'
+import { ROLE_ROUTE, getRoleFromPath, profileUrl } from '@/data/constants'
 import { recommendJobsForCandidate, type JobRecommendation } from '@/lib/v2/matching'
 
 const RATE_LIMIT = 3

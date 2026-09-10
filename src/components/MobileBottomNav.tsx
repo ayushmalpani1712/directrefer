@@ -3,7 +3,7 @@ import { LayoutDashboard, Users, FileText, MessageSquare, User } from 'lucide-re
 import { cn } from '@/lib/utils'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { ROLE_ROUTE, getRoleFromPath, getMessagesPath, type Role } from '@/data/mock'
+import { ROLE_ROUTE, getRoleFromPath, getMessagesPath, type Role } from '@/data/constants'
 
 interface BottomNavItem {
   label: string

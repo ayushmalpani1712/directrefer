@@ -4,8 +4,8 @@ import { ArrowRight, CheckCircle, Search, Upload, X, Briefcase, Building2 } from
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/context/AuthContext'
-import { ROLE_ROUTE, RECRUITER_VISIBLE } from '@/data/mock'
-import type { Role } from '@/data/mock'
+import { ROLE_ROUTE, RECRUITER_VISIBLE } from '@/data/constants'
+import type { Role } from '@/data/constants'
 
 const ONBOARDING_DISMISSED_KEY = 'onboarding_dismissed'
 

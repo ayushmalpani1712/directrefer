@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { initials, PIPELINE_STAGES, GRADIENTS, AVATAR_COLORS, avatarColor } from '@/data/mock'
+import { initials, PIPELINE_STAGES, GRADIENTS, AVATAR_COLORS, avatarColor } from '@/data/constants'
 
 describe('initials', () => {
   it('returns first letters of each word', () => {

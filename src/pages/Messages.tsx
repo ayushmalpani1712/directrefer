@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils'
 import { MessagesSkeleton } from '@/components/ui/skeleton'
 import ResumePreview from '@/components/ResumePreview'
 import { supabase } from '@/lib/supabase'
-import { getRoleFromPath, profileUrl, type Role, type Conversation } from '@/data/mock'
+import { getRoleFromPath, profileUrl, type Role, type Conversation } from '@/data/constants'
 import { fetchConversations } from '@/lib/db'
 
 interface FileInfo {

@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { ListSkeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
-import { profileUrl } from '@/data/mock'
+import { profileUrl } from '@/data/constants'
 import { jobTemplates, type JobTemplate } from '@/data/jobTemplates'
 
 const STAGE_COLORS: Record<string, string> = {

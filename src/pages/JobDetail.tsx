@@ -16,7 +16,7 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { ListSkeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
-import { profileUrl } from '@/data/mock'
+import { profileUrl } from '@/data/constants'
 import { submitApplication } from '@/lib/v2/api'
 import { getSkillGap } from '@/lib/v2/matching'
 

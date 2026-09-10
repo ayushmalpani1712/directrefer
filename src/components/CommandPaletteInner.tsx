@@ -9,7 +9,7 @@ import { useApp } from '@/context/AppContext'
 // Re-declare navFor here to avoid circular imports — it's a pure function of role
 // Actually, we import it from layout which is already loaded
 // We need to avoid importing the whole layout module, so let's inline the nav items
-import { ROLE_ROUTE, RECRUITER_VISIBLE, getMessagesPath, profileUrl, type Role } from '@/data/mock'
+import { ROLE_ROUTE, RECRUITER_VISIBLE, getMessagesPath, profileUrl, type Role } from '@/data/constants'
 
 interface NavItem { label: string; icon: typeof Search; href: string }
 interface NavGroup { group: string; items: NavItem[] }

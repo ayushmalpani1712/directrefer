@@ -4,7 +4,7 @@
 // CSV and PDF export helpers for analytics and referral data.
 // ============================================================================
 
-import type { ReferralRequest } from '@/data/mock'
+import type { ReferralRequest } from '@/data/constants'
 
 export function exportToCSV(data: Record<string, unknown>[], filename: string) {
   if (data.length === 0) return

@@ -9,7 +9,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { HeadManager } from '@/components/HeadManager'
 import { lazyWithRetry } from '@/lib/lazyWithRetry'
 import { useVersionCheck } from '@/lib/useVersionCheck'
-import { ROLE_ROUTE, ROLE_MESSAGES_ROUTE, getRoleFromPath, type Role } from '@/data/mock'
+import { ROLE_ROUTE, ROLE_MESSAGES_ROUTE, getRoleFromPath, type Role } from '@/data/constants'
 import { SessionTimeout } from '@/components/SessionTimeout'
 import { ScrollToTop } from '@/components/ScrollToTop'
 

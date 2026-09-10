@@ -14,7 +14,7 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { GRADIENTS, getMessagesPath } from '@/data/mock'
+import { GRADIENTS, getMessagesPath } from '@/data/constants'
 import { getBannerStyle, getProfileTheme } from '@/lib/utils'
 import NotFound from '@/pages/NotFound'
 

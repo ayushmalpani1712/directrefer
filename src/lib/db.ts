@@ -19,7 +19,7 @@ import {
   type Job,
   type AppNotification,
   type NotificationType,
-} from '@/data/mock'
+} from '@/data/constants'
 
 // ── Helpers ─────────────────────────────────────────────────────
 

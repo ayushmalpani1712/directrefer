@@ -16,7 +16,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { SkeletonGrid } from '@/components/ui/skeleton'
 import { EmptyState, GAvatar } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
-import { type Professional, profileUrl, calculateMatchScore } from '@/data/mock'
+import { type Professional, profileUrl, calculateMatchScore } from '@/data/constants'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { cn } from '@/lib/utils'
 

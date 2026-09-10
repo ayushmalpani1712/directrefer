@@ -14,7 +14,7 @@ import {
   type Job,
   PIPELINE_STAGES,
   getRoleFromPath,
-} from '@/data/mock'
+} from '@/data/constants'
 import { supabase, advanceReferralPipeline as dbAdvancePipeline } from '@/lib/supabase'
 import { sendReferralStatusEmail, sendReminderEmail } from '@/lib/email'
 import { notifyNewMessage, notifyReferralUpdate, requestNotificationPermission } from '@/lib/notifications'

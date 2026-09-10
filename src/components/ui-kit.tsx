@@ -4,7 +4,7 @@ import { ArrowDownRight, ArrowUpRight, Star, type LucideIcon } from 'lucide-reac
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { initials, avatarColor, type ReferralStatus } from '@/data/mock'
+import { initials, avatarColor, type ReferralStatus } from '@/data/constants'
 
 // ── Avatar (initials-based, solid color from official palette) ─────────
 export function GAvatar({ name, userId, color, className, ring }: { name: string; userId?: string; color?: string; className?: string; ring?: boolean }) {

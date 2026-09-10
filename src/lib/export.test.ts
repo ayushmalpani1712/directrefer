@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { exportToCSV, exportReferralsCSV, exportAnalyticsCSV, exportUsersCSV } from '@/lib/export'
-import type { ReferralRequest } from '@/data/mock'
+import type { ReferralRequest } from '@/data/constants'
 
 describe('exportToCSV', () => {
   beforeEach(() => {

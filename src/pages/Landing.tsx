@@ -32,7 +32,7 @@ import { Logo } from '@/components/layout'
 import { FadeIn } from '@/components/FadeIn'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { profileUrl, RECRUITER_VISIBLE } from '@/data/mock'
+import { profileUrl, RECRUITER_VISIBLE } from '@/data/constants'
 import { captureUTMFromURL, storeUTMParams, trackPageVisit, persistUTMEvent } from '@/lib/analytics'
 
 const ROLES = [

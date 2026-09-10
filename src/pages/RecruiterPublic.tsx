@@ -12,7 +12,7 @@ import { Chip, CompanyChip, ReportDialog, Stars } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
-import { getMessagesPath, RECRUITER_VISIBLE } from '@/data/mock'
+import { getMessagesPath, RECRUITER_VISIBLE } from '@/data/constants'
 import { getBannerStyle } from '@/lib/utils'
 import NotFound from '@/pages/NotFound'
 

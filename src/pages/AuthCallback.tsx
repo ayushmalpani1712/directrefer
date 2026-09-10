@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
-import { ROLE_ROUTE, type Role } from '@/data/mock'
+import { ROLE_ROUTE, type Role } from '@/data/constants'
 import { persistUTMEvent } from '@/lib/analytics'
 
 async function getRoleRoute(): Promise<string> {
