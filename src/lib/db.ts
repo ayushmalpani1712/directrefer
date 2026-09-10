@@ -1639,13 +1639,12 @@ export async function updatePlatformSetting(key: string, value: unknown): Promis
 export interface Announcement {
   id: string
   title: string
-  body: string
+  content: string
   type: string
-  active: boolean
+  is_active: boolean
   created_by: string | null
   created_at: string
   expires_at: string | null
-  target_role: string
 }
 
 export async function fetchAnnouncements(): Promise<Announcement[]> {
@@ -1661,18 +1660,17 @@ export async function fetchAnnouncements(): Promise<Announcement[]> {
   }
 }
 
-export async function createAnnouncement(title: string, body: string, type: string, expiresAt?: string, targetRole?: string): Promise<boolean> {
+export async function createAnnouncement(title: string, content: string, type: string, expiresAt?: string): Promise<boolean> {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     const { error } = await supabase
       .from('announcements')
       .insert({
         title,
-        body,
+        content,
         type,
         created_by: user?.id || null,
         expires_at: expiresAt || null,
-        target_role: targetRole || 'all',
       })
     return !error
   } catch {
@@ -1696,7 +1694,7 @@ export async function toggleAnnouncement(id: string, active: boolean): Promise<b
   try {
     const { error } = await supabase
       .from('announcements')
-      .update({ active })
+      .update({ is_active: active })
       .eq('id', id)
     return !error
   } catch {

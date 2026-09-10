@@ -283,7 +283,7 @@ export default function AdminSettings() {
       toast.error('Title and body are required')
       return
     }
-    const ok = await createAnnouncement(newAnnTitle, newAnnBody, newAnnType, undefined, newAnnTarget)
+    const ok = await createAnnouncement(newAnnTitle, newAnnBody, newAnnType)
     if (ok) {
       toast.success('Announcement created')
       logAdminAction('created_announcement', undefined, { title: newAnnTitle, target: newAnnTarget })
@@ -344,16 +344,6 @@ export default function AdminSettings() {
       case 'maintenance': return 'bg-rose-500/10 text-rose-600 border-rose-500/25'
       case 'update': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25'
       default: return 'bg-muted text-muted-foreground'
-    }
-  }
-
-  const getTargetRoleBadge = (targetRole: string) => {
-    switch (targetRole) {
-      case 'student': return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/25">Students</Badge>
-      case 'professional': return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/25">Professionals</Badge>
-      case 'recruiter': return <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/25">Recruiters</Badge>
-      case 'admin': return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/25">Admins</Badge>
-      default: return <Badge variant="outline">All users</Badge>
     }
   }
 
@@ -524,13 +514,12 @@ export default function AdminSettings() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold">{a.title}</span>
                       <Badge className={getFlagColor(a.type)}>{a.type}</Badge>
-                      {getTargetRoleBadge(a.target_role)}
-                      {!a.active && <Badge variant="outline">Inactive</Badge>}
+                      {!a.is_active && <Badge variant="outline">Inactive</Badge>}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{a.body}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{a.content}</p>
                     <div className="text-xs text-muted-foreground mt-1">{new Date(a.created_at).toLocaleDateString()}</div>
                   </div>
-                  <Switch checked={a.active} onCheckedChange={(v) => handleToggleAnnouncement(a.id, v)} />
+                    <Switch checked={a.is_active} onCheckedChange={(v) => handleToggleAnnouncement(a.id, v)} />
                   <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeleteAnnId(a.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </CardContent>
               </Card>

@@ -3,6 +3,9 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 
 interface AdminReferral {
   id: string
@@ -25,6 +28,7 @@ export default function AdminReferrals() {
   const [referrals, setReferrals] = useState<AdminReferral[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
 
   useEffect(() => {
     const fetch = async () => {
@@ -67,6 +71,7 @@ export default function AdminReferrals() {
   }, [])
 
   const filtered = referrals.filter(r => {
+    if (statusFilter !== 'all' && r.status !== statusFilter) return false
     if (!search) return true
     const q = search.toLowerCase()
     return [r.requester_name, r.professional_name, r.job_title].join(' ').toLowerCase().includes(q)
@@ -77,16 +82,32 @@ export default function AdminReferrals() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h2 className="text-lg font-semibold">All Referrals</h2>
-          <p className="text-xs text-muted-foreground">{referrals.length} total &middot; {referrals.filter(r => r.status === 'requested' || r.status === 'under_review').length} pending</p>
+          <p className="text-xs text-muted-foreground">{referrals.length} total &middot; {filtered.length} showing</p>
         </div>
-        <div className="relative w-64">
-          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search..."
-            className="h-9 pl-8 text-sm"
-          />
+        <div className="flex items-center gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-9 w-36 text-sm">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="requested">Requested</SelectItem>
+              <SelectItem value="under_review">Under Review</SelectItem>
+              <SelectItem value="accepted">Accepted</SelectItem>
+              <SelectItem value="declined">Declined</SelectItem>
+              <SelectItem value="referral_submitted">Referral Submitted</SelectItem>
+              <SelectItem value="closed">Closed</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              className="h-9 pl-8 text-sm"
+            />
+          </div>
         </div>
       </div>
 

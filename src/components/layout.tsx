@@ -20,6 +20,7 @@ import {
   SidebarProvider, SidebarRail, SidebarTrigger, useSidebar,
 } from '@/components/ui/sidebar'
 import { GAvatar } from '@/components/ui-kit'
+import { AnnouncementBanner } from '@/components/AnnouncementBanner'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import {
@@ -405,7 +406,7 @@ function Topbar() {
   return (
     <header className="glass sticky top-0 z-30 flex h-14 items-center gap-1.5 border-b border-border/50 px-2 sm:px-4 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
       <SidebarTrigger className="md:hidden h-11 w-11 shrink-0 touch-target" aria-label="Toggle navigation menu" />
-      <a href="/" onClick={(e) => { e.preventDefault(); window.location.assign('/') }} className="flex items-center shrink-0 md:hidden" aria-label="Direct Refer — Go to homepage">
+      <a href="/" onClick={(e) => { e.preventDefault(); navigate('/') }} className="flex items-center shrink-0 md:hidden" aria-label="Direct Refer — Go to homepage">
         <svg viewBox="0 0 512 385" className="h-8 w-auto shrink-0" aria-hidden="true">
           <image href="/logo-emblem.png" width="512" height="385" />
         </svg>
@@ -482,6 +483,7 @@ export default function AppShell() {
       </a>
       <AppSidebar aria-label="Main navigation" />
       <SidebarInset className="bg-background flex flex-col min-w-0 min-h-0 overflow-y-auto overflow-x-hidden">
+        <AnnouncementBanner />
         <Topbar />
         <main id="main-content" className="mx-auto w-full min-w-0 max-w-7xl min-h-0 px-4 py-6 sm:px-6 lg:px-8 overflow-x-hidden pb-24 md:pb-6" role="main">
           <Breadcrumbs />

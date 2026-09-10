@@ -52,7 +52,7 @@ export default function AdminOverview() {
   const professionalCount = analytics?.usersByRole?.find(r => r.role === 'professional')?.count ?? 0
   const recruiterCount = analytics?.usersByRole?.find(r => r.role === 'recruiter')?.count ?? 0
   const inactiveUsers = allUsers.filter(u => u.daysInactive >= 180)
-  const activeAnnouncements = announcements.filter(a => a.active)
+  const activeAnnouncements = announcements.filter(a => a.is_active)
 
   const referralsSent = analytics?.totalReferrals ?? 0
   const referralsAccepted = analytics?.conversionRate ?? 0
