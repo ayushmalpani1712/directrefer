@@ -18,7 +18,6 @@
   },
   "iconLibrary": "lucide",
   "registries": {
-    "@vengeanceui": "https://raw.githubusercontent.com/Ashutoshx7/VengeanceUI/main/public/r/{name}.json",
-    "@skiper-ui": "https://skiper-ui.com/r/{name}"
+    "@vengeanceui": "https://raw.githubusercontent.com/Ashutoshx7/VengeanceUI/main/public/r/{name}.json"
   }
 }
