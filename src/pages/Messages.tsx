@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils'
 import { MessagesSkeleton } from '@/components/ui/skeleton'
 import ResumePreview from '@/components/ResumePreview'
 import { supabase } from '@/lib/supabase'
-import { getRoleFromPath, profileUrl, type Role, type Conversation } from '@/data/constants'
+import { getRoleFromPath, profileUrl, type Role, type Conversation, type Message } from '@/data/constants'
 import { fetchConversations } from '@/lib/db'
 
 interface FileInfo {
@@ -222,6 +222,33 @@ export default function Messages() {
     }).catch(() => {})
     return () => { cancelled = true }
   }, [user?.id, urlRole])
+
+  useEffect(() => {
+    if (!user?.id || conversations.length === 0) return
+    const convoIds = conversations.map((c) => c.id)
+    const channel = supabase
+      .channel('messages-realtime')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+      }, (payload) => {
+        const msg = payload.new as { id: string; conversation_id: string; sender_id: string; content: string; kind: string; created_at: string }
+        if (msg.sender_id === user.id) return
+        if (!convoIds.includes(msg.conversation_id)) return
+        const displayText = msg.kind === 'file' ? (() => { try { return `📎 ${JSON.parse(msg.content).name}` } catch { return '📎 File' } })() : msg.content
+        const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id !== msg.conversation_id) return c
+            const newMsg: Message = { id: msg.id, from: 'them', text: msg.content, time: timeStr, is_read: false, kind: msg.kind as 'text' | 'file' }
+            return { ...c, messages: [...c.messages, newMsg], lastMessage: displayText, time: timeStr }
+          })
+        )
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [user?.id, conversations.length])
 
   const active = conversations.find((c) => c.id === activeId)
   const sorted = [...conversations]

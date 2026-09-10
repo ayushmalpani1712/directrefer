@@ -20,6 +20,7 @@ import { sendReferralStatusEmail, sendReminderEmail } from '@/lib/email'
 import { notifyNewMessage, notifyReferralUpdate, requestNotificationPermission } from '@/lib/notifications'
 import { setWorkspaceCookie, getWorkspaceCookie, clearWorkspaceCookie } from '@/lib/utils'
 import { logClientError } from '@/lib/db'
+import { recordStateTransition } from '@/lib/v2/state-history'
 
 async function loadDb() {
   return await import('@/lib/db')
@@ -1205,6 +1206,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return updated
     }))
     if (req) {
+      recordStateTransition({
+        entity_type: 'referral',
+        entity_id: id,
+        from_state: req.status,
+        to_state: status,
+        triggered_by: user?.id ?? null,
+        metadata: passReason ? { reason: passReason } : null,
+      }).catch((err) => {
+        console.error('Failed to record state transition:', err)
+      })
       const dbStatus = status === 'declined' ? 'rejected' : status === 'requested' ? 'pending' : status
       if (status === 'accepted' || status === 'declined' || status === 'under_review') {
         updateReferralStatus(id, dbStatus as 'accepted' | 'rejected' | 'under_review', passReason).catch((err) => {
@@ -1302,6 +1313,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (r.id !== id) return r
           return { ...r, pipelineStage: current.pipelineStage, progress: current.progress }
         }))
+      })
+      recordStateTransition({
+        entity_type: 'referral',
+        entity_id: id,
+        from_state: current.pipelineStage,
+        to_state: nextStage,
+        triggered_by: user?.id ?? null,
+      }).catch((err) => {
+        console.error('Failed to record pipeline transition:', err)
       })
     }
   }, [requests])
