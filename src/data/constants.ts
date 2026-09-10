@@ -327,6 +327,7 @@ export type NotificationType = 'accepted' | 'rejected' | 'declined' | 'referral_
 
 export interface AppNotification {
   id: string; type: NotificationType; title: string; description: string; time: string; read: boolean
+  entity_type?: string | null; entity_id?: string | null
 }
 
 // ─── helpers ────────────────────────────────────────────────

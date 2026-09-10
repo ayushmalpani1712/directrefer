@@ -523,6 +523,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Request browser notification permission (non-blocking)
     requestNotificationPermission()
 
+    // Start retry scheduler for failed notifications
+    import('@/lib/notificationRetry').then(({ startRetryScheduler }) => startRetryScheduler())
+
     // ── Real-time: notifications ──
     const notifChannel = supabase
       .channel('realtime-notifications')
@@ -531,7 +534,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${currentUser.id}` },
         async (payload) => {
           const { formatRelativeTime } = await loadDb()
-          const row = payload.new as { id: string; type: string; title: string; description: string | null; read: boolean; created_at: string }
+          const row = payload.new as { id: string; type: string; title: string; description: string | null; read: boolean; created_at: string; entity_type?: string | null; entity_id?: string | null }
           setNotifications((prev) => [
             {
               id: row.id,
@@ -540,6 +543,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
               description: row.description ?? '',
               time: formatRelativeTime(row.created_at),
               read: row.read,
+              entity_type: row.entity_type ?? null,
+              entity_id: row.entity_id ?? null,
             },
             ...prev,
           ])

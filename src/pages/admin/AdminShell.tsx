@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router'
-import { LayoutDashboard, Users, ShieldCheck, BarChart3, Settings, History, Flag, BadgeCheck, TrendingUp, Send } from 'lucide-react'
+import { LayoutDashboard, Users, ShieldCheck, BarChart3, Settings, History, Flag, BadgeCheck, TrendingUp, Send, ClipboardList, Star } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 import AdminNotifications from '@/components/AdminNotifications'
@@ -8,6 +8,8 @@ const NAV_ITEMS = [
   { to: '/admin/overview', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/admin/users', label: 'Users', icon: Users },
   { to: '/admin/referrals', label: 'Referrals', icon: Send },
+  { to: '/admin/screening', label: 'Screening', icon: ClipboardList },
+  { to: '/admin/scoring', label: 'Scoring', icon: Star },
   { to: '/admin/approvals', label: 'Approvals', icon: BadgeCheck },
   { to: '/admin/moderation', label: 'Moderation', icon: Flag },
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },

@@ -1,0 +1,56 @@
+{
+  "baseUrl": "https://www.directrefer.in",
+  "scenarios": {
+    "landing": {
+      "name": "Landing Page",
+      "url": "/",
+      "method": "GET",
+      "concurrent": 25,
+      "duration": 60,
+      "rampUp": 5,
+      "description": "Homepage load with static assets"
+    },
+    "jobListing": {
+      "name": "Job Listing",
+      "url": "/referral-jobs",
+      "method": "GET",
+      "concurrent": 20,
+      "duration": 60,
+      "rampUp": 5,
+      "description": "Job listing page with Supabase data"
+    },
+    "search": {
+      "name": "Professional Search",
+      "url": "/find",
+      "method": "GET",
+      "concurrent": 15,
+      "duration": 60,
+      "rampUp": 5,
+      "description": "Professional discovery page"
+    },
+    "authCallback": {
+      "name": "Auth Callback",
+      "url": "/api/me",
+      "method": "GET",
+      "concurrent": 10,
+      "duration": 30,
+      "rampUp": 3,
+      "description": "Auth callback endpoint (requires session)"
+    },
+    "apiEndpoints": {
+      "name": "API Endpoints",
+      "url": "/api/jobs",
+      "method": "GET",
+      "concurrent": 10,
+      "duration": 30,
+      "rampUp": 3,
+      "description": "Serverless API endpoints"
+    }
+  },
+  "thresholds": {
+    "maxErrorRate": 0.05,
+    "maxP95Latency": 2000,
+    "maxAvgLatency": 1000,
+    "minRequestsPerSec": 5
+  }
+}

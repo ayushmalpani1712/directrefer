@@ -855,7 +855,7 @@ export async function fetchNotifications(userId: string): Promise<AppNotificatio
   try {
     const { data, error } = await supabase
       .from('notifications')
-      .select('id, type, title, description, created_at, read')
+      .select('id, type, title, description, created_at, read, entity_type, entity_id')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(50)
@@ -869,6 +869,8 @@ export async function fetchNotifications(userId: string): Promise<AppNotificatio
       description: row.description ?? '',
       time: formatRelativeTime(row.created_at),
       read: row.read,
+      entity_type: row.entity_type ?? null,
+      entity_id: row.entity_id ?? null,
     }))
   } catch (err) {
     console.error('fetchNotifications failed:', err)

@@ -12,6 +12,8 @@ import { useVersionCheck } from '@/lib/useVersionCheck'
 import { ROLE_ROUTE, ROLE_MESSAGES_ROUTE, getRoleFromPath, type Role } from '@/data/constants'
 import { SessionTimeout } from '@/components/SessionTimeout'
 import { ScrollToTop } from '@/components/ScrollToTop'
+import { ImpersonationBanner } from '@/components/ImpersonationBanner'
+import { isImpersonating } from '@/lib/impersonation'
 
 const AppShell = lazyWithRetry(() => import('@/components/layout'))
 const OnboardingOverlay = lazyWithRetry(() => import('@/components/OnboardingOverlay').then(m => ({ default: m.OnboardingOverlay })))
@@ -56,9 +58,12 @@ const BookmarksPage = lazyWithRetry(() => import('@/pages/Network').then((m) => 
 const ActivityPage = lazyWithRetry(() => import('@/pages/Network').then((m) => ({ default: m.ActivityPage })))
 const JobDetailPage = lazyWithRetry(() => import('@/pages/JobDetail'))
 const ScreeningSubmit = lazyWithRetry(() => import('@/pages/ScreeningSubmit'))
+const ScreeningResults = lazyWithRetry(() => import('@/pages/ScreeningResults'))
 const RecruiterScreening = lazyWithRetry(() => import('@/pages/RecruiterScreening'))
 const ScreeningAnalyticsPage = lazyWithRetry(() => import('@/pages/ScreeningAnalytics'))
 const NotFound = lazyWithRetry(() => import('@/pages/NotFound'))
+const Forbidden = lazyWithRetry(() => import('@/pages/Forbidden'))
+const ServerError = lazyWithRetry(() => import('@/pages/ServerError'))
 const AuthCallback = lazyWithRetry(() => import('@/pages/AuthCallback'))
 const PrivacyPolicy = lazyWithRetry(() => import('@/pages/PrivacyPolicy'))
 const TermsOfService = lazyWithRetry(() => import('@/pages/TermsOfService'))
@@ -78,6 +83,8 @@ const GuidesPage = lazyWithRetry(() => import('@/pages/GuidesPage'))
 const DataHub = lazyWithRetry(() => import('@/pages/DataHub'))
 const SuccessStoriesPage = lazyWithRetry(() => import('@/pages/SuccessStoriesPage'))
 const AcquisitionDashboard = lazyWithRetry(() => import('@/pages/admin/AcquisitionDashboard'))
+const AdminScreeningQueue = lazyWithRetry(() => import('@/pages/admin/ScreeningQueue'))
+const AdminReviewerScoring = lazyWithRetry(() => import('@/pages/admin/ReviewerScoring'))
 
 function LazyErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
@@ -218,6 +225,12 @@ function VersionChecker() {
   return null
 }
 
+function ImpersonationWrapper() {
+  const [impersonating, setImpersonating] = useState(isImpersonating())
+  if (!impersonating) return null
+  return <ImpersonationBanner onStop={() => setImpersonating(false)} />
+}
+
 export default function App() {
   return (
     <ThemeProvider attribute="class" forcedTheme="dark" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
@@ -227,6 +240,7 @@ export default function App() {
             <ErrorBoundary>
               <HeadManager />
               <VersionChecker />
+              <ImpersonationWrapper />
               <Suspense fallback={null}><OnboardingOverlay /></Suspense>
               <Suspense fallback={null}><InstallPrompt /></Suspense>
               <RecoveryHandler />
@@ -248,6 +262,8 @@ export default function App() {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/help" element={<Help />} />
                 <Route path="/referral-jobs" element={<ReferralJobs />} />
+                <Route path="/forbidden" element={<Forbidden />} />
+                <Route path="/server-error" element={<ServerError />} />
 
                 {/* ── Phase 5: Audience landing pages ── */}
                 <Route path="/for/freshers" element={<AudiencePage audience="freshers" />} />
@@ -290,6 +306,7 @@ export default function App() {
                   <Route path="/job-seeker/request-referral" element={<RequireRole allowed={['student', 'admin']}><RequestReferral /></RequireRole>} />
                   <Route path="/job-seeker/request-referral/:id" element={<RequireRole allowed={['student', 'admin']}><RequestReferral /></RequireRole>} />
                   <Route path="/job-seeker/screening/:jobId" element={<RequireRole allowed={['student', 'admin']}><ScreeningSubmit /></RequireRole>} />
+                  <Route path="/job-seeker/screening-results/:jobId" element={<RequireRole allowed={['student', 'admin']}><ScreeningResults /></RequireRole>} />
                   <Route path="/job-seeker/job-alerts" element={<RequireRole allowed={['student', 'admin']}><JobAlerts /></RequireRole>} />
 
                   {/* ── Professional routes ── */}
@@ -323,6 +340,8 @@ export default function App() {
                     <Route path="settings" element={<AdminSettingsPage />} />
                     <Route path="audit-log" element={<AdminAuditLog />} />
                     <Route path="referrals" element={<AdminReferrals />} />
+                    <Route path="screening" element={<AdminScreeningQueue />} />
+                    <Route path="scoring" element={<AdminReviewerScoring />} />
                     <Route path="messages" element={<Messages />} />
                     <Route path="notifications" element={<NotificationsPage />} />
                     <Route path="activity" element={<ActivityPage />} />

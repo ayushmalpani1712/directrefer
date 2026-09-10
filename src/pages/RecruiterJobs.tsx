@@ -262,10 +262,13 @@ function ApplicationsPanel({ jobs, user }: { jobs: { id: string; title: string }
   const [applications, setApplications] = useState<Array<{ id: string; candidate_id: string; status: string; submitted_at: string; cover_letter: string | null; profiles_job_seeker?: { full_name: string; email: string } }>>([])
   const [loading, setLoading] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [selectedAppIds, setSelectedAppIds] = useState<Set<string>>(new Set())
+  const [bulkConfirmAction, setBulkConfirmAction] = useState<'shortlist' | 'reject' | 'export' | null>(null)
 
   useEffect(() => {
     if (!selectedJobId) { setApplications([]); return }
     setLoading(true)
+    setSelectedAppIds(new Set())
     import('@/lib/v2/applications').then(({ getJobApplications }) =>
       getJobApplications(selectedJobId).then((apps) => { setApplications(apps) })
     ).catch(() => toast.error('Failed to load applications'))
@@ -287,6 +290,68 @@ function ApplicationsPanel({ jobs, user }: { jobs: { id: string; title: string }
     }
   }
 
+  const toggleSelectApp = (appId: string) => {
+    setSelectedAppIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(appId)) next.delete(appId)
+      else next.add(appId)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedAppIds.size === applications.length) {
+      setSelectedAppIds(new Set())
+    } else {
+      setSelectedAppIds(new Set(applications.map((a) => a.id)))
+    }
+  }
+
+  const handleBulkAction = async () => {
+    if (!bulkConfirmAction || !user) return
+    const ids = Array.from(selectedAppIds)
+
+    if (bulkConfirmAction === 'export') {
+      const selected = applications.filter((a) => selectedAppIds.has(a.id))
+      const headers = ['Candidate Name', 'Email', 'Status', 'Applied Date', 'Cover Letter']
+      const escape = (v: string) => `"${v.replace(/"/g, '""')}"`
+      const rows = [headers.join(',')]
+      for (const a of selected) {
+        rows.push([
+          escape(a.profiles_job_seeker?.full_name ?? 'Unknown'),
+          escape(a.profiles_job_seeker?.email ?? ''),
+          escape(a.status),
+          escape(new Date(a.submitted_at).toLocaleDateString()),
+          escape(a.cover_letter ?? ''),
+        ].join(','))
+      }
+      const csv = rows.join('\n')
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `applications-${selectedJobId}-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      toast.success(`Exported ${ids.length} application${ids.length > 1 ? 's' : ''}`)
+    } else {
+      const newStatus = bulkConfirmAction === 'shortlist' ? 'shortlisted' : 'rejected'
+      try {
+        const { supabase } = await import('@/lib/supabase')
+        await supabase.from('applications').update({ status: newStatus }).in('id', ids)
+        setApplications((prev) => prev.map((a) => selectedAppIds.has(a.id) ? { ...a, status: newStatus } : a))
+        toast.success(`${ids.length} application${ids.length > 1 ? 's' : ''} ${newStatus}`)
+      } catch {
+        toast.error('Failed to perform bulk action')
+      }
+    }
+
+    setSelectedAppIds(new Set())
+    setBulkConfirmAction(null)
+  }
+
   const statusColor = (s: string) => {
     switch (s) {
       case 'submitted': return 'bg-blue-500/10 text-blue-600 border-blue-500/25'
@@ -299,6 +364,8 @@ function ApplicationsPanel({ jobs, user }: { jobs: { id: string; title: string }
       default: return ''
     }
   }
+
+  const allSelected = applications.length > 0 && selectedAppIds.size === applications.length
 
   return (
     <div className="space-y-4">
@@ -327,52 +394,89 @@ function ApplicationsPanel({ jobs, user }: { jobs: { id: string; title: string }
           <p className="mt-3 text-sm text-muted-foreground">No applications yet for this job</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {applications.map((app) => (
-            <Card key={app.id} className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
-              <CardContent className="flex items-center gap-4 p-4">
-                <GAvatar
-                  name={app.profiles_job_seeker?.full_name ?? 'Candidate'}
-                  color="#6366F1"
-                  className="h-10 w-10 shrink-0 text-xs"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold">{app.profiles_job_seeker?.full_name ?? 'Unknown'}</span>
-                    <Badge className={cn('text-[10px]', statusColor(app.status))}>{app.status}</Badge>
+        <>
+          {selectedAppIds.size > 0 && (
+            <div className="flex items-center gap-2 rounded-lg border border-primary/25 bg-primary/5 p-2.5">
+              <span className="text-xs font-medium text-primary">{selectedAppIds.size} selected</span>
+              <div className="ml-auto flex gap-1.5">
+                <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => setBulkConfirmAction('shortlist')}>
+                  <CheckSquare className="mr-1 h-3 w-3" /> Shortlist All
+                </Button>
+                <Button size="sm" variant="outline" className="h-7 text-[11px] text-rose-600 border-rose-500/30" onClick={() => setBulkConfirmAction('reject')}>
+                  <Trash2 className="mr-1 h-3 w-3" /> Reject All
+                </Button>
+                <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => setBulkConfirmAction('export')}>
+                  <FileText className="mr-1 h-3 w-3" /> Export
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 px-1">
+              <button onClick={toggleSelectAll} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
+                {allSelected ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4" />}
+              </button>
+              <span className="text-xs text-muted-foreground">{allSelected ? 'Deselect all' : 'Select all'}</span>
+            </div>
+            {applications.map((app) => (
+              <Card key={app.id} className={cn('transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm', selectedAppIds.has(app.id) && 'border-primary/30 bg-primary/[0.02]')}>
+                <CardContent className="flex items-center gap-4 p-4">
+                  <button onClick={() => toggleSelectApp(app.id)} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
+                    {selectedAppIds.has(app.id) ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4" />}
+                  </button>
+                  <GAvatar
+                    name={app.profiles_job_seeker?.full_name ?? 'Candidate'}
+                    color="#6366F1"
+                    className="h-10 w-10 shrink-0 text-xs"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold">{app.profiles_job_seeker?.full_name ?? 'Unknown'}</span>
+                      <Badge className={cn('text-[10px]', statusColor(app.status))}>{app.status}</Badge>
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      {app.profiles_job_seeker?.email} · Applied {new Date(app.submitted_at).toLocaleDateString()}
+                    </div>
+                    {app.cover_letter && <p className="mt-1.5 text-xs text-muted-foreground line-clamp-1">{app.cover_letter}</p>}
                   </div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">
-                    {app.profiles_job_seeker?.email} · Applied {new Date(app.submitted_at).toLocaleDateString()}
+                  <div className="flex shrink-0 gap-1.5">
+                    {app.status === 'submitted' && (
+                      <Button size="sm" variant="outline" className="h-7 text-[11px]" disabled={updatingId === app.id} onClick={() => handleStatusUpdate(app.id, 'shortlisted')}>
+                        Shortlist
+                      </Button>
+                    )}
+                    {app.status === 'shortlisted' && (
+                      <Button size="sm" variant="outline" className="h-7 text-[11px]" disabled={updatingId === app.id} onClick={() => handleStatusUpdate(app.id, 'interview')}>
+                        Interview
+                      </Button>
+                    )}
+                    {app.status === 'interview' && (
+                      <Button size="sm" variant="outline" className="h-7 text-[11px]" disabled={updatingId === app.id} onClick={() => handleStatusUpdate(app.id, 'offered')}>
+                        Offer
+                      </Button>
+                    )}
+                    {!['rejected', 'withdrawn', 'offered'].includes(app.status) && (
+                      <Button size="sm" variant="outline" className="h-7 text-[11px] text-rose-600 border-rose-500/30 hover:bg-rose-500/10" disabled={updatingId === app.id} onClick={() => handleStatusUpdate(app.id, 'rejected')}>
+                        Reject
+                      </Button>
+                    )}
                   </div>
-                  {app.cover_letter && <p className="mt-1.5 text-xs text-muted-foreground line-clamp-1">{app.cover_letter}</p>}
-                </div>
-                <div className="flex shrink-0 gap-1.5">
-                  {app.status === 'submitted' && (
-                    <Button size="sm" variant="outline" className="h-7 text-[11px]" disabled={updatingId === app.id} onClick={() => handleStatusUpdate(app.id, 'shortlisted')}>
-                      Shortlist
-                    </Button>
-                  )}
-                  {app.status === 'shortlisted' && (
-                    <Button size="sm" variant="outline" className="h-7 text-[11px]" disabled={updatingId === app.id} onClick={() => handleStatusUpdate(app.id, 'interview')}>
-                      Interview
-                    </Button>
-                  )}
-                  {app.status === 'interview' && (
-                    <Button size="sm" variant="outline" className="h-7 text-[11px]" disabled={updatingId === app.id} onClick={() => handleStatusUpdate(app.id, 'offered')}>
-                      Offer
-                    </Button>
-                  )}
-                  {!['rejected', 'withdrawn', 'offered'].includes(app.status) && (
-                    <Button size="sm" variant="outline" className="h-7 text-[11px] text-rose-600 border-rose-500/30 hover:bg-rose-500/10" disabled={updatingId === app.id} onClick={() => handleStatusUpdate(app.id, 'rejected')}>
-                      Reject
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
       )}
+
+      <ConfirmDialog
+        open={bulkConfirmAction !== null && bulkConfirmAction !== 'export'}
+        onOpenChange={(open) => { if (!open) setBulkConfirmAction(null) }}
+        title={bulkConfirmAction === 'shortlist' ? 'Shortlist selected applications' : 'Reject selected applications'}
+        description={`This will ${bulkConfirmAction === 'shortlist' ? 'shortlist' : 'reject'} ${selectedAppIds.size} application${selectedAppIds.size > 1 ? 's' : ''}. ${bulkConfirmAction === 'reject' ? 'This action cannot be undone.' : ''}`}
+        confirmLabel={bulkConfirmAction === 'shortlist' ? 'Shortlist All' : 'Reject All'}
+        onConfirm={handleBulkAction}
+      />
     </div>
   )
 }

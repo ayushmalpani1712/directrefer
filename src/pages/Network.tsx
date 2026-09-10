@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Link, useLocation } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
   Activity as ActivityIcon, Bell, Bookmark as BookmarkIcon, BookmarkCheck, CheckCheck,
@@ -16,6 +16,19 @@ import { ROLE_ROUTE, getRoleFromPath, type AppNotification } from '@/data/consta
 import { cn } from '@/lib/utils'
 import { ProfessionalCard } from '@/pages/FindProfessionals'
 import { ListSkeleton } from '@/components/ui/skeleton'
+
+function getNotificationRoute(entityType: string | null | undefined, entityId: string | null | undefined, prefix: string): string | null {
+  if (!entityType || !entityId) return null
+  switch (entityType) {
+    case 'referral': return `${prefix}/referral-inbox`
+    case 'application': return '/job-seeker/applications'
+    case 'screening': return `/job-seeker/screening-results/${entityId}`
+    case 'match': return '/professional/talent'
+    case 'message': return '/messages'
+    case 'system': return `${prefix}/settings`
+    default: return null
+  }
+}
 
 const ICONS: Record<string, { icon: typeof Bell; cls: string }> = {
   accepted: { icon: CheckCheck, cls: 'bg-emerald-500/10 text-emerald-500' },
@@ -84,6 +97,7 @@ function groupNotifications(notifications: AppNotification[]) {
 export function NotificationsPage() {
   const { notifications, markNotificationRead, markAllNotificationsRead, loading } = useApp()
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const prefix = ROLE_ROUTE[getRoleFromPath(pathname) || 'student']
   const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -144,13 +158,17 @@ export function NotificationsPage() {
               </div>
               {group.items.map((n, i) => {
                 const cfg = ICONS[n.type] ?? { icon: Bell, cls: 'bg-muted text-muted-foreground' }
+                const deepLink = getNotificationRoute(n.entity_type, n.entity_id, prefix)
                 return (
                   <motion.button
                     key={n.id}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    onClick={() => markNotificationRead(n.id)}
+                    onClick={() => {
+                      markNotificationRead(n.id)
+                      if (deepLink) navigate(deepLink)
+                    }}
                     className={cn('flex w-full items-start gap-3.5 rounded-xl border p-4 text-left transition-all hover:border-primary/30', n.read ? 'border-border bg-card' : 'border-primary/25 bg-primary/[0.03]')}
                   >
                     <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', cfg.cls)}><cfg.icon className="h-4.5 w-4.5" /></div>
@@ -158,11 +176,17 @@ export function NotificationsPage() {
                       <div className="flex items-center gap-2">
                         <span className="truncate text-sm font-semibold">{n.title}</span>
                         <span className="inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">{TYPE_LABELS[n.type] ?? 'Other'}</span>
+                        {n.entity_type && (
+                          <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary capitalize">{n.entity_type}</span>
+                        )}
                         {!n.read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
                       </div>
                       <p className="mt-0.5 text-sm text-muted-foreground">{n.description}</p>
                       <span className="mt-1 block text-xs text-muted-foreground/70">{getRelativeTime(n.time)}</span>
                     </div>
+                    {deepLink && (
+                      <span className="shrink-0 self-center text-xs text-primary/60 hover:text-primary">Go →</span>
+                    )}
                   </motion.button>
                 )
               })}

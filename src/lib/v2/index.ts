@@ -20,3 +20,6 @@ export type { MatchCandidate, MatchProfessional, MatchResult } from './matching'
 export { fetchTrustScore, fetchTrustScores, recordReferralTransition, recordApplicationTransition, getReferralHistory, runCandidateScreening, submitApplication, updateAppStatus, notifyStateChange, calculateProfileCompleteness } from './api'
 
 export { trustScoresSupported, stateHistorySupported, screeningSupported, applicationsSupported, matchesSupported, getV2FeatureFlags } from './probes'
+
+export { recordBehaviorAdjustment, getBehaviorAdjustments, onReferralAccepted, onReferralRejected, onLateResponse, onScreeningPassed, onInactivity, applyBehaviorAdjustments } from './behaviorScore'
+export type { BehaviorAdjustment } from './behaviorScore'
