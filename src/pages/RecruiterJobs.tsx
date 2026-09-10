@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  Briefcase, ChevronRight, Clock, MapPin, Pause, Play, Plus, Search, Star, Trash2, Pencil, Users, X, Bookmark, BookmarkCheck, Share2, AlertTriangle, FileText, CalendarClock, CheckSquare, Square,
+  Briefcase, ChevronRight, Clock, MapPin, Pause, Play, Plus, Search, Star, Trash2, Pencil, Users, X, Bookmark, BookmarkCheck, Share2, AlertTriangle, FileText, CalendarClock, CheckSquare, Square, Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -255,6 +255,126 @@ export default function RecruiterJobs() {
   }
 
   return <RecruiterJobsManager />
+}
+
+function ApplicationsPanel({ jobs, user }: { jobs: { id: string; title: string }[]; user: { id: string } | null }) {
+  const [selectedJobId, setSelectedJobId] = useState<string>('')
+  const [applications, setApplications] = useState<Array<{ id: string; candidate_id: string; status: string; submitted_at: string; cover_letter: string | null; profiles_job_seeker?: { full_name: string; email: string } }>>([])
+  const [loading, setLoading] = useState(false)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!selectedJobId) { setApplications([]); return }
+    setLoading(true)
+    import('@/lib/v2/applications').then(({ getJobApplications }) =>
+      getJobApplications(selectedJobId).then((apps) => { setApplications(apps) })
+    ).catch(() => toast.error('Failed to load applications'))
+      .finally(() => setLoading(false))
+  }, [selectedJobId])
+
+  const handleStatusUpdate = async (appId: string, newStatus: string) => {
+    if (!user) return
+    setUpdatingId(appId)
+    try {
+      const { updateApplicationStatus } = await import('@/lib/v2/applications')
+      await updateApplicationStatus(appId, newStatus as 'shortlisted' | 'rejected' | 'interview' | 'offered', user.id)
+      setApplications((prev) => prev.map((a) => a.id === appId ? { ...a, status: newStatus } : a))
+      toast.success(`Application ${newStatus}`)
+    } catch {
+      toast.error('Failed to update status')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const statusColor = (s: string) => {
+    switch (s) {
+      case 'submitted': return 'bg-blue-500/10 text-blue-600 border-blue-500/25'
+      case 'screening': return 'bg-amber-500/10 text-amber-600 border-amber-500/25'
+      case 'shortlisted': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25'
+      case 'interview': return 'bg-purple-500/10 text-purple-600 border-purple-500/25'
+      case 'offered': return 'bg-primary/10 text-primary border-primary/25'
+      case 'rejected': return 'bg-rose-500/10 text-rose-600 border-rose-500/25'
+      case 'withdrawn': return 'bg-muted text-muted-foreground'
+      default: return ''
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <select
+          value={selectedJobId}
+          onChange={(e) => setSelectedJobId(e.target.value)}
+          className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+        >
+          <option value="">Select a job…</option>
+          {jobs.map((j) => <option key={j.id} value={j.id}>{j.title}</option>)}
+        </select>
+        {selectedJobId && <span className="text-xs text-muted-foreground">{applications.length} application{applications.length !== 1 ? 's' : ''}</span>}
+      </div>
+
+      {!selectedJobId ? (
+        <div className="rounded-xl border border-dashed border-border py-12 text-center">
+          <Eye className="mx-auto h-10 w-10 text-muted-foreground/40" />
+          <p className="mt-3 text-sm text-muted-foreground">Select a job to view its applications</p>
+        </div>
+      ) : loading ? (
+        <div className="space-y-3"><ListSkeleton count={3} /></div>
+      ) : applications.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border py-12 text-center">
+          <Users className="mx-auto h-10 w-10 text-muted-foreground/40" />
+          <p className="mt-3 text-sm text-muted-foreground">No applications yet for this job</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {applications.map((app) => (
+            <Card key={app.id} className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
+              <CardContent className="flex items-center gap-4 p-4">
+                <GAvatar
+                  name={app.profiles_job_seeker?.full_name ?? 'Candidate'}
+                  color="#6366F1"
+                  className="h-10 w-10 shrink-0 text-xs"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold">{app.profiles_job_seeker?.full_name ?? 'Unknown'}</span>
+                    <Badge className={cn('text-[10px]', statusColor(app.status))}>{app.status}</Badge>
+                  </div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">
+                    {app.profiles_job_seeker?.email} · Applied {new Date(app.submitted_at).toLocaleDateString()}
+                  </div>
+                  {app.cover_letter && <p className="mt-1.5 text-xs text-muted-foreground line-clamp-1">{app.cover_letter}</p>}
+                </div>
+                <div className="flex shrink-0 gap-1.5">
+                  {app.status === 'submitted' && (
+                    <Button size="sm" variant="outline" className="h-7 text-[11px]" disabled={updatingId === app.id} onClick={() => handleStatusUpdate(app.id, 'shortlisted')}>
+                      Shortlist
+                    </Button>
+                  )}
+                  {app.status === 'shortlisted' && (
+                    <Button size="sm" variant="outline" className="h-7 text-[11px]" disabled={updatingId === app.id} onClick={() => handleStatusUpdate(app.id, 'interview')}>
+                      Interview
+                    </Button>
+                  )}
+                  {app.status === 'interview' && (
+                    <Button size="sm" variant="outline" className="h-7 text-[11px]" disabled={updatingId === app.id} onClick={() => handleStatusUpdate(app.id, 'offered')}>
+                      Offer
+                    </Button>
+                  )}
+                  {!['rejected', 'withdrawn', 'offered'].includes(app.status) && (
+                    <Button size="sm" variant="outline" className="h-7 text-[11px] text-rose-600 border-rose-500/30 hover:bg-rose-500/10" disabled={updatingId === app.id} onClick={() => handleStatusUpdate(app.id, 'rejected')}>
+                      Reject
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function RecruiterJobsManager() {
@@ -518,6 +638,7 @@ function RecruiterJobsManager() {
         <TabsList>
           <TabsTrigger value="jobs"><Briefcase className="mr-1.5 h-4 w-4" /> Job postings</TabsTrigger>
           <TabsTrigger value="pipeline"><Users className="mr-1.5 h-4 w-4" /> Pipeline board</TabsTrigger>
+          <TabsTrigger value="applications"><Eye className="mr-1.5 h-4 w-4" /> Applications</TabsTrigger>
         </TabsList>
 
         {/* ── Jobs list ── */}
@@ -865,6 +986,10 @@ function RecruiterJobsManager() {
               )
             })}
           </div>
+        </TabsContent>
+
+        <TabsContent value="applications" className="mt-5">
+          <ApplicationsPanel jobs={jobs} user={user} />
         </TabsContent>
       </Tabs>
 
