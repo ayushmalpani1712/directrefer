@@ -16,6 +16,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
+import { useProfileDraft } from '@/hooks/useProfileDraft'
 import { type Professional } from '@/data/mock'
 import { supabase } from '@/lib/supabase'
 import { cn, getBannerStyle } from '@/lib/utils'
@@ -92,6 +93,27 @@ export default function ProfessionalProfile() {
   const [bannerTheme, setBannerTheme] = useState<string | null>(null)
   const [selectedAvatarColor] = useState<string>(ME.gradient)
   const [bannerModalOpen, setBannerModalOpen] = useState(false)
+
+  const { loadDraft, markSaved, clearDraft } = useProfileDraft(user?.id, {
+    name: editName, designation: editDesignation, company: editCompany,
+    location: editLocation, industry: editIndustry, linkedin: linkedinUrl, github: githubUrl,
+  })
+
+  useEffect(() => {
+    if (!user?.id || editingHeader) return
+    loadDraft().then((draft) => {
+      if (draft && typeof draft === 'object') {
+        if (draft.name) setEditName(String(draft.name))
+        if (draft.designation) setEditDesignation(String(draft.designation))
+        if (draft.company) setEditCompany(String(draft.company))
+        if (draft.location) setEditLocation(String(draft.location))
+        if (draft.industry) setEditIndustry(String(draft.industry))
+        if (draft.linkedin) setLinkedinUrl(String(draft.linkedin))
+        if (draft.github) setGithubUrl(String(draft.github))
+        setEditingHeader(true)
+      }
+    })
+  }, [user?.id])
   const [showOnFind, setShowOnFind] = useState(true)
   const [profileHistory, setProfileHistory] = useState<{ snapshot: Record<string, unknown>; created_at: string }[]>([])
 
@@ -273,6 +295,7 @@ export default function ProfessionalProfile() {
                       setLinkedinUrl(ME.linkedinUrl)
                       setGithubUrl(ME.githubUrl)
                       setEditingHeader(false)
+                      clearDraft()
                     }}><X className="mr-1.5 h-3.5 w-3.5" /> Cancel</Button>
                     <Button size="sm" className="rounded-full" onClick={() => {
                       updateProfessional(ME.id, {
@@ -296,6 +319,7 @@ export default function ProfessionalProfile() {
                         githubUrl,
                       })
                       setEditingHeader(false)
+                      markSaved()
                       toast.success('Profile saved')
                     }}><Check className="mr-1.5 h-4 w-4" /> Save</Button>
                   </>

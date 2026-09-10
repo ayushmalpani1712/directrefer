@@ -14,6 +14,7 @@ import { Chip, CompanyChip } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
+import { useProfileDraft } from '@/hooks/useProfileDraft'
 import { supabase } from '@/lib/supabase'
 import { ProfileSkeleton } from '@/components/ui/skeleton'
 
@@ -92,6 +93,24 @@ export default function RecruiterProfile() {
   const [editLocations, setEditLocations] = useState('')
   const [savingHeader, setSavingHeader] = useState(false)
   const [savingAbout, setSavingAbout] = useState(false)
+
+  const { loadDraft, markSaved, clearDraft } = useProfileDraft(user?.id, {
+    name: editName, industry: editIndustry, size: editSize, website: editWebsite, linkedin: editLinkedin,
+  })
+
+  useEffect(() => {
+    if (!user?.id || editing) return
+    loadDraft().then((draft) => {
+      if (draft && typeof draft === 'object') {
+        if (draft.name) setEditName(String(draft.name))
+        if (draft.industry) setEditIndustry(String(draft.industry))
+        if (draft.size) setEditSize(String(draft.size))
+        if (draft.website) setEditWebsite(String(draft.website))
+        if (draft.linkedin) setEditLinkedin(String(draft.linkedin))
+        setEditing(true)
+      }
+    })
+  }, [user?.id])
 
   // Sync local state when DB data loads
   useEffect(() => {
@@ -213,6 +232,7 @@ export default function RecruiterProfile() {
                       setEditWebsite(c.website)
                       setEditLinkedin(c.linkedin)
                       setEditing(false)
+                      clearDraft()
                     }}><X className="mr-1.5 h-3.5 w-3.5" /> Cancel</Button>
                     <Button size="sm" className="rounded-full" disabled={savingHeader} onClick={async () => {
                       setSavingHeader(true)
@@ -235,6 +255,7 @@ export default function RecruiterProfile() {
                           company_linkedin: editLinkedin,
                         })
                         setEditing(false)
+                        markSaved()
                         toast.success('Profile saved')
                       } catch {
                         toast.error('Failed to save. Please try again.')
