@@ -1535,8 +1535,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (patch.location !== undefined) dbPatch.location = patch.location
     if (patch.stage) {
       const stageMap: Record<string, string> = { Active: 'active', Paused: 'paused', Draft: 'draft', Closed: 'closed' }
-      dbPatch.stage = stageMap[patch.stage] ?? patch.stage
+      dbPatch.status = stageMap[patch.stage] ?? patch.stage
     }
+    if (patch.salary !== undefined) dbPatch.salary_range = patch.salary
     if (patch.expires_at !== undefined) dbPatch.expires_at = patch.expires_at
     if (Object.keys(dbPatch).length > 0) updateJobDb(id, dbPatch).catch((err) => {
       console.error('Failed to update job:', err)

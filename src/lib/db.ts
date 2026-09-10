@@ -741,7 +741,7 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
   try {
     let query = supabase
       .from('jobs')
-      .select('id, title, department, location, type, salary_range, applicants, referrals, stage, posted_at, recruiter_id, description, expires_at')
+      .select('id, title, department, location, type, salary_range, applicant_count, referral_count, status, posted_at, recruiter_id, description, expires_at')
       .order('posted_at', { ascending: false })
 
     if (recruiterId) {
@@ -784,12 +784,12 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
         location: row.location ?? '',
         type: row.type ?? 'Full-time',
         salary: row.salary_range ?? '',
-        applicants: row.applicants,
-        referrals: row.referrals,
+        applicants: row.applicant_count,
+        referrals: row.referral_count,
         stage:
-          row.stage === 'active'
+          row.status === 'active'
             ? 'Active'
-            : row.stage === 'paused'
+            : row.status === 'paused'
               ? 'Paused'
               : 'Draft',
         postedDaysAgo: daysSince(row.posted_at),
@@ -813,7 +813,7 @@ export async function updateJob(
     location?: string
     type?: string
     salary_range?: string
-    stage?: 'active' | 'paused' | 'draft' | 'closed'
+    status?: 'active' | 'paused' | 'draft' | 'closed'
     expires_at?: string | null
   }
 ): Promise<boolean> {
@@ -836,12 +836,13 @@ export async function fetchBookmarks(userId: string): Promise<string[]> {
   try {
     const { data, error } = await supabase
       .from('bookmarks')
-      .select('professional_id')
+      .select('entity_id')
       .eq('user_id', userId)
+      .eq('entity_type', 'professional')
 
     if (error || !data) return []
 
-    return data.map((row) => row.professional_id)
+    return data.map((row) => row.entity_id)
   } catch (err) {
     console.error('fetchBookmarks failed:', err)
     return []

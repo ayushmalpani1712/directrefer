@@ -199,15 +199,25 @@ export async function calculateProfileCompleteness(userId: string): Promise<numb
 
     if (!profile) return 0
 
+    const { data: skills } = await supabase
+      .from('profile_skills')
+      .select('skill_id')
+      .eq('profile_id', userId)
+
+    const { data: user } = await supabase
+      .from('users')
+      .select('linkedin_url')
+      .eq('id', userId)
+      .single()
+
     let score = 0
     if (profile.job_title) score += 15
     if (profile.company_name) score += 15
     if (profile.bio && profile.bio.length > 50) score += 20
-    if (profile.skills && profile.skills.length > 0) score += 15
-    if (profile.years_of_experience > 0) score += 10
-    if (profile.open_positions && profile.open_positions.length > 0) score += 10
+    if (skills && skills.length > 0) score += 15
+    if (profile.years_experience && profile.years_experience > 0) score += 10
     if (profile.referral_policy) score += 10
-    if (profile.linkedin_url || profile.github_url) score += 5
+    if (user?.linkedin_url || profile.github_url) score += 5
 
     return Math.min(100, score)
   } catch {

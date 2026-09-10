@@ -319,7 +319,7 @@ export async function findMatchesForProfessional(
   const { data: jobs } = await supabase
     .from('jobs')
     .select('*')
-    .eq('status', 'open')
+    .eq('status', 'active')
     .is('deleted_at', null)
 
   if (!jobs) return []
@@ -406,8 +406,6 @@ export async function storeMatches(matches: MatchResult[]): Promise<void> {
     location_score: m.location_score,
     reputation_score: m.reputation_score,
     source: 'algorithm' as const,
-    match_reasons: m.match_reasons,
-    job_title: '',
   }))
 
   const { error } = await supabase
@@ -480,18 +478,10 @@ export async function recommendJobsForCandidate(
   const candidateSkills = (profileSkills ?? []).map((s) => s.skill_id)
   if (candidateSkills.length === 0) return []
 
-  const { data: seekerProfile } = await supabase
-    .from('profiles_job_seeker')
-    .select('experience_years')
-    .eq('user_id', candidateId)
-    .single()
-
-  const candidateExp = seekerProfile?.experience_years ?? 0
-
   const { data: jobs } = await supabase
     .from('jobs')
-    .select('id, title, company_name, location, min_experience_years, max_experience_years')
-    .eq('status', 'open')
+    .select('id, title, location')
+    .eq('status', 'active')
     .is('deleted_at', null)
 
   if (!jobs) return []
@@ -514,14 +504,7 @@ export async function recommendJobsForCandidate(
     const matchingSkills = jobRequiredSkills.filter((s) => candidateSkills.includes(s))
     const skillOverlapPct = Math.round((matchingSkills.length / jobRequiredSkills.length) * 100)
 
-    let experienceFit = 1.0
-    const minExp = job.min_experience_years ?? 0
-    const maxExp = job.max_experience_years ?? Infinity
-    if (candidateExp < minExp) {
-      experienceFit = Math.max(0.3, candidateExp / minExp)
-    } else if (candidateExp > maxExp && maxExp !== Infinity) {
-      experienceFit = Math.max(0.5, maxExp / candidateExp)
-    }
+    const experienceFit = 1.0
 
     const score = Math.round(skillOverlapPct * 0.7 + experienceFit * 30)
 
@@ -529,7 +512,7 @@ export async function recommendJobsForCandidate(
       recommendations.push({
         job_id: job.id,
         title: job.title,
-        company: job.company_name ?? '',
+        company: '',
         location: job.location ?? '',
         score,
         matching_skills: jobSkillNames.filter((_, i) => matchingSkills.includes(jobRequiredSkills[i])),
