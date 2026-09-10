@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bookmark, BookmarkCheck, MapPin, MessageSquare, Search, Star, UserPlus, Users } from 'lucide-react'
+import { Bookmark, BookmarkCheck, MapPin, MessageSquare, Search, SlidersHorizontal, Target, UserPlus, Users } from 'lucide-react'
 import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,28 +15,72 @@ import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { getMessagesPath, profileUrl } from '@/data/constants'
 
+function computeSkillOverlap(a: string[], b: string[]): number {
+  if (a.length === 0 || b.length === 0) return 0
+  const setA = new Set(a.map((s) => s.toLowerCase()))
+  const setB = new Set(b.map((s) => s.toLowerCase()))
+  let overlap = 0
+  for (const s of setA) { if (setB.has(s)) overlap++ }
+  return Math.round((overlap / Math.max(setA.size, setB.size)) * 100)
+}
+
+function matchColor(pct: number): string {
+  if (pct >= 70) return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25'
+  if (pct >= 40) return 'bg-amber-500/10 text-amber-600 border-amber-500/25'
+  return 'bg-muted text-muted-foreground border-border'
+}
+
+type SortKey = 'match' | 'experience' | 'name'
+
 export default function TalentSearch() {
   const loading = usePageLoading(400)
-  const { candidates, savedCandidates, toggleCandidate, startConversation, role, refreshCandidates } = useApp()
+  const { candidates, savedCandidates, toggleCandidate, startConversation, role, refreshCandidates, student, professionals } = useApp()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const [source, setSource] = useState('all')
-  const [minRating, setMinRating] = useState('0')
+  const [minMatch, setMinMatch] = useState('0')
+  const [sortBy, setSortBy] = useState<SortKey>('match')
 
   useEffect(() => { refreshCandidates() }, [refreshCandidates])
 
-  const results = useMemo(() => candidates.filter((c) => {
-    if (role === 'professional' && c.profileRole !== 'job-seeker') return false
-    if (q && ![c.name, c.role, c.location, ...c.skills].join(' ').toLowerCase().includes(q.toLowerCase())) return false
-    if (source !== 'all' && c.source !== source) return false
-    if (c.rating < Number(minRating)) return false
-    return true
-  }), [q, source, minRating, candidates, role])
+  const mySkills = useMemo(() => {
+    if (role === 'professional') {
+      const me = professionals.find((p) => p.id === user?.id)
+      return me?.skills ?? []
+    }
+    return student?.skills ?? []
+  }, [role, professionals, user?.id, student?.skills])
+
+  const scored = useMemo(() => candidates.map((c) => ({
+    ...c,
+    matchScore: computeSkillOverlap(mySkills, c.skills),
+  })), [candidates, mySkills])
+
+  const results = useMemo(() => {
+    const filtered = scored.filter((c) => {
+      if (role === 'professional' && c.profileRole !== 'job-seeker') return false
+      if (q && ![c.name, c.role, c.location, ...c.skills].join(' ').toLowerCase().includes(q.toLowerCase())) return false
+      if (source !== 'all' && c.source !== source) return false
+      if (c.matchScore < Number(minMatch)) return false
+      return true
+    })
+
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'match': return b.matchScore - a.matchScore
+        case 'experience': return b.exp - a.exp
+        case 'name': return a.name.localeCompare(b.name)
+        default: return 0
+      }
+    })
+
+    return filtered
+  }, [scored, q, source, minMatch, sortBy, role])
 
   return (
     <div className="space-y-6">
-      <SectionHeader title={role === 'professional' ? 'Find job seekers' : 'Discover talent'} subtitle={role === 'professional' ? 'Open-to-work candidates looking for referral opportunities' : 'Open-to-work candidates and referral-warmed talent — sorted by fit'} />
+      <SectionHeader title={role === 'professional' ? 'Find job seekers' : 'Discover talent'} subtitle={role === 'professional' ? 'Open-to-work candidates ranked by skill match' : 'Open-to-work candidates and referral-warmed talent — ranked by fit'} />
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
@@ -51,15 +96,30 @@ export default function TalentSearch() {
             {role !== 'professional' && <SelectItem value="Open for referrals">Open for referrals</SelectItem>}
           </SelectContent>
         </Select>
-        <Select value={minRating} onValueChange={setMinRating}>
-          <SelectTrigger className="h-12 sm:w-44"><SelectValue placeholder="Min rating" /></SelectTrigger>
+        <Select value={minMatch} onValueChange={setMinMatch}>
+          <SelectTrigger className="h-12 sm:w-44"><SelectValue placeholder="Min match" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="0">Any rating</SelectItem>
-            <SelectItem value="4">4.0+</SelectItem>
-            <SelectItem value="4.5">4.5+</SelectItem>
+            <SelectItem value="0">Any match</SelectItem>
+            <SelectItem value="20">20%+</SelectItem>
+            <SelectItem value="40">40%+</SelectItem>
+            <SelectItem value="60">60%+</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
+          <SelectTrigger className="h-12 sm:w-44"><SelectValue placeholder="Sort by" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="match"><SlidersHorizontal className="mr-1.5 inline h-3.5 w-3.5" />Match score</SelectItem>
+            <SelectItem value="experience"><SlidersHorizontal className="mr-1.5 inline h-3.5 w-3.5" />Experience</SelectItem>
+            <SelectItem value="name"><SlidersHorizontal className="mr-1.5 inline h-3.5 w-3.5" />Name</SelectItem>
           </SelectContent>
         </Select>
       </div>
+
+      {mySkills.length === 0 && (
+        <div className="rounded-lg border border-amber-500/25 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-400">
+          Add skills to your profile to see match scores for each candidate.
+        </div>
+      )}
 
       {loading ? (
         <SkeletonGrid count={6} />
@@ -67,10 +127,10 @@ export default function TalentSearch() {
         <EmptyState
           icon={Users}
           title="No candidates match"
-          description="Try broadening your search or lowering the rating filter."
+          description="Try broadening your search or lowering the match filter."
           action={
-            (q || source !== 'all' || minRating !== '0') ? (
-              <Button variant="ghost" size="sm" onClick={() => { setQ(''); setSource('all'); setMinRating('0') }}>Clear filters</Button>
+            (q || source !== 'all' || minMatch !== '0') ? (
+              <Button variant="ghost" size="sm" onClick={() => { setQ(''); setSource('all'); setMinMatch('0') }}>Clear filters</Button>
             ) : undefined
           }
         />
@@ -97,10 +157,14 @@ export default function TalentSearch() {
                       </div>
                       <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {c.location}</span>
-                        <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /> <b className="text-foreground">{c.rating}</b></span>
+                        {mySkills.length > 0 && (
+                          <Badge variant="outline" className={`gap-1 text-[10px] font-semibold ${matchColor(c.matchScore)}`}>
+                            <Target className="h-3 w-3" /> {c.matchScore}% match
+                          </Badge>
+                        )}
                         <Chip tone={c.source === 'Referral' ? 'primary' : 'default'}>{c.source}</Chip>
                       </div>
-                      <div className="mt-3 flex flex-wrap gap-1.5">{c.skills.map((s) => <Chip key={s}>{s}</Chip>)}</div>
+                      <div className="mt-3 flex flex-wrap gap-1.5">{c.skills.map((s) => <Chip key={s} tone={mySkills.some((ms) => ms.toLowerCase() === s.toLowerCase()) ? 'primary' : 'default'}>{s}</Chip>)}</div>
                       <div className="mt-4 flex gap-2">
                         <Button size="sm" className="flex-1 rounded-lg bg-primary" disabled={c.id === user?.id} onClick={async (e) => {
                           e.stopPropagation()
