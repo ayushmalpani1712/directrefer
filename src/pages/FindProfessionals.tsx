@@ -373,19 +373,24 @@ export default function FindProfessionals() {
 
   const activeCount = f.companies.length + f.skills.length + f.locations.length
 
+  const totalAvailable = professionals.length
+  const totalWithReferrals = professionals.filter(p => p.referralsCompleted > 0).length
+  const totalVerified = professionals.filter(p => p.verified).length
+  const hasStats = totalAvailable > 0
+
+  const filterChipLabel = (category: string, value: string) => `${category}: ${value}`
+
   return (
     <div className="space-y-6">
       {/* Search row */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-          </svg>
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={f.q}
             onChange={(e) => setF((p) => ({ ...p, q: e.target.value }))}
             placeholder="Search by name or role…"
-            className="h-11 rounded-xl pl-10 text-sm"
+            className="h-11 rounded-xl pl-10 text-sm bg-white/[0.04]"
           />
           {f.q && (
             <button onClick={() => setF((p) => ({ ...p, q: '' }))} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -446,6 +451,66 @@ export default function FindProfessionals() {
         </Sheet>
       </div>
 
+      {/* Stats bar */}
+      {!loading && hasStats && (
+        <p className="text-xs text-muted-foreground">
+          {totalAvailable} professional{totalAvailable !== 1 ? 's' : ''} available{' '}
+          <span className="text-muted-foreground/50">·</span>{' '}
+          {totalWithReferrals} with referral{totalWithReferrals !== 1 ? 's' : ''}{' '}
+          <span className="text-muted-foreground/50">·</span>{' '}
+          {totalVerified} verified
+        </p>
+      )}
+
+      {/* Active filter chips */}
+      {!loading && activeCount > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          {f.companies.map((c) => (
+            <button
+              key={`company-${c}`}
+              onClick={() => setF((p) => ({ ...p, companies: toggle(p.companies, c) }))}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              {filterChipLabel('Company', c)}
+              <X className="h-3 w-3 text-muted-foreground" />
+            </button>
+          ))}
+          {f.skills.map((s) => (
+            <button
+              key={`skill-${s}`}
+              onClick={() => setF((p) => ({ ...p, skills: toggle(p.skills, s) }))}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              {filterChipLabel('Skill', s)}
+              <X className="h-3 w-3 text-muted-foreground" />
+            </button>
+          ))}
+          {f.locations.map((l) => (
+            <button
+              key={`location-${l}`}
+              onClick={() => setF((p) => ({ ...p, locations: toggle(p.locations, l) }))}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              {filterChipLabel('Location', l)}
+              <X className="h-3 w-3 text-muted-foreground" />
+            </button>
+          ))}
+          <button
+            onClick={() => setF(EMPTY_FILTERS)}
+            className="text-xs font-medium text-primary hover:text-primary/80 transition-colors ml-1"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
+
+      {/* Results count */}
+      {!loading && (
+        <p className="text-xs text-muted-foreground">
+          Showing {results.length} of {totalAvailable} professional{totalAvailable !== 1 ? 's' : ''}
+        </p>
+      )}
+
       {/* Results */}
       {loading ? (
         <SkeletonGrid count={6} />
@@ -453,7 +518,7 @@ export default function FindProfessionals() {
         <EmptyState
           icon={Search}
           title="No professionals found"
-          description="Try a different search or clear your filters."
+          description="Try broadening your search or adjusting filters."
           primaryCtaLabel="Clear filters"
           onPrimaryCtaClick={() => setF(EMPTY_FILTERS)}
         />

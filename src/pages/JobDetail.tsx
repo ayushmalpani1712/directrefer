@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { CompanyChip } from '@/components/ui-kit'
+import { CompanyChip, EmptyState } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { ListSkeleton } from '@/components/ui/skeleton'
@@ -200,13 +200,13 @@ export default function JobDetailPage() {
 
   if (!job) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-20">
-        <Briefcase className="h-12 w-12 text-muted-foreground/40" />
-        <p className="text-muted-foreground">Job not found</p>
-        <Link to={role === 'recruiter' ? '/recruiter/jobs' : '/job-seeker/browse-jobs'}>
-          <Button variant="outline" size="sm"><ArrowLeft className="mr-2 h-4 w-4" /> Back to jobs</Button>
-        </Link>
-      </div>
+      <EmptyState
+        icon={Briefcase}
+        title="Job not found"
+        description="This job may have been removed or the link may be outdated."
+        primaryCtaLabel="Back to jobs"
+        primaryCtaHref={role === 'recruiter' ? '/recruiter/jobs' : '/job-seeker/browse-jobs'}
+      />
     )
   }
 
@@ -225,7 +225,7 @@ export default function JobDetailPage() {
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
           <CardContent className="p-6">
-            <div className="flex items-start gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4">
               {job.recruiter_id ? (
                 <Link to={profileUrl('recruiter', job.recruiter_id, job.recruiter_slug)}>
                   <CompanyChip name={job.recruiter_name || 'Co'} className="h-12 w-12 rounded-xl text-sm hover:ring-2 hover:ring-primary/30 transition-all" />
@@ -264,7 +264,7 @@ export default function JobDetailPage() {
               </div>
             </div>
 
-            <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1"><Users className="h-4 w-4" /> {job.applicants} applicants</span>
               <span className="flex items-center gap-1 text-primary"><Star className="h-4 w-4" /> {job.referrals} referrals</span>
               <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> Posted {postedDate} ({daysAgo}d ago)</span>
@@ -341,7 +341,7 @@ export default function JobDetailPage() {
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 lg:sticky lg:top-6">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <Card className="transition-[border-color,box-shadow] duration-200 hover:border-border/80 hover:shadow-sm">
               <CardContent className="p-6 space-y-4">

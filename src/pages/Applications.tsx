@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Briefcase, Calendar, Building2, FileText, XCircle, Search } from 'lucide-react'
+import { Briefcase, Calendar, Building2, FileText, XCircle, Search, Clock, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { DataCard } from '@/components/ui/card-primitives'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { EmptyState } from '@/components/ui-kit'
@@ -154,27 +155,18 @@ export default function Applications() {
         <p className="mt-1 text-sm text-muted-foreground">Track your job applications and their status</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: 'Total Applications', value: stats.total, color: 'text-primary' },
-          { label: 'Submitted', value: stats.submitted, color: 'text-blue-400' },
-          { label: 'Under Review', value: stats.screening, color: 'text-amber-400' },
-          { label: 'Shortlisted', value: stats.shortlisted, color: 'text-emerald-400' },
-        ].map((stat) => (
-          <Card key={stat.label} className="flex flex-col">
-            <CardContent className="flex flex-1 flex-col p-4">
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
-              <div className={cn('mt-1 text-2xl font-bold', stat.color)}>{stat.value}</div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <DataCard title="Total Applications" value={stats.total} icon={<Briefcase className="h-5 w-5" />} />
+        <DataCard title="Submitted" value={stats.submitted} icon={<FileText className="h-5 w-5" />} />
+        <DataCard title="Under Review" value={stats.screening} icon={<Clock className="h-5 w-5" />} />
+        <DataCard title="Shortlisted" value={stats.shortlisted} icon={<Star className="h-5 w-5" />} />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList className="w-full sm:w-auto">
+          <TabsList className="w-full overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-auto">
             {STATUS_TABS.map((tab) => (
-              <TabsTrigger key={tab.key} value={tab.key} className="text-xs">
+              <TabsTrigger key={tab.key} value={tab.key} className="whitespace-nowrap shrink-0 px-2.5 py-2 text-[11px] sm:px-4 sm:py-2.5 sm:text-xs">
                 {tab.label}
               </TabsTrigger>
             ))}
@@ -196,7 +188,7 @@ export default function Applications() {
             <EmptyState
               icon={FileText}
               title={activeTab === 'all' ? 'No applications yet' : `No ${STATUS_TABS.find((t) => t.key === activeTab)?.label.toLowerCase()} applications`}
-              description={activeTab === 'all' ? 'Start applying to jobs to track them here.' : 'Try a different filter.'}
+              description={activeTab === 'all' ? 'Start applying to jobs to track your applications here.' : 'Try a different filter.'}
               primaryCtaLabel={activeTab === 'all' ? 'Browse Jobs' : undefined}
               primaryCtaHref="/job-seeker/browse-jobs"
             />

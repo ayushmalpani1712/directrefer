@@ -95,12 +95,12 @@ function PipelineProgress({ stage }: { stage: PipelineStage }) {
         <span className="font-semibold uppercase tracking-wider">Your referral status</span>
         <span className="font-medium text-primary">{current + 1} of {PIPELINE_STAGES.length}</span>
       </div>
-      <div className="mt-2 flex items-center gap-1">
+      <div className="mt-2 flex items-center gap-1 overflow-hidden">
         {PIPELINE_STAGES.map((s, i) => {
           const meta = PIPELINE_STAGE_META[s.key]
           const done = i <= current
           return (
-            <div key={s.key} className="flex-1">
+            <div key={s.key} className="min-w-0 flex-1">
               <div className={cn('h-1.5 rounded-full transition-colors', done ? 'bg-primary' : 'bg-muted')} />
               <div className={cn('mt-1 flex items-center gap-1 text-[10px] font-medium', done ? meta.cls : 'text-muted-foreground/60')}>
                 <meta.icon className="h-3 w-3 shrink-0" />
@@ -357,7 +357,7 @@ export default function ReferralJobs() {
           title="Referral Jobs"
           subtitle="Open roles at companies where verified professionals are available — no cold applying."
         />
-        <div className="relative sm:w-72">
+        <div className="relative w-full sm:w-72">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search roles, companies, skills…" className="pl-9 rounded-full" />
           {q && <button onClick={() => setQ('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
@@ -379,6 +379,14 @@ export default function ReferralJobs() {
             </button>
           ))}
         </div>
+      )}
+
+      {filtered.length > 0 && (
+        <p className="mt-4 text-xs text-muted-foreground">
+          {filtered.length} active role{filtered.length !== 1 ? 's' : ''} ·{' '}
+          {filtered.filter((j) => j.hasReferrer).length} with verified professional{filtered.filter((j) => j.hasReferrer).length !== 1 ? 's' : ''} ·{' '}
+          {types.length} type{types.length !== 1 ? 's' : ''}
+        </p>
       )}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2 items-stretch">
