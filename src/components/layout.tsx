@@ -555,7 +555,7 @@ export default function AppShell() {
       <SidebarInset className="bg-background flex flex-col min-w-0 min-h-0 overflow-y-auto overflow-x-hidden">
         <AnnouncementBanner />
         <Topbar />
-        <main id="main-content" className="mx-auto w-full min-w-0 max-w-7xl min-h-0 px-4 py-6 sm:px-6 lg:px-8 overflow-x-hidden pb-24 md:pb-6" role="main">
+        <main id="main-content" className="mx-auto w-full min-w-0 max-w-7xl min-h-0 px-4 py-6 sm:px-6 lg:px-8 overflow-x-hidden pb-24 md:pb-6" role="main" style={{ paddingBottom: 'max(96px, calc(80px + env(safe-area-inset-bottom, 0px)))' }}>
           <Breadcrumbs />
           <AnimatedOutlet />
         </main>

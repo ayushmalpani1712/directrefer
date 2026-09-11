@@ -48,7 +48,7 @@ export function TrustBadge({ tier, score, className, showScore = false }: TrustB
 
   return (
     <div className={cn(
-      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium',
+      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium shrink-0',
       config.bgColor,
       config.colors,
       className,

@@ -531,6 +531,79 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVENESS FIXES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Prevent any card or container from exceeding viewport width */
+@layer utilities {
+  .overflow-x-contained {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+}
+
+/* Mobile: ensure all cards respect viewport */
+@media (max-width: 480px) {
+  /* Cards must not exceed viewport */
+  [class*="Card"], [class*="card"] {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* Progress bars must be 100% width */
+  .recharts-bar-rectangle,
+  [class*="progress"] {
+    max-width: 100%;
+  }
+
+  /* Flex rows must wrap on small screens */
+  .flex-nowrap-mobile {
+    flex-wrap: wrap;
+  }
+
+  /* Name/location: allow natural wrap instead of truncation */
+  .truncate-mobile {
+    overflow-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
+  }
+
+  /* Toggle pills: compact on mobile */
+  .toggle-pill-mobile {
+    white-space: nowrap;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  /* Action buttons: full width, evenly spaced */
+  .action-btn-group-mobile {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .action-btn-group-mobile > * {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 44px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SAFE AREA — FAB above bottom nav
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  .fab-safe-bottom {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+
+  .main-content-safe-bottom {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    PERFORMANCE
    ═══════════════════════════════════════════════════════════════════════════ */
 

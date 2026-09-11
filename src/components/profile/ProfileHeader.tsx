@@ -72,20 +72,20 @@ export function ProfileHeader({
 
       <CardContent className="relative px-4 pb-5 sm:px-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex items-end gap-4 min-w-0">
+          <div className="flex items-end gap-3 sm:gap-4 min-w-0">
             <div className="-mt-14 shrink-0">
               <GAvatar
                 name={s.name}
                 color={s.gradient}
-                className="h-24 w-24 border-4 border-card text-2xl"
+                className="h-20 w-20 sm:h-24 sm:w-24 border-4 border-card text-xl sm:text-2xl"
               />
             </div>
             <div className="pb-0.5 min-w-0 flex-1">
-              <div className="flex items-center gap-2.5">
-                <h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight truncate">
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                <h1 className="font-display text-lg sm:text-2xl font-bold tracking-tight min-w-0" style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                   {editing ? (
                     <input
-                      className="w-full bg-transparent border-b border-primary outline-none text-xl sm:text-2xl font-bold placeholder:text-muted-foreground/30"
+                      className="w-full bg-transparent border-b border-primary outline-none text-lg sm:text-2xl font-bold placeholder:text-muted-foreground/30"
                       placeholder="Your full name"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
@@ -102,9 +102,9 @@ export function ProfileHeader({
                   onChange={(e) => setEditHeadline(e.target.value)}
                 />
               ) : (
-                <p className="mt-0.5 text-sm text-muted-foreground truncate">{s.headline}</p>
+                <p className="mt-0.5 text-sm text-muted-foreground" style={{ overflowWrap: 'break-word' }}>{s.headline}</p>
               )}
-              <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground min-w-0">
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground min-w-0">
                 {editing ? (
                   <input
                     className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40"
@@ -117,16 +117,17 @@ export function ProfileHeader({
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.location)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 hover:text-foreground transition-colors truncate"
+                    className="inline-flex items-center gap-1 hover:text-foreground transition-colors min-w-0"
+                    style={{ overflowWrap: 'break-word' }}
                   >
-                    <MapPin className="h-3.5 w-3.5 shrink-0" /> {s.location}
+                    <MapPin className="h-3.5 w-3.5 shrink-0" /> <span className="min-w-0" style={{ overflowWrap: 'break-word' }}>{s.location}</span>
                   </a>
                 )}
-                <div className="h-3.5 w-px bg-border" />
+                <div className="h-3.5 w-px bg-border shrink-0" />
                 <div
                   role="presentation"
                   className={cn(
-                    'flex items-center gap-2 rounded-full border px-3 py-1 transition-colors text-xs font-medium',
+                    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors text-xs font-medium shrink-0',
                     openToWork ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400' : 'border-border text-muted-foreground'
                   )}
                 >
@@ -135,7 +136,7 @@ export function ProfileHeader({
                     onCheckedChange={onToggleOpenToWork}
                   />
                   <span className={cn(
-                    'text-sm font-medium',
+                    'text-xs font-medium whitespace-nowrap',
                     openToWork ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
                   )}>Open to work</span>
                 </div>
@@ -145,7 +146,7 @@ export function ProfileHeader({
                   <div className="flex items-center gap-2 min-w-0">
                     <Linkedin className="h-3.5 w-3.5 text-[#0A66C2] shrink-0" />
                     <input
-                      className="w-full sm:w-56 bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40"
+                      className="w-full bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40"
                       placeholder="e.g. linkedin.com/in/yourname"
                       value={editLinkedin}
                       onChange={(e) => setEditLinkedin(e.target.value)}
@@ -154,7 +155,7 @@ export function ProfileHeader({
                   <div className="flex items-center gap-2 min-w-0">
                     <Github className="h-3.5 w-3.5 shrink-0" />
                     <input
-                      className="w-full sm:w-56 bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40"
+                      className="w-full bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40"
                       placeholder="e.g. github.com/yourname"
                       value={editGithub}
                       onChange={(e) => setEditGithub(e.target.value)}
