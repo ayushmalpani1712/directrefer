@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  Building2, Check, Clock, Github, GraduationCap, History, Info, Linkedin, MapPin, Pencil, Plus,
-  ShieldCheck, Wrench, X, Palette, Eye, EyeOff,
+  ArrowLeft, Building2, Check, Clock, Github, GraduationCap, History, Info, Linkedin, MapPin, Pencil, Plus,
+  ShieldCheck, Wrench, X, Palette, Eye, EyeOff, MessageCircle, Send,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -17,12 +18,14 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { useProfileDraft } from '@/hooks/useProfileDraft'
+import { useMobile } from '@/hooks/use-mobile'
 import { type Professional } from '@/data/constants'
 import { supabase } from '@/lib/supabase'
 import { cn, getBannerStyle } from '@/lib/utils'
 import { BannerColorModal } from '@/components/BannerColorModal'
 import { ProfileSkeleton } from '@/components/ui/skeleton'
 import { TrustScoreHistory } from '@/components/TrustScoreHistory'
+import { TrustBadge, TrustScoreBar } from '@/components/TrustBadge'
 
 export default function ProfessionalProfile() {
   const { professionals, updateProfessional, student, toggleProfessionalOpenForReferrals, toggleProfessionalOpenToWork } = useApp()
@@ -206,6 +209,159 @@ export default function ProfessionalProfile() {
   }
 
   const p = ME
+  const isMobile = useMobile()
+  const navigate = useNavigate()
+
+  if (isMobile) {
+    const trustScore = p.activityScore || 0
+    const trustTier = trustScore >= 80 ? 'verified' as const : trustScore >= 50 ? 'provisional' as const : 'unverified' as const
+
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <span className="truncate text-sm font-semibold">{p.name}</span>
+        </div>
+
+        <div className="relative">
+          {(() => { const bs = getBannerStyle(user?.id, bannerTheme); return (
+            <div className="h-32 w-full" style={bs.style}>
+              <div className="absolute inset-0 bg-grid opacity-10" />
+            </div>
+          ) })()}
+
+          <div className="relative -mt-12 px-4">
+            <GAvatar name={p.name} color={selectedAvatarColor} className="h-20 w-20 border-4 border-card text-xl" />
+
+            <div className="mt-3">
+              <div className="flex items-center gap-2">
+                <h1 className="font-display text-xl font-bold tracking-tight">{p.name}</h1>
+                {p.verified && <Check className="h-4 w-4 text-emerald-500" />}
+              </div>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {p.designation} at <CompanyChip name={p.company} className="h-4 w-4 text-[7px]" /> {p.company}
+              </p>
+              {p.location && (
+                <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin className="h-3 w-3" /> {p.location}
+                </p>
+              )}
+            </div>
+
+            <div className="mt-4 flex gap-3">
+              <Button variant="outline" className="flex-1 rounded-full" size="sm">
+                <MessageCircle className="mr-1.5 h-4 w-4" /> Message
+              </Button>
+              <Button className="flex-1 rounded-full" size="sm">
+                <Send className="mr-1.5 h-4 w-4" /> Request Referral
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 px-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm"><ShieldCheck className="h-4 w-4 text-primary" /> Trust Score</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex items-center justify-between mb-1">
+                <TrustBadge tier={trustTier} score={trustScore} showScore />
+                <span className="text-xs font-semibold text-muted-foreground">{trustScore}/100</span>
+              </div>
+              <TrustScoreBar score={trustScore} />
+              <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-emerald-500" /> Identity verified</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-emerald-500" /> Profile complete</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-4 px-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm"><Info className="h-4 w-4 text-primary" /> About</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="text-sm leading-relaxed text-muted-foreground">{p.bio || 'No bio added yet.'}</p>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-muted/50 p-3 text-center">
+                  <div className="text-lg font-bold">{p.yearsExp} yrs</div>
+                  <div className="text-xs text-muted-foreground">Experience</div>
+                </div>
+                <div className="rounded-xl bg-muted/50 p-3 text-center">
+                  <div className="text-lg font-bold">{p.industry || '—'}</div>
+                  <div className="text-xs text-muted-foreground">Department</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-4 px-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm"><Building2 className="h-4 w-4 text-primary" /> Experience</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex items-start gap-3">
+                <CompanyChip name={p.company} className="h-10 w-10 rounded-xl text-xs shrink-0" />
+                <div>
+                  <div className="text-sm font-semibold">{p.designation}</div>
+                  <div className="text-xs text-muted-foreground">{p.company}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">Jan 2023 — Present</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {p.skills.length > 0 && (
+          <div className="mt-4 px-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm"><Wrench className="h-4 w-4 text-primary" /> Skills</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex flex-wrap gap-2">
+                  {p.skills.map((s) => (
+                    <Chip key={s} tone="primary">{s}</Chip>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        <div className="mt-4 px-4 pb-8">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm"><ShieldCheck className="h-4 w-4 text-primary" /> Referral Info</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-3">
+              <div className="flex items-center justify-between rounded-xl border border-border px-4 py-3">
+                <span className="text-sm font-medium">Available for referrals</span>
+                <span className={cn('text-sm font-semibold', p.openForReferrals ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground')}>
+                  {p.openForReferrals ? 'Yes' : 'No'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-border px-4 py-3">
+                <span className="text-sm font-medium">Response rate</span>
+                <span className="text-sm font-semibold">{p.responseRate}%</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-border px-4 py-3">
+                <span className="text-sm font-medium">Avg reply time</span>
+                <span className="text-sm font-semibold">{p.avgReplyHours > 0 ? `${p.avgReplyHours} hours` : '—'}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

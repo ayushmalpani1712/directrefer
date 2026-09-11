@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import {
-  BadgeCheck, Bell, Building2, Check, CreditCard, FileImage, Globe, KeyRound, Laptop, Lock, Mail, Monitor, Palette,
+  BadgeCheck, Bell, Building2, Check, ChevronRight, CreditCard, FileImage, Globe, KeyRound, Laptop, Lock, Mail, Monitor, Palette,
   ShieldCheck, Trash2, Upload, User, X, Zap, Loader2,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -356,14 +356,17 @@ function VerificationModal({
   )
 }
 
-function Row({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
+function Row({ title, desc, children, showChevron }: { title: string; desc?: string; children: React.ReactNode; showChevron?: boolean }) {
   return (
-    <div className="flex min-w-0 items-center justify-between gap-6 py-4">
-      <div className="min-w-0">
+    <div className="flex min-w-0 items-center justify-between gap-4 py-3.5 sm:py-4">
+      <div className="min-w-0 flex-1">
         <div className="text-sm font-medium">{title}</div>
         {desc && <div className="mt-0.5 text-xs text-muted-foreground">{desc}</div>}
       </div>
-      <div className="shrink-0">{children}</div>
+      <div className="flex shrink-0 items-center gap-2">
+        {children}
+        {showChevron && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+      </div>
     </div>
   )
 }
@@ -584,14 +587,14 @@ export default function Settings() {
                 { key: 'weekly_digest' as const, t: 'Weekly digest email', d: 'A Sunday summary of your pipeline', icon: Mail },
               ]).map((n) => (
                 <Row key={n.key} title={n.t} desc={n.d}>
-                  <Switch checked={notifPrefs[n.key]} onCheckedChange={(v) => handleNotifPrefChange(n.key, v)} />
+                  <Switch checked={notifPrefs[n.key]} onCheckedChange={(v) => handleNotifPrefChange(n.key, v)} className="h-6 w-11 data-[state=checked]:bg-primary" />
                 </Row>
               ))}
               <Row title="Email notifications off" desc="Disable all email notifications (in-app notifications still work)">
-                <Switch checked={notifPrefs.email_opt_out} onCheckedChange={(v) => handleNotifPrefChange('email_opt_out', v)} />
+                <Switch checked={notifPrefs.email_opt_out} onCheckedChange={(v) => handleNotifPrefChange('email_opt_out', v)} className="h-6 w-11 data-[state=checked]:bg-primary" />
               </Row>
               <Row title="Notification sound" desc="Play a subtle sound when new in-app notifications arrive">
-                <Switch checked={notifPrefs.notification_sound} onCheckedChange={(v) => handleNotifPrefChange('notification_sound', v)} />
+                <Switch checked={notifPrefs.notification_sound} onCheckedChange={(v) => handleNotifPrefChange('notification_sound', v)} className="h-6 w-11 data-[state=checked]:bg-primary" />
               </Row>
             </CardContent>
           </Card>
@@ -601,10 +604,10 @@ export default function Settings() {
           <Card className="">
             <CardHeader><CardTitle className="text-base">Privacy</CardTitle></CardHeader>
             <CardContent className="divide-y divide-border">
-              <Row title="Public profile" desc="Appear in search results for professionals and recruiters"><Switch checked={privacy.public_profile} onCheckedChange={(v) => handlePrivacyChange('public_profile', v)} /></Row>
-              <Row title="Show salary expectations" desc="Visible to verified recruiters only"><Switch checked={privacy.show_salary} onCheckedChange={(v) => handlePrivacyChange('show_salary', v)} /></Row>
-              <Row title="Activity status" desc="Show when you're online in messages"><Switch checked={privacy.activity_status} onCheckedChange={(v) => handlePrivacyChange('activity_status', v)} /></Row>
-              <Row title="Search engine indexing" desc="Allow your public profile to appear on Google"><Switch checked={privacy.search_indexing} onCheckedChange={(v) => handlePrivacyChange('search_indexing', v)} /></Row>
+              <Row title="Public profile" desc="Appear in search results for professionals and recruiters"><Switch checked={privacy.public_profile} onCheckedChange={(v) => handlePrivacyChange('public_profile', v)} className="h-6 w-11 data-[state=checked]:bg-primary" /></Row>
+              <Row title="Show salary expectations" desc="Visible to verified recruiters only"><Switch checked={privacy.show_salary} onCheckedChange={(v) => handlePrivacyChange('show_salary', v)} className="h-6 w-11 data-[state=checked]:bg-primary" /></Row>
+              <Row title="Activity status" desc="Show when you're online in messages"><Switch checked={privacy.activity_status} onCheckedChange={(v) => handlePrivacyChange('activity_status', v)} className="h-6 w-11 data-[state=checked]:bg-primary" /></Row>
+              <Row title="Search engine indexing" desc="Allow your public profile to appear on Google"><Switch checked={privacy.search_indexing} onCheckedChange={(v) => handlePrivacyChange('search_indexing', v)} className="h-6 w-11 data-[state=checked]:bg-primary" /></Row>
             </CardContent>
           </Card>
         </TabsContent>

@@ -626,3 +626,88 @@ img[loading="lazy"]:not([data-src]) {
 .will-change-opacity {
   will-change: opacity;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE DESIGN SYSTEM TOKENS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+  /* Mobile typography */
+  .text-mobile-title { font-size: 1.125rem; line-height: 1.5; font-weight: 600; letter-spacing: -0.01em; }
+  .text-mobile-subtitle { font-size: 0.875rem; line-height: 1.5; font-weight: 500; }
+  .text-mobile-body { font-size: 0.875rem; line-height: 1.6; }
+  .text-mobile-caption { font-size: 0.75rem; line-height: 1.5; }
+  .text-mobile-label { font-size: 0.6875rem; line-height: 1.5; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* Mobile spacing */
+  .px-mobile { padding-left: 1rem; padding-right: 1rem; }
+  .py-mobile { padding-top: 1rem; padding-bottom: 1rem; }
+  .gap-mobile { gap: 0.75rem; }
+  .gap-mobile-sm { gap: 0.5rem; }
+
+  /* Mobile card */
+  .card-mobile { background: hsl(var(--card)); border-radius: 1rem; padding: 1rem; }
+  .card-mobile-elevated { background: hsl(var(--card)); border-radius: 1rem; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  /* Mobile button press feedback */
+  .press-feedback { transition: transform 0.1s ease; }
+  .press-feedback:active { transform: scale(0.98); }
+
+  /* Bottom sheet backdrop */
+  .sheet-backdrop { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+
+  /* Hide scrollbar */
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+}
+
+/* Mobile-specific overrides */
+@media (max-width: 767px) {
+  /* Force single column on all grids */
+  [class*="grid-cols-2"],
+  [class*="grid-cols-3"],
+  [class*="grid-cols-4"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Compact spacing */
+  .space-y-6 > * + * { margin-top: 1rem; }
+  .space-y-4 > * + * { margin-top: 0.75rem; }
+
+  /* Full-width buttons on mobile */
+  .btn-mobile-full { width: 100% !important; }
+
+  /* No horizontal overflow */
+  body { overflow-x: hidden; }
+
+  /* Safe area for bottom nav */
+  .pb-bottom-nav { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE TRANSITIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  /* Smooth page transitions */
+  [data-page-enter] {
+    animation: mobile-page-in 0.2s ease-out;
+  }
+
+  @keyframes mobile-page-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Button press feedback */
+  .press-active:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+
+  /* Card press feedback */
+  .card-press:active {
+    transform: scale(0.99);
+    transition: transform 0.1s ease;
+  }
+}

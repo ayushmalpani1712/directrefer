@@ -270,7 +270,7 @@ export default function RequestReferral() {
                 )}
                 <div className="relative mt-4">
                   <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search professionals…" className="h-11 rounded-xl pl-10" />
+                  <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search professionals…" className="h-12 rounded-xl pl-10" />
                 </div>
                 <div className="mt-4 max-h-[380px] space-y-2.5 overflow-y-auto pr-1">
                   {filtered.map((p) => (
@@ -409,15 +409,15 @@ export default function RequestReferral() {
                 <div className="mt-4 space-y-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="li">LinkedIn profile</Label>
-                    <Input id="li" value={draft.linkedinUrl} onChange={(e) => setDraft((d) => ({ ...d, linkedinUrl: e.target.value }))} placeholder="https://linkedin.com/in/yourname" className="h-11" />
+                    <Input id="li" value={draft.linkedinUrl} onChange={(e) => setDraft((d) => ({ ...d, linkedinUrl: e.target.value }))} placeholder="https://linkedin.com/in/yourname" className="h-12 rounded-xl" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="gh">GitHub</Label>
-                    <Input id="gh" value={draft.githubUrl} onChange={(e) => setDraft((d) => ({ ...d, githubUrl: e.target.value }))} placeholder="github.com/yourname" className="h-11" />
+                    <Input id="gh" value={draft.githubUrl} onChange={(e) => setDraft((d) => ({ ...d, githubUrl: e.target.value }))} placeholder="github.com/yourname" className="h-12 rounded-xl" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="pf">Portfolio website</Label>
-                    <Input id="pf" value={draft.portfolioUrl} onChange={(e) => setDraft((d) => ({ ...d, portfolioUrl: e.target.value }))} placeholder="https://yoursite.dev" className="h-11" />
+                    <Input id="pf" value={draft.portfolioUrl} onChange={(e) => setDraft((d) => ({ ...d, portfolioUrl: e.target.value }))} placeholder="https://yoursite.dev" className="h-12 rounded-xl" />
                   </div>
                   {(draft.linkedinUrl || draft.githubUrl || draft.portfolioUrl) && (
                     <div className="rounded-xl border border-border bg-muted/30 p-4">
@@ -459,7 +459,7 @@ export default function RequestReferral() {
                 </p>
                 <div className="mt-4 space-y-1.5">
                   <Label htmlFor="role">Target role</Label>
-                  <Input id="role" value={draft.role} onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value }))} className="h-11" placeholder="e.g. Software Engineer III" />
+                  <Input id="role" value={draft.role} onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value }))} className="h-12 rounded-xl" placeholder="e.g. Software Engineer III" />
                 </div>
                 <div className="mt-4 space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -616,18 +616,20 @@ export default function RequestReferral() {
 
       {/* Footer actions */}
       {step < 7 && (
-        <div className="flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">Step {step} of {STEPS.length - 1}</div>
-          {step < 6 ? (
-            <Button onClick={next} disabled={!canNext} className="rounded-full bg-primary  px-6">
-              Continue <ArrowRight className="ml-1.5 h-4 w-4" />
-            </Button>
-          ) : (
-            <Button onClick={submit} disabled={sending} className="rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white  px-6">
-              {sending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />}
-              {sending ? 'Sending…' : 'Send referral request'}
-            </Button>
-          )}
+        <div className="sticky bottom-0 z-10 border-t border-border bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-muted-foreground">Step {step} of {STEPS.length - 1}</div>
+            {step < 6 ? (
+              <Button onClick={next} disabled={!canNext} className="h-12 rounded-xl px-6">
+                Continue <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button onClick={submit} disabled={sending} className="h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 px-6 text-white">
+                {sending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />}
+                {sending ? 'Sending…' : 'Send referral request'}
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>

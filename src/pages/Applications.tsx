@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Briefcase, Calendar, Building2, FileText, XCircle, Search, Clock, Star } from 'lucide-react'
+import { Briefcase, Calendar, Building2, FileText, XCircle, Search, Clock, Star, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { DataCard } from '@/components/ui/card-primitives'
@@ -8,8 +8,10 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { EmptyState } from '@/components/ui-kit'
 import { useAuth } from '@/context/AuthContext'
+import { useMobile } from '@/hooks/use-mobile'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { useNavigate } from 'react-router'
 import type { ApplicationStatus, Application } from '@/lib/v2/applications'
 
 const STATUS_TABS: { key: string; label: string }[] = [
@@ -22,6 +24,17 @@ const STATUS_TABS: { key: string; label: string }[] = [
   { key: 'accepted', label: 'Accepted' },
   { key: 'rejected', label: 'Rejected' },
   { key: 'withdrawn', label: 'Withdrawn' },
+]
+
+const MOBILE_STATUS_TABS: { key: string; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'submitted', label: 'Submitted' },
+  { key: 'screening', label: 'Screening' },
+  { key: 'shortlisted', label: 'Shortlisted' },
+  { key: 'interview', label: 'Interview' },
+  { key: 'offered', label: 'Offered' },
+  { key: 'accepted', label: 'Accepted' },
+  { key: 'referred', label: 'Referred' },
 ]
 
 const STATUS_STYLES: Record<ApplicationStatus, { label: string; cls: string; dot: string }> = {
@@ -62,6 +75,8 @@ interface JobInfo {
 
 export default function Applications() {
   const { user } = useAuth()
+  const isMobile = useMobile()
+  const navigate = useNavigate()
   const [applications, setApplications] = useState<(Application & { jobs?: JobInfo })[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
@@ -132,18 +147,151 @@ export default function Applications() {
 
   if (loading) {
     return (
-      <div className="space-y-6 p-6">
-        <div className="h-8 w-48 animate-pulse rounded-lg bg-white/5" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={cn('space-y-6', isMobile ? 'px-4 py-4' : 'p-6')}>
+        <div className={cn('animate-pulse rounded-lg bg-muted/50', isMobile ? 'h-8 w-40' : 'h-8 w-48')} />
+        <div className={cn('grid gap-4', isMobile ? 'grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-4')}>
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-white/5" />
+            <div key={i} className={cn('animate-pulse rounded-xl bg-muted/50', isMobile ? 'h-20' : 'h-24')} />
           ))}
         </div>
+        {isMobile && (
+          <div className="flex gap-2 overflow-hidden">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-8 w-20 shrink-0 animate-pulse rounded-full bg-muted/50" />
+            ))}
+          </div>
+        )}
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 animate-pulse rounded-xl bg-white/5" />
+            <div key={i} className={cn('animate-pulse rounded-xl bg-muted/50', isMobile ? 'h-24' : 'h-28')} />
           ))}
         </div>
+      </div>
+    )
+  }
+
+  if (isMobile) {
+    return (
+      <div className="space-y-4 px-4 py-4">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">My Applications</h1>
+          <p className="mt-0.5 text-xs text-muted-foreground">Track your job applications and their status</p>
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search by company or role..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-10 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          />
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {MOBILE_STATUS_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors',
+                activeTab === tab.key
+                  ? 'bg-indigo-500 text-white'
+                  : 'bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1]'
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.06]">
+              <FileText className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h3 className="mt-4 text-sm font-semibold text-white">
+              {activeTab === 'all' ? 'No applications yet' : `No ${MOBILE_STATUS_TABS.find((t) => t.key === activeTab)?.label.toLowerCase()} applications`}
+            </h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {activeTab === 'all' ? 'Start applying to jobs to track them here' : 'Try a different filter'}
+            </p>
+            {activeTab === 'all' && (
+              <Button
+                size="sm"
+                className="mt-5 rounded-xl bg-indigo-500 px-5 text-xs font-medium text-white hover:bg-indigo-600"
+                onClick={() => navigate('/job-seeker/browse-jobs')}
+              >
+                Browse Jobs
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {filtered.map((app, idx) => {
+              const job = app.jobs
+              return (
+                <motion.div
+                  key={app.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.18, delay: idx * 0.03 }}
+                >
+                  <Card
+                    className="cursor-pointer transition-all active:scale-[0.98]"
+                    onClick={() => navigate(`/job-seeker/job/${(app as any).job_id ?? ''}`)}
+                  >
+                    <CardContent className="flex items-center gap-3 p-3.5">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Briefcase className="h-5 w-5" />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[15px] font-semibold text-white truncate">
+                          {job?.title || 'Untitled Position'}
+                        </div>
+                        <div className="mt-0.5 flex items-center gap-1 text-[13px] text-muted-foreground">
+                          <Building2 className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{job?.company || 'Unknown Company'}</span>
+                          {job?.location && (
+                            <>
+                              <span className="text-slate-600">·</span>
+                              <MapPin className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{job.location}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 flex-col items-end gap-1.5">
+                        <AppStatusBadge status={app.status} />
+                        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {formatDate(app.submitted_at)}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {(app.status === 'submitted' || app.status === 'screening') && (
+                    <div className="mt-1.5 flex justify-end px-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => { e.stopPropagation(); handleWithdraw(app.id) }}
+                        className="h-7 rounded-lg px-2 text-[11px] text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                      >
+                        <XCircle className="mr-1 h-3 w-3" />
+                        Withdraw
+                      </Button>
+                    </div>
+                  )}
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
       </div>
     )
   }

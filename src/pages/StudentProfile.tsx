@@ -1,22 +1,28 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  Briefcase, FileText, BadgeCheck, Award, Download,
+  Briefcase, FileText, BadgeCheck, Award, Download, ArrowLeft, Pencil,
+  Linkedin, Github, Globe, MapPin, Shield, Target, Activity, ClipboardCheck,
+  CheckCircle2, Circle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import ResumePreview from '@/components/ResumePreview'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { GAvatar, StatusBadge, Chip } from '@/components/ui-kit'
+import { Switch } from '@/components/ui/switch'
+import { GAvatar, StatusBadge, Chip, ProgressRing } from '@/components/ui-kit'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { ProfileSkeleton } from '@/components/ui/skeleton'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { useProfileDraft } from '@/hooks/useProfileDraft'
+import { useMobile } from '@/hooks/use-mobile'
 import { uploadResume, deleteResume } from '@/lib/db'
+import { TrustBadge, TrustScoreBar } from '@/components/TrustBadge'
+import { cn, getBannerStyle } from '@/lib/utils'
 
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileSidebar } from '@/components/profile/ProfileSidebar'
@@ -40,6 +46,8 @@ export default function StudentProfile() {
   const { user } = useAuth()
   const loading = usePageLoading(450)
   const s = student
+  const isMobile = useMobile()
+  const navigate = useNavigate()
 
   const [openToWork, setOpenToWork] = useState(s.openToWork)
   const [bannerTheme, setBannerTheme] = useState<string | null>(s.bannerTheme ?? null)
@@ -316,6 +324,626 @@ export default function StudentProfile() {
   }
 
   if (loading) return <ProfileSkeleton />
+
+  const bs = getBannerStyle(user?.id, bannerTheme)
+  const mobileTabTriggers = [
+    { value: 'about', label: 'About' },
+    { value: 'experience', label: 'Experience' },
+    { value: 'education', label: 'Education' },
+    { value: 'projects', label: 'Projects' },
+    { value: 'skills', label: 'Skills' },
+  ]
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <input ref={resumeInputRef} type="file" accept=".pdf" className="hidden" onChange={handleResumeUpload} />
+
+        {/* Mobile Header */}
+        <div className="sticky top-0 z-50 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 h-12">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs font-medium text-primary"
+            onClick={() => { setEditName(s.name); setEditHeadline(s.headline); setEditLocation(s.location); setEditing(true) }}
+          >
+            <Pencil className="h-3.5 w-3.5 mr-1" />
+            Edit Profile
+          </Button>
+        </div>
+
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          {/* Banner */}
+          <div className="relative h-32" style={bs.style}>
+            <div className="absolute inset-0 bg-grid opacity-10" />
+          </div>
+
+          {/* Profile Info */}
+          <div className="px-4 -mt-12 relative z-10">
+            <div className="flex items-end gap-3">
+              <GAvatar
+                name={s.name}
+                color={s.gradient}
+                className="h-20 w-20 border-4 border-card text-xl shrink-0"
+              />
+            </div>
+            <div className="mt-2">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <h1 className="font-display text-lg font-bold tracking-tight" style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                  {editing ? (
+                    <input
+                      className="w-full bg-transparent border-b border-primary outline-none text-lg font-bold placeholder:text-muted-foreground/30"
+                      placeholder="Your full name"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                    />
+                  ) : s.name}
+                </h1>
+                <TrustBadge tier="verified" />
+              </div>
+              {editing ? (
+                <input
+                  className="mt-0.5 w-full bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40"
+                  placeholder="e.g. Software Engineer | React & Node.js"
+                  value={editHeadline}
+                  onChange={(e) => setEditHeadline(e.target.value)}
+                />
+              ) : (
+                <p className="mt-0.5 text-xs text-muted-foreground" style={{ overflowWrap: 'break-word' }}>{s.headline}</p>
+              )}
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
+                {editing ? (
+                  <input
+                    className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40"
+                    placeholder="e.g. Pune, India"
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value)}
+                  />
+                ) : (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+                    style={{ overflowWrap: 'break-word' }}
+                  >
+                    <MapPin className="h-3 w-3 shrink-0" /> <span style={{ overflowWrap: 'break-word' }}>{s.location}</span>
+                  </a>
+                )}
+                <div className="h-3 w-px bg-border shrink-0" />
+                <div
+                  role="presentation"
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 transition-colors text-xs font-medium shrink-0',
+                    openToWork ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400' : 'border-border text-muted-foreground'
+                  )}
+                >
+                   <Switch
+                    checked={openToWork}
+                    onCheckedChange={async (v) => {
+                      setOpenToWork(v)
+                      const ok = await toggleStudentOpenToWork(v)
+                      if (ok) toast.success(v ? 'You are now visible in search' : 'Profile hidden from search')
+                    }}
+                  />
+                  <span className={cn(
+                    'text-xs font-medium whitespace-nowrap',
+                    openToWork ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
+                  )}>Open to work</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Social Links */}
+          <div className="px-4 mt-3 flex overflow-x-auto gap-2 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {editing && (
+              <>
+                <div className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs shrink-0">
+                  <Linkedin className="h-3.5 w-3.5 text-[#0A66C2] shrink-0" />
+                  <input
+                    className="bg-transparent outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40 w-32"
+                    placeholder="LinkedIn URL"
+                    value={editLinkedin}
+                    onChange={(e) => setEditLinkedin(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs shrink-0">
+                  <Github className="h-3.5 w-3.5 shrink-0" />
+                  <input
+                    className="bg-transparent outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40 w-32"
+                    placeholder="GitHub URL"
+                    value={editGithub}
+                    onChange={(e) => setEditGithub(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+            {!editing && s.links.linkedin && (
+              <a
+                href={s.links.linkedin.startsWith('http') ? s.links.linkedin : `https://linkedin.com/in/${s.links.linkedin}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0"
+              >
+                <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" /> LinkedIn
+              </a>
+            )}
+            {!editing && s.links.github && (
+              <a
+                href={s.links.github.startsWith('http') ? s.links.github : `https://github.com/${s.links.github}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0"
+              >
+                <Github className="h-3.5 w-3.5" /> GitHub
+              </a>
+            )}
+            {!editing && s.links.website && (
+              <a
+                href={s.links.website.startsWith('http') ? s.links.website : `https://${s.links.website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0"
+              >
+                <Globe className="h-3.5 w-3.5 text-primary" /> Website
+              </a>
+            )}
+            {!editing && !s.links.linkedin && (
+              <button
+                type="button"
+                onClick={() => { setEditing(true) }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors shrink-0"
+              >
+                <Linkedin className="h-3.5 w-3.5" /> Add LinkedIn
+              </button>
+            )}
+            {!editing && !s.links.github && (
+              <button
+                type="button"
+                onClick={() => { setEditing(true) }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors shrink-0"
+              >
+                <Github className="h-3.5 w-3.5" /> Add GitHub
+              </button>
+            )}
+          </div>
+
+          {/* Edit Controls */}
+          {editing && (
+            <div className="px-4 mt-3 flex gap-2">
+              <Button variant="outline" size="sm" className="rounded-full flex-1" onClick={handleCancelEdit}>
+                Cancel
+              </Button>
+              <Button size="sm" className="rounded-full flex-1" onClick={handleSaveProfile}>
+                Save
+              </Button>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Tabs */}
+        <div className="mt-4">
+          <Tabs defaultValue="about" className="w-full">
+            <div className="overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <TabsList className="inline-flex w-auto gap-1 bg-transparent px-4 pb-2 h-auto">
+                {mobileTabTriggers.map(({ value, label }) => (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    className="rounded-full border border-border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 text-xs whitespace-nowrap shrink-0"
+                  >
+                    {label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+
+            <div className="px-4 pt-2 pb-4 space-y-4">
+              <TabsContent value="about" className="mt-0">
+                <AboutTab student={s} onEdit={() => { setEditing(true) }} />
+              </TabsContent>
+              <TabsContent value="experience" className="mt-0">
+                <ExperienceTab
+                  experience={s.experience}
+                  onAdd={handleAddExperience}
+                  onEdit={handleEditExperience}
+                  onDelete={handleDeleteExperience}
+                />
+              </TabsContent>
+              <TabsContent value="education" className="mt-0">
+                <EducationTab
+                  education={s.education}
+                  onAdd={handleAddEducation}
+                  onEdit={handleEditEducation}
+                  onDelete={handleDeleteEducation}
+                />
+              </TabsContent>
+              <TabsContent value="projects" className="mt-0">
+                <ProjectsTab
+                  projects={s.projects}
+                  onAdd={handleAddProject}
+                  onEdit={handleEditProject}
+                  onDelete={handleDeleteProject}
+                />
+              </TabsContent>
+              <TabsContent value="skills" className="mt-0">
+                <SkillsTab
+                  skills={s.skills}
+                  onAdd={handleAddSkill}
+                  onRemove={handleRemoveSkill}
+                />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
+
+        {/* Trust Score */}
+        <div className="px-4 pb-4">
+          <div className="rounded-xl border border-border p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Shield className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold tracking-tight">72</div>
+                <div className="text-xs text-muted-foreground">Trust Score</div>
+              </div>
+              <div className="ml-auto">
+                <TrustBadge tier="provisional" score={72} showScore />
+              </div>
+            </div>
+            <TrustScoreBar score={72} className="mt-3" />
+            <div className="mt-4 space-y-2.5">
+              {[
+                { icon: Target, label: 'Identity', value: '85%' },
+                { icon: Activity, label: 'Profile', value: '70%' },
+                { icon: ClipboardCheck, label: 'Activity', value: '65%' },
+                { icon: Shield, label: 'Screening', value: '60%' },
+              ].map(({ icon: Icon, label, value }) => (
+                <div key={label} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{label}</span>
+                  </div>
+                  <span className="font-medium tabular-nums">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Profile Strength */}
+        <div className="px-4 pb-6">
+          <div className="rounded-xl border border-border p-4">
+            <div className="flex items-center gap-4">
+              <ProgressRing value={s.profileCompletion} size={64} />
+              <div className="min-w-0">
+                <div className="text-sm font-semibold">Profile Strength</div>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {s.profileCompletion >= 80
+                    ? 'Your profile looks great!'
+                    : 'Add more details to strengthen your profile.'}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 space-y-2.5">
+              {[
+                { label: 'Add photo', done: true },
+                { label: 'Add bio', done: !!s.headline },
+                { label: 'Add experience', done: s.experience.length > 0 },
+                { label: 'Add education', done: s.education.length > 0 },
+                { label: 'Upload resume', done: !!s.resumeFile },
+                { label: 'Verify identity', done: false },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2.5">
+                  {item.done ? (
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                  ) : (
+                    <Circle className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+                  )}
+                  <span className={cn('text-sm', item.done ? 'text-foreground' : 'text-muted-foreground')}>
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Referral History */}
+        <div className="px-4 pb-4">
+          <div className="rounded-xl border border-border p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <FileText className="h-4 w-4 shrink-0 text-primary" />
+              <span className="text-sm font-semibold">Referral History</span>
+            </div>
+            <div className="space-y-3">
+              {myRequests.length === 0 && <p className="text-sm text-muted-foreground">No referral history yet.</p>}
+              {myRequests.map((r) => {
+                const p = professionals.find((x) => x.id === r.professionalId)
+                if (!p) return null
+                return (
+                  <div key={r.id} className="flex items-center gap-3 rounded-xl border border-border p-3">
+                    <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-[10px] shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">{r.role}</div>
+                      <div className="truncate text-xs text-muted-foreground">via {p.name} &middot; {p.company} &middot; {r.date}</div>
+                    </div>
+                    <StatusBadge status={r.status} />
+                  </div>
+                )
+              })}
+              <Button variant="outline" size="sm" className="w-full" asChild>
+                <Link to="/job-seeker/applications">View full history</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Certifications & Achievements */}
+        <div className="px-4 pb-4 space-y-4">
+          <div className="rounded-xl border border-border p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <BadgeCheck className="h-4 w-4 shrink-0 text-primary" />
+              <span className="text-sm font-semibold">Certifications</span>
+            </div>
+            <div className="space-y-2.5">
+              {s.certifications.length === 0 && <p className="text-sm text-muted-foreground">No certifications yet.</p>}
+              {s.certifications.map((c) => (
+                <div key={c} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="break-words">{c}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-xl border border-border p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Award className="h-4 w-4 shrink-0 text-primary" />
+              <span className="text-sm font-semibold">Achievements</span>
+            </div>
+            <div className="space-y-2.5">
+              {s.achievements.length === 0 && <p className="text-sm text-muted-foreground">No achievements yet.</p>}
+              {s.achievements.map((a) => (
+                <div key={a} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="break-words">{a}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Career Preferences */}
+        <div className="px-4 pb-4">
+          <div className="rounded-xl border border-border p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4 shrink-0 text-primary" />
+                <span className="text-sm font-semibold">Career Preferences</span>
+              </div>
+              {!showCareerEdit && (
+                <Button variant="ghost" size="sm" className="h-8 text-xs text-primary" onClick={() => setShowCareerEdit(true)}>
+                  Edit
+                </Button>
+              )}
+            </div>
+            {showCareerEdit ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Preferred roles</label>
+                  <input className="mt-1.5 w-full bg-transparent border-b border-muted-foreground/30 outline-none text-sm" placeholder="e.g. Frontend Engineer, PM" value={editPreferredRoles} onChange={(e) => setEditPreferredRoles(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Preferred companies</label>
+                  <input className="mt-1.5 w-full bg-transparent border-b border-muted-foreground/30 outline-none text-sm" placeholder="e.g. Google, Microsoft" value={editPreferredCompanies} onChange={(e) => setEditPreferredCompanies(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Career interests</label>
+                  <input className="mt-1.5 w-full bg-transparent border-b border-muted-foreground/30 outline-none text-sm" placeholder="e.g. AI, Cloud Computing" value={editCareerInterests} onChange={(e) => setEditCareerInterests(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expected salary</label>
+                  <input className="mt-1.5 w-full bg-transparent border-b border-muted-foreground/30 outline-none text-sm" placeholder="e.g. 8-12 LPA" value={editExpectedSalary} onChange={(e) => setEditExpectedSalary(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Languages</label>
+                  <input className="mt-1.5 w-full bg-transparent border-b border-muted-foreground/30 outline-none text-sm" placeholder="e.g. English, Hindi" value={editLanguages} onChange={(e) => setEditLanguages(e.target.value)} />
+                </div>
+                <p className="text-xs text-muted-foreground">Separate values with commas</p>
+                <div className="flex gap-2 pt-1">
+                  <Button size="sm" className="rounded-full bg-primary" onClick={handleSaveCareer}>Save</Button>
+                  <Button size="sm" variant="ghost" onClick={handleCancelCareerEdit}>Cancel</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4 text-sm">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Preferred roles</div>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">{s.preferredRoles.length > 0 ? s.preferredRoles.map((r) => <Chip key={r}>{r}</Chip>) : <span className="text-xs text-muted-foreground">Not set</span>}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Preferred companies</div>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">{s.preferredCompanies.length > 0 ? s.preferredCompanies.map((c) => <Chip key={c} tone="outline">{c}</Chip>) : <span className="text-xs text-muted-foreground">Not set</span>}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Career interests</div>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">{s.careerInterests.length > 0 ? s.careerInterests.map((c) => <Chip key={c}>{c}</Chip>) : <span className="text-xs text-muted-foreground">Not set</span>}</div>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground shrink-0">Expected salary</span>
+                  <span className="font-semibold text-right break-words">{s.expectedSalary || <span className="text-xs text-muted-foreground">Not set</span>}</span>
+                </div>
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-muted-foreground shrink-0">Languages</span>
+                  <span className="text-right font-medium break-words">{s.languages.length > 0 ? s.languages.join(', ') : <span className="text-xs text-muted-foreground">Not set</span>}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Job Preferences */}
+        <div className="px-4 pb-4">
+          <div className="rounded-xl border border-border p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4 shrink-0 text-primary" />
+                <span className="text-sm font-semibold">Job Preferences</span>
+              </div>
+              {!showJobPrefEdit && (
+                <Button variant="ghost" size="sm" className="h-8 text-xs text-primary" onClick={() => setShowJobPrefEdit(true)}>
+                  Edit
+                </Button>
+              )}
+            </div>
+            {showJobPrefEdit ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notice period</label>
+                  <select className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" value={editNoticePeriod} onChange={(e) => setEditNoticePeriod(e.target.value)}>
+                    <option value="">Select notice period</option>
+                    <option value="Immediately available">Immediately available</option>
+                    <option value="Within 15 days">Within 15 days</option>
+                    <option value="Within 30 days">Within 30 days</option>
+                    <option value="Within 60 days">Within 60 days</option>
+                    <option value="Within 90 days">Within 90 days</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Work preference</label>
+                  <select className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" value={editWorkPreference} onChange={(e) => setEditWorkPreference(e.target.value)}>
+                    <option value="">Select work preference</option>
+                    <option value="Remote">Remote</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="On-site">On-site</option>
+                    <option value="Flexible">Flexible</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Why I'm a fit</label>
+                  <textarea className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary resize-none" rows={3} placeholder="e.g. 3 years building React apps at a fintech..." value={editWhyFit} onChange={(e) => setEditWhyFit(e.target.value)} />
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Button size="sm" className="rounded-full bg-primary" onClick={handleSaveJobPrefs}>Save</Button>
+                  <Button size="sm" variant="ghost" onClick={handleCancelJobPrefEdit}>Cancel</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground shrink-0">Notice period</span>
+                  <span className="font-semibold text-right break-words">{s.noticePeriod || <span className="text-xs text-muted-foreground">Not set</span>}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground shrink-0">Work preference</span>
+                  <span className="font-semibold text-right break-words">{s.workPreference || <span className="text-xs text-muted-foreground">Not set</span>}</span>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Why I'm a fit</div>
+                  {s.whyFit ? (
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground break-words">{s.whyFit}</p>
+                  ) : (
+                    <p className="mt-1 text-xs text-muted-foreground">Not set</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Resume */}
+        <div className="px-4 pb-6">
+          <div className="rounded-xl border border-border p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 shrink-0 text-primary" />
+                <span className="text-sm font-semibold">Resume</span>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                {s.resumeFile && (
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-rose-500" onClick={() => setShowResumeConfirm(true)}>
+                    <span className="text-xs">X</span>
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" className="h-8 text-xs text-primary" onClick={() => resumeInputRef.current?.click()}>
+                  Upload
+                </Button>
+              </div>
+            </div>
+            <div className="rounded-xl border border-dashed border-border p-4 text-center transition-colors hover:border-primary/40 hover:bg-muted/30">
+              {resumeUploading ? (
+                <>
+                  <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <p className="mt-2 text-xs font-medium text-primary">Uploading...</p>
+                </>
+              ) : (
+                <>
+                  <FileText className="mx-auto h-6 w-6 text-muted-foreground" />
+                  <p className="mt-2 text-xs font-medium break-words">Drop your PDF here or click to upload</p>
+                  <p className="mt-1 text-xs text-muted-foreground">PDF, max 10 MB</p>
+                  <Button variant="outline" size="sm" className="mt-2" onClick={() => resumeInputRef.current?.click()}>
+                    Choose file
+                  </Button>
+                </>
+              )}
+            </div>
+            {s.resumeFile ? (
+              <div className="mt-3 flex items-center gap-3 rounded-xl border border-border p-3">
+                <FileText className="h-7 w-7 text-rose-500 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{s.resumeFile.name}</div>
+                  <div className="text-xs text-muted-foreground">{s.resumeFile.size} &middot; Uploaded {s.resumeFile.date}</div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {s.resumeFile.url && (
+                    <Button variant="ghost" size="sm" className="h-7 text-xs text-primary" onClick={() => setShowResumePreview(true)}>
+                      Preview
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={handleDownloadResume}>
+                    <Download className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-3 flex items-center gap-3 rounded-xl border border-border p-3">
+                <FileText className="h-7 w-7 text-muted-foreground shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-muted-foreground">No resume uploaded</div>
+                  <div className="text-xs text-muted-foreground">Upload a PDF to get started</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <ConfirmDialog
+          open={showResumeConfirm}
+          onOpenChange={setShowResumeConfirm}
+          title="Delete resume?"
+          description="This will permanently remove your uploaded resume from your profile."
+          onConfirm={handleDeleteResume}
+        />
+
+        {s.resumeFile?.url && (
+          <ResumePreview
+            url={s.resumeFile.url}
+            fileName={s.resumeFile.name}
+            open={showResumePreview}
+            onOpenChange={setShowResumePreview}
+          />
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

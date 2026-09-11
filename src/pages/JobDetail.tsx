@@ -19,6 +19,7 @@ import { supabase } from '@/lib/supabase'
 import { profileUrl } from '@/data/constants'
 import { submitApplication } from '@/lib/v2/api'
 import { getSkillGap } from '@/lib/v2/matching'
+import { useMobile } from '@/hooks/use-mobile'
 
 interface JobDetail {
   id: string
@@ -53,6 +54,7 @@ export default function JobDetailPage() {
   const [applying, setApplying] = useState(false)
   const [applied, setApplied] = useState(false)
   const [skillGap, setSkillGap] = useState<{ matching: string[]; missing: string[]; gap_score: number } | null>(null)
+  const isMobile = useMobile()
 
   useEffect(() => {
     if (!id) return
@@ -212,6 +214,215 @@ export default function JobDetailPage() {
 
   const postedDate = new Date(job.posted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   const daysAgo = Math.floor((Date.now() - new Date(job.posted_at).getTime()) / 86400000)
+
+  if (isMobile) {
+    return (
+      <div className="pb-[140px]">
+        <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+          <Link to={role === 'recruiter' ? '/recruiter/jobs' : '/job-seeker/browse-jobs'} className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <span className="text-xs text-muted-foreground">Back to jobs</span>
+        </div>
+
+        <div className="px-4 space-y-5">
+          <div className="flex items-center gap-3">
+            {job.recruiter_id ? (
+              <Link to={profileUrl('recruiter', job.recruiter_id, job.recruiter_slug)}>
+                <CompanyChip name={job.recruiter_name || 'Co'} className="h-10 w-10 rounded-xl text-xs" />
+              </Link>
+            ) : (
+              <CompanyChip name={job.recruiter_name || 'Co'} className="h-10 w-10 rounded-xl text-xs" />
+            )}
+            <Badge variant="outline" className="border-emerald-500/25 bg-emerald-500/10 text-emerald-500 text-[10px]">Active</Badge>
+          </div>
+
+          <div>
+            <h1 className="text-[20px] font-bold leading-tight">{job.title}</h1>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+              {job.recruiter_name && (
+                <Link to={profileUrl('recruiter', job.recruiter_id, job.recruiter_slug)} className="hover:text-foreground transition-colors">
+                  {job.recruiter_name}
+                </Link>
+              )}
+              <span>·</span>
+              <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {job.location}</span>
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" /> {job.type}</span>
+              {job.salary && (
+                <>
+                  <span>·</span>
+                  <span className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /> {job.salary}</span>
+                </>
+              )}
+            </div>
+            <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {job.applicants} applicants</span>
+              <span className="flex items-center gap-1 text-primary"><Star className="h-3.5 w-3.5" /> {job.referrals} referrals</span>
+            </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">Posted {postedDate} ({daysAgo}d ago)</p>
+          </div>
+
+          {job.expires_at && (() => {
+            const deadline = new Date(job.expires_at)
+            const now = new Date()
+            const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+            const isExpired = daysLeft <= 0
+            const isUrgent = daysLeft > 0 && daysLeft <= 7
+            return (
+              <div className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-xs ${
+                isExpired
+                  ? 'border-rose-500/25 bg-rose-500/5 text-rose-500'
+                  : isUrgent
+                  ? 'border-amber-500/25 bg-amber-500/5 text-amber-500'
+                  : 'border-border bg-muted/30 text-foreground'
+              }`}>
+                {isExpired ? <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> : <CalendarClock className="h-3.5 w-3.5 shrink-0" />}
+                <span className="font-medium">
+                  {isExpired
+                    ? 'Application deadline has passed'
+                    : isUrgent
+                    ? `Deadline in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`
+                    : `Deadline: ${deadline.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+                  }
+                </span>
+              </div>
+            )
+          })()}
+
+          <Separator />
+
+          {job.description && (
+            <div>
+              <h2 className="text-base font-semibold">About the role</h2>
+              <div className="mt-2 prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-muted-foreground text-[13px] leading-relaxed">
+                {job.description}
+              </div>
+            </div>
+          )}
+
+          {job.requirements && (
+            <div>
+              <h2 className="text-base font-semibold">Requirements</h2>
+              <div className="mt-2 prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-muted-foreground text-[13px] leading-relaxed">
+                {job.requirements}
+              </div>
+            </div>
+          )}
+
+          {!job.description && !job.requirements && (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Briefcase className="h-8 w-8 text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground">No detailed description available.</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Contact the recruiter for more info.</p>
+            </div>
+          )}
+
+          <Separator />
+
+          {skillGap && role === 'student' && (
+            <div className="space-y-3">
+              <h2 className="text-base font-semibold">Skill match</h2>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Match score</span>
+                <span className={`font-bold ${skillGap.gap_score >= 70 ? 'text-emerald-500' : skillGap.gap_score >= 40 ? 'text-amber-500' : 'text-rose-500'}`}>
+                  {skillGap.gap_score}%
+                </span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    skillGap.gap_score >= 70 ? 'bg-emerald-500' : skillGap.gap_score >= 40 ? 'bg-amber-500' : 'bg-rose-500'
+                  }`}
+                  style={{ width: `${skillGap.gap_score}%` }}
+                />
+              </div>
+              {skillGap.matching.length > 0 && (
+                <div>
+                  <div className="text-xs font-medium text-emerald-600 mb-1">Matching</div>
+                  <div className="flex flex-wrap gap-1">
+                    {skillGap.matching.map((s) => (
+                      <span key={s} className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600">{s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {skillGap.missing.length > 0 && (
+                <div>
+                  <div className="text-xs font-medium text-rose-600 mb-1">Missing</div>
+                  <div className="flex flex-wrap gap-1">
+                    {skillGap.missing.map((s) => (
+                      <span key={s} className="rounded-md bg-rose-500/10 px-2 py-0.5 text-[11px] font-medium text-rose-600">{s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {job.recruiter_id && (
+            <div>
+              <Separator className="mb-5" />
+              <h2 className="text-base font-semibold mb-3">Posted by</h2>
+              <Link to={profileUrl('recruiter', job.recruiter_id, job.recruiter_slug)} className="flex items-center gap-3 group">
+                <CompanyChip name={job.recruiter_name || 'Co'} className="h-10 w-10 rounded-xl text-xs" />
+                <div>
+                  <p className="text-sm font-medium group-hover:text-primary transition-colors">{job.recruiter_name || 'Recruiter'}</p>
+                  <p className="text-xs text-muted-foreground">View company profile</p>
+                </div>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        <div className="fixed bottom-[72px] left-0 right-0 z-40 border-t bg-background/95 backdrop-blur-lg safe-area-inset-bottom">
+          <div className="flex flex-col gap-2 p-4">
+            {role === 'student' && (
+              <>
+                {applied ? (
+                  <Button className="w-full h-12 rounded-xl" disabled variant="outline">
+                    Application Submitted
+                  </Button>
+                ) : job.expires_at && new Date(job.expires_at) < new Date() ? (
+                  <Button className="w-full h-12 rounded-xl" disabled>
+                    Applications Closed
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full h-12 rounded-xl bg-primary text-white shadow-sm"
+                    onClick={handleApply}
+                    disabled={applying}
+                  >
+                    {applying ? 'Submitting…' : 'Apply via DirectRefer'}
+                  </Button>
+                )}
+                <Link to="/job-seeker/request-referral" className="block">
+                  <Button variant="outline" className="w-full h-12 rounded-xl">
+                    Request Referral
+                  </Button>
+                </Link>
+              </>
+            )}
+            {role === 'professional' && (
+              <Link to="/professional/professionals" className="block">
+                <Button className="w-full h-12 rounded-xl bg-primary text-white shadow-sm">
+                  View Referral Requests
+                </Button>
+              </Link>
+            )}
+            {job.application_url && (
+              <a href={job.application_url} target="_blank" rel="noopener noreferrer" className="block">
+                <Button variant="outline" className="w-full h-12 rounded-xl gap-2">
+                  Apply directly <ExternalLink className="h-3.5 w-3.5" />
+                </Button>
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

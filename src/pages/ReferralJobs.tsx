@@ -19,6 +19,8 @@ import { useAuth } from '@/context/AuthContext'
 import { PIPELINE_STAGES, type PipelineStage } from '@/data/constants'
 import { cn } from '@/lib/utils'
 import { findMatchesForJobSeeker, storeMatches } from '@/lib/v2/matching'
+import { JobListSkeleton } from '@/components/mobile/MobileSkeleton'
+import { useMobile } from '@/hooks/use-mobile'
 
 interface JobRow {
   id: string
@@ -333,7 +335,21 @@ export default function ReferralJobs() {
     }
   }
 
+  const isMobile = useMobile()
+
   if (loading) {
+    if (isMobile) {
+      return (
+        <div className="min-h-screen bg-background px-4 py-4">
+          <div className="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+            <ArrowLeft className="h-4 w-4" /> Back
+          </div>
+          <div className="relative w-full mb-3 h-12 animate-pulse rounded-xl bg-muted/50" />
+          <div className="mb-3 h-6 w-48 animate-pulse rounded-lg bg-muted/50" />
+          <JobListSkeleton />
+        </div>
+      )
+    }
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-10">
         <div className="h-8 w-64 animate-pulse rounded-xl bg-muted" />
@@ -343,6 +359,149 @@ export default function ReferralJobs() {
             <div key={i} className="h-44 animate-pulse rounded-2xl bg-muted/50" />
           ))}
         </div>
+      </div>
+    )
+  }
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background px-4 py-4">
+        <button onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/')} className="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Back
+        </button>
+
+        <div className="relative w-full mb-3">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search roles, companies, skills…" className="pl-9 pr-9 h-12 rounded-xl text-base" />
+          {q && <button onClick={() => setQ('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+        </div>
+
+        {types.length > 1 && (
+          <div className="mb-3 flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+            {['all', ...types.map((t) => t.toLowerCase())].map((t) => (
+              <button
+                key={t}
+                onClick={() => setTypeFilter(t)}
+                className={cn(
+                  'shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors',
+                  typeFilter === t ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {t === 'all' ? 'All' : t}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {filtered.length > 0 && (
+          <p className="mb-3 text-xs text-muted-foreground">
+            {filtered.length} role{filtered.length !== 1 ? 's' : ''} found
+          </p>
+        )}
+
+        <div className="flex flex-col gap-3">
+          {filtered.length === 0 ? (
+            <EmptyState
+              icon={Briefcase}
+              title="No matching roles right now"
+              description="Try a different search, or check back soon — recruiters post new roles regularly."
+            />
+          ) : (
+            filtered.map((job) => {
+              const topReferrer = job.hasReferrer ? job.referrers[0] : undefined
+              const myRequest = user
+                ? requests.find((r) => r.requesterId === user.id && r.professionalId === topReferrer?.user_id && normalizeText(r.role) === normalizeText(job.title))
+                : undefined
+              return (
+                <motion.div
+                  key={job.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <Card
+                    className="cursor-pointer active:scale-[0.98] transition-transform"
+                    onClick={() => {
+                      if (!user) { navigate('/login'); return }
+                      if (topReferrer?.slug) {
+                        navigate(`/job-seeker/request-referral/${topReferrer.user_id}?role=${encodeURIComponent(job.title)}`)
+                      }
+                    }}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <CompanyChip name={job.company ?? ''} />
+                        {job.matchScore > 0 && <MatchScore score={job.matchScore} />}
+                      </div>
+
+                      <h3 className="text-[16px] font-semibold leading-tight truncate">{job.title}</h3>
+                      <p className="mt-0.5 text-xs text-muted-foreground truncate">
+                        {job.company}{job.location ? ` · ${job.location}` : ''}
+                      </p>
+
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {job.type && (
+                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">{job.type}</Badge>
+                        )}
+                        {job.salary_range && (
+                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">{job.salary_range}</Badge>
+                        )}
+                      </div>
+
+                      {job.skillsList.length > 0 && (
+                        <div className="mt-2.5 flex flex-wrap gap-1">
+                          {job.skillsList.slice(0, 3).map((s) => {
+                            const isMatching = studentSkills.includes(s.toLowerCase())
+                            return (
+                              <Chip key={s} tone={isMatching ? 'primary' : 'default'}>
+                                {isMatching && <CheckCircle2 className="mr-0.5 h-2 w-2" />}
+                                {s}
+                              </Chip>
+                            )
+                          })}
+                          {job.skillsList.length > 3 && (
+                            <span className="inline-flex items-center text-[10px] text-muted-foreground">+{job.skillsList.length - 3} more</span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex items-center justify-between">
+                        {job.hasReferrer ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            {job.referrerCount} professional{job.referrerCount !== 1 ? 's' : ''} available
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                            No professional yet
+                          </span>
+                        )}
+                      </div>
+
+                      {myRequest ? (
+                        <Button size="sm" variant="outline" className="mt-3 w-full rounded-lg" asChild>
+                          <Link to="/job-seeker/applications">Track Referral <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link>
+                        </Button>
+                      ) : job.hasReferrer ? (
+                        <Button size="sm" className="mt-3 w-full rounded-lg bg-primary">
+                          <Users className="mr-1.5 h-3.5 w-3.5" /> Request Referral
+                          <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" className="mt-3 w-full rounded-lg" disabled>
+                          No professional attached
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )
+            })
+          )}
+        </div>
+
+        <p className="mt-6 text-center text-[10px] text-muted-foreground">
+          Professional availability shown only when verified data backs them.
+        </p>
       </div>
     )
   }

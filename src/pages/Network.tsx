@@ -16,6 +16,7 @@ import { ROLE_ROUTE, getRoleFromPath, type AppNotification } from '@/data/consta
 import { cn } from '@/lib/utils'
 import { ProfessionalCard } from '@/pages/FindProfessionals'
 import { ListSkeleton } from '@/components/ui/skeleton'
+import { useMobile } from '@/hooks/use-mobile'
 
 function getNotificationRoute(entityType: string | null | undefined, entityId: string | null | undefined, prefix: string): string | null {
   if (!entityType || !entityId) return null
@@ -99,6 +100,7 @@ export function NotificationsPage() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const prefix = ROLE_ROUTE[getRoleFromPath(pathname) || 'student']
+  const isMobile = useMobile()
   const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
@@ -115,13 +117,124 @@ export function NotificationsPage() {
   const totalPages = Math.max(1, Math.ceil(shown.length / PAGE_SIZE))
   const paginated = shown.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const groups = useMemo(() => groupNotifications(paginated), [paginated])
+  const unreadCount = notifications.filter((n) => !n.read).length
 
   if (loading) return <ListSkeleton count={5} />
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col gap-4 pb-6">
+        <div className="flex items-center justify-between px-1">
+          <div>
+            <h1 className="text-lg font-bold tracking-tight">Notifications</h1>
+            {unreadCount > 0 && (
+              <p className="text-xs text-muted-foreground">{unreadCount} unread</p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <Button variant="outline" size="sm" onClick={() => markAllNotificationsRead()} className="h-8 text-xs">
+                <CheckCheck className="mr-1 h-3 w-3" /> Mark all read
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+              <Link to={`${prefix}/settings`}><Settings2 className="h-4 w-4" /></Link>
+            </Button>
+          </div>
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(1) }}
+            placeholder="Search notifications..."
+            className="h-9 pl-9 text-sm"
+          />
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto px-1 no-scrollbar">
+          {['all', 'unread', 'accepted', 'rejected', 'message', 'system'].map((t) => (
+            <button
+              key={t}
+              onClick={() => { setFilter(t); setPage(1) }}
+              className={cn(
+                'shrink-0 rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors',
+                filter === t
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-muted-foreground hover:bg-muted'
+              )}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
+        {shown.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Bell className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="mt-4 text-sm font-semibold">No notifications yet</p>
+            <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">
+              You'll see updates about your referrals and applications here
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4 px-1">
+            {groups.map((group) => (
+              <div key={group.label} className="space-y-2">
+                <span className="block px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {group.label}
+                </span>
+                {group.items.map((n, i) => {
+                  const cfg = ICONS[n.type] ?? { icon: Bell, cls: 'bg-muted text-muted-foreground' }
+                  const deepLink = getNotificationRoute(n.entity_type, n.entity_id, prefix)
+                  return (
+                    <motion.button
+                      key={n.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                      onClick={() => {
+                        markNotificationRead(n.id)
+                        if (deepLink) navigate(deepLink)
+                      }}
+                      className={cn(
+                        'flex w-full items-start gap-3 rounded-xl p-3 text-left transition-colors active:bg-muted/50',
+                        n.read ? 'bg-card' : 'bg-primary/5'
+                      )}
+                    >
+                      <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full', cfg.cls)}>
+                        <cfg.icon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="truncate text-[14px] font-semibold leading-snug">{n.title}</span>
+                          {!n.read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
+                        </div>
+                        <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground line-clamp-2">{n.description}</p>
+                        <span className="mt-1 block text-[12px] text-muted-foreground/60">{getRelativeTime(n.time)}</span>
+                      </div>
+                    </motion.button>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-end justify-between">
-        <SectionHeader title="Notifications" subtitle={`${notifications.filter((n) => !n.read).length} unread`} />
+        <SectionHeader title="Notifications" subtitle={`${unreadCount} unread`} />
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => markAllNotificationsRead()}><CheckCheck className="mr-1.5 h-3.5 w-3.5" /> Mark all read</Button>
           <Button variant="ghost" size="icon" asChild><Link to={`${prefix}/settings`}><Settings2 className="h-4.5 w-4.5" /></Link></Button>
