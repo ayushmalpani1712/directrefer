@@ -65,7 +65,7 @@ function CapacityMeter({ used, max }: { used: number; max: number }) {
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-sm">
         <span className="text-muted-foreground">
           Monthly Capacity: <span className="font-semibold text-foreground">{used}</span> of <span className="font-semibold text-foreground">{max}</span> used
         </span>

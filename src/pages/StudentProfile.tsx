@@ -355,34 +355,34 @@ export default function StudentProfile() {
         {/* Left column — 66% */}
         <div className="lg:col-span-2">
           <Tabs defaultValue="about" className="w-full">
-            <TabsList className="w-full justify-start gap-0 bg-transparent border-b border-border rounded-none p-0 h-auto">
+            <TabsList className="w-full justify-start gap-0 bg-transparent border-b border-border rounded-none p-0 h-auto overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <TabsTrigger
                 value="about"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-4 py-2.5"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-3 py-2.5 text-xs sm:text-sm sm:px-4 whitespace-nowrap shrink-0"
               >
                 About
               </TabsTrigger>
               <TabsTrigger
                 value="experience"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-4 py-2.5"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-3 py-2.5 text-xs sm:text-sm sm:px-4 whitespace-nowrap shrink-0"
               >
                 Experience
               </TabsTrigger>
               <TabsTrigger
                 value="education"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-4 py-2.5"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-3 py-2.5 text-xs sm:text-sm sm:px-4 whitespace-nowrap shrink-0"
               >
                 Education
               </TabsTrigger>
               <TabsTrigger
                 value="projects"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-4 py-2.5"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-3 py-2.5 text-xs sm:text-sm sm:px-4 whitespace-nowrap shrink-0"
               >
                 Projects
               </TabsTrigger>
               <TabsTrigger
                 value="skills"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-4 py-2.5"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-3 py-2.5 text-xs sm:text-sm sm:px-4 whitespace-nowrap shrink-0"
               >
                 Skills
               </TabsTrigger>

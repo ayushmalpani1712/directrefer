@@ -164,14 +164,14 @@ export default function AdminOverview() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Admin Dashboard</h1>
           <p className="text-sm text-muted-foreground">
             Platform operations, metrics, and system health
           </p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2" onClick={loadData}>
+        <Button variant="outline" size="sm" className="gap-2 self-start" onClick={loadData}>
           <RefreshCw className="h-3.5 w-3.5" />
           Refresh
         </Button>

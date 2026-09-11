@@ -445,7 +445,7 @@ function Breadcrumbs({ title, description }: BreadcrumbsProps) {
       {(pageTitle || pageDescription) && (
         <div className="border-b border-border/50 pb-4">
           {pageTitle && (
-            <h1 className="text-[24px] font-semibold leading-tight text-white">{pageTitle}</h1>
+            <h1 className="text-xl md:text-[24px] font-semibold leading-tight text-white">{pageTitle}</h1>
           )}
           {pageDescription && (
             <p className="mt-1 text-[14px] leading-relaxed text-neutral-400">{pageDescription}</p>
