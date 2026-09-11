@@ -53,7 +53,7 @@ export function MobileBottomNav() {
               key={item.href}
               onClick={() => navigate(item.href)}
               className={cn(
-                'relative flex flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-2 min-w-[64px] min-h-[56px] transition-colors duration-200',
+                'relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-2 min-h-[56px] transition-colors duration-200',
                 active
                   ? 'text-primary'
                   : 'text-muted-foreground active:text-foreground',

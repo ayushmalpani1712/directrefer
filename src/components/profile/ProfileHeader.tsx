@@ -165,7 +165,7 @@ export function ProfileHeader({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 sm:pb-0.5 shrink-0">
+          <div className="flex flex-wrap gap-2 sm:pb-0.5">
             {editing ? (
               <>
                 <Button variant="outline" size="sm" className="rounded-full" onClick={handleCancelEdit}>

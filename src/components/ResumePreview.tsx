@@ -181,7 +181,7 @@ export default function ResumePreview({ url, fileName, open, onOpenChange }: Res
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="!rounded-xl overflow-hidden [&>button]:hidden"
-        style={{ maxWidth: 'none', width: 'calc(100vw - 2rem)', height: 'calc(100vh - 2rem)', padding: 0, gap: 0, display: 'flex', flexDirection: 'column' }}
+        style={{ maxWidth: 'calc(100vw - 2rem)', width: '100%', height: 'calc(100vh - 2rem)', padding: 0, gap: 0, display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}
         showCloseButton={false}
       >
         <div className="flex items-center justify-between border-b border-border bg-card px-4 py-2 shrink-0">
