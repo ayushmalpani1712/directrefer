@@ -146,6 +146,24 @@
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.2);
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -4px rgba(0,0,0,0.2);
     --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.4), 0 8px 10px -6px rgba(0,0,0,0.3);
+
+    /* ── Card primitives ──────────────────────────────────────────── */
+    --card-radius: 0.75rem;
+    --card-border: 1px solid hsl(var(--border));
+    --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    --card-shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.2), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --card-padding: 1.5rem;
+
+    /* ── Gradient tokens ──────────────────────────────────────────── */
+    --gradient-primary: linear-gradient(135deg, hsl(234 78% 56%) 0%, hsl(262 83% 58%) 100%);
+    --gradient-subtle: linear-gradient(135deg, hsl(234 78% 56% / 0.08) 0%, hsl(262 83% 58% / 0.04) 100%);
+    --gradient-welcome: linear-gradient(135deg, hsl(234 78% 56% / 0.12) 0%, hsl(220 20% 14%) 100%);
+
+    /* ── Button tokens ────────────────────────────────────────────── */
+    --btn-primary-bg: hsl(234 78% 56%);
+    --btn-primary-hover: hsl(234 78% 62%);
+    --btn-secondary-border: hsl(234 78% 56%);
+    --btn-ghost-hover: hsl(220 20% 18%);
   }
 }
 

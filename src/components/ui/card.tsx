@@ -7,11 +7,12 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-4 rounded-xl border border-border py-5 shadow-xs transition-all duration-200",
-        "hover:shadow-sm hover:border-border/80",
+        "bg-card text-card-foreground flex flex-col gap-4 border border-border py-5 shadow-xs transition-all duration-200",
+        "hover:shadow-[var(--card-shadow-hover)] hover:border-border/80",
         "dark:hover:border-border/60",
         className
       )}
+      style={{ borderRadius: "var(--card-radius)" } as React.CSSProperties}
       {...props}
     />
   )

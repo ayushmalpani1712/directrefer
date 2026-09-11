@@ -1,9 +1,9 @@
 import { useLocation, useNavigate } from 'react-router'
-import { LayoutDashboard, Users, FileText, MessageSquare, User } from 'lucide-react'
+import { LayoutDashboard, Users, FileText, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { ROLE_ROUTE, getRoleFromPath, getMessagesPath, type Role } from '@/data/constants'
+import { ROLE_ROUTE, getRoleFromPath, type Role } from '@/data/constants'
 
 interface BottomNavItem {
   label: string
@@ -13,12 +13,10 @@ interface BottomNavItem {
 }
 
 function itemsFor(role: Role, prefix: string): BottomNavItem[] {
-  const messagesPath = getMessagesPath(role)
   return [
-    { label: 'Home', icon: LayoutDashboard, href: `${prefix}/dashboard` },
-    { label: 'Find', icon: Users, href: role === 'student' ? '/job-seeker/professionals' : '/professional/talent' },
+    { label: 'Dashboard', icon: LayoutDashboard, href: `${prefix}/dashboard` },
+    { label: 'Search', icon: Users, href: role === 'student' ? '/job-seeker/browse-jobs' : '/professional/browse-jobs' },
     { label: 'Referrals', icon: FileText, href: `${prefix}/referrals`, getBadge: (pending) => pending > 0 ? String(pending) : undefined },
-    { label: 'Messages', icon: MessageSquare, href: messagesPath, getBadge: (_, unread) => unread > 0 ? String(unread) : undefined },
     { label: 'Profile', icon: User, href: `${prefix}/profile` },
   ]
 }

@@ -2,18 +2,14 @@ import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  Award, BadgeCheck, Briefcase, Building2, CheckCircle2,
-  Download, FileText, Github, GraduationCap, Languages, Linkedin, MapPin, Pencil, Plus,
-  Sparkles, Target, Trash2, Upload, Zap, Globe, X, Palette, Eye,
+  Briefcase, FileText, BadgeCheck, Award, Download,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import ResumePreview from '@/components/ResumePreview'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-
-import { Switch } from '@/components/ui/switch'
-import { Chip, GAvatar, ProgressRing, StatusBadge } from '@/components/ui-kit'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { GAvatar, StatusBadge, Chip } from '@/components/ui-kit'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { ProfileSkeleton } from '@/components/ui/skeleton'
 import { useApp } from '@/context/AppContext'
@@ -22,30 +18,20 @@ import { usePageLoading } from '@/hooks/usePageLoading'
 import { useProfileDraft } from '@/hooks/useProfileDraft'
 import { uploadResume, deleteResume } from '@/lib/db'
 
-import { cn, getBannerStyle } from '@/lib/utils'
-import { BannerColorModal } from '@/components/BannerColorModal'
-
-function Section({ title, icon: Icon, children, onAdd, actions, className }: { title: string; icon: typeof Award; children: React.ReactNode; onAdd?: () => void; actions?: React.ReactNode; className?: string }) {
-  return (
-    <Card className={cn('w-full max-w-full overflow-hidden', className)}>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2 text-base min-w-0"><Icon className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">{title}</span></CardTitle>
-        <div className="flex items-center gap-1 shrink-0">
-          {actions}
-          {onAdd && <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={onAdd}><Plus className="h-3.5 w-3.5" /></Button>}
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">{children}</CardContent>
-    </Card>
-  )
-}
+import { ProfileHeader } from '@/components/profile/ProfileHeader'
+import { ProfileSidebar } from '@/components/profile/ProfileSidebar'
+import { AboutTab } from '@/components/profile/AboutTab'
+import { ExperienceTab } from '@/components/profile/ExperienceTab'
+import { EducationTab } from '@/components/profile/EducationTab'
+import { ProjectsTab } from '@/components/profile/ProjectsTab'
+import { SkillsTab } from '@/components/profile/SkillsTab'
 
 export default function StudentProfile() {
   const {
     professionals, student, requests,
     updateStudent, addStudentSkill, addStudentProject,
-    addStudentCertification, addStudentAchievement, setStudentResume,
-    removeStudentCertification, removeStudentAchievement, removeStudentProject,
+    setStudentResume,
+    removeStudentProject,
     removeStudentExperience,
     removeStudentEducation,
     removeStudentResume, removeStudentSkill,
@@ -57,44 +43,14 @@ export default function StudentProfile() {
 
   const [openToWork, setOpenToWork] = useState(s.openToWork)
   const [bannerTheme, setBannerTheme] = useState<string | null>(s.bannerTheme ?? null)
-  const [bannerModalOpen, setBannerModalOpen] = useState(false)
 
-  // Sync openToWork when DB data loads (only if value actually changed)
   useEffect(() => {
     setOpenToWork((prev) => (prev === s.openToWork ? prev : s.openToWork))
   }, [s.openToWork])
 
-  // Sync banner theme when DB data loads
   useEffect(() => {
     setBannerTheme(s.bannerTheme ?? null)
   }, [s.bannerTheme])
-
-  // Sync header edit fields when DB data loads (only if values actually changed)
-  useEffect(() => {
-    setEditName((prev) => (prev === s.name ? prev : s.name))
-    setEditHeadline((prev) => (prev === s.headline ? prev : s.headline))
-    setEditLocation((prev) => (prev === s.location ? prev : s.location))
-    setEditLinkedin((prev) => (prev === s.links.linkedin ? prev : s.links.linkedin))
-    setEditGithub((prev) => (prev === s.links.github ? prev : s.links.github))
-  }, [s.name, s.headline, s.location, s.links.linkedin, s.links.github])
-
-  // Sync career preference edit fields when DB data loads (only if values actually changed)
-  useEffect(() => {
-    setEditPreferredRoles((prev) => (prev === s.preferredRoles.join(', ') ? prev : s.preferredRoles.join(', ')))
-    setEditPreferredCompanies((prev) => (prev === s.preferredCompanies.join(', ') ? prev : s.preferredCompanies.join(', ')))
-    setEditCareerInterests((prev) => (prev === s.careerInterests.join(', ') ? prev : s.careerInterests.join(', ')))
-    setEditExpectedSalary((prev) => (prev === s.expectedSalary ? prev : s.expectedSalary))
-    setEditLanguages((prev) => (prev === s.languages.join(', ') ? prev : s.languages.join(', ')))
-  }, [s.preferredRoles, s.preferredCompanies, s.careerInterests, s.expectedSalary, s.languages])
-
-  // Sync job preference edit fields when DB data loads
-  useEffect(() => {
-    setEditNoticePeriod((prev) => (prev === (s.noticePeriod || '') ? prev : (s.noticePeriod || '')))
-    setEditWorkPreference((prev) => (prev === (s.workPreference || '') ? prev : (s.workPreference || '')))
-    setEditWhyFit((prev) => (prev === (s.whyFit || '') ? prev : (s.whyFit || '')))
-  }, [s.noticePeriod, s.workPreference, s.whyFit])
-
-  const myRequests = requests.filter((r) => r.requesterId === user?.id)
 
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState(s.name)
@@ -102,6 +58,14 @@ export default function StudentProfile() {
   const [editLocation, setEditLocation] = useState(s.location)
   const [editLinkedin, setEditLinkedin] = useState(s.links.linkedin)
   const [editGithub, setEditGithub] = useState(s.links.github)
+
+  useEffect(() => {
+    setEditName((prev) => (prev === s.name ? prev : s.name))
+    setEditHeadline((prev) => (prev === s.headline ? prev : s.headline))
+    setEditLocation((prev) => (prev === s.location ? prev : s.location))
+    setEditLinkedin((prev) => (prev === s.links.linkedin ? prev : s.links.linkedin))
+    setEditGithub((prev) => (prev === s.links.github ? prev : s.links.github))
+  }, [s.name, s.headline, s.location, s.links.linkedin, s.links.github])
 
   const { loadDraft, markSaved } = useProfileDraft(user?.id, {
     name: editName, headline: editHeadline, location: editLocation,
@@ -123,56 +87,7 @@ export default function StudentProfile() {
   }, [user?.id])
 
   const resumeInputRef = useRef<HTMLInputElement>(null)
-
-  // Experience
-  const [showExpForm, setShowExpForm] = useState(false)
-  const [expTitle, setExpTitle] = useState('')
-  const [expOrg, setExpOrg] = useState('')
-  const [expPeriod, setExpPeriod] = useState('')
-  const [expDesc, setExpDesc] = useState('')
-  const [expEditIndex, setExpEditIndex] = useState<number | null>(null)
-  const [expEditTitle, setExpEditTitle] = useState('')
-  const [expEditOrg, setExpEditOrg] = useState('')
-  const [expEditPeriod, setExpEditPeriod] = useState('')
-  const [expEditDesc, setExpEditDesc] = useState('')
-  const [expDeleteIndex, setExpDeleteIndex] = useState<number | null>(null)
-
-  // Education
-  const [showEduForm, setShowEduForm] = useState(false)
-  const [eduSchool, setEduSchool] = useState('')
-  const [eduDegree, setEduDegree] = useState('')
-  const [eduPeriod, setEduPeriod] = useState('')
-  const [eduDetail, setEduDetail] = useState('')
-  const [eduEditIndex, setEduEditIndex] = useState<number | null>(null)
-  const [eduEditSchool, setEduEditSchool] = useState('')
-  const [eduEditDegree, setEduEditDegree] = useState('')
-  const [eduEditPeriod, setEduEditPeriod] = useState('')
-  const [eduEditDetail, setEduEditDetail] = useState('')
-  const [eduDeleteIndex, setEduDeleteIndex] = useState<number | null>(null)
-
-  // Projects (left)
-  const [showProjectForm, setShowProjectForm] = useState(false)
-  const [projName, setProjName] = useState('')
-  const [projDesc, setProjDesc] = useState('')
-  const [projTags, setProjTags] = useState('')
-  const [projEditName, setProjEditName] = useState<string | null>(null)
-  const [projEditDesc, setProjEditDesc] = useState('')
-  const [projEditTags, setProjEditTags] = useState('')
-  const [projDeleteName, setProjDeleteName] = useState<string | null>(null)
-
-  // Certifications
-  const [showCertForm, setShowCertForm] = useState(false)
-  const [certName, setCertName] = useState('')
-  const [certDeleteName, setCertDeleteName] = useState<string | null>(null)
-
-  // Achievements
-  const [showAchForm, setShowAchForm] = useState(false)
-  const [achName, setAchName] = useState('')
-  const [achDeleteName, setAchDeleteName] = useState<string | null>(null)
-
-  // Skills
-  const [showSkillInput, setShowSkillInput] = useState(false)
-  const [skillName, setSkillName] = useState('')
+  const myRequests = requests.filter((r) => r.requesterId === user?.id)
 
   // Resume
   const [showResumeConfirm, setShowResumeConfirm] = useState(false)
@@ -187,18 +102,27 @@ export default function StudentProfile() {
   const [editExpectedSalary, setEditExpectedSalary] = useState(s.expectedSalary)
   const [editLanguages, setEditLanguages] = useState(s.languages.join(', '))
 
-  // Job preferences (Phase 2)
+  // Job preferences
   const [showJobPrefEdit, setShowJobPrefEdit] = useState(false)
   const [editNoticePeriod, setEditNoticePeriod] = useState(s.noticePeriod || '')
   const [editWorkPreference, setEditWorkPreference] = useState(s.workPreference || '')
   const [editWhyFit, setEditWhyFit] = useState(s.whyFit || '')
 
-  if (loading) {
-    return (
-      <ProfileSkeleton />
-    )
-  }
+  useEffect(() => {
+    setEditPreferredRoles((prev) => (prev === s.preferredRoles.join(', ') ? prev : s.preferredRoles.join(', ')))
+    setEditPreferredCompanies((prev) => (prev === s.preferredCompanies.join(', ') ? prev : s.preferredCompanies.join(', ')))
+    setEditCareerInterests((prev) => (prev === s.careerInterests.join(', ') ? prev : s.careerInterests.join(', ')))
+    setEditExpectedSalary((prev) => (prev === s.expectedSalary ? prev : s.expectedSalary))
+    setEditLanguages((prev) => (prev === s.languages.join(', ') ? prev : s.languages.join(', ')))
+  }, [s.preferredRoles, s.preferredCompanies, s.careerInterests, s.expectedSalary, s.languages])
 
+  useEffect(() => {
+    setEditNoticePeriod((prev) => (prev === (s.noticePeriod || '') ? prev : (s.noticePeriod || '')))
+    setEditWorkPreference((prev) => (prev === (s.workPreference || '') ? prev : (s.workPreference || '')))
+    setEditWhyFit((prev) => (prev === (s.whyFit || '') ? prev : (s.whyFit || '')))
+  }, [s.noticePeriod, s.workPreference, s.whyFit])
+
+  // --- Handlers ---
   function handleSaveProfile() {
     if (!editName.trim()) {
       toast.error('Name cannot be empty')
@@ -259,175 +183,66 @@ export default function StudentProfile() {
     setShowJobPrefEdit(false)
   }
 
-  // --- Experience ---
-  function handleAddExperience() {
-    if (!expTitle.trim() || !expOrg.trim()) {
-      toast.error('Title and organization are required')
-      return
-    }
-    updateStudent({ experience: [...s.experience, { title: expTitle.trim(), org: expOrg.trim(), period: expPeriod.trim() || 'Present', desc: expDesc.trim() }] })
-    setExpTitle(''); setExpOrg(''); setExpPeriod(''); setExpDesc('')
-    setShowExpForm(false)
+  function handleAddExperience(exp: { title: string; org: string; period: string; desc: string }) {
+    updateStudent({ experience: [...s.experience, exp] })
     toast.success('Experience added')
   }
 
-  function startEditExp(i: number) {
-    const e = s.experience[i]
-    setExpEditIndex(i)
-    setExpEditTitle(e.title)
-    setExpEditOrg(e.org)
-    setExpEditPeriod(e.period)
-    setExpEditDesc(e.desc)
-  }
-
-  function handleSaveEditExp() {
-    if (expEditIndex === null) return
-    if (!expEditTitle.trim() || !expEditOrg.trim()) {
-      toast.error('Title and organization are required')
-      return
-    }
+  function handleEditExperience(i: number, exp: { title: string; org: string; period: string; desc: string }) {
     const updated = [...s.experience]
-    updated[expEditIndex] = { title: expEditTitle.trim(), org: expEditOrg.trim(), period: expEditPeriod.trim() || 'Present', desc: expEditDesc.trim() }
+    updated[i] = exp
     updateStudent({ experience: updated })
-    setExpEditIndex(null)
     toast.success('Experience updated')
   }
 
-  function handleDeleteExp() {
-    if (expDeleteIndex === null) return
-    removeStudentExperience(expDeleteIndex)
-    setExpDeleteIndex(null)
+  function handleDeleteExperience(i: number) {
+    removeStudentExperience(i)
     toast.success('Experience removed')
   }
 
-  // --- Education ---
-  function handleAddEducation() {
-    if (!eduSchool.trim() || !eduDegree.trim()) {
-      toast.error('School and degree are required')
-      return
-    }
-    updateStudent({ education: [...s.education, { school: eduSchool.trim(), degree: eduDegree.trim(), period: eduPeriod.trim() || 'Present', detail: eduDetail.trim() }] })
-    setEduSchool(''); setEduDegree(''); setEduPeriod(''); setEduDetail('')
-    setShowEduForm(false)
+  function handleAddEducation(edu: { school: string; degree: string; period: string; detail: string }) {
+    updateStudent({ education: [...s.education, edu] })
     toast.success('Education added')
   }
 
-  function startEditEdu(i: number) {
-    const e = s.education[i]
-    setEduEditIndex(i)
-    setEduEditSchool(e.school)
-    setEduEditDegree(e.degree)
-    setEduEditPeriod(e.period)
-    setEduEditDetail(e.detail)
-  }
-
-  function handleSaveEditEdu() {
-    if (eduEditIndex === null) return
-    if (!eduEditSchool.trim() || !eduEditDegree.trim()) {
-      toast.error('School and degree are required')
-      return
-    }
+  function handleEditEducation(i: number, edu: { school: string; degree: string; period: string; detail: string }) {
     const updated = [...s.education]
-    updated[eduEditIndex] = { school: eduEditSchool.trim(), degree: eduEditDegree.trim(), period: eduEditPeriod.trim() || 'Present', detail: eduEditDetail.trim() }
+    updated[i] = edu
     updateStudent({ education: updated })
-    setEduEditIndex(null)
     toast.success('Education updated')
   }
 
-  function handleDeleteEdu() {
-    if (eduDeleteIndex === null) return
-    removeStudentEducation(eduDeleteIndex)
-    setEduDeleteIndex(null)
+  function handleDeleteEducation(i: number) {
+    removeStudentEducation(i)
     toast.success('Education removed')
   }
 
-  // --- Projects (left) ---
-  function handleAddProject() {
-    if (!projName.trim()) {
-      toast.error('Project name is required')
-      return
-    }
-    addStudentProject({ name: projName.trim(), desc: projDesc.trim(), tags: projTags.split(',').map((t) => t.trim()).filter(Boolean) })
-    setProjName(''); setProjDesc(''); setProjTags('')
-    setShowProjectForm(false)
+  function handleAddProject(proj: { name: string; desc: string; tags: string[] }) {
+    addStudentProject(proj)
     toast.success('Project added')
   }
 
-  function startEditProj(name: string) {
-    const p = s.projects.find((x) => x.name === name)
-    if (!p) return
-    setProjEditName(p.name)
-    setProjEditDesc(p.desc)
-    setProjEditTags(p.tags.join(', '))
-  }
-
-  function handleSaveEditProj() {
-    if (!projEditName) return
-    if (!projEditName.trim()) {
-      toast.error('Project name is required')
-      return
-    }
-    removeStudentProject(projEditName)
-    addStudentProject({ name: projEditName.trim(), desc: projEditDesc.trim(), tags: projEditTags.split(',').map((t) => t.trim()).filter(Boolean) })
-    setProjEditName(null)
+  function handleEditProject(oldName: string, proj: { name: string; desc: string; tags: string[] }) {
+    removeStudentProject(oldName)
+    addStudentProject(proj)
     toast.success('Project updated')
   }
 
-  function handleDeleteProj(name: string) {
+  function handleDeleteProject(name: string) {
     removeStudentProject(name)
-    setProjDeleteName(null)
     toast.success('Project removed')
   }
 
-  // --- Certifications ---
-  function handleAddCertification() {
-    if (!certName.trim()) {
-      toast.error('Certification name is required')
-      return
-    }
-    addStudentCertification(certName.trim())
-    setCertName('')
-    setShowCertForm(false)
-    toast.success('Certification added')
-  }
-
-  function handleDeleteCert(cert: string) {
-    removeStudentCertification(cert)
-    setCertDeleteName(null)
-    toast.success('Certification removed')
-  }
-
-  // --- Achievements ---
-  function handleAddAchievement() {
-    if (!achName.trim()) {
-      toast.error('Achievement name is required')
-      return
-    }
-    addStudentAchievement(achName.trim())
-    setAchName('')
-    setShowAchForm(false)
-    toast.success('Achievement added')
-  }
-
-  function handleDeleteAch(ach: string) {
-    removeStudentAchievement(ach)
-    setAchDeleteName(null)
-    toast.success('Achievement removed')
-  }
-
-  // --- Skills ---
-  function handleAddSkill() {
-    if (!skillName.trim()) {
-      toast.error('Skill name is required')
-      return
-    }
-    addStudentSkill(skillName.trim())
-    setSkillName('')
-    setShowSkillInput(false)
+  function handleAddSkill(skill: string) {
+    addStudentSkill(skill)
     toast.success('Skill added')
   }
 
-  // --- Resume ---
+  function handleRemoveSkill(skill: string) {
+    removeStudentSkill(skill)
+    toast.success('Skill removed')
+  }
+
   async function handleResumeUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -500,457 +315,198 @@ export default function StudentProfile() {
     }
   }
 
+  if (loading) return <ProfileSkeleton />
+
   return (
     <div className="space-y-6">
-
-
       <input ref={resumeInputRef} type="file" accept=".pdf" className="hidden" onChange={handleResumeUpload} />
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="w-full max-w-full overflow-hidden">
-          {(() => { const bs = getBannerStyle(user?.id, bannerTheme); return (
-            <div className="relative h-28 sm:h-36" style={bs.style}>
-              <div className="absolute inset-0 bg-grid opacity-10" />
-              <button
-                type="button"
-                onClick={() => setBannerModalOpen(true)}
-                className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-all hover:bg-black/60"
-              >
-                <Palette className="h-3.5 w-3.5" />
-                Edit Banner
-              </button>
-            </div>
-          ) })()}
-          <BannerColorModal
-            open={bannerModalOpen}
-            onOpenChange={setBannerModalOpen}
-            value={bannerTheme}
-            onChange={(g) => { setBannerTheme(g); updateStudent({ bannerTheme: g }) }}
-          />
-          <CardContent className="relative px-4 pb-5 sm:px-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-4 min-w-0">
-                <div className="-mt-12 sm:-mt-14 shrink-0">
-                  <GAvatar name={s.name} color={s.gradient} className="h-20 w-20 border-4 border-card text-xl sm:h-24 sm:w-24 sm:text-2xl" />
-                </div>
-                <div className="pb-0.5 min-w-0 flex-1">
-                  <h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight truncate">
-                    {editing ? (
-                      <input className="w-full bg-transparent border-b border-primary outline-none text-xl sm:text-2xl font-bold placeholder:text-muted-foreground/30" placeholder="Your full name" value={editName} onChange={(e) => setEditName(e.target.value)} />
-                    ) : s.name}
-                  </h1>
-                  {editing ? (
-                    <input className="mt-0.5 w-full bg-transparent border-b border-muted-foreground/30 outline-none text-sm text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. Software Engineer | React & Node.js" value={editHeadline} onChange={(e) => setEditHeadline(e.target.value)} />
-                  ) : (
-                    <p className="mt-0.5 text-sm text-muted-foreground truncate">{s.headline}</p>
-                  )}
-                  <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground min-w-0">
-                    {editing ? (
-                      <input className="bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. Pune, India" value={editLocation} onChange={(e) => setEditLocation(e.target.value)} />
-                    ) : (
-                      <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.location)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors truncate"><MapPin className="h-3.5 w-3.5 shrink-0" /> {s.location}</a>
-                    )}
-                  </div>
-                  {editing && (
-                    <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Linkedin className="h-3.5 w-3.5 text-[#0A66C2] shrink-0" />
-                        <input className="w-full sm:w-56 bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. linkedin.com/in/yourname" value={editLinkedin} onChange={(e) => setEditLinkedin(e.target.value)} />
-                      </div>
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Github className="h-3.5 w-3.5 shrink-0" />
-                        <input className="w-full sm:w-56 bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40" placeholder="e.g. github.com/yourname" value={editGithub} onChange={(e) => setEditGithub(e.target.value)} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 sm:pb-0.5 shrink-0">
-                {s.resumeFile?.url ? (
-                  <Button variant="outline" size="sm" className="rounded-full" onClick={() => setShowResumePreview(true)}><FileText className="mr-1.5 h-3.5 w-3.5" /> Resume</Button>
-                ) : (
-                  <Button variant="outline" size="sm" className="rounded-full" onClick={handleDownloadResume}><Download className="mr-1.5 h-3.5 w-3.5" /> Resume</Button>
-                )}
-                {editing ? (
-                  <>
-                    <Button variant="outline" size="sm" className="rounded-full" onClick={handleCancelEdit}><X className="mr-1.5 h-3.5 w-3.5" /> Cancel</Button>
-                    <Button size="sm" className="rounded-full" onClick={handleSaveProfile}><CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Save</Button>
-                  </>
-                ) : (
-                  <Button size="sm" className="rounded-full" onClick={() => { setEditName(s.name); setEditHeadline(s.headline); setEditLocation(s.location); setEditing(true) }}><Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit profile</Button>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2.5 text-sm min-w-0">
-              <span className="text-muted-foreground shrink-0"><strong className="text-foreground">{myRequests.length}</strong> referrals sent</span>
-              <span className="text-muted-foreground shrink-0"><strong className="text-foreground">{s.skills.length}</strong> skills</span>
-              <span className="text-muted-foreground shrink-0"><strong className="text-foreground">{s.profileCompletion}%</strong> complete</span>
-              <div className="h-4 w-px bg-border hidden sm:block shrink-0" />
-              <div
-                role="presentation"
-                className={cn(
-                  'flex items-center gap-2 rounded-full border px-3 py-1 transition-colors text-xs font-medium shrink-0',
-                  openToWork ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400' : 'border-border text-muted-foreground'
-                )}
-              >
-                <Switch
-                  checked={openToWork}
-                  onCheckedChange={async (v) => {
-                    setOpenToWork(v)
-                    const ok = await toggleStudentOpenToWork(v)
-                    if (ok) toast.success(v ? 'You are now visible in search' : 'Profile hidden from search')
-                  }}
-                />
-                <span className={cn(
-                  'text-sm font-medium',
-                  openToWork
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-muted-foreground'
-                )}>Open to work</span>
-              </div>
-              {s.links.linkedin ? (
-                <a href={s.links.linkedin.startsWith('http') ? s.links.linkedin : `https://linkedin.com/in/${s.links.linkedin}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors shrink-0"><Linkedin className="h-4 w-4 text-[#0A66C2]" /> LinkedIn</a>
-              ) : (
-                <button type="button" onClick={() => { setEditName(s.name); setEditHeadline(s.headline); setEditLocation(s.location); setEditLinkedin(s.links.linkedin); setEditGithub(s.links.github); setEditing(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors shrink-0"><Linkedin className="h-4 w-4" /> Add LinkedIn</button>
-              )}
-              {s.links.github ? (
-                <a href={s.links.github.startsWith('http') ? s.links.github : `https://github.com/${s.links.github}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors shrink-0"><Github className="h-4 w-4" /> GitHub</a>
-              ) : (
-                <button type="button" onClick={() => { setEditName(s.name); setEditHeadline(s.headline); setEditLocation(s.location); setEditLinkedin(s.links.linkedin); setEditGithub(s.links.github); setEditing(true) }} className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors shrink-0"><Github className="h-4 w-4" /> Add GitHub</button>
-              )}
-              {s.links.website ? (
-                <a href={s.links.website.startsWith('http') ? s.links.website : `https://${s.links.website}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors shrink-0"><Globe className="h-4 w-4 text-primary" /> Website</a>
-              ) : null}
-            </div>
-          </CardContent>
-        </Card>
+        <ProfileHeader
+          student={s}
+          userId={user?.id}
+          editing={editing}
+          editName={editName}
+          editHeadline={editHeadline}
+          editLocation={editLocation}
+          editLinkedin={editLinkedin}
+          editGithub={editGithub}
+          setEditName={setEditName}
+          setEditHeadline={setEditHeadline}
+          setEditLocation={setEditLocation}
+          setEditLinkedin={setEditLinkedin}
+          setEditGithub={setEditGithub}
+          handleSaveProfile={handleSaveProfile}
+          handleCancelEdit={handleCancelEdit}
+          startEditing={() => { setEditName(s.name); setEditHeadline(s.headline); setEditLocation(s.location); setEditing(true) }}
+          openToWork={openToWork}
+          onToggleOpenToWork={async (v) => {
+            setOpenToWork(v)
+            const ok = await toggleStudentOpenToWork(v)
+            if (ok) toast.success(v ? 'You are now visible in search' : 'Profile hidden from search')
+          }}
+          bannerTheme={bannerTheme}
+          onBannerThemeChange={(g) => { setBannerTheme(g); updateStudent({ bannerTheme: g }) }}
+          onResumeDownload={handleDownloadResume}
+        />
       </motion.div>
 
-      <div className="grid gap-6 lg:grid-cols-3 items-stretch">
-        <div className="flex flex-col gap-6 lg:col-span-2">
-          {/* Experience */}
-          <Section title="Experience" icon={Briefcase} onAdd={() => setShowExpForm(!showExpForm)}>
-            <div className="space-y-5">
-              {showExpForm && (
-                <div className="rounded-xl border border-primary/30 bg-muted/30 p-4 space-y-3">
-                  <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Job title *" value={expTitle} onChange={(e) => setExpTitle(e.target.value)} />
-                  <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Organization *" value={expOrg} onChange={(e) => setExpOrg(e.target.value)} />
-                  <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Period (e.g. Jan 2024 - Present)" value={expPeriod} onChange={(e) => setExpPeriod(e.target.value)} />
-                  <textarea className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary resize-none" rows={2} placeholder="Description" value={expDesc} onChange={(e) => setExpDesc(e.target.value)} />
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={handleAddExperience}>Add</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setShowExpForm(false)}>Cancel</Button>
-                  </div>
-                </div>
-              )}
-              {s.experience.length === 0 && !showExpForm && <p className="text-sm text-muted-foreground">No experience yet.</p>}
-              {s.experience.map((e, i) => (
-                <div key={i}>
-                  {expEditIndex === i ? (
-                    <div className="rounded-xl border border-primary/30 bg-muted/30 p-4 space-y-3">
-                      <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Job title *" value={expEditTitle} onChange={(ev) => setExpEditTitle(ev.target.value)} />
-                      <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Organization *" value={expEditOrg} onChange={(ev) => setExpEditOrg(ev.target.value)} />
-                      <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Period (e.g. Jan 2024 - Present)" value={expEditPeriod} onChange={(ev) => setExpEditPeriod(ev.target.value)} />
-                      <textarea className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary resize-none" rows={2} placeholder="Description" value={expEditDesc} onChange={(ev) => setExpEditDesc(ev.target.value)} />
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={handleSaveEditExp}>Save</Button>
-                        <Button size="sm" variant="ghost" onClick={() => setExpEditIndex(null)}>Cancel</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex gap-4">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted"><Building2 className="h-5 w-5 text-muted-foreground" /></div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="text-sm font-semibold min-w-0 truncate">{e.title}</div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => startEditExp(i)}><Pencil className="h-3.5 w-3.5" /></Button>
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-rose-500" onClick={() => setExpDeleteIndex(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                          </div>
-                        </div>
-                        <div className="text-sm text-muted-foreground truncate">{e.org} · {e.period}</div>
-                        <p className="mt-1 text-sm leading-relaxed text-muted-foreground break-words">{e.desc}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Section>
+      <div className="grid gap-6 lg:grid-cols-3 items-start">
+        {/* Left column — 66% */}
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="about" className="w-full">
+            <TabsList className="w-full justify-start gap-0 bg-transparent border-b border-border rounded-none p-0 h-auto">
+              <TabsTrigger
+                value="about"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-4 py-2.5"
+              >
+                About
+              </TabsTrigger>
+              <TabsTrigger
+                value="experience"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-4 py-2.5"
+              >
+                Experience
+              </TabsTrigger>
+              <TabsTrigger
+                value="education"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-4 py-2.5"
+              >
+                Education
+              </TabsTrigger>
+              <TabsTrigger
+                value="projects"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-4 py-2.5"
+              >
+                Projects
+              </TabsTrigger>
+              <TabsTrigger
+                value="skills"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-4 py-2.5"
+              >
+                Skills
+              </TabsTrigger>
+            </TabsList>
 
-          <ConfirmDialog
-            open={expDeleteIndex !== null}
-            onOpenChange={(open) => { if (!open) setExpDeleteIndex(null) }}
-            title="Delete experience?"
-            description="This will permanently remove this experience entry from your profile."
-            onConfirm={handleDeleteExp}
-          />
+            <TabsContent value="about" className="mt-0">
+              <AboutTab student={s} onEdit={() => { setEditing(true) }} />
+            </TabsContent>
 
-          {/* Projects */}
-          <Section title="Projects" icon={Sparkles} onAdd={() => setShowProjectForm(!showProjectForm)}>
-            {showProjectForm && (
-              <div className="mb-3 rounded-xl border border-primary/30 bg-muted/30 p-4 space-y-3">
-                <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Project name *" value={projName} onChange={(e) => setProjName(e.target.value)} />
-                <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Description" value={projDesc} onChange={(e) => setProjDesc(e.target.value)} />
-                <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Tags (comma-separated)" value={projTags} onChange={(e) => setProjTags(e.target.value)} />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleAddProject}>Add</Button>
-                  <Button size="sm" variant="ghost" onClick={() => setShowProjectForm(false)}>Cancel</Button>
-                </div>
-              </div>
-            )}
-            <div className="grid gap-3 sm:grid-cols-2">
-              {s.projects.length === 0 && !showProjectForm && <p className="text-sm text-muted-foreground">No projects yet.</p>}
-              {s.projects.map((p) => (
-                <div key={p.name}>
-                  {projEditName === p.name ? (
-                    <div className="rounded-xl border border-primary/30 bg-muted/30 p-4 space-y-3">
-                      <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Project name *" value={projEditName ?? ''} onChange={(e) => setProjEditName(e.target.value)} />
-                      <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Description" value={projEditDesc} onChange={(e) => setProjEditDesc(e.target.value)} />
-                      <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Tags (comma-separated)" value={projEditTags} onChange={(e) => setProjEditTags(e.target.value)} />
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={handleSaveEditProj}>Save</Button>
-                        <Button size="sm" variant="ghost" onClick={() => setProjEditName(null)}>Cancel</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="rounded-xl border border-border p-4 transition-colors hover:border-primary/30">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="text-sm font-semibold min-w-0 truncate">{p.name}</div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => startEditProj(p.name)}><Pencil className="h-3.5 w-3.5" /></Button>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-rose-500" onClick={() => setProjDeleteName(p.name)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                        </div>
-                      </div>
-                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground break-words line-clamp-2">{p.desc}</p>
-                      <div className="mt-2.5 flex flex-wrap gap-1.5">{p.tags.map((t) => <Chip key={t}>{t}</Chip>)}</div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Section>
+            <TabsContent value="experience" className="mt-0">
+              <ExperienceTab
+                experience={s.experience}
+                onAdd={handleAddExperience}
+                onEdit={handleEditExperience}
+                onDelete={handleDeleteExperience}
+              />
+            </TabsContent>
 
-          <ConfirmDialog
-            open={projDeleteName !== null}
-            onOpenChange={(open) => { if (!open) setProjDeleteName(null) }}
-            title="Delete project?"
-            description={`This will permanently remove the project "${projDeleteName}" from your profile.`}
-            onConfirm={() => { if (projDeleteName) handleDeleteProj(projDeleteName) }}
-          />
+            <TabsContent value="education" className="mt-0">
+              <EducationTab
+                education={s.education}
+                onAdd={handleAddEducation}
+                onEdit={handleEditEducation}
+                onDelete={handleDeleteEducation}
+              />
+            </TabsContent>
 
-          {/* Education */}
-          <Section title="Education" icon={GraduationCap} onAdd={() => setShowEduForm(!showEduForm)}>
-            <div className="space-y-4">
-              {showEduForm && (
-                <div className="rounded-xl border border-primary/30 bg-muted/30 p-4 space-y-3">
-                  <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="School *" value={eduSchool} onChange={(e) => setEduSchool(e.target.value)} />
-                  <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Degree *" value={eduDegree} onChange={(e) => setEduDegree(e.target.value)} />
-                  <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Period (e.g. 2020 - 2024)" value={eduPeriod} onChange={(e) => setEduPeriod(e.target.value)} />
-                  <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Detail (e.g. GPA, honors)" value={eduDetail} onChange={(e) => setEduDetail(e.target.value)} />
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={handleAddEducation}>Add</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setShowEduForm(false)}>Cancel</Button>
-                  </div>
-                </div>
-              )}
-              {s.education.length === 0 && !showEduForm && <p className="text-sm text-muted-foreground">No education yet.</p>}
-              {s.education.map((e, i) => (
-                <div key={i}>
-                  {eduEditIndex === i ? (
-                    <div className="rounded-xl border border-primary/30 bg-muted/30 p-4 space-y-3">
-                      <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="School *" value={eduEditSchool} onChange={(ev) => setEduEditSchool(ev.target.value)} />
-                      <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Degree *" value={eduEditDegree} onChange={(ev) => setEduEditDegree(ev.target.value)} />
-                      <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Period (e.g. 2020 - 2024)" value={eduEditPeriod} onChange={(ev) => setEduEditPeriod(ev.target.value)} />
-                      <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Detail (e.g. GPA, honors)" value={eduEditDetail} onChange={(ev) => setEduEditDetail(ev.target.value)} />
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={handleSaveEditEdu}>Save</Button>
-                        <Button size="sm" variant="ghost" onClick={() => setEduEditIndex(null)}>Cancel</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex gap-4">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted"><GraduationCap className="h-5 w-5 text-muted-foreground" /></div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="text-sm font-semibold min-w-0 truncate">{e.school}</div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => startEditEdu(i)}><Pencil className="h-3.5 w-3.5" /></Button>
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-rose-500" onClick={() => setEduDeleteIndex(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                          </div>
-                        </div>
-                        <div className="text-sm text-muted-foreground truncate">{e.degree} · {e.period}</div>
-                        <div className="mt-0.5 text-xs text-muted-foreground break-words">{e.detail}</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Section>
+            <TabsContent value="projects" className="mt-0">
+              <ProjectsTab
+                projects={s.projects}
+                onAdd={handleAddProject}
+                onEdit={handleEditProject}
+                onDelete={handleDeleteProject}
+              />
+            </TabsContent>
 
-          <ConfirmDialog
-            open={eduDeleteIndex !== null}
-            onOpenChange={(open) => { if (!open) setEduDeleteIndex(null) }}
-            title="Delete education?"
-            description="This will permanently remove this education entry from your profile."
-            onConfirm={handleDeleteEdu}
-          />
+            <TabsContent value="skills" className="mt-0">
+              <SkillsTab
+                skills={s.skills}
+                onAdd={handleAddSkill}
+                onRemove={handleRemoveSkill}
+              />
+            </TabsContent>
+          </Tabs>
 
-          {/* Certifications & achievements */}
-          <div className="grid gap-6 sm:grid-cols-2">
-            <Section title="Certifications" icon={BadgeCheck} onAdd={() => setShowCertForm(!showCertForm)}>
-              {showCertForm && (
-                <div className="mb-2 rounded-xl border border-primary/30 bg-muted/30 p-3 space-y-2">
-                  <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Certification name *" value={certName} onChange={(e) => setCertName(e.target.value)} />
-                  <div className="flex gap-2">
-                    <Button size="sm" className="w-full sm:w-auto" onClick={handleAddCertification}>Add</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setShowCertForm(false)}>Cancel</Button>
-                  </div>
-                </div>
-              )}
-              <div className="space-y-2.5">
-                {s.certifications.length === 0 && !showCertForm && <p className="text-sm text-muted-foreground">No certifications yet.</p>}
-                {s.certifications.map((c) => (
-                  <div key={c} className="flex items-center justify-between gap-2 text-sm">
-                    <div className="flex items-center gap-2.5 min-w-0"><CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" /> <span className="truncate break-words">{c}</span></div>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-rose-500 shrink-0" onClick={() => setCertDeleteName(c)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                  </div>
-                ))}
-              </div>
-            </Section>
-
-            <ConfirmDialog
-              open={certDeleteName !== null}
-              onOpenChange={(open) => { if (!open) setCertDeleteName(null) }}
-              title="Delete certification?"
-              description={`This will permanently remove "${certDeleteName}" from your certifications.`}
-              onConfirm={() => { if (certDeleteName) handleDeleteCert(certDeleteName) }}
-            />
-
-            <Section title="Achievements" icon={Award} onAdd={() => setShowAchForm(!showAchForm)}>
-              {showAchForm && (
-                <div className="mb-2 rounded-xl border border-primary/30 bg-muted/30 p-3 space-y-2">
-                  <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Achievement name *" value={achName} onChange={(e) => setAchName(e.target.value)} />
-                  <div className="flex gap-2">
-                    <Button size="sm" className="w-full sm:w-auto" onClick={handleAddAchievement}>Add</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setShowAchForm(false)}>Cancel</Button>
-                  </div>
-                </div>
-              )}
-              <div className="space-y-2.5">
-                {s.achievements.length === 0 && !showAchForm && <p className="text-sm text-muted-foreground">No achievements yet.</p>}
-                {s.achievements.map((a) => (
-                  <div key={a} className="flex items-center justify-between gap-2 text-sm">
-                    <div className="flex items-center gap-2.5 min-w-0"><Award className="h-4 w-4 shrink-0 text-amber-500" /> <span className="truncate break-words">{a}</span></div>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-rose-500 shrink-0" onClick={() => setAchDeleteName(a)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                  </div>
-                ))}
-              </div>
-            </Section>
-
-            <ConfirmDialog
-              open={achDeleteName !== null}
-              onOpenChange={(open) => { if (!open) setAchDeleteName(null) }}
-              title="Delete achievement?"
-              description={`This will permanently remove "${achDeleteName}" from your achievements.`}
-              onConfirm={() => { if (achDeleteName) handleDeleteAch(achDeleteName) }}
-            />
-          </div>
-
-          {/* Referral history */}
-          <Section title="Referral history" icon={FileText} className="flex-1">
-            <div className="space-y-3">
-              {myRequests.length === 0 && <p className="text-sm text-muted-foreground">No referral history yet.</p>}
-              {myRequests.map((r) => {
-                const p = professionals.find((x) => x.id === r.professionalId)
-                if (!p) return null
-                return (
-                  <div key={r.id} className="flex items-center gap-3 rounded-xl border border-border p-3.5">
-                    <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-[10px] shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">{r.role}</div>
-                      <div className="truncate text-xs text-muted-foreground">via {p.name} · {p.company} · {r.date}</div>
-                    </div>
-                    <StatusBadge status={r.status} />
-                  </div>
-                )
-              })}
-              <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild><Link to="/job-seeker/applications">View full history</Link></Button>
-            </div>
-          </Section>
-        </div>
-
-        {/* Right column */}
-        <div className="flex flex-col gap-6">
-          {/* Profile completion */}
-          <Card className="w-full max-w-full overflow-hidden">
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="shrink-0"><ProgressRing value={s.profileCompletion} size={64} /></div>
-              <div className="min-w-0">
-                <div className="text-sm font-semibold">Profile strength</div>
-                <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">Add your notice period and a short "why fit" pitch to reach 100%.</p>
-                <Button variant="link" size="sm" className="mt-0.5 h-auto p-0 text-xs text-primary" onClick={() => {
-                  if (!s.headline || s.skills.length === 0) toast.success('Keep adding details to strengthen your profile!')
-                  else toast.success('Your profile is looking great!')
-                }}>Complete profile</Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Privacy & visibility */}
-          <Card className="w-full max-w-full overflow-hidden">
+          {/* Referral History */}
+          <Card className="w-full overflow-hidden mt-6">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base min-w-0"><Eye className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">Privacy</span></CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 space-y-3 text-sm">
-              <div className="flex items-center justify-between rounded-xl border border-border p-3.5">
-                <div className="min-w-0">
-                  <div className="font-medium">Open to Work</div>
-                  <div className="text-xs text-muted-foreground">Visible in talent search</div>
-                </div>
-                <Switch checked={openToWork} onCheckedChange={async (v) => { setOpenToWork(v); await toggleStudentOpenToWork(v) }} />
-              </div>
-              <p className="text-xs text-muted-foreground">Your resume, skills, and experience are visible to professionals you contact. Your email and phone are never shared publicly.</p>
-            </CardContent>
-          </Card>
-
-          {/* Skills */}
-          <Card className="w-full max-w-full overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base min-w-0"><Zap className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">Skills</span></CardTitle>
-              <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary shrink-0" onClick={() => setShowSkillInput(!showSkillInput)}><Plus className="h-3.5 w-3.5" /></Button>
+              <CardTitle className="flex items-center gap-2 text-base min-w-0">
+                <FileText className="h-4 w-4 shrink-0 text-primary" />
+                <span className="truncate">Referral History</span>
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              {showSkillInput && (
-                <div className="mb-3 flex gap-2">
-                  <input className="flex-1 min-w-0 rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary" placeholder="Skill name" value={skillName} onChange={(e) => setSkillName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()} />
-                  <Button size="sm" onClick={handleAddSkill}>Add</Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setShowSkillInput(false); setSkillName('') }}><X className="h-4 w-4" /></Button>
-                </div>
-              )}
-              <div className="flex flex-wrap gap-2">
-                {s.skills.length === 0 && !showSkillInput && <p className="text-sm text-muted-foreground">No skills yet.</p>}
-                {s.skills.map((sk) => (
-                  <div key={sk} className="group relative inline-flex">
-                    <Chip tone="primary">
-                      {sk}
-                      <button className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-primary-foreground/60 opacity-0 transition-opacity hover:bg-primary-foreground/20 group-hover:opacity-100" onClick={() => { removeStudentSkill(sk); toast.success('Skill removed') }}><X className="h-2.5 w-2.5" /></button>
-                    </Chip>
-                  </div>
-                ))}
+              <div className="space-y-3">
+                {myRequests.length === 0 && <p className="text-sm text-muted-foreground">No referral history yet.</p>}
+                {myRequests.map((r) => {
+                  const p = professionals.find((x) => x.id === r.professionalId)
+                  if (!p) return null
+                  return (
+                    <div key={r.id} className="flex items-center gap-3 rounded-xl border border-border p-3.5">
+                      <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-[10px] shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium">{r.role}</div>
+                        <div className="truncate text-xs text-muted-foreground">via {p.name} &middot; {p.company} &middot; {r.date}</div>
+                      </div>
+                      <StatusBadge status={r.status} />
+                    </div>
+                  )
+                })}
+                <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>
+                  <Link to="/job-seeker/applications">View full history</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
 
-          {/* Preferences */}
-          <Card className="w-full max-w-full overflow-hidden">
+          {/* Certifications & Achievements */}
+          <div className="grid gap-6 sm:grid-cols-2 mt-6">
+            <Card className="w-full overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-base min-w-0">
+                  <BadgeCheck className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="truncate">Certifications</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-2.5">
+                {s.certifications.length === 0 && <p className="text-sm text-muted-foreground">No certifications yet.</p>}
+                {s.certifications.map((c) => (
+                  <div key={c} className="flex items-center justify-between gap-2 text-sm">
+                    <span className="truncate break-words">{c}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card className="w-full overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-base min-w-0">
+                  <Award className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="truncate">Achievements</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-2.5">
+                {s.achievements.length === 0 && <p className="text-sm text-muted-foreground">No achievements yet.</p>}
+                {s.achievements.map((a) => (
+                  <div key={a} className="flex items-center justify-between gap-2 text-sm">
+                    <span className="truncate break-words">{a}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Career Preferences */}
+          <Card className="w-full overflow-hidden mt-6">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base min-w-0"><Target className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">Career preferences</span></CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base min-w-0">
+                <Briefcase className="h-4 w-4 shrink-0 text-primary" />
+                <span className="truncate">Career Preferences</span>
+              </CardTitle>
               {!showCareerEdit && (
-                <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary shrink-0" onClick={() => setShowCareerEdit(true)}>
-                  <Pencil className="h-3.5 w-3.5" />
+                <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => setShowCareerEdit(true)}>
+                  Edit
                 </Button>
               )}
             </CardHeader>
@@ -979,7 +535,7 @@ export default function StudentProfile() {
                   </div>
                   <p className="text-xs text-muted-foreground">Separate values with commas</p>
                   <div className="flex gap-2 pt-1">
-                    <Button size="sm" className="rounded-full bg-primary" onClick={handleSaveCareer}><CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Save</Button>
+                    <Button size="sm" className="rounded-full bg-primary" onClick={handleSaveCareer}>Save</Button>
                     <Button size="sm" variant="ghost" onClick={handleCancelCareerEdit}>Cancel</Button>
                   </div>
                 </div>
@@ -997,13 +553,12 @@ export default function StudentProfile() {
                     <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Career interests</div>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">{s.careerInterests.length > 0 ? s.careerInterests.map((c) => <Chip key={c}>{c}</Chip>) : <span className="text-xs text-muted-foreground">Not set</span>}</div>
                   </div>
-                  <Separator />
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-muted-foreground shrink-0">Expected salary</span>
                     <span className="font-semibold text-right break-words">{s.expectedSalary || <span className="text-xs text-muted-foreground">Not set</span>}</span>
                   </div>
                   <div className="flex items-start justify-between gap-2">
-                    <span className="flex items-center gap-1.5 text-muted-foreground shrink-0"><Languages className="h-4 w-4" /> Languages</span>
+                    <span className="text-muted-foreground shrink-0">Languages</span>
                     <span className="text-right font-medium break-words">{s.languages.length > 0 ? s.languages.join(', ') : <span className="text-xs text-muted-foreground">Not set</span>}</span>
                   </div>
                 </>
@@ -1011,13 +566,16 @@ export default function StudentProfile() {
             </CardContent>
           </Card>
 
-          {/* Job preferences (Phase 2) */}
-          <Card className="w-full max-w-full overflow-hidden">
+          {/* Job Preferences */}
+          <Card className="w-full overflow-hidden mt-6">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base min-w-0"><Briefcase className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">Job preferences</span></CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base min-w-0">
+                <Briefcase className="h-4 w-4 shrink-0 text-primary" />
+                <span className="truncate">Job Preferences</span>
+              </CardTitle>
               {!showJobPrefEdit && (
-                <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary shrink-0" onClick={() => setShowJobPrefEdit(true)}>
-                  <Pencil className="h-3.5 w-3.5" />
+                <Button data-slot="card-action" variant="ghost" size="sm" className="h-8 text-primary" onClick={() => setShowJobPrefEdit(true)}>
+                  Edit
                 </Button>
               )}
             </CardHeader>
@@ -1049,11 +607,10 @@ export default function StudentProfile() {
                   </div>
                   <div>
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Why I'm a fit</label>
-                    <textarea className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary resize-none" rows={3} placeholder="e.g. 3 years building React apps at a fintech — shipped payments features used by 2M users." value={editWhyFit} onChange={(e) => setEditWhyFit(e.target.value)} />
-                    <p className="mt-1 text-xs text-muted-foreground">A short pitch professionals read to decide if you're worth endorsing.</p>
+                    <textarea className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary resize-none" rows={3} placeholder="e.g. 3 years building React apps at a fintech..." value={editWhyFit} onChange={(e) => setEditWhyFit(e.target.value)} />
                   </div>
                   <div className="flex gap-2 pt-1">
-                    <Button size="sm" className="rounded-full bg-primary" onClick={handleSaveJobPrefs}><CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Save</Button>
+                    <Button size="sm" className="rounded-full bg-primary" onClick={handleSaveJobPrefs}>Save</Button>
                     <Button size="sm" variant="ghost" onClick={handleCancelJobPrefEdit}>Cancel</Button>
                   </div>
                 </div>
@@ -1072,7 +629,7 @@ export default function StudentProfile() {
                     {s.whyFit ? (
                       <p className="mt-1 text-sm leading-relaxed text-muted-foreground break-words">{s.whyFit}</p>
                     ) : (
-                      <p className="mt-1 text-xs text-muted-foreground">Not set — add a short pitch to get more referrals accepted.</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Not set</p>
                     )}
                   </div>
                 </>
@@ -1081,14 +638,22 @@ export default function StudentProfile() {
           </Card>
 
           {/* Resume */}
-          <Card className="flex-1 w-full max-w-full overflow-hidden">
+          <Card className="w-full overflow-hidden mt-6">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base min-w-0"><FileText className="h-4 w-4 shrink-0 text-primary" /> <span className="truncate">Resume</span></CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base min-w-0">
+                <FileText className="h-4 w-4 shrink-0 text-primary" />
+                <span className="truncate">Resume</span>
+              </CardTitle>
               <div data-slot="card-action" className="flex items-center gap-1 shrink-0">
                 {s.resumeFile && (
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-rose-500" onClick={() => setShowResumeConfirm(true)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-rose-500" onClick={() => setShowResumeConfirm(true)}>
+                    <span className="sr-only">Delete</span>
+                    <span className="text-xs">X</span>
+                  </Button>
                 )}
-                <Button variant="ghost" size="sm" className="h-8 text-primary" onClick={() => resumeInputRef.current?.click()}><Plus className="h-3.5 w-3.5" /></Button>
+                <Button variant="ghost" size="sm" className="h-8 text-primary" onClick={() => resumeInputRef.current?.click()}>
+                  Upload
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="pt-0">
@@ -1097,15 +662,14 @@ export default function StudentProfile() {
                   <>
                     <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                     <p className="mt-2 text-sm font-medium text-primary">Uploading...</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Please wait</p>
                   </>
                 ) : (
                   <>
-                    <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                    <FileText className="mx-auto h-8 w-8 text-muted-foreground" />
                     <p className="mt-2 text-sm font-medium break-words">Drop your PDF here or click to upload</p>
                     <p className="mt-1 text-xs text-muted-foreground">PDF, max 10 MB</p>
-                    <Button variant="outline" size="sm" className="mt-3 w-full sm:w-auto" onClick={() => resumeInputRef.current?.click()}>
-                      <Upload className="mr-1.5 h-3.5 w-3.5" /> Choose file
+                    <Button variant="outline" size="sm" className="mt-3" onClick={() => resumeInputRef.current?.click()}>
+                      Choose file
                     </Button>
                   </>
                 )}
@@ -1115,7 +679,7 @@ export default function StudentProfile() {
                   <FileText className="h-8 w-8 text-rose-500 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium">{s.resumeFile.name}</div>
-                    <div className="text-xs text-muted-foreground">{s.resumeFile.size} · Uploaded {s.resumeFile.date}</div>
+                    <div className="text-xs text-muted-foreground">{s.resumeFile.size} &middot; Uploaded {s.resumeFile.date}</div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {s.resumeFile.url && (
@@ -1123,7 +687,9 @@ export default function StudentProfile() {
                         Preview
                       </Button>
                     )}
-                    <Button variant="ghost" size="sm" onClick={handleDownloadResume}><Download className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="sm" onClick={handleDownloadResume}>
+                      <Download className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -1154,6 +720,17 @@ export default function StudentProfile() {
               onOpenChange={setShowResumePreview}
             />
           )}
+        </div>
+
+        {/* Right column — 33%, sticky */}
+        <div className="lg:col-span-1">
+          <ProfileSidebar
+            profileCompletion={s.profileCompletion}
+            resumeFile={s.resumeFile}
+            hasExperience={s.experience.length > 0}
+            hasEducation={s.education.length > 0}
+            headline={s.headline}
+          />
         </div>
       </div>
     </div>

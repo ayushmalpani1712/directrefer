@@ -1,10 +1,10 @@
-import { lazy, Suspense, useMemo, useEffect } from 'react'
+import { lazy, Suspense, useMemo, useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 
 import {
-  Bell, Bookmark, Briefcase, ChevronRight, CircleHelp, Command,
-  FileText, Home, LayoutDashboard, MessageSquare,
-  Search, Settings, Shield, ShieldCheck, User, Users, Zap, Inbox, LineChart, Activity,
+  Bell, Bookmark, Briefcase, ChevronDown, ChevronRight, CircleHelp,
+  FileText, Home, LayoutDashboard, MessageSquare, MoreHorizontal,
+  Settings, Shield, ShieldCheck, User, Users, Zap, Inbox, LineChart, Activity,
   type LucideIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -58,69 +58,61 @@ export function Logo({ compact }: { compact?: boolean }) {
 // ── Nav config ──────────────────────────────────────────────
 interface NavItem { label: string; href: string; icon: LucideIcon; badge?: string }
 
-function navFor(role: Role, pendingCount: number, prefix: string): { group: string; items: NavItem[] }[] {
-  const common: { group: string; items: NavItem[] }[] = []
+function navFor(role: Role, pendingCount: number, prefix: string): { primary: NavItem[]; more: NavItem[] } {
+  const primary: NavItem[] = []
+  const more: NavItem[] = []
+
   if (role === 'admin') {
-    common.push({
-      group: 'Admin',
-      items: [
-        { label: 'Dashboard', href: '/admin/overview', icon: LayoutDashboard },
-        { label: 'Workspaces', href: '/admin/users', icon: Users },
-        { label: 'Settings', href: '/admin/settings', icon: Settings },
-      ],
-    })
-    common.push({
-      group: 'Network',
-      items: [
-        { label: 'Activity', href: `${prefix}/activity`, icon: Activity },
-        { label: 'Analytics', href: `${prefix}/analytics`, icon: LineChart },
-      ],
-    })
-    return common
-  }
-  if (role === 'student') {
-    common.push({
-      group: 'Workspace',
-      items: [
-        { label: 'Dashboard', href: '/job-seeker/dashboard', icon: LayoutDashboard },
-        { label: 'Find Professionals', href: '/job-seeker/professionals', icon: Users },
-        { label: 'Browse Jobs', href: '/job-seeker/browse-jobs', icon: Briefcase },
-        { label: 'Job Alerts', href: '/job-seeker/job-alerts', icon: Bell },
-        { label: 'My Referrals', href: '/job-seeker/applications', icon: FileText, badge: pendingCount > 0 ? String(pendingCount) : undefined },
-        { label: 'My Profile', href: '/job-seeker/profile', icon: User },
-      ],
-    })
-  } else if (role === 'professional') {
-    common.push({
-      group: 'Workspace',
-      items: [
-        { label: 'Dashboard', href: '/professional/dashboard', icon: LayoutDashboard },
-        { label: 'Find Job Seekers', href: '/professional/talent', icon: Users },
-        { label: 'Referral Requests', href: '/professional/referrals', icon: Inbox, badge: pendingCount > 0 ? String(pendingCount) : undefined },
-        { label: 'Browse Jobs', href: '/professional/browse-jobs', icon: Briefcase },
-        { label: 'My Profile', href: '/professional/profile', icon: User },
-      ],
-    })
-  } else if (role === 'recruiter' && RECRUITER_VISIBLE) {
-    common.push({
-      group: 'Workspace',
-      items: [
-        { label: 'Dashboard', href: '/recruiter/dashboard', icon: LayoutDashboard },
-        { label: 'Jobs & Pipeline', href: '/recruiter/jobs', icon: Briefcase },
-        { label: 'Talent Search', href: '/recruiter/talent', icon: Users },
-        { label: 'Company Profile', href: '/recruiter/profile', icon: Home },
-      ],
-    })
-  }
-  common.push({
-    group: 'Network',
-    items: [
-      ...(role === 'student' ? [{ label: 'Bookmarks', href: `${prefix}/bookmarks`, icon: Bookmark }] : []),
+    primary.push(
+      { label: 'Dashboard', href: '/admin/overview', icon: LayoutDashboard },
+      { label: 'Workspaces', href: '/admin/users', icon: Users },
+      { label: 'Settings', href: '/admin/settings', icon: Settings },
+    )
+    more.push(
       { label: 'Activity', href: `${prefix}/activity`, icon: Activity },
       { label: 'Analytics', href: `${prefix}/analytics`, icon: LineChart },
-    ],
-  })
-  return common
+    )
+  } else if (role === 'student') {
+    primary.push(
+      { label: 'Dashboard', href: '/job-seeker/dashboard', icon: LayoutDashboard },
+      { label: 'Profile', href: '/job-seeker/profile', icon: User },
+      { label: 'Browse Jobs', href: '/job-seeker/browse-jobs', icon: Briefcase },
+    )
+    more.push(
+      { label: 'Applications', href: '/job-seeker/applications', icon: FileText, badge: pendingCount > 0 ? String(pendingCount) : undefined },
+      { label: 'Referrals', href: '/job-seeker/professionals', icon: Users },
+      { label: 'Job Alerts', href: '/job-seeker/job-alerts', icon: Bell },
+      { label: 'Bookmarks', href: `${prefix}/bookmarks`, icon: Bookmark },
+      { label: 'Activity', href: `${prefix}/activity`, icon: Activity },
+      { label: 'Analytics', href: `${prefix}/analytics`, icon: LineChart },
+    )
+  } else if (role === 'professional') {
+    primary.push(
+      { label: 'Dashboard', href: '/professional/dashboard', icon: LayoutDashboard },
+      { label: 'Profile', href: '/professional/profile', icon: User },
+      { label: 'Find Candidates', href: '/professional/talent', icon: Users },
+    )
+    more.push(
+      { label: 'Referrals', href: '/professional/referrals', icon: Inbox, badge: pendingCount > 0 ? String(pendingCount) : undefined },
+      { label: 'Browse Jobs', href: '/professional/browse-jobs', icon: Briefcase },
+      { label: 'Activity', href: `${prefix}/activity`, icon: Activity },
+      { label: 'Analytics', href: `${prefix}/analytics`, icon: LineChart },
+    )
+  } else if (role === 'recruiter' && RECRUITER_VISIBLE) {
+    primary.push(
+      { label: 'Dashboard', href: '/recruiter/dashboard', icon: LayoutDashboard },
+      { label: 'Profile', href: '/recruiter/profile', icon: Home },
+      { label: 'Jobs', href: '/recruiter/jobs', icon: Briefcase },
+    )
+    more.push(
+      { label: 'Talent', href: '/recruiter/talent', icon: Users },
+      { label: 'Applications', href: `${prefix}/applications`, icon: FileText },
+      { label: 'Activity', href: `${prefix}/activity`, icon: Activity },
+      { label: 'Analytics', href: `${prefix}/analytics`, icon: LineChart },
+    )
+  }
+
+  return { primary, more }
 }
 
 // ── Workspace switcher (inlined) ────────────────────────────
@@ -247,18 +239,21 @@ function AppSidebar() {
   const { role, student, requests } = useApp()
   const { state, setOpenMobile } = useSidebar()
   const { pathname } = useLocation()
+  const [moreOpen, setMoreOpen] = useState(false)
   const pendingCount = requests.filter((r) => r.status === 'requested' || r.status === 'under_review').length
   const urlRole = getRoleFromPath(pathname) || role
   const prefix = ROLE_ROUTE[urlRole]
-  const groups = navFor(urlRole, pendingCount, prefix)
+  const { primary, more } = navFor(urlRole, pendingCount, prefix)
   const user = student
 
   useEffect(() => { setOpenMobile(false) }, [setOpenMobile])
 
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '?') || pathname.startsWith(href + '/')
+
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <div className="flex-none">
-        <SidebarHeader className="h-14 justify-center border-b border-sidebar-border px-4">
+        <SidebarHeader className="h-16 justify-center border-b border-sidebar-border px-4">
           {state === 'collapsed' ? (
             <Link to="/" className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground" aria-label="Direct Refer — Go to homepage">
               <Zap className="h-4.5 w-4.5 fill-white text-white" />
@@ -269,28 +264,76 @@ function AppSidebar() {
         </SidebarHeader>
       </div>
       <SidebarContent className="flex-1 overflow-y-auto px-2">
-        {groups.map((g) => (
-          <SidebarGroup key={g.group}>
-            <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-              {g.group}
-            </SidebarGroupLabel>
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+            Menu
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {primary.map((item) => {
+                const active = isActive(item.href)
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild tooltip={item.label}>
+                      <Link
+                        to={item.href}
+                        className={cn(
+                          'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-200 min-h-[44px] relative active:scale-[0.98]',
+                          active
+                            ? 'bg-neutral-800/50 text-white font-semibold border-l-2 border-primary pl-[10px]'
+                            : 'text-neutral-400 hover:bg-neutral-800/30 hover:text-white',
+                        )}
+                      >
+                        <item.icon className={cn('h-[18px] w-[18px] shrink-0 transition-transform duration-200', active && 'scale-110')} />
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                    {item.badge && (
+                      <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary" aria-label={`${item.badge} pending`}>
+                        {item.badge}
+                      </SidebarMenuBadge>
+                    )}
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {more.length > 0 && (
+          <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {g.items.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(item.href + '?') || pathname.startsWith(item.href + '/')
+                <SidebarMenuItem>
+                  <button
+                    onClick={() => setMoreOpen(!moreOpen)}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-200 min-h-[44px]',
+                      moreOpen
+                        ? 'text-white bg-neutral-800/30'
+                        : 'text-neutral-400 hover:bg-neutral-800/30 hover:text-white',
+                    )}
+                  >
+                    <MoreHorizontal className="h-[18px] w-[18px] shrink-0" />
+                    <span className="truncate">More</span>
+                    <ChevronDown className={cn('h-4 w-4 ml-auto transition-transform duration-200', moreOpen && 'rotate-180')} />
+                  </button>
+                </SidebarMenuItem>
+                {moreOpen && more.map((item) => {
+                  const active = isActive(item.href)
                   return (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton asChild tooltip={item.label}>
                         <Link
                           to={item.href}
                           className={cn(
-                            'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-200 min-h-[44px] relative active:scale-[0.98]',
-                            isActive
-                              ? 'bg-primary/10 text-primary font-semibold before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-full before:bg-primary'
-                              : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground hover:translate-x-[1px]',
+                            'flex items-center gap-3 rounded-xl px-3 py-2.5 pl-9 text-[13px] font-medium transition-all duration-200 min-h-[40px] relative active:scale-[0.98]',
+                            active
+                              ? 'bg-neutral-800/50 text-white font-semibold border-l-2 border-primary'
+                              : 'text-neutral-400 hover:bg-neutral-800/30 hover:text-white',
                           )}
                         >
-                          <item.icon className={cn('h-[18px] w-[18px] shrink-0 transition-transform duration-200', isActive && 'scale-110')} />
+                          <item.icon className={cn('h-[16px] w-[16px] shrink-0 transition-transform duration-200', active && 'scale-110')} />
                           <span className="truncate">{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
@@ -305,7 +348,7 @@ function AppSidebar() {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        ))}
+        )}
       </SidebarContent>
       <div className="flex-none">
         <SidebarFooter className="border-t border-sidebar-border p-2">
@@ -365,31 +408,51 @@ const CRUMB_LABELS: Record<string, string> = {
 }
 if (RECRUITER_VISIBLE) CRUMB_LABELS.recruiter = 'Recruiter'
 
-function Breadcrumbs() {
+interface BreadcrumbsProps {
+  title?: string
+  description?: string
+}
+
+function Breadcrumbs({ title, description }: BreadcrumbsProps) {
   const { pathname } = useLocation()
   const { visibleProfessionals } = useApp()
   const urlRole = getRoleFromPath(pathname) || 'student'
   const segs = pathname.split('/').filter(Boolean)
-  if (segs.length === 0) return null
+
+  const pageTitle = title ?? CRUMB_LABELS[segs[segs.length - 1]] ?? segs[segs.length - 1] ?? 'Page'
+  const pageDescription = description ?? ''
+
   return (
-    <nav className="mb-4 flex items-center gap-1 overflow-x-auto text-sm text-muted-foreground [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <Link to={ROLE_ROUTE[urlRole]} className="shrink-0 hover:text-foreground"><Home className="h-3.5 w-3.5" /></Link>
-      {segs.map((s, i) => {
-        const href = '/' + segs.slice(0, i + 1).join('/')
-        const label = CRUMB_LABELS[s] ?? visibleProfessionals.find((p) => p.id === s)?.name ?? s
-        const last = i === segs.length - 1
-        return (
-          <span key={href} className="flex shrink-0 items-center gap-1">
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
-            {last ? (
-              <span className="whitespace-nowrap font-medium text-foreground">{label}</span>
-            ) : (
-              <Link to={href} className="whitespace-nowrap hover:text-foreground">{label}</Link>
-            )}
-          </span>
-        )
-      })}
-    </nav>
+    <div className="mb-6">
+      <nav className="mb-3 flex items-center gap-1 overflow-x-auto text-sm text-muted-foreground [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <Link to={ROLE_ROUTE[urlRole]} className="shrink-0 hover:text-foreground"><Home className="h-3.5 w-3.5" /></Link>
+        {segs.map((s, i) => {
+          const href = '/' + segs.slice(0, i + 1).join('/')
+          const label = CRUMB_LABELS[s] ?? visibleProfessionals.find((p) => p.id === s)?.name ?? s
+          const last = i === segs.length - 1
+          return (
+            <span key={href} className="flex shrink-0 items-center gap-1">
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+              {last ? (
+                <span className="whitespace-nowrap font-medium text-foreground">{label}</span>
+              ) : (
+                <Link to={href} className="whitespace-nowrap hover:text-foreground">{label}</Link>
+              )}
+            </span>
+          )
+        })}
+      </nav>
+      {(pageTitle || pageDescription) && (
+        <div className="border-b border-border/50 pb-4">
+          {pageTitle && (
+            <h1 className="text-[24px] font-semibold leading-tight text-white">{pageTitle}</h1>
+          )}
+          {pageDescription && (
+            <p className="mt-1 text-[14px] leading-relaxed text-neutral-400">{pageDescription}</p>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -397,41 +460,42 @@ function Breadcrumbs() {
 function Topbar() {
   const { pathname } = useLocation()
   const urlRole = getRoleFromPath(pathname) || 'student'
-  const { conversations, notifications } = useApp()
+  const { conversations, notifications, student } = useApp()
   const messagesPath = getMessagesPath(urlRole)
   const prefix = ROLE_ROUTE[urlRole]
   const unreadMessages = conversations.reduce((a, c) => a + c.unread, 0)
   const unreadNotifs = notifications.filter((n) => !n.read).length
   const navigate = useNavigate()
   return (
-    <header className="glass sticky top-0 z-30 flex h-14 items-center gap-1.5 border-b border-border/50 px-2 sm:px-4 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
+    <header className="glass sticky top-0 z-30 flex h-16 items-center gap-1.5 border-b border-border/50 px-2 sm:px-4 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
       <SidebarTrigger className="md:hidden h-11 w-11 shrink-0 touch-target" aria-label="Toggle navigation menu" />
       <a href="/" onClick={(e) => { e.preventDefault(); navigate('/') }} className="flex items-center shrink-0 md:hidden" aria-label="Direct Refer — Go to homepage">
         <svg viewBox="0 0 512 385" className="h-8 w-auto shrink-0" aria-hidden="true">
           <image href="/logo-emblem.png" width="512" height="385" />
         </svg>
       </a>
-      <button
-        onClick={() => {
+      <input
+        type="text"
+        placeholder="Search jobs, professionals, companies..."
+        onFocus={() => {
           const e = new KeyboardEvent('keydown', { key: 'k', bubbles: true, cancelable: true })
           Object.defineProperty(e, 'metaKey', { value: true })
           Object.defineProperty(e, 'ctrlKey', { value: true })
           document.dispatchEvent(e)
         }}
-        className="hidden h-9 flex-1 items-center gap-2.5 rounded-xl border border-border/60 bg-muted/50 px-4 text-[14px] text-muted-foreground transition-[border-color] duration-300 hover:border-primary/30 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 sm:flex sm:max-w-md dark:bg-white/[0.04] dark:border-white/[0.08] dark:hover:border-primary/30 dark:focus:border-primary/40"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            const ke = new KeyboardEvent('keydown', { key: 'k', bubbles: true, cancelable: true })
+            Object.defineProperty(ke, 'metaKey', { value: true })
+            Object.defineProperty(ke, 'ctrlKey', { value: true })
+            document.dispatchEvent(ke)
+          }
+        }}
+        className="hidden sm:flex h-9 flex-1 items-center gap-2.5 rounded-full border border-border/60 bg-muted/50 px-4 text-[14px] text-muted-foreground placeholder:text-muted-foreground/60 transition-[border-color] duration-300 hover:border-primary/30 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 sm:max-w-md dark:bg-white/[0.04] dark:border-white/[0.08] dark:hover:border-primary/30 dark:focus:border-primary/40"
         aria-label="Search (Ctrl+K)"
-      >
-        <Search className="h-4 w-4" />
-        <span className="flex-1 text-left">Search people, jobs, pages…</span>
-        <kbd className="pointer-events-none inline-flex items-center gap-0.5 rounded-md border border-border/60 bg-muted/50 px-1.5 font-mono text-[10px] text-muted-foreground/70">
-          <Command className="h-3 w-3" />K
-        </kbd>
-      </button>
-      <Badge variant="outline" className="hidden sm:inline-flex h-6 shrink-0 rounded-full border-primary/40 bg-primary/5 px-2.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-        {ROLE_META[urlRole].label}
-      </Badge>
+      />
       <div className="flex-1 sm:hidden" />
-      <div className="ml-auto flex items-center gap-0.5">
+      <div className="ml-auto flex items-center gap-1.5">
         <button
           onClick={() => document.dispatchEvent(new CustomEvent('toggle-command-palette'))}
           className="relative flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -459,10 +523,16 @@ function Topbar() {
           <Bell className="h-[18px] w-[18px]" />
           {unreadNotifs > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white badge-pulse" aria-hidden="true">
-              {unreadNotifs}
+              {unreadNotifs > 9 ? '9+' : unreadNotifs}
             </span>
           )}
         </button>
+        <div className="hidden sm:flex items-center gap-1.5 ml-1">
+          <div className="flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+            <GAvatar name={student?.name ?? 'U'} color={student?.gradient} className="h-4 w-4 text-[8px]" />
+            <span>{ROLE_META[urlRole].label}</span>
+          </div>
+        </div>
         <WorkspaceSwitcher />
       </div>
     </header>
