@@ -260,7 +260,6 @@ export default function ReferralJobs() {
         setJobs(jobRows)
         setReferrers(enriched)
       } catch (err) {
-        console.error('ReferralJobs load failed:', err)
         if (cancelled) return
         setJobs([])
         setReferrers([])
@@ -372,7 +371,7 @@ export default function ReferralJobs() {
 
         <div className="relative w-full mb-3">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search roles, companies, skills…" className="pl-9 pr-9 h-12 rounded-xl text-base" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search roles, companies, skills…" aria-label="Search referral jobs" className="pl-9 pr-9 h-12 rounded-xl text-base" />
           {q && <button onClick={() => setQ('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
         </div>
 
@@ -518,7 +517,7 @@ export default function ReferralJobs() {
         />
         <div className="relative w-full sm:w-72">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search roles, companies, skills…" className="pl-9 rounded-full" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search roles, companies, skills…" aria-label="Search referral jobs" className="pl-9 rounded-full" />
           {q && <button onClick={() => setQ('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
         </div>
       </div>

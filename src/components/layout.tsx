@@ -36,6 +36,7 @@ import { supabase } from '@/lib/supabase'
 import { MobileBottomNav } from '@/components/MobileBottomNav'
 import { useMobile } from '@/hooks/use-mobile'
 import { MobileHeader } from '@/components/mobile/MobileHeader'
+import { SkipToContent } from '@/components/SkipToContent'
 
 // ── Logo ────────────────────────────────────────────────────
 export function Logo({ compact }: { compact?: boolean }) {
@@ -553,8 +554,9 @@ export default function AppShell() {
   if (isMobile) {
     return (
       <div className="flex flex-col min-h-dvh bg-background">
+        <SkipToContent />
         <MobileHeader />
-        <main className="flex-1 overflow-y-auto" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+        <main id="main-content" className="flex-1 overflow-y-auto" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           <div className="px-4 py-4">
             <AnimatedOutlet />
           </div>
@@ -566,9 +568,7 @@ export default function AppShell() {
 
   return (
     <SidebarProvider>
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground">
-        Skip to content
-      </a>
+      <SkipToContent />
       <AppSidebar aria-label="Main navigation" />
       <SidebarInset className="bg-background flex flex-col min-w-0 min-h-0 overflow-y-auto overflow-x-hidden">
         <AnnouncementBanner />

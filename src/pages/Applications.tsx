@@ -185,6 +185,7 @@ export default function Applications() {
             placeholder="Search by company or role..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search applications by company or role"
             className="h-10 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
           />
         </div>
@@ -326,6 +327,7 @@ export default function Applications() {
               placeholder="Search by company or role..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search applications by company or role"
               className="h-9 w-full rounded-lg border border-white/[0.08] bg-white/[0.04] pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 sm:w-64"
             />
           </div>

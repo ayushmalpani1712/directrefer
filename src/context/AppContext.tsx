@@ -711,8 +711,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (parts.length >= 2) { userPatch.city = parts[0]; userPatch.state = parts[1] }
       }
       if (patch.linkedinUrl !== undefined) userPatch.linkedin = patch.linkedinUrl
-      if (Object.keys(userPatch).length > 0) updateUserProfile(id, userPatch).catch((err) => {
-        console.error('Failed to update user profile:', err)
+      if (Object.keys(userPatch).length > 0) updateUserProfile(id, userPatch).catch(() => {
         setProfessionals(prevProfessionals) // Rollback
         toast.error('Failed to save changes. Please try again.')
       })
@@ -733,8 +732,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (patch.college !== undefined) profilePatch.college = patch.college
       if (patch.gradient !== undefined) profilePatch.avatar_color = patch.gradient
       if (Object.keys(profilePatch).length > 0) {
-        updateProfessionalProfile(id, profilePatch).catch((err) => {
-          console.error('Failed to update professional profile:', err)
+        updateProfessionalProfile(id, profilePatch).catch(() => {
           setProfessionals(prevProfessionals) // Rollback
           toast.error('Failed to save changes. Please try again.')
         })
@@ -748,7 +746,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         await updateRecruiterProfile(user.id, patch)
       } catch (err) {
-        console.error('Failed to update recruiter profile:', err)
         toast.error('Something went wrong. Please try again.')
         throw err
       }
@@ -773,8 +770,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (parts.length >= 2) { userPatch.city = parts[0]; userPatch.state = parts[1] }
         else if (parts.length === 1) { userPatch.city = parts[0] }
       }
-      if (Object.keys(userPatch).length > 0) updateUserProfile(user.id, userPatch).catch((err) => {
-        console.error('Failed to update student profile:', err)
+      if (Object.keys(userPatch).length > 0) updateUserProfile(user.id, userPatch).catch(() => {
         setStudent(prev)
         studentSnapshotRef.current = prev
         toast.error('Failed to save changes. Please try again.')
@@ -807,8 +803,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (patch.projects !== undefined) profilePatch.projects = JSON.stringify(patch.projects)
       if (patch.gradient !== undefined) profilePatch.avatar_color = patch.gradient
       const profilePatchBase = { ...profilePatch } as Record<string, unknown>
-      if (Object.keys(profilePatch).length > 0) updateJobSeekerProfile(user.id, profilePatchBase).catch((err) => {
-        console.error('Failed to update job seeker profile:', err)
+      if (Object.keys(profilePatch).length > 0) updateJobSeekerProfile(user.id, profilePatchBase).catch(() => {
         setStudent(prev)
         studentSnapshotRef.current = prev
         toast.error('Failed to save changes. Please try again.')
@@ -824,9 +819,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (patch.noticePeriod !== undefined) extra.notice_period = patch.noticePeriod
           if (patch.workPreference !== undefined) extra.work_preference = patch.workPreference
           if (patch.whyFit !== undefined) extra.why_me = patch.whyFit
-          updateJobSeekerProfile(user.id, extra).catch((err) => {
-            console.error('Failed to save candidate fields:', err)
-          })
+          updateJobSeekerProfile(user.id, extra).catch(() => {})
         }
       }
     }
@@ -840,7 +833,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       studentSnapshotRef.current = next
       return next
     })
-    if (user) updateJobSeekerProfile(user.id, { certifications: JSON.stringify([...student.certifications, cert]) }).catch((err) => { console.error('Failed to save certification:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { certifications: JSON.stringify([...student.certifications, cert]) }).catch(() => { setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.certifications])
 
   const addStudentAchievement = useCallback(async (ach: string) => {
@@ -851,7 +844,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       studentSnapshotRef.current = next
       return next
     })
-    if (user) updateJobSeekerProfile(user.id, { achievements: JSON.stringify([...student.achievements, ach]) }).catch((err) => { console.error('Failed to save achievement:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { achievements: JSON.stringify([...student.achievements, ach]) }).catch(() => { setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.achievements])
 
   const addStudentProject = useCallback(async (proj: { name: string; desc: string; tags: string[] }) => {
@@ -862,7 +855,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       studentSnapshotRef.current = next
       return next
     })
-    if (user) updateJobSeekerProfile(user.id, { projects: JSON.stringify([...student.projects, proj]) }).catch((err) => { console.error('Failed to save project:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { projects: JSON.stringify([...student.projects, proj]) }).catch(() => { setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.projects])
 
   const addStudentSkill = useCallback(async (skill: string) => {
@@ -873,7 +866,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       studentSnapshotRef.current = next
       return next
     })
-    if (user) updateJobSeekerProfile(user.id, { skills: [...student.skills, skill] }).catch((err) => { console.error('Failed to save skill:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { skills: [...student.skills, skill] }).catch(() => { setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.skills])
 
   const removeStudentSkill = useCallback(async (skill: string) => {
@@ -884,7 +877,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       studentSnapshotRef.current = next
       return next
     })
-    if (user) updateJobSeekerProfile(user.id, { skills: student.skills.filter((s) => s !== skill) }).catch((err) => { console.error('Failed to remove skill:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { skills: student.skills.filter((s) => s !== skill) }).catch(() => { setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.skills])
 
   const removeStudentCertification = useCallback(async (cert: string) => {
@@ -895,7 +888,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       studentSnapshotRef.current = next
       return next
     })
-    if (user) updateJobSeekerProfile(user.id, { certifications: JSON.stringify(student.certifications.filter((c) => c !== cert)) }).catch((err) => { console.error('Failed to remove certification:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { certifications: JSON.stringify(student.certifications.filter((c) => c !== cert)) }).catch(() => { setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.certifications])
 
   const removeStudentAchievement = useCallback(async (ach: string) => {
@@ -906,7 +899,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       studentSnapshotRef.current = next
       return next
     })
-    if (user) updateJobSeekerProfile(user.id, { achievements: JSON.stringify(student.achievements.filter((a) => a !== ach)) }).catch((err) => { console.error('Failed to remove achievement:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { achievements: JSON.stringify(student.achievements.filter((a) => a !== ach)) }).catch(() => { setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.achievements])
 
   const removeStudentProject = useCallback(async (name: string) => {
@@ -917,7 +910,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       studentSnapshotRef.current = next
       return next
     })
-    if (user) updateJobSeekerProfile(user.id, { projects: JSON.stringify(student.projects.filter((p) => p.name !== name)) }).catch((err) => { console.error('Failed to remove project:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+    if (user) updateJobSeekerProfile(user.id, { projects: JSON.stringify(student.projects.filter((p) => p.name !== name)) }).catch(() => { setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
   }, [user, student.projects])
 
   const addStudentExperience = useCallback(async (exp: { title: string; org: string; period: string; desc: string }) => {
@@ -930,7 +923,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
     if (user) {
       const updatedExp = [...student.experience, exp]
-      updateJobSeekerProfile(user.id, { experience_years: updatedExp.length, experience: JSON.stringify(updatedExp) }).catch((err) => { console.error('Failed to save experience:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+      updateJobSeekerProfile(user.id, { experience_years: updatedExp.length, experience: JSON.stringify(updatedExp) }).catch(() => { setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
     }
   }, [user, student.experience])
 
@@ -944,7 +937,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
     if (user) {
       const updatedExp = student.experience.filter((_, i) => i !== index)
-      updateJobSeekerProfile(user.id, { experience_years: updatedExp.length, experience: JSON.stringify(updatedExp) }).catch((err) => { console.error('Failed to save experience:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+      updateJobSeekerProfile(user.id, { experience_years: updatedExp.length, experience: JSON.stringify(updatedExp) }).catch(() => { setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
     }
   }, [user, student.experience])
 
@@ -958,7 +951,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
     if (user) {
       const next = [...student.education, edu]
-      updateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || edu.school, qualification: next[0]?.degree || edu.degree }).catch((err) => { console.error('Failed to save education:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+      updateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || edu.school, qualification: next[0]?.degree || edu.degree }).catch(() => { setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
     }
   }, [user, student.education])
 
@@ -972,7 +965,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
     if (user) {
       const next = student.education.filter((_, i) => i !== index)
-      updateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || undefined, qualification: next[0]?.degree || undefined }).catch((err) => { console.error('Failed to save education:', err); setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
+      updateJobSeekerProfile(user.id, { education: JSON.stringify(next), college: next[0]?.school || undefined, qualification: next[0]?.degree || undefined }).catch(() => { setStudent(prev); studentSnapshotRef.current = prev; toast.error('Failed to save. Please try again.') })
     }
   }, [user, student.education])
 
@@ -984,8 +977,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
     if (user) {
       const resumePatch: Record<string, unknown> = { resume_url: undefined, resume_name: undefined, resume_size_bytes: undefined, resume_uploaded_at: undefined }
-      updateJobSeekerProfile(user.id, resumePatch).catch((err) => {
-        console.error('Failed to remove resume from DB:', err)
+      updateJobSeekerProfile(user.id, resumePatch).catch(() => {
         toast.error('Failed to remove resume')
       })
     }
@@ -999,8 +991,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const { toggleBookmark: toggleBookmarkDb } = await loadDb()
     const wasBookmarked = bookmarks.includes(id)
     setBookmarks((b) => (b.includes(id) ? b.filter((x) => x !== id) : [...b, id]))
-    if (user) toggleBookmarkDb(user.id, id).catch((err) => {
-      console.error('Failed to toggle bookmark:', err)
+    if (user) toggleBookmarkDb(user.id, id).catch(() => {
       toast.error('Something went wrong. Please try again.')
       setBookmarks((b) => (wasBookmarked ? [...b, id] : b.filter((x) => x !== id)))
     })
@@ -1084,7 +1075,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return true
     } catch (err) {
-      console.error('TOGGLE PERSIST FAILED (open_for_referrals):', err)
       setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, openForReferrals: prevValue } : p))
       toast.error('Failed to update toggle. Please try again.')
       return false
@@ -1127,7 +1117,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return true
     } catch (err) {
-      console.error('TOGGLE PERSIST FAILED (professional is_open_to_work):', err)
       setProfessionals((prev) => prev.map((p) => p.id === user.id ? { ...p, isOpenToWork: prevValue } : p))
       toast.error('Failed to update toggle. Please try again.')
       return false
@@ -1175,8 +1164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 read: notifData.read ?? false,
               }, ...prev])
             }
-          }, (err: unknown) => {
-            console.error('Failed to create notification:', err)
+          }, () => {
             toast.error('Failed to send notification')
           })
         }
@@ -1218,14 +1206,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         to_state: status,
         triggered_by: user?.id ?? null,
         metadata: passReason ? { reason: passReason } : null,
-      }).catch((err) => {
-        console.error('Failed to record state transition:', err)
-      })
+      }).catch(() => {})
       const dbStatus = status === 'declined' ? 'rejected' : status === 'requested' ? 'pending' : status
       if (status === 'accepted' || status === 'declined' || status === 'under_review') {
-        updateReferralStatus(id, dbStatus as 'accepted' | 'rejected' | 'under_review', passReason).catch((err) => {
-          console.error('Failed to update referral status:', err)
-          logClientError(`Referral status update failed: ${err}`, 'referral', 'error')
+        updateReferralStatus(id, dbStatus as 'accepted' | 'rejected' | 'under_review', passReason).catch(() => {
           toast.error('Something went wrong. Please try again.')
         })
       }
@@ -1246,8 +1230,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               read: notifData.read ?? false,
             }, ...prev])
           }
-        }, (err: unknown) => {
-          console.error('Failed to create notification:', err)
+        }, () => {
         })
       }
       if (status === 'accepted') {
@@ -1265,7 +1248,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const professional = professionals.find((p) => p.id === req.professionalId)
         const proName = professional?.name || 'the professional'
         sendReferralStatusEmail(req.studentEmail, req.student, proName, req.role, status === 'declined' ? 'rejected' : status as 'accepted' | 'rejected')
-          .catch((err) => { console.error('Failed to send referral status email:', err); toast.error('Failed to send status email') })
+          .catch(() => { toast.error('Failed to send status email') })
       }
     }
   }, [requests, professionals, user, setNpsOpen])
@@ -1293,7 +1276,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const daysPending = Math.floor((now - requestDate) / (24 * 60 * 60 * 1000))
             sendReminderEmail(pro.email, pro.name, r.student, r.role, daysPending)
               .then(() => { reminded.add(r.id); changed = true })
-              .catch((err) => { console.error('Failed to send reminder email:', err); toast.error('Failed to send reminder email') })
+              .catch(() => { toast.error('Failed to send reminder email') })
           }
         }
       })
@@ -1311,8 +1294,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (r.id !== id) return r
         return { ...r, pipelineStage: nextStage, progress: Math.round(((currentIdx + 1) / (stages.length - 1)) * 100) }
       }))
-      dbAdvancePipeline(id, nextStage).catch((err) => {
-        console.error('Failed to advance pipeline:', err)
+      dbAdvancePipeline(id, nextStage).catch(() => {
         toast.error('Something went wrong. Please try again.')
         setRequests((prev) => prev.map((r) => {
           if (r.id !== id) return r
@@ -1325,9 +1307,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         from_state: current.pipelineStage,
         to_state: nextStage,
         triggered_by: user?.id ?? null,
-      }).catch((err) => {
-        console.error('Failed to record pipeline transition:', err)
-      })
+      }).catch(() => {})
     }
   }, [requests])
 
@@ -1338,8 +1318,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (r.id !== id) return r
       return { ...r, status: 'referral_submitted' as ReferralStatus, pipelineStage: 'referral_submitted' as PipelineStage, progress: 85 }
     }))
-    submitReferralDb(id).catch((err) => {
-      console.error('Failed to submit referral:', err)
+    submitReferralDb(id).catch(() => {
       toast.error('Something went wrong. Please try again.')
       setRequests((prev) => prev.map((r) => {
         if (r.id !== id) return r
@@ -1370,8 +1349,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             read: notifData.read ?? false,
           }, ...prev])
         }
-      }, (err: unknown) => {
-        console.error('Failed to create notification:', err)
+      }, () => {
       })
     }
   }, [requests])
@@ -1383,8 +1361,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (r.id !== id) return r
       return { ...r, status: 'closed' as ReferralStatus, pipelineStage: 'closed' as PipelineStage, progress: 0 }
     }))
-    cancelReferralDb(id).catch((err) => {
-      console.error('Failed to cancel referral:', err)
+    cancelReferralDb(id).catch(() => {
       toast.error('Something went wrong. Please try again.')
       if (req) {
         setRequests((prev) => prev.map((r) => {
@@ -1403,8 +1380,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const progress = newStatus === 'application_submitted' ? 95 : 100
       return { ...r, status: newStatus as ReferralStatus, pipelineStage: newStatus as PipelineStage, progress }
     }))
-    updateAppStatusDb(id, newStatus).catch((err) => {
-      console.error('Failed to update application status:', err)
+    updateAppStatusDb(id, newStatus).catch(() => {
       toast.error('Something went wrong. Please try again.')
       if (req) {
         setRequests((prev) => prev.map((r) => {
@@ -1432,8 +1408,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             read: notifData.read ?? false,
           }, ...prev])
         }
-      }, (err: unknown) => {
-        console.error('Failed to create notification:', err)
+      }, () => {
       })
     }
   }, [requests])
@@ -1478,8 +1453,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             )
           )
         }
-      }).catch((err) => {
-        console.error('Failed to send message:', err)
+      }).catch(() => {
         // Rollback: remove phantom message and restore previous lastMessage
         setConversations((prev) =>
           prev.map((c) =>
@@ -1504,8 +1478,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .eq('conversation_id', id)
         .neq('sender_id', user.id)
         .eq('is_read', false)
-        .then(() => {}, (err) => {
-          console.error('Failed to mark conversation read:', err)
+        .then(() => {}, () => {
           toast.error('Something went wrong. Please try again.')
         })
     }
@@ -1531,8 +1504,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     )
-    markNotificationReadDb(id).catch((err) => {
-      console.error('Failed to mark notification read:', err)
+    markNotificationReadDb(id).catch(() => {
       toast.error('Something went wrong. Please try again.')
     })
   }, [])
@@ -1540,8 +1512,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const markAllNotificationsRead = useCallback(async () => {
     const { markAllNotificationsRead: markAllNotificationsReadDb } = await loadDb()
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-    if (user) markAllNotificationsReadDb(user.id).catch((err) => {
-      console.error('Failed to mark all notifications read:', err)
+    if (user) markAllNotificationsReadDb(user.id).catch(() => {
       toast.error('Something went wrong. Please try again.')
     })
   }, [user])
@@ -1564,8 +1535,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     if (patch.salary !== undefined) dbPatch.salary_range = patch.salary
     if (patch.expires_at !== undefined) dbPatch.expires_at = patch.expires_at
-    if (Object.keys(dbPatch).length > 0) updateJobDb(id, dbPatch).catch((err) => {
-      console.error('Failed to update job:', err)
+    if (Object.keys(dbPatch).length > 0) updateJobDb(id, dbPatch).catch(() => {
       toast.error('Something went wrong. Please try again.')
     })
   }, [])

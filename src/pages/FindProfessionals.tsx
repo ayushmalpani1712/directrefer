@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, memo } from 'react'
 import { Link } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Bookmark, BookmarkCheck, ChevronDown, ChevronUp, MapPin, Search, SlidersHorizontal, Users, X } from 'lucide-react'
@@ -51,7 +51,7 @@ function trustDotColor(score?: number) {
   return 'bg-muted-foreground'
 }
 
-export function ProfessionalCard({ p, index, matchResult }: { p: Professional; index: number; matchResult?: MatchResult }) {
+export const ProfessionalCard = memo(function ProfessionalCard({ p, index, matchResult }: { p: Professional; index: number; matchResult?: MatchResult }) {
   const { bookmarks, toggleBookmark } = useApp()
   const saved = bookmarks.includes(p.id)
 
@@ -140,9 +140,9 @@ export function ProfessionalCard({ p, index, matchResult }: { p: Professional; i
       </Link>
     </motion.div>
   )
-}
+})
 
-function MobileProfessionalCard({ p, index, matchResult }: { p: Professional; index: number; matchResult?: MatchResult }) {
+const MobileProfessionalCard = memo(function MobileProfessionalCard({ p, index, matchResult }: { p: Professional; index: number; matchResult?: MatchResult }) {
   const { bookmarks, toggleBookmark } = useApp()
   const saved = bookmarks.includes(p.id)
 
@@ -228,7 +228,7 @@ function MobileProfessionalCard({ p, index, matchResult }: { p: Professional; in
       </Link>
     </motion.div>
   )
-}
+})
 
 function FilterSection({ title, count, children, defaultOpen = true }: { title: string; count?: number; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -486,6 +486,7 @@ export default function FindProfessionals() {
             value={f.q}
             onChange={(e) => setF((p) => ({ ...p, q: e.target.value }))}
             placeholder="Search by name, company, or skill…"
+            aria-label="Search professionals by name, company, or skill"
             className="h-12 rounded-xl pl-10 text-sm bg-white/[0.04]"
           />
           {f.q && (
@@ -631,6 +632,7 @@ export default function FindProfessionals() {
               value={f.q}
               onChange={(e) => setF((p) => ({ ...p, q: e.target.value }))}
               placeholder="Search by name, company, or skill…"
+              aria-label="Search professionals by name, company, or skill"
               className="h-11 rounded-xl pl-10 text-sm bg-white/[0.04]"
             />
             {f.q && (
