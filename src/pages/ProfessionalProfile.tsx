@@ -218,34 +218,39 @@ export default function ProfessionalProfile() {
 
     return (
       <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="sticky top-0 z-50 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <span className="truncate text-sm font-semibold">{p.name}</span>
+          <span className="text-sm font-semibold" style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}>{p.name}</span>
         </div>
 
         <div className="relative">
           {(() => { const bs = getBannerStyle(user?.id, bannerTheme); return (
-            <div className="h-32 w-full" style={bs.style}>
+            <div className="relative h-32 w-full" style={bs.style}>
               <div className="absolute inset-0 bg-grid opacity-10" />
             </div>
           ) })()}
 
-          <div className="relative -mt-12 px-4">
+          <div className="relative -mt-12 px-4 z-10">
             <GAvatar name={p.name} color={selectedAvatarColor} className="h-20 w-20 border-4 border-card text-xl" />
 
             <div className="mt-3">
-              <div className="flex items-center gap-2">
-                <h1 className="font-display text-xl font-bold tracking-tight">{p.name}</h1>
-                {p.verified && <Check className="h-4 w-4 text-emerald-500" />}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <h1
+                  className="font-display text-xl font-bold tracking-tight"
+                  style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}
+                >
+                  {p.name}
+                </h1>
+                {p.verified && <TrustBadge tier="verified" />}
               </div>
-              <p className="mt-0.5 text-sm text-muted-foreground">
+              <p className="mt-0.5 text-sm text-muted-foreground" style={{ overflowWrap: 'break-word' }}>
                 {p.designation} at <CompanyChip name={p.company} className="h-4 w-4 text-[7px]" /> {p.company}
               </p>
               {p.location && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                  <MapPin className="h-3 w-3" /> {p.location}
+                <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground" style={{ overflowWrap: 'break-word' }}>
+                  <MapPin className="h-3 w-3 shrink-0" /> {p.location}
                 </p>
               )}
             </div>
@@ -286,7 +291,7 @@ export default function ProfessionalProfile() {
               <CardTitle className="flex items-center gap-2 text-sm"><Info className="h-4 w-4 text-primary" /> About</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <p className="text-sm leading-relaxed text-muted-foreground">{p.bio || 'No bio added yet.'}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground" style={{ overflowWrap: 'break-word' }}>{p.bio || 'No bio added yet.'}</p>
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-muted/50 p-3 text-center">
                   <div className="text-lg font-bold">{p.yearsExp} yrs</div>
@@ -395,7 +400,7 @@ export default function ProfessionalProfile() {
                   <GAvatar name={p.name} color={selectedAvatarColor} className="h-20 w-20 border-4 border-card text-xl sm:h-24 sm:w-24 sm:text-2xl" />
                 </div>
                 <div className="pb-0.5 min-w-0">
-                  <h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight truncate">
+                  <h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight" style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                     {editingHeader ? (
                       <input className="w-full bg-transparent border-b border-primary outline-none text-xl sm:text-2xl font-bold placeholder:text-muted-foreground/30" placeholder="Your full name" value={editName} onChange={(e) => setEditName(e.target.value)} />
                     ) : p.name}

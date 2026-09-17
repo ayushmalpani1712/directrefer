@@ -146,97 +146,124 @@ function MobileInboxCard({
 }) {
   const r = request
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <GAvatar name={r.student} color="#5C5D66" className="h-10 w-10 text-xs shrink-0" />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold truncate">{r.student}</span>
-              <StatusBadge status={r.status} />
+    <Card className="overflow-hidden border-border/60 shadow-sm">
+      <CardContent className="p-0">
+        <div className="p-4 pb-3">
+          <div className="flex items-start gap-3">
+            <GAvatar name={r.student} color="#5C5D66" className="h-11 w-11 text-xs shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[15px] font-semibold leading-tight">{r.student}</span>
+                <StatusBadge status={r.status} />
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Wants referral for:
+              </p>
+              <p className="text-sm font-medium leading-snug">
+                {r.role}{r.company ? <span className="text-muted-foreground"> @ {r.company}</span> : ''}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground truncate">{r.role}{r.company ? ` · ${r.company}` : ''}</p>
           </div>
-        </div>
 
-        <div className="mt-3 space-y-1.5">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Role:</span> {r.role}
-          </div>
-          {r.company && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">Company:</span> {r.company}
+          {r.note && (
+            <div className="mt-3 rounded-lg bg-muted/40 px-3 py-2.5">
+              <p className="text-[13px] leading-relaxed text-muted-foreground line-clamp-3 italic">"{r.note}"</p>
+            </div>
+          )}
+
+          {(r.status === 'accepted' || r.status === 'requested' || r.status === 'under_review' || r.status === 'referral_submitted') && (
+            <div className="mt-3">
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Pipeline</p>
+              <MobilePipeline stage={r.pipelineStage} />
+            </div>
+          )}
+
+          {r.status === 'requested' && r.policyAcknowledged && (
+            <div className="mt-2.5 flex items-center gap-1.5 rounded-lg bg-emerald-500/5 px-2.5 py-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
+              <ShieldCheck className="h-3 w-3 shrink-0" />
+              Policy acknowledged
+            </div>
+          )}
+          {r.status === 'requested' && !r.policyAcknowledged && (
+            <div className="mt-2.5 flex items-center gap-1.5 rounded-lg bg-amber-500/5 px-2.5 py-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+              <ShieldCheck className="h-3 w-3 shrink-0" />
+              Policy not yet acknowledged
+            </div>
+          )}
+          {r.status === 'accepted' && (
+            <div className="mt-2.5 flex items-center gap-1.5 rounded-lg bg-violet-500/5 px-2.5 py-1.5 text-[11px] text-violet-600 dark:text-violet-400">
+              <FileCheck className="h-3 w-3 shrink-0" />
+              Ready to submit referral
+            </div>
+          )}
+          {screeningResult && (
+            <div className={`mt-2.5 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] ${
+              screeningResult.passed
+                ? 'bg-emerald-500/5 text-emerald-600 dark:text-emerald-400'
+                : 'bg-amber-500/5 text-amber-600 dark:text-amber-400'
+            }`}>
+              <ShieldCheck className="h-3 w-3 shrink-0" />
+              Screening: {screeningResult.passed ? 'Passed' : 'Review needed'}
             </div>
           )}
         </div>
 
-        {(r.status === 'accepted' || r.status === 'requested' || r.status === 'under_review' || r.status === 'referral_submitted') && (
-          <div className="mt-3 rounded-lg bg-muted/50 px-3 py-2">
-            <p className="mb-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Pipeline</p>
-            <MobilePipeline stage={r.pipelineStage} />
-          </div>
-        )}
-
-        {r.status === 'requested' && r.policyAcknowledged && (
-          <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-500/5 px-2.5 py-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
-            <ShieldCheck className="h-3 w-3 shrink-0" />
-            Policy acknowledged
-          </div>
-        )}
-        {r.status === 'requested' && !r.policyAcknowledged && (
-          <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-amber-500/5 px-2.5 py-1.5 text-[11px] text-amber-600 dark:text-amber-400">
-            <ShieldCheck className="h-3 w-3 shrink-0" />
-            Policy not yet acknowledged
-          </div>
-        )}
-        {r.status === 'accepted' && (
-          <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-violet-500/5 px-2.5 py-1.5 text-[11px] text-violet-600 dark:text-violet-400">
-            <FileCheck className="h-3 w-3 shrink-0" />
-            Ready to submit referral
-          </div>
-        )}
-        {screeningResult && (
-          <div className={`mt-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] ${
-            screeningResult.passed
-              ? 'bg-emerald-500/5 text-emerald-600 dark:text-emerald-400'
-              : 'bg-amber-500/5 text-amber-600 dark:text-amber-400'
-          }`}>
-            <ShieldCheck className="h-3 w-3 shrink-0" />
-            Screening: {screeningResult.passed ? 'Passed' : 'Review needed'}
-          </div>
-        )}
-
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="flex items-center border-t border-border/40">
           {r.studentResumeUrl && (
-            <Button size="sm" variant="ghost" className="h-7 gap-1 rounded-full text-xs" onClick={onResume}>
-              <FileText className="h-3 w-3" /> Resume
-            </Button>
+            <button
+              onClick={onResume}
+              className="flex items-center gap-1.5 px-4 py-3 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <FileText className="h-3.5 w-3.5" /> Resume
+            </button>
           )}
-        </div>
-
-        <div className="mt-3 flex gap-2">
           {r.status === 'requested' || r.status === 'under_review' ? (
             <>
-              <Button size="sm" className="flex-1 rounded-lg bg-emerald-600 hover:bg-emerald-700" disabled={screeningLoading} onClick={onAccept}>
-                {screeningLoading ? 'Processing...' : <><CheckCheck className="mr-1.5 h-3.5 w-3.5" /> Accept</>}
-              </Button>
-              <Button size="sm" variant="ghost" className="rounded-lg" onClick={onDecline}>
-                <XCircle className="mr-1.5 h-3.5 w-3.5" /> Decline
+              <button
+                onClick={onDecline}
+                className="flex items-center gap-1.5 px-4 py-3 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors border-l border-border/40"
+              >
+                <XCircle className="h-3.5 w-3.5" /> Decline
+              </button>
+              <div className="flex-1" />
+              <Button
+                size="sm"
+                className="m-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 h-9 px-5 text-xs font-semibold gap-1.5"
+                disabled={screeningLoading}
+                onClick={onAccept}
+              >
+                {screeningLoading ? 'Processing...' : <><CheckCheck className="h-3.5 w-3.5" /> Accept</>}
               </Button>
             </>
           ) : r.status === 'accepted' ? (
             <>
-              <Button size="sm" className="flex-1 rounded-lg bg-violet-600 hover:bg-violet-700" onClick={onSubmitReferral}>
-                <FileCheck className="mr-1.5 h-3.5 w-3.5" /> Submit Referral
-              </Button>
-              <Button size="sm" variant="outline" className="rounded-lg" disabled={!r.requesterId} onClick={onMessage}>
-                <MessageSquare className="h-3.5 w-3.5" />
+              <button
+                onClick={onMessage}
+                disabled={!r.requesterId}
+                className="flex items-center gap-1.5 px-4 py-3 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 border-l border-border/40"
+              >
+                <MessageSquare className="h-3.5 w-3.5" /> Message
+              </button>
+              <div className="flex-1" />
+              <Button
+                size="sm"
+                className="m-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 h-9 px-5 text-xs font-semibold gap-1.5"
+                onClick={onSubmitReferral}
+              >
+                <FileCheck className="h-3.5 w-3.5" /> Submit Referral
               </Button>
             </>
           ) : (
-            <Button size="sm" variant="outline" className="rounded-lg" disabled={!r.requesterId} onClick={onMessage}>
-              <MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message
-            </Button>
+            <>
+              {r.requesterId && (
+                <button
+                  onClick={onMessage}
+                  className="flex items-center gap-1.5 px-4 py-3 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors border-l border-border/40"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" /> Message
+                </button>
+              )}
+            </>
           )}
         </div>
       </CardContent>
@@ -246,14 +273,14 @@ function MobileInboxCard({
 
 function MobileEmptyState({ tab }: { tab: ReferralStatus | 'all' }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
-        <Inbox className="h-8 w-8 text-muted-foreground/50" />
+    <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/60">
+        <Inbox className="h-8 w-8 text-muted-foreground/40" />
       </div>
-      <h3 className="mt-4 text-sm font-semibold">
+      <h3 className="mt-5 text-sm font-semibold">
         {tab === 'all' ? 'No referral requests yet' : tab === 'accepted' ? 'No accepted requests' : 'No pending requests'}
       </h3>
-      <p className="mt-1.5 text-xs text-muted-foreground max-w-[240px]">
+      <p className="mt-1.5 text-xs text-muted-foreground max-w-[240px] leading-relaxed">
         {tab === 'all'
           ? "When job seekers request referrals, they'll appear here."
           : tab === 'accepted'
@@ -293,7 +320,6 @@ export default function ReferralInbox() {
       onReferralAccepted(ME.id).catch(() => {})
       autoAwardOnAcceptance(requestId, ME.id).catch(() => {})
     }
-    // Run screening in background
     if (requesterId) {
       setScreeningLoading(requestId)
       try {
@@ -302,9 +328,7 @@ export default function ReferralInbox() {
           ...prev,
           [requestId]: { passed: result.all_passed, summary: result.summary }
         }))
-      } catch {
-        // Screening is optional — don't block UI
-      } finally {
+      } catch { /* screening optional */ } finally {
         setScreeningLoading(null)
       }
     }
@@ -314,36 +338,69 @@ export default function ReferralInbox() {
 
   if (isMobile) {
     return (
-      <div className="space-y-4 pb-20">
-        <div className="px-1">
-          <h1 className="text-lg font-bold">Referral Inbox</h1>
-          <p className="text-xs text-muted-foreground">Review and manage referral requests</p>
+      <div className="min-h-screen bg-background pb-24">
+        <div className="sticky top-0 z-20 border-b border-border/40 bg-background/80 backdrop-blur-xl">
+          <div className="px-5 pt-5 pb-3">
+            <h1 className="text-xl font-bold tracking-tight">Referral Inbox</h1>
+            <p className="mt-0.5 text-xs text-muted-foreground">Review and manage referral requests</p>
+          </div>
+
+          <div className="overflow-x-auto scrollbar-none">
+            <div className="flex gap-2 px-5 pb-3 min-w-max">
+              {MOBILE_TABS.map((t) => {
+                const count = t.key === 'all' ? inbox.length : counts(t.key)
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setTab(t.key)}
+                    className={cn(
+                      'flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium transition-all whitespace-nowrap',
+                      tab === t.key
+                        ? 'bg-foreground text-background shadow-sm'
+                        : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+                    )}
+                  >
+                    {t.label}
+                    {count > 0 && (
+                      <span className={cn(
+                        'flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold',
+                        tab === t.key
+                          ? 'bg-background/20 text-background'
+                          : 'bg-foreground/10 text-muted-foreground'
+                      )}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </div>
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-          <TabsList className="mx-1 h-9 w-[calc(100%-8px)]">
-            {MOBILE_TABS.map((t) => (
-              <TabsTrigger key={t.key} value={t.key} className="flex-1 gap-1 text-xs">
-                {t.label}
-                <span className="rounded-full bg-muted px-1.5 text-[9px] font-semibold text-muted-foreground">
-                  {t.key === 'all' ? inbox.length : counts(t.key)}
-                </span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-
-        <div className="relative mx-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search requests…" className="pl-9 h-9 text-sm" />
+        <div className="px-4 pt-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search by name, role, or note…"
+              className="h-11 rounded-xl pl-9 bg-muted/40 border-border/50 text-sm"
+            />
+          </div>
         </div>
 
         {filtered.length === 0 ? (
           <MobileEmptyState tab={tab} />
         ) : (
-          <div className="space-y-3 px-1">
+          <div className="px-4 pt-4 space-y-3">
             {filtered.map((r, i) => (
-              <motion.div key={r.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+              <motion.div
+                key={r.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04, duration: 0.25 }}
+              >
                 <MobileInboxCard
                   request={r}
                   screeningLoading={screeningLoading === r.id}

@@ -18,6 +18,7 @@ import { LinkedInShareButton } from '@/components/LinkedInShareButton'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
+import { useMobile } from '@/hooks/use-mobile'
 import { type Professional, type RelationshipType, REFERRAL_RELATIONSHIPS, POLICY_ACKNOWLEDGMENT } from '@/data/constants'
 import { uploadResume } from '@/lib/db'
 import { cn } from '@/lib/utils'
@@ -33,8 +34,6 @@ const STEPS = [
   { id: 7, label: 'Done', icon: PartyPopper },
 ]
 
-// Max concurrent pending referral requests a candidate can hold.
-// Slot is released when a request is accepted, declined or expired.
 const MAX_ACTIVE_REQUESTS = 5
 
 interface Draft {
@@ -57,6 +56,7 @@ const DEFAULT_MSG = (p?: Professional, s?: { name: string }) =>
 export default function RequestReferral() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const isMobile = useMobile()
   const { addRequest, visibleProfessionals: professionals, student, requests } = useApp()
   const { user } = useAuth()
   const loading = usePageLoading(350)
@@ -78,7 +78,6 @@ export default function RequestReferral() {
   const [q, setQ] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Autosave (debounced)
   useEffect(() => {
     const t = setTimeout(() => {
       if (draft.professionalId || draft.message || draft.resumeName) {
@@ -200,6 +199,432 @@ export default function RequestReferral() {
 
   const pct = Math.round(((step - 1) / (STEPS.length - 1)) * 100)
 
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-28">
+        <div className="sticky top-0 z-20 border-b border-border/40 bg-background/80 backdrop-blur-xl">
+          <div className="flex items-center justify-between px-4 py-3">
+            <button
+              onClick={() => (step > 1 && step < 7 ? setStep(step - 1) : navigate(-1))}
+              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" /> {step > 1 && step < 7 ? 'Back' : 'Back'}
+            </button>
+            {savedAt && step < 7 && (
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><Save className="h-3 w-3 text-emerald-500" /> Saved</span>
+            )}
+          </div>
+
+          <div className="px-4 pb-4">
+            <h1 className="text-lg font-bold tracking-tight">Request Referral</h1>
+            <div className="mt-2.5 flex items-center gap-3">
+              <div className="flex-1">
+                <Progress value={pct} className="h-1.5" />
+              </div>
+              <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                Step {step} of {STEPS.length - 1}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+            className="px-4 pt-5"
+          >
+            {step === 1 && (
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-base font-bold">Select a professional</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">to request referral from</p>
+                </div>
+                {isUnverified && (
+                  <div className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/5 p-4">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                    <div>
+                      <div className="text-sm font-semibold text-red-700 dark:text-red-400">Request blocked</div>
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">This professional has an unverified trust tier.</p>
+                    </div>
+                  </div>
+                )}
+                {isProvisional && !isUnverified && (
+                  <div className="flex items-start gap-3 rounded-xl border border-sky-500/30 bg-sky-500/5 p-4">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-500" />
+                    <div>
+                      <div className="text-sm font-semibold text-sky-700 dark:text-sky-400">Provisional professional</div>
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">Still building their trust score.</p>
+                    </div>
+                  </div>
+                )}
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search professionals…" className="h-12 rounded-xl pl-10 text-sm" />
+                </div>
+                <div className="max-h-[420px] space-y-2.5 overflow-y-auto">
+                  {filtered.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setDraft((d) => ({ ...d, professionalId: p.id, message: d.message || DEFAULT_MSG(p, student), role: d.role || p.openPositions[0] || '' }))}
+                      className={cn(
+                        'flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition-all',
+                        draft.professionalId === p.id
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                          : 'border-border/60 hover:border-primary/30',
+                      )}
+                    >
+                      <GAvatar name={p.name} color={p.gradient} className="h-12 w-12 text-xs shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-semibold">{p.name}</span>
+                          {p.verified && <ShieldCheck className="h-3.5 w-3.5 text-sky-500" />}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{p.designation}</div>
+                        <div className="text-xs text-muted-foreground">{p.company} · Trust: {Math.round(p.responseRate * 0.85)}</div>
+                      </div>
+                      <div className="shrink-0">
+                        {draft.professionalId === p.id ? (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <Check className="h-4 w-4" strokeWidth={3} />
+                          </div>
+                        ) : (
+                          <span className="text-xs font-medium text-primary">Select</span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                  {filtered.length === 0 && (
+                    <div className="flex flex-col items-center py-12 text-center">
+                      <UserX className="h-8 w-8 text-muted-foreground/40" />
+                      <p className="mt-3 text-sm font-medium">No professionals found</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Try a different search term</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-5">
+                <div>
+                  <h2 className="text-base font-bold">How do you know {pro?.name?.split(' ')[0]}?</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">This helps the professional decide faster.</p>
+                </div>
+                <div className="space-y-2.5">
+                  {REFERRAL_RELATIONSHIPS.map((rel) => (
+                    <button
+                      key={rel.value}
+                      onClick={() => setDraft((d) => ({ ...d, relationshipType: rel.value }))}
+                      className={cn(
+                        'flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-all',
+                        draft.relationshipType === rel.value
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                          : 'border-border/60 hover:border-primary/30',
+                      )}
+                    >
+                      <div className={cn(
+                        'flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors shrink-0',
+                        draft.relationshipType === rel.value ? 'border-primary bg-primary' : 'border-border',
+                      )}>
+                        {draft.relationshipType === rel.value && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold">{rel.label}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{rel.description}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="rel-note-mobile" className="text-sm">Additional context (optional)</Label>
+                  <Textarea
+                    id="rel-note-mobile"
+                    value={draft.relationshipNote}
+                    onChange={(e) => setDraft((d) => ({ ...d, relationshipNote: e.target.value }))}
+                    rows={2}
+                    className="resize-none rounded-xl text-sm"
+                    placeholder="e.g. Worked together at Acme Corp"
+                  />
+                </div>
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+                  <div className="flex items-start gap-3">
+                    <Handshake className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                    <div>
+                      <div className="text-sm font-semibold text-amber-700 dark:text-amber-400">Referral etiquette</div>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{POLICY_ACKNOWLEDGMENT}</p>
+                      <label className="mt-2.5 flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={draft.policyAcknowledged}
+                          onChange={(e) => setDraft((d) => ({ ...d, policyAcknowledged: e.target.checked }))}
+                          className="mt-0.5 accent-amber-500"
+                        />
+                        <span className="text-xs font-medium text-foreground">I acknowledge and agree</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-base font-bold">Attach your resume</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">PDF up to 10MB.</p>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleResumeUpload}
+                />
+                {!draft.resumeName ? (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-border py-14 transition-colors hover:border-primary/50 hover:bg-primary/[0.03]"
+                  >
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      <FileUp className="h-6 w-6" />
+                    </div>
+                    <div className="mt-4 text-sm font-semibold">Tap to upload</div>
+                    <div className="mt-1 text-xs text-muted-foreground">PDF, DOC up to 10MB</div>
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold truncate">{draft.resumeName}</div>
+                        <div className="text-xs text-muted-foreground">Uploaded</div>
+                      </div>
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                    </div>
+                    <Button variant="outline" size="sm" className="rounded-xl" onClick={() => fileInputRef.current?.click()}>Replace file</Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {step === 4 && (
+              <div className="space-y-5">
+                <div>
+                  <h2 className="text-base font-bold">Portfolio & links</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">Optional but recommended.</p>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="li-m" className="text-sm">LinkedIn profile</Label>
+                    <Input id="li-m" value={draft.linkedinUrl} onChange={(e) => setDraft((d) => ({ ...d, linkedinUrl: e.target.value }))} placeholder="https://linkedin.com/in/yourname" className="h-12 rounded-xl text-sm" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="gh-m" className="text-sm">GitHub</Label>
+                    <Input id="gh-m" value={draft.githubUrl} onChange={(e) => setDraft((d) => ({ ...d, githubUrl: e.target.value }))} placeholder="github.com/yourname" className="h-12 rounded-xl text-sm" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="pf-m" className="text-sm">Portfolio website</Label>
+                    <Input id="pf-m" value={draft.portfolioUrl} onChange={(e) => setDraft((d) => ({ ...d, portfolioUrl: e.target.value }))} placeholder="https://yoursite.dev" className="h-12 rounded-xl text-sm" />
+                  </div>
+                  {(draft.linkedinUrl || draft.githubUrl || draft.portfolioUrl) && (
+                    <div className="rounded-xl border border-border bg-muted/30 p-4">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Preview</div>
+                      <div className="flex flex-wrap gap-2">
+                        {draft.linkedinUrl && (
+                          <a href={draft.linkedinUrl.startsWith('http') ? draft.linkedinUrl : `https://linkedin.com/in/${draft.linkedinUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors">
+                            <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" /> LinkedIn
+                          </a>
+                        )}
+                        {draft.githubUrl && (
+                          <a href={draft.githubUrl.startsWith('http') ? draft.githubUrl : `https://github.com/${draft.githubUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors">
+                            <Github className="h-3.5 w-3.5" /> GitHub
+                          </a>
+                        )}
+                        {draft.portfolioUrl && (
+                          <a href={draft.portfolioUrl.startsWith('http') ? draft.portfolioUrl : `https://${draft.portfolioUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors">
+                            <Globe className="h-3.5 w-3.5 text-primary" /> Portfolio
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <div className="rounded-xl bg-muted/50 p-4 text-xs text-muted-foreground leading-relaxed">
+                    Profiles with links get <b className="text-foreground">2.3× more accepts</b>.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === 5 && (
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-base font-bold">Your referral message</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {pro ? `${pro.name.split(' ')[0]}'s policy: "${pro.referralPolicy}"` : 'Be specific, be brief, be human.'}
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="role-m" className="text-sm">Target role</Label>
+                  <Input id="role-m" value={draft.role} onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value }))} className="h-12 rounded-xl text-sm" placeholder="e.g. Software Engineer III" />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="msg-m" className="text-sm">Message</Label>
+                    <span className={cn('text-xs', draft.message.length >= 40 ? 'text-emerald-500' : 'text-muted-foreground')}>{draft.message.length} / 40+</span>
+                  </div>
+                  <Textarea
+                    id="msg-m"
+                    value={draft.message}
+                    onChange={(e) => setDraft((d) => ({ ...d, message: e.target.value }))}
+                    rows={7}
+                    className="resize-none rounded-xl text-sm"
+                    placeholder="Introduce yourself, name the role, share one proof point…"
+                  />
+                </div>
+              </div>
+            )}
+
+            {step === 6 && pro && (
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-base font-bold">Review & send</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">This lands in {pro.name.split(' ')[0]}'s inbox.</p>
+                </div>
+                <div className="rounded-xl border border-border p-4">
+                  <div className="flex items-center gap-3">
+                    <GAvatar name={pro.name} color={pro.gradient} className="h-12 w-12 text-sm" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold">{pro.name}</div>
+                      <div className="text-xs text-muted-foreground">{pro.designation} · {pro.company}</div>
+                    </div>
+                    <CompanyChip name={pro.company} />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="rounded-xl border border-border p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Target role</div>
+                      <button onClick={() => setStep(5)} className="text-[11px] font-medium text-primary">Edit</button>
+                    </div>
+                    <div className="mt-1 text-sm font-medium">{draft.role || pro.openPositions[0] || 'Open role'}</div>
+                  </div>
+                  <div className="rounded-xl border border-border p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Resume</div>
+                      <button onClick={() => setStep(3)} className="text-[11px] font-medium text-primary">Edit</button>
+                    </div>
+                    <div className="mt-1 flex items-center gap-1.5 text-sm font-medium"><FileText className="h-4 w-4 text-primary" /> {draft.resumeName}</div>
+                  </div>
+                  {draft.relationshipType && (
+                    <div className="rounded-xl border border-border p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Relationship</div>
+                        <button onClick={() => setStep(2)} className="text-[11px] font-medium text-primary">Edit</button>
+                      </div>
+                      <div className="mt-1 text-sm font-medium">{REFERRAL_RELATIONSHIPS.find((r) => r.value === draft.relationshipType)?.label}</div>
+                      {draft.relationshipNote && <div className="mt-0.5 text-xs text-muted-foreground">{draft.relationshipNote}</div>}
+                    </div>
+                  )}
+                  <div className="rounded-xl border border-border p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Message</div>
+                      <button onClick={() => setStep(5)} className="text-[11px] font-medium text-primary">Edit</button>
+                    </div>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground line-clamp-4">"{draft.message}"</p>
+                  </div>
+                  {(student.noticePeriod || student.workPreference || student.whyFit) && (
+                    <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-4">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Candidate snapshot</div>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {student.noticePeriod && <Chip tone="primary"><Clock className="mr-1 h-3 w-3" /> {student.noticePeriod}</Chip>}
+                        {student.workPreference && <Chip tone="primary"><Briefcase className="mr-1 h-3 w-3" /> {student.workPreference}</Chip>}
+                        {student.whyFit && <Chip tone="primary"><Sparkles className="mr-1 h-3 w-3" /> {student.whyFit.length > 50 ? `${student.whyFit.slice(0, 50)}…` : student.whyFit}</Chip>}
+                      </div>
+                    </div>
+                  )}
+                  {!student.noticePeriod && (
+                    <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-4 text-xs text-amber-600 dark:text-amber-400 leading-relaxed">
+                      <b>Tip:</b> Add your notice period — professionals are more likely to accept when they know when you can start.{' '}
+                      <button onClick={() => navigate('/job-seeker/profile')} className="font-semibold underline">Add now</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {step === 7 && pro && (
+              <div className="space-y-5">
+                <div className="flex flex-col items-center text-center py-6">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 220, damping: 14, delay: 0.1 }}
+                    className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white"
+                  >
+                    <Check className="h-8 w-8" strokeWidth={3} />
+                  </motion.div>
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                    <h2 className="mt-4 text-lg font-bold">Referral request sent</h2>
+                    <p className="mt-1.5 text-xs text-muted-foreground max-w-[280px] leading-relaxed">
+                      {pro.name} typically replies within ~{pro.avgReplyHours} hours. We'll notify you when they respond.
+                    </p>
+                  </motion.div>
+                </div>
+                <div className="space-y-2.5">
+                  <Button className="w-full rounded-xl h-12 text-sm font-semibold" asChild>
+                    <Link to="/job-seeker/applications">Track my referrals <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
+                  </Button>
+                  <Button variant="outline" className="w-full rounded-xl h-12 text-sm" asChild>
+                    <Link to="/job-seeker/professionals">Request another</Link>
+                  </Button>
+                  <LinkedInShareButton role={draft.role || pro.openPositions[0] || 'this role'} company={pro.company} professionalName={pro.name} variant="outline" />
+                </div>
+              </div>
+            )}
+
+            {step === 7 && (
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
+                <div className="mt-4 rounded-xl border border-primary/20 bg-primary/[0.03] p-5 text-center">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 mx-auto">
+                    <Users className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="mt-3 text-sm font-semibold">Are you a professional at {pro?.company || 'a top company'}?</h3>
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">Help others get referred — build your reputation.</p>
+                  <Button variant="outline" className="mt-3 rounded-xl" asChild>
+                    <Link to="/login?role=professional">Become a Professional</Link>
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {step < 7 && (
+          <div className="fixed bottom-0 inset-x-0 z-30 border-t border-border/40 bg-background/90 backdrop-blur-xl safe-area-pb">
+            <div className="px-4 py-4">
+              {step < 6 ? (
+                <Button onClick={next} disabled={!canNext} className="w-full h-13 rounded-xl text-sm font-semibold">
+                  Continue <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button onClick={submit} disabled={sending} className="w-full h-13 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white text-sm font-semibold">
+                  {sending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />}
+                  {sending ? 'Sending…' : 'Send referral request'}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
@@ -211,7 +636,6 @@ export default function RequestReferral() {
         )}
       </div>
 
-      {/* Stepper */}
       <div>
         <div className="flex items-center justify-between">
           {STEPS.map((s, i) => (
@@ -244,7 +668,6 @@ export default function RequestReferral() {
           exit={{ opacity: 0, x: -24 }}
           transition={{ duration: 0.25 }}
         >
-          {/* STEP 1 — choose professional */}
           {step === 1 && (
             <Card className="">
               <CardContent className="p-6">
@@ -299,7 +722,6 @@ export default function RequestReferral() {
             </Card>
           )}
 
-          {/* STEP 2 — relationship type & policy */}
           {step === 2 && (
             <Card className="">
               <CardContent className="p-6">
@@ -361,7 +783,6 @@ export default function RequestReferral() {
             </Card>
           )}
 
-          {/* STEP 3 — resume */}
           {step === 3 && (
             <Card className="">
               <CardContent className="p-6">
@@ -400,7 +821,6 @@ export default function RequestReferral() {
             </Card>
           )}
 
-          {/* STEP 4 — portfolio */}
           {step === 4 && (
             <Card className="">
               <CardContent className="p-6">
@@ -449,7 +869,6 @@ export default function RequestReferral() {
             </Card>
           )}
 
-          {/* STEP 5 — message */}
           {step === 5 && (
             <Card className="">
               <CardContent className="p-6">
@@ -479,7 +898,6 @@ export default function RequestReferral() {
             </Card>
           )}
 
-          {/* STEP 6 — review */}
           {step === 6 && pro && (
             <Card className="">
               <CardContent className="p-6">
@@ -560,7 +978,6 @@ export default function RequestReferral() {
             </Card>
           )}
 
-           {/* STEP 7 — success */}
            {step === 7 && pro && (
              <Card className="overflow-hidden">
                <CardContent className="relative flex flex-col items-center px-6 py-14 text-center">
@@ -592,7 +1009,6 @@ export default function RequestReferral() {
              </Card>
            )}
 
-           {/* Network effect: Become a Referrer CTA */}
            {step === 7 && (
              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
                <Card className="border-primary/20 bg-primary/[0.03]">
@@ -605,7 +1021,7 @@ export default function RequestReferral() {
                      <p className="mt-1 text-xs text-muted-foreground">Help others get referred — build your professional reputation and help your community. Verified employees get priority visibility.</p>
                    </div>
                    <Button variant="outline" className="shrink-0 rounded-full" asChild>
-                      <Link to="/login?role=professional">Become a Professional</Link>
+                     <Link to="/login?role=professional">Become a Professional</Link>
                    </Button>
                  </CardContent>
                </Card>
@@ -614,7 +1030,6 @@ export default function RequestReferral() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Footer actions */}
       {step < 7 && (
         <div className="sticky bottom-0 z-10 border-t border-border bg-background/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex items-center justify-between">

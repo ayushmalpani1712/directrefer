@@ -339,7 +339,6 @@ export default function StudentProfile() {
       <div className="min-h-screen bg-background">
         <input ref={resumeInputRef} type="file" accept=".pdf" className="hidden" onChange={handleResumeUpload} />
 
-        {/* Mobile Header */}
         <div className="sticky top-0 z-50 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 h-12">
           <button
             type="button"
@@ -361,12 +360,10 @@ export default function StudentProfile() {
         </div>
 
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          {/* Banner */}
           <div className="relative h-32" style={bs.style}>
             <div className="absolute inset-0 bg-grid opacity-10" />
           </div>
 
-          {/* Profile Info */}
           <div className="px-4 -mt-12 relative z-10">
             <div className="flex items-end gap-3">
               <GAvatar
@@ -377,7 +374,10 @@ export default function StudentProfile() {
             </div>
             <div className="mt-2">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <h1 className="font-display text-lg font-bold tracking-tight" style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                <h1
+                  className="font-display text-lg font-bold tracking-tight"
+                  style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}
+                >
                   {editing ? (
                     <input
                       className="w-full bg-transparent border-b border-primary outline-none text-lg font-bold placeholder:text-muted-foreground/30"
@@ -443,7 +443,6 @@ export default function StudentProfile() {
             </div>
           </div>
 
-          {/* Social Links */}
           <div className="px-4 mt-3 flex overflow-x-auto gap-2 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {editing && (
               <>
@@ -517,7 +516,6 @@ export default function StudentProfile() {
             )}
           </div>
 
-          {/* Edit Controls */}
           {editing && (
             <div className="px-4 mt-3 flex gap-2">
               <Button variant="outline" size="sm" className="rounded-full flex-1" onClick={handleCancelEdit}>
@@ -530,7 +528,6 @@ export default function StudentProfile() {
           )}
         </motion.div>
 
-        {/* Tabs */}
         <div className="mt-4">
           <Tabs defaultValue="about" className="w-full">
             <div className="overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -586,7 +583,6 @@ export default function StudentProfile() {
           </Tabs>
         </div>
 
-        {/* Trust Score */}
         <div className="px-4 pb-4">
           <div className="rounded-xl border border-border p-4">
             <div className="flex items-center gap-3">
@@ -621,7 +617,6 @@ export default function StudentProfile() {
           </div>
         </div>
 
-        {/* Profile Strength */}
         <div className="px-4 pb-6">
           <div className="rounded-xl border border-border p-4">
             <div className="flex items-center gap-4">
@@ -659,7 +654,6 @@ export default function StudentProfile() {
           </div>
         </div>
 
-        {/* Referral History */}
         <div className="px-4 pb-4">
           <div className="rounded-xl border border-border p-4">
             <div className="flex items-center gap-2 mb-3">
@@ -689,7 +683,6 @@ export default function StudentProfile() {
           </div>
         </div>
 
-        {/* Certifications & Achievements */}
         <div className="px-4 pb-4 space-y-4">
           <div className="rounded-xl border border-border p-4">
             <div className="flex items-center gap-2 mb-3">
@@ -721,7 +714,6 @@ export default function StudentProfile() {
           </div>
         </div>
 
-        {/* Career Preferences */}
         <div className="px-4 pb-4">
           <div className="rounded-xl border border-border p-4">
             <div className="flex items-center justify-between mb-3">
@@ -790,7 +782,6 @@ export default function StudentProfile() {
           </div>
         </div>
 
-        {/* Job Preferences */}
         <div className="px-4 pb-4">
           <div className="rounded-xl border border-border p-4">
             <div className="flex items-center justify-between mb-3">
@@ -859,7 +850,6 @@ export default function StudentProfile() {
           </div>
         </div>
 
-        {/* Resume */}
         <div className="px-4 pb-6">
           <div className="rounded-xl border border-border p-4">
             <div className="flex items-center justify-between mb-3">

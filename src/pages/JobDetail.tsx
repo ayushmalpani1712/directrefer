@@ -42,6 +42,15 @@ interface JobDetail {
   recruiter_slug: string
 }
 
+function extractExperience(description: string | null): string | null {
+  const lower = (description ?? '').toLowerCase()
+  const match = lower.match(/(\d+)\+?\s*(?:years|yrs)?\s*(?:of)?\s*experience/)
+  if (match) return `${match[1]}+ yrs`
+  if (lower.includes('fresher') || lower.includes('entry level') || lower.includes('entry-level')) return 'Entry level'
+  if (lower.includes('senior')) return 'Senior'
+  return null
+}
+
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
@@ -226,88 +235,96 @@ export default function JobDetailPage() {
         </div>
 
         <div className="px-4 space-y-5">
-          <div className="flex items-center gap-3">
-            {job.recruiter_id ? (
-              <Link to={profileUrl('recruiter', job.recruiter_id, job.recruiter_slug)}>
-                <CompanyChip name={job.recruiter_name || 'Co'} className="h-10 w-10 rounded-xl text-xs" />
-              </Link>
-            ) : (
-              <CompanyChip name={job.recruiter_name || 'Co'} className="h-10 w-10 rounded-xl text-xs" />
-            )}
-            <Badge variant="outline" className="border-emerald-500/25 bg-emerald-500/10 text-emerald-500 text-xs">Active</Badge>
-          </div>
-
           <div>
             <h1 className="text-[20px] font-bold leading-tight">{job.title}</h1>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-              {job.recruiter_name && (
-                <Link to={profileUrl('recruiter', job.recruiter_id, job.recruiter_slug)} className="hover:text-foreground transition-colors">
-                  {job.recruiter_name}
-                </Link>
-              )}
-              <span>·</span>
-              <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {job.location}</span>
-            </div>
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" /> {job.type}</span>
-              {job.salary && (
-                <>
-                  <span>·</span>
-                  <span className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /> {job.salary}</span>
-                </>
-              )}
-            </div>
-            <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {job.applicants} applicants</span>
-              <span className="flex items-center gap-1 text-primary"><Star className="h-3.5 w-3.5" /> {job.referrals} referrals</span>
-            </div>
-            <p className="mt-1.5 text-xs text-muted-foreground">Posted {postedDate} ({daysAgo}d ago)</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {job.recruiter_name || 'Company'}{job.location ? ` · ${job.location}` : ''}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Posted {postedDate} ({daysAgo}d ago)</p>
           </div>
 
-          {job.expires_at && (() => {
-            const deadline = new Date(job.expires_at)
-            const now = new Date()
-            const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-            const isExpired = daysLeft <= 0
-            const isUrgent = daysLeft > 0 && daysLeft <= 7
-            return (
-              <div className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-xs ${
-                isExpired
-                  ? 'border-rose-500/25 bg-rose-500/5 text-rose-500'
-                  : isUrgent
-                  ? 'border-amber-500/25 bg-amber-500/5 text-amber-500'
-                  : 'border-border bg-muted/30 text-foreground'
-              }`}>
-                {isExpired ? <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> : <CalendarClock className="h-3.5 w-3.5 shrink-0" />}
-                <span className="font-medium">
-                  {isExpired
-                    ? 'Application deadline has passed'
-                    : isUrgent
-                    ? `Deadline in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`
-                    : `Deadline: ${deadline.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
-                  }
+          <div className="rounded-xl border bg-card p-4">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Key Details</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {job.salary && (
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-sm font-medium">{job.salary}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm font-medium">{job.location}</span>
+              </div>
+              {extractExperience(job.description) && (
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-sm font-medium">{extractExperience(job.description)}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm font-medium">{job.type}</span>
+              </div>
+            </div>
+          </div>
+
+          {skillGap && role === 'student' && (
+            <div className="rounded-xl border bg-card p-4">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Skills Match</h2>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Match score</span>
+                <span className={`text-sm font-bold ${skillGap.gap_score >= 70 ? 'text-emerald-500' : skillGap.gap_score >= 40 ? 'text-amber-500' : 'text-rose-500'}`}>
+                  {skillGap.gap_score}%
                 </span>
               </div>
-            )
-          })()}
-
-          <Separator />
-
-          {job.description && (
-            <div>
-              <h2 className="text-base font-semibold">About the role</h2>
-              <div className="mt-2 prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-muted-foreground text-[13px] leading-relaxed">
-                {job.description}
+              <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    skillGap.gap_score >= 70 ? 'bg-emerald-500' : skillGap.gap_score >= 40 ? 'bg-amber-500' : 'bg-rose-500'
+                  }`}
+                  style={{ width: `${skillGap.gap_score}%` }}
+                />
               </div>
+              {skillGap.matching.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-1.5">Required</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {skillGap.matching.map((s) => (
+                      <span key={s} className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-600">{s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {skillGap.missing.length > 0 && (
+                <div className="mt-2.5">
+                  <p className="text-xs font-medium text-muted-foreground mb-1.5">Missing</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {skillGap.missing.map((s) => (
+                      <span key={s} className="rounded-full bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-600">{s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {job.requirements && (
+          {(job.description || job.requirements) && (
             <div>
-              <h2 className="text-base font-semibold">Requirements</h2>
-              <div className="mt-2 prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-muted-foreground text-[13px] leading-relaxed">
-                {job.requirements}
-              </div>
+              <h2 className="text-base font-semibold mb-2">About the role</h2>
+              {job.description && (
+                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-muted-foreground text-[13px] leading-relaxed">
+                  {job.description}
+                </div>
+              )}
+              {job.requirements && (
+                <div className="mt-3">
+                  <p className="text-sm font-medium mb-1">Requirements</p>
+                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-muted-foreground text-[13px] leading-relaxed">
+                    {job.requirements}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -319,52 +336,31 @@ export default function JobDetailPage() {
             </div>
           )}
 
-          <Separator />
-
-          {skillGap && role === 'student' && (
-            <div className="space-y-3">
-              <h2 className="text-base font-semibold">Skill match</h2>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Match score</span>
-                <span className={`font-bold ${skillGap.gap_score >= 70 ? 'text-emerald-500' : skillGap.gap_score >= 40 ? 'text-amber-500' : 'text-rose-500'}`}>
-                  {skillGap.gap_score}%
-                </span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    skillGap.gap_score >= 70 ? 'bg-emerald-500' : skillGap.gap_score >= 40 ? 'bg-amber-500' : 'bg-rose-500'
-                  }`}
-                  style={{ width: `${skillGap.gap_score}%` }}
-                />
-              </div>
-              {skillGap.matching.length > 0 && (
-                <div>
-                  <div className="text-xs font-medium text-emerald-600 mb-1">Matching</div>
-                  <div className="flex flex-wrap gap-1">
-                    {skillGap.matching.map((s) => (
-                      <span key={s} className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600">{s}</span>
-                    ))}
-                  </div>
+          <div className="rounded-xl border bg-card p-4">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Referral Info</h2>
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10">
+                  <Users className="h-4 w-4 text-emerald-500" />
                 </div>
-              )}
-              {skillGap.missing.length > 0 && (
                 <div>
-                  <div className="text-xs font-medium text-rose-600 mb-1">Missing</div>
-                  <div className="flex flex-wrap gap-1">
-                    {skillGap.missing.map((s) => (
-                      <span key={s} className="rounded-md bg-rose-500/10 px-2 py-0.5 text-[11px] font-medium text-rose-600">{s}</span>
-                    ))}
-                  </div>
+                  <p className="text-sm font-medium">{job.referrals} professional{job.referrals !== 1 ? 's' : ''} available for referral</p>
                 </div>
-              )}
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                  <Clock className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Avg response: 2 days</p>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
 
           {job.recruiter_id && (
-            <div>
-              <Separator className="mb-5" />
-              <h2 className="text-base font-semibold mb-3">Posted by</h2>
+            <div className="rounded-xl border bg-card p-4">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Company</h2>
               <Link to={profileUrl('recruiter', job.recruiter_id, job.recruiter_slug)} className="flex items-center gap-3 group">
                 <CompanyChip name={job.recruiter_name || 'Co'} className="h-10 w-10 rounded-xl text-xs" />
                 <div>
@@ -380,28 +376,15 @@ export default function JobDetailPage() {
           <div className="flex flex-col gap-2 p-4">
             {role === 'student' && (
               <>
-                {applied ? (
-                  <Button className="w-full h-12 rounded-xl" disabled variant="outline">
-                    Application Submitted
-                  </Button>
-                ) : job.expires_at && new Date(job.expires_at) < new Date() ? (
-                  <Button className="w-full h-12 rounded-xl" disabled>
-                    Applications Closed
-                  </Button>
-                ) : (
-                  <Button
-                    className="w-full h-12 rounded-xl bg-primary text-white shadow-sm"
-                    onClick={handleApply}
-                    disabled={applying}
-                  >
-                    {applying ? 'Submitting…' : 'Apply via DirectRefer'}
-                  </Button>
-                )}
                 <Link to="/job-seeker/request-referral" className="block">
-                  <Button variant="outline" className="w-full h-12 rounded-xl">
+                  <Button className="w-full h-12 rounded-xl bg-primary text-white shadow-sm">
                     Request Referral
                   </Button>
                 </Link>
+                <Button variant="outline" className="w-full h-12 rounded-xl" onClick={toggleBookmark} disabled={bookmarkLoading}>
+                  {bookmarked ? <BookmarkCheck className="h-4 w-4 mr-2 text-primary fill-primary" /> : <Bookmark className="h-4 w-4 mr-2" />}
+                  {bookmarked ? 'Saved' : 'Save Job'}
+                </Button>
               </>
             )}
             {role === 'professional' && (

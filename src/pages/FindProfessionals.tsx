@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bookmark, BookmarkCheck, ChevronDown, ChevronUp, Search, SlidersHorizontal, X } from 'lucide-react'
+import { Bookmark, BookmarkCheck, ChevronDown, ChevronUp, MapPin, Search, SlidersHorizontal, Users, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
-import { TrustBadge } from '@/components/TrustBadge'
 import { MatchScore } from '@/components/MatchScore'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
@@ -23,7 +22,7 @@ import { useMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import { findMatchesForJobSeeker, type MatchResult } from '@/lib/v2/matching'
 
-  type SortKey = 'best_match' | 'recommended' | 'top_rated' | 'fastest' | 'recent' | 'most_referrals'
+type SortKey = 'best_match' | 'recommended' | 'top_rated' | 'fastest' | 'recent' | 'most_referrals'
 
 interface Filters {
   q: string
@@ -36,6 +35,20 @@ const EMPTY_FILTERS: Filters = { q: '', companies: [], skills: [], locations: []
 
 function toggle(list: string[], v: string) {
   return list.includes(v) ? list.filter((x) => x !== v) : [...list, v]
+}
+
+function trustColor(score?: number) {
+  if (!score) return 'text-muted-foreground'
+  if (score >= 80) return 'text-emerald-500'
+  if (score >= 50) return 'text-amber-500'
+  return 'text-muted-foreground'
+}
+
+function trustDotColor(score?: number) {
+  if (!score) return 'bg-muted-foreground'
+  if (score >= 80) return 'bg-emerald-500'
+  if (score >= 50) return 'bg-amber-500'
+  return 'bg-muted-foreground'
 }
 
 export function ProfessionalCard({ p, index, matchResult }: { p: Professional; index: number; matchResult?: MatchResult }) {
@@ -51,86 +64,79 @@ export function ProfessionalCard({ p, index, matchResult }: { p: Professional; i
       className="h-full"
     >
       <Link to={profileUrl('professional', p.id, p.slug)} className="group flex h-full flex-col rounded-2xl border border-border bg-card p-5 transition-shadow hover:shadow-md hover:border-primary/20">
-        {/* Top row: Avatar + Bookmark */}
         <div className="flex items-start justify-between">
-          <GAvatar name={p.name} color={p.gradient} className="h-12 w-12 text-sm" />
+          <div className="flex items-center gap-3">
+            <GAvatar name={p.name} color={p.gradient} className="h-12 w-12 shrink-0 text-sm" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[15px] font-semibold truncate">{p.name}</span>
+                {p.verified && (
+                  <svg className="h-4 w-4 shrink-0 text-sky-500" viewBox="0 0 24 24" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              {(p.designation || p.company) && (
+                <div className="mt-0.5 text-sm text-muted-foreground truncate">{p.designation}{p.designation && p.company ? ' @ ' : ''}{p.company}</div>
+              )}
+            </div>
+          </div>
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleBookmark(p.id); toast(saved ? 'Removed' : 'Saved', { duration: 1500 }) }}
-            className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            {saved ? <BookmarkCheck className="h-5 w-5 text-primary" /> : <Bookmark className="h-5 w-5" />}
+            {saved ? <BookmarkCheck className="h-4 w-4 text-primary" /> : <Bookmark className="h-4 w-4" />}
           </button>
         </div>
 
-        {/* Name + Designation */}
-        <div className="mt-3">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[15px] font-semibold">{p.name}</span>
-            {p.verified && (
-              <svg className="h-4 w-4 shrink-0 text-sky-500" viewBox="0 0 24 24" fill="currentColor">
-                <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
-              </svg>
-            )}
-          </div>
-          {(p.designation || p.company) && (
-            <div className="mt-0.5 text-sm text-muted-foreground">{p.designation}{p.designation && p.company ? ' · ' : ''}{p.company}</div>
+        <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
+          {p.location && (
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              {p.location}
+            </span>
+          )}
+          {p.yearsExp > 0 && (
+            <span>{p.yearsExp} yr{p.yearsExp !== 1 ? 's' : ''}</span>
           )}
         </div>
 
-        {/* Tags: Professional + Available + Reputation */}
-        <div className="mt-3 flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">Professional</span>
-          {p.openForReferrals && (
-            <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Available
-            </span>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {p.skills.slice(0, 3).map((s) => (
+            <span key={s} className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{s}</span>
+          ))}
+          {p.skills.length > 3 && (
+            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">+{p.skills.length - 3}</span>
           )}
-          {p.trustTier && (
-            <TrustBadge tier={p.trustTier} score={p.trustScore} showScore />
+        </div>
+
+        <div className="mt-3 flex items-center gap-3">
+          {p.trustScore != null && (
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className={cn('h-2 w-2 rounded-full', trustDotColor(p.trustScore))} />
+              <span className={cn('font-medium', trustColor(p.trustScore))}>Trust: {p.trustScore}/100</span>
+            </div>
           )}
-          {matchResult && matchResult.match_score > 0 && (
+          {p.referralsCompleted > 0 && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Users className="h-3 w-3" />
+              Referred: {p.referralsCompleted}
+            </div>
+          )}
+        </div>
+
+        {matchResult && matchResult.match_score > 0 && (
+          <div className="mt-2 flex items-center gap-2">
             <MatchScore score={matchResult.match_score} confidence={matchResult.confidence} />
-          )}
-          {p.activityScore >= 70 && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600" title={`Reputation score: ${p.activityScore}/100`}>
-              ⭐ {p.activityScore}
-            </span>
-          )}
-          {p.badges.length > 0 && (
-            <span className="text-xs text-muted-foreground" title={p.badges.join(', ')}>
-              {p.badges.length} badge{p.badges.length !== 1 ? 's' : ''}
-            </span>
-          )}
-        </div>
-
-        {/* Match reasons */}
-        {matchResult && matchResult.match_reasons.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {matchResult.match_reasons.map((reason) => (
+            {matchResult.match_reasons.slice(0, 2).map((reason) => (
               <span key={reason} className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-xs font-medium text-primary">{reason}</span>
             ))}
           </div>
         )}
 
-        {/* Bio */}
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground line-clamp-2">{p.bio}</p>
-
-        {/* Skills */}
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {p.skills.slice(0, 4).map((s) => (
-            <span key={s} className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{s}</span>
-          ))}
-          {p.skills.length > 4 && (
-            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">+{p.skills.length - 4}</span>
-          )}
-        </div>
-
-        {/* Spacer to push button to bottom */}
         <div className="flex-1" />
 
-        {/* View profile button */}
-        <span className="mt-5 flex h-10 w-full items-center justify-center rounded-xl bg-primary text-sm font-medium">View profile</span>
+        <span className="mt-4 flex h-10 w-full items-center justify-center rounded-xl bg-primary text-sm font-medium transition-colors group-hover:bg-primary/90">View Profile →</span>
       </Link>
     </motion.div>
   )
@@ -147,7 +153,7 @@ function MobileProfessionalCard({ p, index, matchResult }: { p: Professional; in
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25, delay: Math.min(index * 0.04, 0.2) }}
     >
-      <Link to={profileUrl('professional', p.id, p.slug)} className="group block rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-md hover:border-primary/20 active:scale-[0.98]">
+      <Link to={profileUrl('professional', p.id, p.slug)} className="group block rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-md hover:border-primary/20 active:scale-[0.98]">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <GAvatar name={p.name} color={p.gradient} className="h-12 w-12 shrink-0 text-sm" />
@@ -161,39 +167,29 @@ function MobileProfessionalCard({ p, index, matchResult }: { p: Professional; in
                 )}
               </div>
               {(p.designation || p.company) && (
-                <div className="mt-0.5 text-[13px] text-muted-foreground truncate">{p.designation}{p.designation && p.company ? ' at ' : ''}{p.company}</div>
+                <div className="mt-0.5 text-[13px] text-muted-foreground truncate">{p.designation}{p.designation && p.company ? ' @ ' : ''}{p.company}</div>
               )}
             </div>
           </div>
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleBookmark(p.id); toast(saved ? 'Removed' : 'Saved', { duration: 1500 }) }}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            {saved ? <BookmarkCheck className="h-5 w-5 text-primary" /> : <Bookmark className="h-5 w-5" />}
+            {saved ? <BookmarkCheck className="h-4 w-4 text-primary" /> : <Bookmark className="h-4 w-4" />}
           </button>
         </div>
 
-        <div className="mt-3 flex items-center gap-2 flex-wrap">
-          {p.openForReferrals && (
-            <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Available
+        <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
+          {p.location && (
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              {p.location}
             </span>
           )}
-          {p.trustTier && (
-            <TrustBadge tier={p.trustTier} score={p.trustScore} showScore />
-          )}
-          {matchResult && matchResult.match_score > 0 && (
-            <MatchScore score={matchResult.match_score} confidence={matchResult.confidence} />
-          )}
-          {p.activityScore >= 70 && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600" title={`Reputation score: ${p.activityScore}/100`}>
-              ⭐ {p.activityScore}
-            </span>
+          {p.yearsExp > 0 && (
+            <span>{p.yearsExp} yr{p.yearsExp !== 1 ? 's' : ''}</span>
           )}
         </div>
-
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground line-clamp-2">{p.bio}</p>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
           {p.skills.slice(0, 3).map((s) => (
@@ -204,7 +200,31 @@ function MobileProfessionalCard({ p, index, matchResult }: { p: Professional; in
           )}
         </div>
 
-        <span className="mt-4 flex h-10 w-full items-center justify-center rounded-xl bg-primary text-sm font-medium">View Profile →</span>
+        <div className="mt-3 flex items-center gap-3">
+          {p.trustScore != null && (
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className={cn('h-2 w-2 rounded-full', trustDotColor(p.trustScore))} />
+              <span className={cn('font-medium', trustColor(p.trustScore))}>Trust: {p.trustScore}/100</span>
+            </div>
+          )}
+          {p.referralsCompleted > 0 && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Users className="h-3 w-3" />
+              Referred: {p.referralsCompleted}
+            </div>
+          )}
+        </div>
+
+        {matchResult && matchResult.match_score > 0 && (
+          <div className="mt-2 flex items-center gap-2">
+            <MatchScore score={matchResult.match_score} confidence={matchResult.confidence} />
+            {matchResult.match_reasons.slice(0, 2).map((reason) => (
+              <span key={reason} className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-xs font-medium text-primary">{reason}</span>
+            ))}
+          </div>
+        )}
+
+        <span className="mt-4 flex h-10 w-full items-center justify-center rounded-xl bg-primary text-sm font-medium transition-colors group-hover:bg-primary/90">View Profile →</span>
       </Link>
     </motion.div>
   )
@@ -252,7 +272,6 @@ function FilterSheet({ f, setF, companies, allSkills, allLocations }: { f: Filte
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1 -mx-6 px-6">
         <div className="space-y-1">
-          {/* Company */}
           <FilterSection title="Company" count={f.companies.length}>
             {companies.length > 5 && (
               <div className="relative mb-2">
@@ -290,7 +309,6 @@ function FilterSheet({ f, setF, companies, allSkills, allLocations }: { f: Filte
 
           <Separator className="my-1" />
 
-          {/* Location */}
           <FilterSection title="Location" count={f.locations.length}>
             {allLocations.length === 0 ? (
               <p className="text-xs text-muted-foreground py-2">No locations available</p>
@@ -319,7 +337,6 @@ function FilterSheet({ f, setF, companies, allSkills, allLocations }: { f: Filte
 
           <Separator className="my-1" />
 
-          {/* Skills */}
           <FilterSection title="Skills" count={f.skills.length}>
             {allSkills.length === 0 ? (
               <p className="text-xs text-muted-foreground py-2">No skills available</p>
@@ -366,11 +383,9 @@ function FilterSheet({ f, setF, companies, allSkills, allLocations }: { f: Filte
               </>
             )}
           </FilterSection>
-
         </div>
       </ScrollArea>
 
-      {/* Footer */}
       <div className="mt-4 pt-4 border-t">
         <Button
           variant={hasActiveFilters ? 'default' : 'ghost'}
@@ -460,12 +475,17 @@ export default function FindProfessionals() {
   if (isMobile) {
     return (
       <div className="space-y-4 pb-20">
+        <div>
+          <h1 className="text-xl font-semibold">Find Professionals</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Who can refer me to the job I want?</p>
+        </div>
+
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={f.q}
             onChange={(e) => setF((p) => ({ ...p, q: e.target.value }))}
-            placeholder="Search by name or role…"
+            placeholder="Search by name, company, or skill…"
             className="h-12 rounded-xl pl-10 text-sm bg-white/[0.04]"
           />
           {f.q && (
@@ -565,7 +585,7 @@ export default function FindProfessionals() {
 
         {!loading && (
           <p className="text-xs text-muted-foreground">
-            {results.length} result{results.length !== 1 ? 's' : ''}
+            Showing {results.length} professional{results.length !== 1 ? 's' : ''}
           </p>
         )}
 
@@ -590,154 +610,163 @@ export default function FindProfessionals() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Search row */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={f.q}
-            onChange={(e) => setF((p) => ({ ...p, q: e.target.value }))}
-            placeholder="Search by name or role…"
-            className="h-11 rounded-xl pl-10 text-sm bg-white/[0.04]"
-          />
-          {f.q && (
-            <button onClick={() => setF((p) => ({ ...p, q: '' }))} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-              <X className="h-4 w-4" />
-            </button>
-          )}
+    <div className="flex gap-6">
+      <aside className="hidden w-72 shrink-0 lg:block">
+        <div className="sticky top-24 rounded-2xl border border-border bg-card p-5">
+          <h3 className="text-sm font-semibold mb-3">Filters</h3>
+          <FilterSheet f={f} setF={setF} companies={COMPANIES} allSkills={ALL_SKILLS} allLocations={ALL_LOCATIONS} />
+        </div>
+      </aside>
+
+      <div className="flex-1 min-w-0 space-y-5">
+        <div>
+          <h1 className="text-xl font-semibold">Find Professionals</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Who can refer me to the job I want?</p>
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="inline-flex h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm text-muted-foreground transition-colors hover:border-foreground/20 hover:text-foreground">
-              <span className="hidden sm:inline">{SORT_OPTIONS.find((o) => o.key === sort)?.label}</span>
-              <ChevronDown className="h-4 w-4" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            {SORT_OPTIONS.map((opt) => (
-              <button
-                key={opt.key}
-                onClick={() => setSort(opt.key)}
-                className={cn(
-                  'flex w-full items-center rounded-md px-2.5 py-2 text-sm hover:bg-muted',
-                  sort === opt.key && 'bg-muted font-medium text-primary'
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={f.q}
+              onChange={(e) => setF((p) => ({ ...p, q: e.target.value }))}
+              placeholder="Search by name, company, or skill…"
+              className="h-11 rounded-xl pl-10 text-sm bg-white/[0.04]"
+            />
+            {f.q && (
+              <button onClick={() => setF((p) => ({ ...p, q: '' }))} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="inline-flex h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm text-muted-foreground transition-colors hover:border-foreground/20 hover:text-foreground">
+                <span className="hidden sm:inline">{SORT_OPTIONS.find((o) => o.key === sort)?.label}</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              {SORT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setSort(opt.key)}
+                  className={cn(
+                    'flex w-full items-center rounded-md px-2.5 py-2 text-sm hover:bg-muted',
+                    sort === opt.key && 'bg-muted font-medium text-primary'
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="h-11 rounded-xl px-4 text-sm lg:hidden">
+                <SlidersHorizontal className="mr-2 h-4 w-4" />
+                Filters
+                {activeCount > 0 && (
+                  <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground">{activeCount}</span>
                 )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-80 flex flex-col gap-0 p-0">
+              <SheetHeader className="px-6 py-4 border-b">
+                <div className="flex items-center justify-between">
+                  <SheetTitle className="flex items-center gap-2">
+                    <SlidersHorizontal className="h-4 w-4" />
+                    Filters
+                    {activeCount > 0 && (
+                      <Badge variant="secondary" className="h-5 px-1.5 text-xs font-bold">{activeCount}</Badge>
+                    )}
+                  </SheetTitle>
+                </div>
+              </SheetHeader>
+              <div className="flex-1 overflow-hidden px-6 py-4">
+                <FilterSheet f={f} setF={setF} companies={COMPANIES} allSkills={ALL_SKILLS} allLocations={ALL_LOCATIONS} />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {!loading && hasStats && (
+          <p className="text-xs text-muted-foreground">
+            {totalAvailable} professional{totalAvailable !== 1 ? 's' : ''} available{' '}
+            <span className="text-muted-foreground/50">·</span>{' '}
+            {totalWithReferrals} with referral{totalWithReferrals !== 1 ? 's' : ''}{' '}
+            <span className="text-muted-foreground/50">·</span>{' '}
+            {totalVerified} verified
+          </p>
+        )}
+
+        {!loading && activeCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {f.companies.map((c) => (
+              <button
+                key={`company-${c}`}
+                onClick={() => setF((p) => ({ ...p, companies: toggle(p.companies, c) }))}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted"
               >
-                {opt.label}
+                {filterChipLabel('Company', c)}
+                <X className="h-3 w-3 text-muted-foreground" />
               </button>
             ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+            {f.skills.map((s) => (
+              <button
+                key={`skill-${s}`}
+                onClick={() => setF((p) => ({ ...p, skills: toggle(p.skills, s) }))}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                {filterChipLabel('Skill', s)}
+                <X className="h-3 w-3 text-muted-foreground" />
+              </button>
+            ))}
+            {f.locations.map((l) => (
+              <button
+                key={`location-${l}`}
+                onClick={() => setF((p) => ({ ...p, locations: toggle(p.locations, l) }))}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                {filterChipLabel('Location', l)}
+                <X className="h-3 w-3 text-muted-foreground" />
+              </button>
+            ))}
+            <button
+              onClick={() => setF(EMPTY_FILTERS)}
+              className="text-xs font-medium text-primary hover:text-primary/80 transition-colors ml-1"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
 
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" className="h-11 rounded-xl px-4 text-sm">
-              <SlidersHorizontal className="mr-2 h-4 w-4" />
-              Filters
-              {activeCount > 0 && (
-                <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground">{activeCount}</span>
-              )}
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-80 flex flex-col gap-0 p-0">
-            <SheetHeader className="px-6 py-4 border-b">
-              <div className="flex items-center justify-between">
-                <SheetTitle className="flex items-center gap-2">
-                  <SlidersHorizontal className="h-4 w-4" />
-                  Filters
-                  {activeCount > 0 && (
-                    <Badge variant="secondary" className="h-5 px-1.5 text-xs font-bold">{activeCount}</Badge>
-                  )}
-                </SheetTitle>
-              </div>
-            </SheetHeader>
-            <div className="flex-1 overflow-hidden px-6 py-4">
-              <FilterSheet f={f} setF={setF} companies={COMPANIES} allSkills={ALL_SKILLS} allLocations={ALL_LOCATIONS} />
-            </div>
-          </SheetContent>
-        </Sheet>
+        {!loading && (
+          <p className="text-xs text-muted-foreground">
+            Showing {results.length} of {totalAvailable} professional{totalAvailable !== 1 ? 's' : ''}
+          </p>
+        )}
+
+        {loading ? (
+          <SkeletonGrid count={6} />
+        ) : results.length === 0 ? (
+          <EmptyState
+            icon={Search}
+            title="No professionals found"
+            description="Try broadening your search or adjusting filters."
+            primaryCtaLabel="Clear filters"
+            onPrimaryCtaClick={() => setF(EMPTY_FILTERS)}
+          />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 items-stretch">
+            <AnimatePresence mode="popLayout">
+              {results.map((p, i) => <ProfessionalCard key={p.id} p={p} index={i} matchResult={matchByProId.get(p.id)} />)}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
-
-      {/* Stats bar */}
-      {!loading && hasStats && (
-        <p className="text-xs text-muted-foreground">
-          {totalAvailable} professional{totalAvailable !== 1 ? 's' : ''} available{' '}
-          <span className="text-muted-foreground/50">·</span>{' '}
-          {totalWithReferrals} with referral{totalWithReferrals !== 1 ? 's' : ''}{' '}
-          <span className="text-muted-foreground/50">·</span>{' '}
-          {totalVerified} verified
-        </p>
-      )}
-
-      {/* Active filter chips */}
-      {!loading && activeCount > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          {f.companies.map((c) => (
-            <button
-              key={`company-${c}`}
-              onClick={() => setF((p) => ({ ...p, companies: toggle(p.companies, c) }))}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              {filterChipLabel('Company', c)}
-              <X className="h-3 w-3 text-muted-foreground" />
-            </button>
-          ))}
-          {f.skills.map((s) => (
-            <button
-              key={`skill-${s}`}
-              onClick={() => setF((p) => ({ ...p, skills: toggle(p.skills, s) }))}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              {filterChipLabel('Skill', s)}
-              <X className="h-3 w-3 text-muted-foreground" />
-            </button>
-          ))}
-          {f.locations.map((l) => (
-            <button
-              key={`location-${l}`}
-              onClick={() => setF((p) => ({ ...p, locations: toggle(p.locations, l) }))}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              {filterChipLabel('Location', l)}
-              <X className="h-3 w-3 text-muted-foreground" />
-            </button>
-          ))}
-          <button
-            onClick={() => setF(EMPTY_FILTERS)}
-            className="text-xs font-medium text-primary hover:text-primary/80 transition-colors ml-1"
-          >
-            Clear all
-          </button>
-        </div>
-      )}
-
-      {/* Results count */}
-      {!loading && (
-        <p className="text-xs text-muted-foreground">
-          Showing {results.length} of {totalAvailable} professional{totalAvailable !== 1 ? 's' : ''}
-        </p>
-      )}
-
-      {/* Results */}
-      {loading ? (
-        <SkeletonGrid count={6} />
-      ) : results.length === 0 ? (
-        <EmptyState
-          icon={Search}
-          title="No professionals found"
-          description="Try broadening your search or adjusting filters."
-          primaryCtaLabel="Clear filters"
-          onPrimaryCtaClick={() => setF(EMPTY_FILTERS)}
-        />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 items-stretch">
-          <AnimatePresence mode="popLayout">
-            {results.map((p, i) => <ProfessionalCard key={p.id} p={p} index={i} matchResult={matchByProId.get(p.id)} />)}
-          </AnimatePresence>
-        </div>
-      )}
     </div>
   )
 }

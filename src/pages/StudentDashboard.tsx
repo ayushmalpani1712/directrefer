@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router'
 import {
   ArrowRight, Briefcase, CheckCircle2, ChevronRight, Circle,
   Send, TrendingUp, Users, Eye, Upload, Shield, UserPlus,
+  Search, FileText,
 } from 'lucide-react'
 import { LazyArea, LazyAreaChart, LazyCartesianGrid, LazyResponsiveContainer, LazyTooltip, LazyXAxis, LazyYAxis } from '@/components/Charts'
 import { Button } from '@/components/ui/button'
@@ -116,33 +117,68 @@ function MobileQuickActionCard({ icon: Icon, label, desc, onClick }: { icon: typ
   )
 }
 
-// ── Mobile Profile Strength Card ───────────────────────────────
-function MobileProfileStrength({ pct, checklist, onContinue }: { pct: number; checklist: Array<{ label: string; done: boolean }>; onContinue: () => void }) {
+// ── Mobile Profile Status Card ─────────────────────────────────
+function MobileProfileStatus({ pct, checklist, onContinue }: { pct: number; checklist: Array<{ label: string; done: boolean }>; onContinue: () => void }) {
   return (
     <MobileCard className="border-border/40">
-      <div className="flex items-center gap-3.5">
-        <ProgressRing value={pct} size={48} stroke={3.5} />
+      <div className="flex items-center gap-4">
+        <ProgressRing value={pct} size={64} stroke={4} />
         <div className="flex-1 min-w-0">
-          <div className="text-[14px] font-semibold text-foreground">Profile {pct}% complete</div>
+          <div className="text-[16px] font-bold text-foreground">{pct}% complete</div>
           <div className="text-[12px] text-muted-foreground mt-0.5">Complete to unlock referrals</div>
         </div>
-        <MobileButton variant="ghost" onClick={onContinue} className="shrink-0 !h-11 !px-3 !text-xs">
-          Continue
+        <MobileButton variant="ghost" onClick={onContinue} className="shrink-0 !h-10 !px-3 !text-[13px]">
+          Complete Profile
+          <ArrowRight className="ml-1 h-3.5 w-3.5" />
         </MobileButton>
       </div>
-      <div className="mt-3 space-y-1.5">
+      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
         {checklist.map((item) => (
-          <div key={item.label} className="flex items-center gap-2.5 py-0.5">
+          <div key={item.label} className="flex items-center gap-2">
             {item.done ? (
               <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
             ) : (
               <Circle className="h-3.5 w-3.5 shrink-0 text-muted-foreground/30" />
             )}
-            <span className={`text-[12px] ${item.done ? 'text-foreground' : 'text-muted-foreground'}`}>{item.label}</span>
+            <span className={`text-[12px] truncate ${item.done ? 'text-foreground' : 'text-muted-foreground'}`}>{item.label}</span>
           </div>
         ))}
       </div>
     </MobileCard>
+  )
+}
+
+// ── Mobile Empty Referral State ────────────────────────────────
+function MobileEmptyReferrals({ onFindProfessionals }: { onFindProfessionals: () => void }) {
+  return (
+    <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 p-5 text-center">
+      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <Send className="h-5 w-5" />
+      </div>
+      <div className="mt-3 text-[14px] font-medium text-foreground">No referrals yet</div>
+      <div className="mt-1 text-[12px] text-muted-foreground">Browse verified professionals and send your first request to get referred.</div>
+      <MobileButton variant="primary" onClick={onFindProfessionals} className="mt-3 !h-10 !text-[13px]">
+        Find Professionals
+        <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+      </MobileButton>
+    </div>
+  )
+}
+
+// ── Mobile Empty Jobs State ────────────────────────────────────
+function MobileEmptyJobs({ onBrowseJobs }: { onBrowseJobs: () => void }) {
+  return (
+    <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 p-5 text-center">
+      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <Briefcase className="h-5 w-5" />
+      </div>
+      <div className="mt-3 text-[14px] font-medium text-foreground">No job recommendations yet</div>
+      <div className="mt-1 text-[12px] text-muted-foreground">Complete your profile to unlock personalized job matches.</div>
+      <MobileButton variant="primary" onClick={onBrowseJobs} className="mt-3 !h-10 !text-[13px]">
+        Browse Jobs
+        <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+      </MobileButton>
+    </div>
   )
 }
 
@@ -527,56 +563,44 @@ function MobileNewUser({ messages, profilePct, profileChecklist, jobRecs, naviga
   jobRecs: JobRecommendation[]; navigate: (to: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-4 pb-8">
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl px-5 py-6" style={{ background: 'var(--gradient-welcome)' }}>
-        <div className="relative z-10">
-          <h1 className="text-xl font-bold text-foreground">{messages.greeting}</h1>
-          <p className="mt-1 text-[13px] text-muted-foreground">{messages.sub}</p>
-          <div className="mt-3 flex items-center gap-3">
-            <div className="h-1.5 flex-1 rounded-full bg-muted/50 overflow-hidden">
-              <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${Math.max(profilePct, 8)}%` }} />
-            </div>
-            <span className="text-[11px] font-medium text-muted-foreground">{profilePct}%</span>
-          </div>
-        </div>
+    <div className="flex flex-col gap-5 pb-8">
+      <div className="px-1 pt-1">
+        <h1 className="text-[20px] font-bold text-foreground">{messages.greeting}</h1>
+        <p className="text-[13px] text-muted-foreground mt-0.5">{messages.sub}</p>
       </div>
 
-      {/* Primary CTA */}
+      <MobileProfileStatus pct={profilePct} checklist={profileChecklist} onContinue={() => navigate('/job-seeker/profile')} />
+
       <div className="px-1">
-        <MobileButton variant="primary" fullWidth onClick={() => navigate('/job-seeker/browse-jobs')}>
-          <Briefcase className="mr-2 h-4 w-4" />
-          Browse Jobs
-        </MobileButton>
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2.5">Referral Activity</div>
+        <MobileEmptyReferrals onFindProfessionals={() => navigate('/job-seeker/professionals')} />
       </div>
 
-      {/* Profile Strength */}
-      <div className="px-1">
-        <MobileProfileStrength pct={profilePct} checklist={profileChecklist} onContinue={() => navigate('/job-seeker/profile')} />
-      </div>
-
-      {/* Quick Actions */}
-      <div className="px-1">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2">Quick Actions</div>
-        <div className="space-y-2">
-          <MobileQuickActionCard icon={Upload} label="Upload Resume" desc="Show employers your experience" onClick={() => navigate('/job-seeker/profile')} />
-          <MobileQuickActionCard icon={Briefcase} label="Add Experience" desc="Detail your work history" onClick={() => navigate('/job-seeker/profile')} />
-          <MobileQuickActionCard icon={Shield} label="Verify Identity" desc="Build trust with referrals" onClick={() => navigate('/job-seeker/profile')} />
-        </div>
-      </div>
-
-      {/* Recommended Jobs */}
-      {jobRecs.length > 0 && (
+      {jobRecs.length > 0 ? (
         <div className="px-1">
-          <div className="flex items-center justify-between px-1 mb-2">
+          <div className="flex items-center justify-between px-1 mb-2.5">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Recommended Jobs</span>
             <Link to="/job-seeker/browse-jobs" className="text-[12px] font-medium text-primary">View all</Link>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {jobRecs.slice(0, 3).map((j) => <MobileJobCard key={j.job_id} job={j} />)}
           </div>
         </div>
+      ) : (
+        <div className="px-1">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2.5">Recommended Jobs</div>
+          <MobileEmptyJobs onBrowseJobs={() => navigate('/job-seeker/browse-jobs')} />
+        </div>
       )}
+
+      <div className="px-1">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2.5">Quick Actions</div>
+        <div className="space-y-2">
+          <MobileQuickActionCard icon={Search} label="Find Professionals" desc="Browse verified professionals" onClick={() => navigate('/job-seeker/professionals')} />
+          <MobileQuickActionCard icon={Briefcase} label="Browse Jobs" desc="Explore matching opportunities" onClick={() => navigate('/job-seeker/browse-jobs')} />
+          <MobileQuickActionCard icon={FileText} label="View Applications" desc="Track your referral requests" onClick={() => navigate('/job-seeker/applications')} />
+        </div>
+      </div>
     </div>
   )
 }
@@ -588,56 +612,70 @@ function MobilePartialUser({ messages, profilePct, profileChecklist, myRequests,
   professionals: Array<{ id: string; name: string; company: string; slug?: string; gradient?: string }>;
   jobRecs: JobRecommendation[]; navigate: (to: string) => void;
 }) {
+  const pendingRequests = myRequests.filter((r) => r.status === 'requested' || r.status === 'under_review')
   return (
-    <div className="flex flex-col gap-4 pb-8">
-      {/* Greeting */}
-      <div className="px-1">
-        <h1 className="text-xl font-bold text-foreground">{getGreeting()}, {(messages.greeting || '').split(' ').pop()}</h1>
+    <div className="flex flex-col gap-5 pb-8">
+      <div className="px-1 pt-1">
+        <h1 className="text-[20px] font-bold text-foreground">{messages.greeting}</h1>
         <p className="text-[13px] text-muted-foreground mt-0.5">{messages.sub}</p>
       </div>
 
-      {/* Profile Completion */}
-      <div className="px-1">
-        <MobileProfileStrength pct={profilePct} checklist={profileChecklist} onContinue={() => navigate('/job-seeker/profile')} />
-      </div>
+      <MobileProfileStatus pct={profilePct} checklist={profileChecklist} onContinue={() => navigate('/job-seeker/profile')} />
 
-      {/* Primary CTA */}
       <div className="px-1">
-        <MobileButton variant="primary" fullWidth onClick={() => navigate('/job-seeker/browse-jobs')}>
-          <Briefcase className="mr-2 h-4 w-4" />
-          Browse Jobs
-        </MobileButton>
-      </div>
-
-      {/* Recent Referrals */}
-      {myRequests.length > 0 && (
-        <div className="px-1">
-          <div className="flex items-center justify-between px-1 mb-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Your Referrals</span>
+        <div className="flex items-center justify-between px-1 mb-2.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Referral Activity</span>
+          {myRequests.length > 0 && (
             <Link to="/job-seeker/applications" className="text-[12px] font-medium text-primary">View all</Link>
+          )}
+        </div>
+        {myRequests.length === 0 ? (
+          <MobileEmptyReferrals onFindProfessionals={() => navigate('/job-seeker/professionals')} />
+        ) : pendingRequests.length > 0 ? (
+          <div className="space-y-2.5">
+            <div className="text-[12px] font-medium text-muted-foreground px-1">Pending ({pendingRequests.length})</div>
+            {pendingRequests.slice(0, 3).map((r) => {
+              const p = professionals.find((x) => x.id === r.professionalId)
+              if (!p) return null
+              return <MobileReferralCard key={r.id} request={r} professional={p} />
+            })}
           </div>
-          <div className="space-y-2">
+        ) : (
+          <div className="space-y-2.5">
             {myRequests.slice(0, 3).map((r) => {
               const p = professionals.find((x) => x.id === r.professionalId)
               if (!p) return null
               return <MobileReferralCard key={r.id} request={r} professional={p} />
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Recommended Jobs */}
-      {jobRecs.length > 0 && (
+      {jobRecs.length > 0 ? (
         <div className="px-1">
-          <div className="flex items-center justify-between px-1 mb-2">
+          <div className="flex items-center justify-between px-1 mb-2.5">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Recommended Jobs</span>
             <Link to="/job-seeker/browse-jobs" className="text-[12px] font-medium text-primary">View all</Link>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {jobRecs.slice(0, 3).map((j) => <MobileJobCard key={j.job_id} job={j} />)}
           </div>
         </div>
+      ) : (
+        <div className="px-1">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2.5">Recommended Jobs</div>
+          <MobileEmptyJobs onBrowseJobs={() => navigate('/job-seeker/browse-jobs')} />
+        </div>
       )}
+
+      <div className="px-1">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2.5">Quick Actions</div>
+        <div className="space-y-2">
+          <MobileQuickActionCard icon={Search} label="Find Professionals" desc="Browse verified professionals" onClick={() => navigate('/job-seeker/professionals')} />
+          <MobileQuickActionCard icon={Briefcase} label="Browse Jobs" desc="Explore matching opportunities" onClick={() => navigate('/job-seeker/browse-jobs')} />
+          <MobileQuickActionCard icon={FileText} label="View Applications" desc="Track your referral requests" onClick={() => navigate('/job-seeker/applications')} />
+        </div>
+      </div>
     </div>
   )
 }
@@ -651,56 +689,70 @@ function MobileActiveUser({ messages, myRequests, professionals, jobRecs, activi
   saved: Array<{ id: string; name: string; company: string; slug?: string; gradient?: string }>;
   navigate: (to: string) => void;
 }) {
+  const pendingRequests = myRequests.filter((r) => r.status === 'requested' || r.status === 'under_review')
   return (
-    <div className="flex flex-col gap-4 pb-8">
-      {/* Greeting */}
-      <div className="px-1">
-        <h1 className="text-xl font-bold text-foreground">{messages.greeting}</h1>
+    <div className="flex flex-col gap-5 pb-8">
+      <div className="px-1 pt-1">
+        <h1 className="text-[20px] font-bold text-foreground">{messages.greeting}</h1>
         <p className="text-[13px] text-muted-foreground mt-0.5">{messages.sub}</p>
       </div>
 
-      {/* Primary CTA */}
       <div className="px-1">
-        <MobileButton variant="primary" fullWidth onClick={() => navigate('/job-seeker/professionals')}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Find Professionals Who Can Refer You
-        </MobileButton>
-      </div>
-
-      {/* Active Referrals */}
-      {myRequests.length > 0 && (
-        <div className="px-1">
-          <div className="flex items-center justify-between px-1 mb-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Active Referrals</span>
-            <Link to="/job-seeker/applications" className="text-[12px] font-medium text-primary">View all</Link>
-          </div>
-          <div className="space-y-2">
-            {myRequests.slice(0, 5).map((r) => {
+        <div className="flex items-center justify-between px-1 mb-2.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Referral Activity</span>
+          <Link to="/job-seeker/applications" className="text-[12px] font-medium text-primary">View all</Link>
+        </div>
+        {myRequests.length === 0 ? (
+          <MobileEmptyReferrals onFindProfessionals={() => navigate('/job-seeker/professionals')} />
+        ) : pendingRequests.length > 0 ? (
+          <div className="space-y-2.5">
+            <div className="text-[12px] font-medium text-muted-foreground px-1">Pending ({pendingRequests.length})</div>
+            {pendingRequests.slice(0, 3).map((r) => {
               const p = professionals.find((x) => x.id === r.professionalId)
               if (!p) return null
               return <MobileReferralCard key={r.id} request={r} professional={p} />
             })}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="space-y-2.5">
+            {myRequests.slice(0, 3).map((r) => {
+              const p = professionals.find((x) => x.id === r.professionalId)
+              if (!p) return null
+              return <MobileReferralCard key={r.id} request={r} professional={p} />
+            })}
+          </div>
+        )}
+      </div>
 
-      {/* Recommended Jobs */}
-      {jobRecs.length > 0 && (
+      {jobRecs.length > 0 ? (
         <div className="px-1">
-          <div className="flex items-center justify-between px-1 mb-2">
+          <div className="flex items-center justify-between px-1 mb-2.5">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Recommended Jobs</span>
             <Link to="/job-seeker/browse-jobs" className="text-[12px] font-medium text-primary">View all</Link>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {jobRecs.slice(0, 3).map((j) => <MobileJobCard key={j.job_id} job={j} />)}
           </div>
         </div>
+      ) : (
+        <div className="px-1">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2.5">Recommended Jobs</div>
+          <MobileEmptyJobs onBrowseJobs={() => navigate('/job-seeker/browse-jobs')} />
+        </div>
       )}
 
-      {/* Saved Professionals */}
+      <div className="px-1">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2.5">Quick Actions</div>
+        <div className="space-y-2">
+          <MobileQuickActionCard icon={UserPlus} label="Find Professionals" desc="Browse verified professionals" onClick={() => navigate('/job-seeker/professionals')} />
+          <MobileQuickActionCard icon={Briefcase} label="Browse Jobs" desc="Explore matching opportunities" onClick={() => navigate('/job-seeker/browse-jobs')} />
+          <MobileQuickActionCard icon={FileText} label="View Applications" desc="Track your referral requests" onClick={() => navigate('/job-seeker/applications')} />
+        </div>
+      </div>
+
       {saved.length > 0 && (
         <div className="px-1">
-          <div className="flex items-center justify-between px-1 mb-2">
+          <div className="flex items-center justify-between px-1 mb-2.5">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Saved</span>
             <Link to="/job-seeker/bookmarks" className="text-[12px] font-medium text-primary">View all</Link>
           </div>
@@ -723,10 +775,9 @@ function MobileActiveUser({ messages, myRequests, professionals, jobRecs, activi
         </div>
       )}
 
-      {/* Recent Activity */}
       {activity.length > 0 && (
         <div className="px-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2 block">Recent Activity</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2.5 block">Recent Activity</span>
           <div className="rounded-xl border border-border/40 bg-card divide-y divide-border/40">
             {activity.slice(0, 4).map((a) => (
               <div key={a.id} className="flex items-start gap-3 p-3">
