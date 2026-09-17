@@ -318,7 +318,7 @@ export default function AcquisitionDashboard() {
                   const height = Math.max((w.count / maxCount) * 100, w.count > 0 ? 6 : 2)
                   return (
                     <div key={w.week} className="flex-1 flex flex-col items-center gap-1 min-w-0">
-                      <span className="text-[10px] font-medium text-muted-foreground">{w.count > 0 ? w.count : ''}</span>
+                      <span className="text-xs font-medium text-muted-foreground">{w.count > 0 ? w.count : ''}</span>
                       <div
                         className="w-full rounded-t bg-gradient-to-t from-primary/70 to-primary"
                         style={{ height: `${height}%` }}

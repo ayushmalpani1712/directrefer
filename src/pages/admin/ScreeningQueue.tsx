@@ -332,10 +332,10 @@ export default function ScreeningQueue() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="all" className="gap-1.5">All <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{attempts.length}</Badge></TabsTrigger>
-          <TabsTrigger value="pending" className="gap-1.5">Pending <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{pendingCount}</Badge></TabsTrigger>
-          <TabsTrigger value="passed" className="gap-1.5">Passed <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{passedCount}</Badge></TabsTrigger>
-          <TabsTrigger value="failed" className="gap-1.5">Failed <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{failedCount}</Badge></TabsTrigger>
+          <TabsTrigger value="all" className="gap-1.5">All <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{attempts.length}</Badge></TabsTrigger>
+          <TabsTrigger value="pending" className="gap-1.5">Pending <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{pendingCount}</Badge></TabsTrigger>
+          <TabsTrigger value="passed" className="gap-1.5">Passed <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{passedCount}</Badge></TabsTrigger>
+          <TabsTrigger value="failed" className="gap-1.5">Failed <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{failedCount}</Badge></TabsTrigger>
         </TabsList>
 
         <TabsContent value={tab} className="space-y-3">
@@ -367,7 +367,7 @@ export default function ScreeningQueue() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                               <h3 className="text-sm font-semibold truncate">{attempt.candidate_name}</h3>
-                              <Badge variant="outline" className={cn('text-[10px] capitalize', attempt.passed && attempt.reviewed_at && 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500', attempt.passed === false && attempt.reviewed_at && 'border-rose-500/25 bg-rose-500/10 text-rose-500', !attempt.reviewed_at && 'border-amber-500/25 bg-amber-500/10 text-amber-500')}>
+                              <Badge variant="outline" className={cn('text-xs capitalize', attempt.passed && attempt.reviewed_at && 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500', attempt.passed === false && attempt.reviewed_at && 'border-rose-500/25 bg-rose-500/10 text-rose-500', !attempt.reviewed_at && 'border-amber-500/25 bg-amber-500/10 text-amber-500')}>
                                 {attempt.status}
                               </Badge>
                             </div>

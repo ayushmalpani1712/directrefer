@@ -155,7 +155,7 @@ export default function TalentSearch() {
                       <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {c.location}</span>
                         {c.matchScore > 0 && (
-                          <Badge variant="outline" className={`gap-1 text-[10px] font-semibold ${c.matchScore >= 70 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25' : c.matchScore >= 40 ? 'bg-amber-500/10 text-amber-600 border-amber-500/25' : 'bg-muted text-muted-foreground border-border'}`}>
+                          <Badge variant="outline" className={`gap-1 text-xs font-semibold ${c.matchScore >= 70 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25' : c.matchScore >= 40 ? 'bg-amber-500/10 text-amber-600 border-amber-500/25' : 'bg-muted text-muted-foreground border-border'}`}>
                             <Target className="h-3 w-3" /> {c.matchScore}% match
                           </Badge>
                         )}
@@ -164,7 +164,7 @@ export default function TalentSearch() {
                       {c.matchReasons && c.matchReasons.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {c.matchReasons.map((reason: string) => (
-                            <span key={reason} className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-[10px] font-medium text-primary">{reason}</span>
+                            <span key={reason} className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-xs font-medium text-primary">{reason}</span>
                           ))}
                         </div>
                       )}

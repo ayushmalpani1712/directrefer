@@ -191,7 +191,7 @@ export function IncentiveTracker() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-semibold capitalize">{inc.incentive_type}</span>
-                          <Badge className={cn('text-[10px]', statusColor(inc.status))}>{inc.status}</Badge>
+                          <Badge className={cn('text-xs', statusColor(inc.status))}>{inc.status}</Badge>
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {inc.incentive_type === 'monetary' ? `$${inc.amount}` : `${inc.amount} pts`}
@@ -254,7 +254,7 @@ export function IncentiveTracker() {
                             {inc.incentive_type === 'monetary' ? `$${inc.amount}` : `${inc.amount} pts`}
                           </td>
                           <td className="px-4 py-3">
-                            <Badge className={cn('text-[10px]', statusColor(inc.status))}>{inc.status}</Badge>
+                            <Badge className={cn('text-xs', statusColor(inc.status))}>{inc.status}</Badge>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">
                             {new Date(inc.created_at).toLocaleDateString()}

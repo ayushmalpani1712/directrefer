@@ -108,7 +108,7 @@ export function ProfessionalCard({ p, index, matchResult }: { p: Professional; i
         {matchResult && matchResult.match_reasons.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {matchResult.match_reasons.map((reason) => (
-              <span key={reason} className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-[10px] font-medium text-primary">{reason}</span>
+              <span key={reason} className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-xs font-medium text-primary">{reason}</span>
             ))}
           </div>
         )}
@@ -218,7 +218,7 @@ function FilterSection({ title, count, children, defaultOpen = true }: { title: 
         <span className="flex items-center gap-2">
           {title}
           {count !== undefined && count > 0 && (
-            <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-bold">{count}</Badge>
+            <Badge variant="secondary" className="h-5 px-1.5 text-xs font-bold">{count}</Badge>
           )}
         </span>
         {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
@@ -459,7 +459,7 @@ export default function FindProfessionals() {
 
   if (isMobile) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 pb-20">
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -482,7 +482,7 @@ export default function FindProfessionals() {
                 <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
                 Filters
                 {activeCount > 0 && (
-                  <span className="ml-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{activeCount}</span>
+                  <span className="ml-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-primary-foreground">{activeCount}</span>
                 )}
               </Button>
             </SheetTrigger>
@@ -493,7 +493,7 @@ export default function FindProfessionals() {
                     <SlidersHorizontal className="h-4 w-4" />
                     Filters
                     {activeCount > 0 && (
-                      <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-bold">{activeCount}</Badge>
+                      <Badge variant="secondary" className="h-5 px-1.5 text-xs font-bold">{activeCount}</Badge>
                     )}
                   </SheetTitle>
                 </div>
@@ -637,7 +637,7 @@ export default function FindProfessionals() {
               <SlidersHorizontal className="mr-2 h-4 w-4" />
               Filters
               {activeCount > 0 && (
-                <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">{activeCount}</span>
+                <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground">{activeCount}</span>
               )}
             </Button>
           </SheetTrigger>
@@ -648,7 +648,7 @@ export default function FindProfessionals() {
                   <SlidersHorizontal className="h-4 w-4" />
                   Filters
                   {activeCount > 0 && (
-                    <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-bold">{activeCount}</Badge>
+                    <Badge variant="secondary" className="h-5 px-1.5 text-xs font-bold">{activeCount}</Badge>
                   )}
                 </SheetTitle>
               </div>

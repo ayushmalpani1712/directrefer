@@ -92,7 +92,7 @@ export function MobileSheet({ open, onClose, children, title }: MobileSheetProps
             <h2 className="text-base font-semibold text-foreground">{title}</h2>
             <button
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors active:bg-muted"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors active:bg-muted"
               aria-label="Close"
             >
               <X className="h-5 w-5" />

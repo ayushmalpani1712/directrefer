@@ -112,7 +112,7 @@ function TheProblemScene({ active }: { active: boolean }) {
         {[{ label: 'Applications', value: apps, color: 'text-foreground' }, { label: 'Responses', value: responses, color: 'text-amber-400' }, { label: 'Referrals', value: referrals, color: 'text-rose-400' }].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: active ? 1 : 0, scale: active ? 1 : 0.8 }} transition={{ delay: 0.3 + i * 0.15 }} className="text-center">
             <div className={`font-display text-3xl sm:text-5xl font-extrabold ${s.color}`}>{s.value}</div>
-            <div className="mt-1 text-[10px] sm:text-xs text-muted-foreground/60">{s.label}</div>
+            <div className="mt-1 text-xs sm:text-xs text-muted-foreground/60">{s.label}</div>
           </motion.div>
         ))}
       </div>
@@ -140,7 +140,7 @@ function DiscoverScene({ active }: { active: boolean }) {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 8 }} transition={{ delay: 0.2 }} className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5">
         <Search className="h-4 w-4 text-muted-foreground/60 shrink-0" />
         <span className="text-sm text-foreground">{typed}<span className="animate-pulse text-primary">|</span></span>
-        <Badge className="ml-auto shrink-0 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px]"><ShieldCheck className="mr-1 h-3 w-3" /> Verified</Badge>
+        <Badge className="ml-auto shrink-0 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs"><ShieldCheck className="mr-1 h-3 w-3" /> Verified</Badge>
       </motion.div>
       <div className="space-y-2.5">
         {MOCK_PROS.map((p, i) => (
@@ -148,17 +148,17 @@ function DiscoverScene({ active }: { active: boolean }) {
             <div className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br text-white text-xs font-bold shrink-0 ${p.gradient}`}>{p.name.split(' ').map(n => n[0]).join('')}</div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-foreground">{p.name} <ShieldCheck className="h-3 w-3 text-emerald-400 shrink-0" /></div>
-              <div className="text-[10px] sm:text-xs text-muted-foreground">{p.role} {'\u2022'} {p.company}</div>
+              <div className="text-xs sm:text-xs text-muted-foreground">{p.role} {'\u2022'} {p.company}</div>
             </div>
-            <div className="flex items-center gap-2.5 text-[10px] sm:text-xs text-muted-foreground shrink-0">
+            <div className="flex items-center gap-2.5 text-xs sm:text-xs text-muted-foreground shrink-0">
               <span className="flex items-center gap-0.5"><Star className="h-3 w-3 fill-amber-400 text-amber-400" />{p.rating}</span>
               <span>{p.referrals}</span>
             </div>
-            <Button size="sm" variant="outline" className="shrink-0 rounded-full text-[10px] sm:text-xs h-7 sm:h-8">Request</Button>
+            <Button size="sm" variant="outline" className="shrink-0 rounded-full text-xs sm:text-xs h-7 sm:h-8">Request</Button>
           </motion.div>
         ))}
       </div>
-      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 6 }} transition={{ delay: 1.5 }} className="flex items-center justify-center gap-2 text-[10px] sm:text-xs text-muted-foreground/60">
+      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 6 }} transition={{ delay: 1.5 }} className="flex items-center justify-center gap-2 text-xs sm:text-xs text-muted-foreground/60">
         <ShieldCheck className="h-3 w-3 text-emerald-400" />
         <span>Google {'\u2022'} Microsoft {'\u2022'} Amazon {'\u2022'} 50+ companies</span>
       </motion.div>
@@ -184,10 +184,10 @@ function RequestScene({ active }: { active: boolean }) {
     <div className="flex flex-col gap-4 px-2 sm:px-4 py-4 sm:py-8">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 8 }} transition={{ delay: 0.15 }} className="rounded-xl border border-border/40 bg-card p-4 space-y-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold">PS</div>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white text-xs font-bold">PS</div>
           <div>
             <div className="text-xs font-semibold text-foreground">Priya Sharma <ShieldCheck className="inline h-3 w-3 text-emerald-400" /></div>
-            <div className="text-[10px] text-muted-foreground">SDE-2 {'\u2022'} Google</div>
+            <div className="text-xs text-muted-foreground">SDE-2 {'\u2022'} Google</div>
           </div>
         </div>
         <div className="rounded-lg bg-muted/30 p-3 min-h-[60px]">
@@ -196,7 +196,7 @@ function RequestScene({ active }: { active: boolean }) {
         {showResume && (
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
             <FileText className="h-3.5 w-3.5 text-primary" />
-            <span className="text-[10px] sm:text-xs text-muted-foreground">resume_alex.pdf</span>
+            <span className="text-xs sm:text-xs text-muted-foreground">resume_alex.pdf</span>
             <CheckCircle2 className="ml-auto h-3.5 w-3.5 text-emerald-400" />
           </motion.div>
         )}
@@ -235,7 +235,7 @@ function TrackScene({ active }: { active: boolean }) {
           {PIPELINE_STEPS.map((label, i) => (
             <div key={label} className="flex-1 text-center">
               <motion.div className={`h-2 rounded-full mb-2 ${i < step ? 'bg-emerald-400' : 'bg-muted/30'}`} initial={{ scaleX: 0 }} animate={{ scaleX: i < step ? 1 : 0.3 }} transition={{ delay: 0.3 + i * 0.3, duration: 0.4, ease: 'easeOut' }} style={{ transformOrigin: 'left' }} />
-              <span className={`text-[9px] sm:text-[10px] ${i < step ? 'text-emerald-400 font-medium' : 'text-muted-foreground/50'}`}>{label}</span>
+              <span className={`text-[9px] sm:text-xs ${i < step ? 'text-emerald-400 font-medium' : 'text-muted-foreground/50'}`}>{label}</span>
               {i < step && (
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5 + i * 0.3, type: 'spring' }}>
                   <CheckCircle2 className="mx-auto mt-1 h-3 w-3 text-emerald-400" />
@@ -250,7 +250,7 @@ function TrackScene({ active }: { active: boolean }) {
           <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
           <div>
             <p className="text-xs font-semibold text-emerald-400">Referral submitted!</p>
-            <p className="text-[10px] text-muted-foreground/60">Priya submitted your referral to Google hiring team</p>
+            <p className="text-xs text-muted-foreground/60">Priya submitted your referral to Google hiring team</p>
           </div>
         </motion.div>
       )}
@@ -271,7 +271,7 @@ function GetReferredScene({ active }: { active: boolean }) {
         <Button size="lg" className="rounded-full bg-primary px-8  text-sm">Find a professional {'\u2014'} it&rsquo;s free</Button>
       </motion.div>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: active ? 1 : 0 }} transition={{ delay: 1.5 }}>
-        <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary text-[10px]">Pre-launch {'\u2022'} Early access</Badge>
+        <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary text-xs">Pre-launch {'\u2022'} Early access</Badge>
       </motion.div>
     </div>
   )
@@ -314,11 +314,11 @@ function SceneCarousel() {
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
           <div className="ml-3 hidden sm:flex h-6 flex-1 max-w-xs items-center rounded-md bg-muted/30 px-2.5 text-[11px] text-muted-foreground">www.directrefer.in</div>
           <div className="ml-auto flex items-center gap-1">
-            <Badge variant="outline" className="hidden sm:inline-flex border-border/60 text-[10px] text-muted-foreground">{idx + 1}/{SCENE_COUNT}</Badge>
+            <Badge variant="outline" className="hidden sm:inline-flex border-border/60 text-xs text-muted-foreground">{idx + 1}/{SCENE_COUNT}</Badge>
           </div>
         </div>
         <div className="flex items-center justify-between border-b border-border/30 bg-muted/10 px-3 sm:px-4 py-2">
-          <span className="text-[10px] sm:text-xs font-medium text-muted-foreground/70">{SCENES[idx].label}</span>
+          <span className="text-xs sm:text-xs font-medium text-muted-foreground/70">{SCENES[idx].label}</span>
           <div className="flex items-center gap-1">
             {SCENES.map((_, i) => (
               <button key={i} onClick={() => setIdx(i)} className={`h-2.5 min-w-[10px] rounded-full transition-all duration-300 ${i === idx ? 'w-7 bg-primary' : i < idx ? 'w-2.5 bg-primary/40' : 'w-2.5 bg-muted-foreground/20'}`} aria-label={`Go to scene ${i + 1}`} />
@@ -363,24 +363,24 @@ function DashboardTab() {
         <div className="flex gap-4">
           <div className="text-center">
             <div className="font-display text-2xl font-bold text-primary">12</div>
-            <div className="text-[10px] text-muted-foreground">Referrals sent</div>
+            <div className="text-xs text-muted-foreground">Referrals sent</div>
           </div>
           <div className="h-10 w-px bg-[rgba(255,255,255,0.07)]" />
           <div className="text-center">
             <div className="font-display text-2xl font-bold text-emerald-500">78</div>
-            <div className="text-[10px] text-muted-foreground">Profile score</div>
+            <div className="text-xs text-muted-foreground">Profile score</div>
           </div>
           <div className="h-10 w-px bg-[rgba(255,255,255,0.07)]" />
           <div className="text-center">
             <div className="font-display text-2xl font-bold text-amber-400">3</div>
-            <div className="text-[10px] text-muted-foreground">Interviews</div>
+            <div className="text-xs text-muted-foreground">Interviews</div>
           </div>
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-emerald-500 text-[10px]">Accepted {'\u2022'} Flipkart</Badge>
-        <Badge className="border border-[rgba(99, 102, 241,0.2)] bg-[rgba(99, 102, 241,0.1)] text-primary text-[10px]">Applied {'\u2022'} Razorpay</Badge>
-        <Badge className="border border-[rgba(232,180,76,0.2)] bg-[rgba(232,180,76,0.1)] text-amber-400 text-[10px]">Under Review {'\u2022'} Google</Badge>
+        <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-emerald-500 text-xs">Accepted {'\u2022'} Flipkart</Badge>
+        <Badge className="border border-[rgba(99, 102, 241,0.2)] bg-[rgba(99, 102, 241,0.1)] text-primary text-xs">Applied {'\u2022'} Razorpay</Badge>
+        <Badge className="border border-[rgba(232,180,76,0.2)] bg-[rgba(232,180,76,0.1)] text-amber-400 text-xs">Under Review {'\u2022'} Google</Badge>
       </div>
       <div className="rounded-xl bg-[rgba(255,255,255,0.05)] p-4">
         <div className="text-xs font-medium text-muted-foreground mb-3">Pipeline</div>
@@ -417,11 +417,11 @@ function ProfessionalsTab() {
             <div className="flex items-center gap-1.5 text-xs font-semibold text-white">{p.name} <ShieldCheck className="h-3 w-3 text-emerald-500" /></div>
             <div className="text-[11px] text-muted-foreground">{p.role} {'\u2022'} {p.company}</div>
           </div>
-          <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-0.5"><Star className="h-3 w-3 fill-amber-400 text-amber-400" />{p.rating}</span>
             <span>{p.referrals} referrals</span>
           </div>
-          <Button size="sm" variant="outline" className="shrink-0 rounded-full border-[rgba(255,255,255,0.06)] text-[10px] text-white hover:bg-[rgba(255,255,255,0.05)]">Request</Button>
+          <Button size="sm" variant="outline" className="shrink-0 rounded-full border-[rgba(255,255,255,0.06)] text-xs text-white hover:bg-[rgba(255,255,255,0.05)]">Request</Button>
         </div>
       ))}
     </div>
@@ -450,7 +450,7 @@ function ReferralsTab() {
         </div>
       ))}
       <div className="rounded-xl bg-[rgba(255,255,255,0.05)] p-3">
-        <div className="text-[10px] font-medium text-muted-foreground mb-2">Pipeline Progress</div>
+        <div className="text-xs font-medium text-muted-foreground mb-2">Pipeline Progress</div>
         <div className="flex items-center gap-1">
           {['Sent', 'Review', 'Accepted', 'Submitted', 'Hired'].map((step, i) => (
             <div key={step} className="flex-1">
@@ -630,7 +630,7 @@ export default function Landing() {
                 <FadeIn key={s.step} delay={i * 0.12} className="text-center group h-full flex flex-col items-center">
                   <div className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-white shadow-sm group-hover:shadow-md transition-all duration-200">
                     <s.icon className="h-6 w-6" />
-                    <div className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-background text-[10px] font-bold text-primary border border-primary/20">{s.step}</div>
+                    <div className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-background text-xs font-bold text-primary border border-primary/20">{s.step}</div>
                   </div>
                   <h3 className="mt-5 text-base font-semibold text-foreground">{s.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground max-w-xs mx-auto">{s.desc}</p>
@@ -686,7 +686,7 @@ export default function Landing() {
                 <Card key={item.label} className="p-5 bg-card rounded-xl border border-border/60">
                   <div className="font-display text-3xl sm:text-4xl font-extrabold text-primary">{item.stat}</div>
                   <div className="mt-2 text-xs sm:text-[13px] text-muted-foreground">{item.label}</div>
-                  <div className="mt-1 text-[10px] text-muted-foreground/60">Source: {item.source}</div>
+                  <div className="mt-1 text-xs text-muted-foreground/60">Source: {item.source}</div>
                 </Card>
               ))}
             </div>

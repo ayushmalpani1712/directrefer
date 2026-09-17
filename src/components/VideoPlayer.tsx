@@ -318,7 +318,7 @@ export function VideoPlayer({
                     <div className="flex items-center justify-between">
                       <button
                         onClick={() => seekTo(note.timestamp)}
-                        className="text-[10px] font-mono text-primary hover:underline"
+                        className="text-xs font-mono text-primary hover:underline"
                       >
                         {formatTime(note.timestamp)}
                       </button>
@@ -339,7 +339,7 @@ export function VideoPlayer({
             </div>
 
             <div className="p-3 border-t border-border/60 space-y-2">
-              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Bookmark className="h-3 w-3" />
                 <span>Add note at {formatTime(currentTime)}</span>
               </div>

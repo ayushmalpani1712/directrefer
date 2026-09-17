@@ -481,7 +481,7 @@ export default function RecruiterProfile() {
                       <div className="text-sm font-semibold truncate">{c.name}</div>
                       <div className="text-xs text-muted-foreground truncate">{c.role}</div>
                     </div>
-                    <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-500">Selected</span>
+                    <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-bold text-amber-500">Selected</span>
                   </div>
                 ))
               })()}

@@ -260,7 +260,7 @@ export default function ReviewerScoring() {
                           <p className="text-xs text-muted-foreground truncate">{attempt.criteria_name}</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <Badge variant="outline" className="text-[10px] border-amber-500/25 bg-amber-500/10 text-amber-500">
+                          <Badge variant="outline" className="text-xs border-amber-500/25 bg-amber-500/10 text-amber-500">
                             <Clock className="mr-1 h-2.5 w-2.5" /> Pending
                           </Badge>
                         </div>
@@ -362,7 +362,7 @@ export default function ReviewerScoring() {
                     <div className="space-y-1">
                       {reviewHistory.map((h, i) => (
                         <div key={i} className="flex items-center gap-3 text-xs rounded-lg bg-muted/30 px-3 py-2">
-                          <Badge variant="outline" className={cn('text-[10px]', h.passed ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500' : 'border-rose-500/25 bg-rose-500/10 text-rose-500')}>
+                          <Badge variant="outline" className={cn('text-xs', h.passed ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500' : 'border-rose-500/25 bg-rose-500/10 text-rose-500')}>
                             {h.passed ? 'Passed' : 'Failed'}
                           </Badge>
                           <span className="font-mono">{h.score}/100</span>

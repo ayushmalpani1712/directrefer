@@ -554,7 +554,7 @@ export default function Settings() {
 
   return (
     <>
-    <div className="mx-auto max-w-4xl min-w-0 overflow-x-hidden space-y-6">
+    <div className="mx-auto max-w-4xl min-w-0 overflow-x-hidden space-y-6 pb-20 sm:pb-0">
 
       <SectionHeader title="Settings" subtitle="Manage your account, preferences and security" />
 

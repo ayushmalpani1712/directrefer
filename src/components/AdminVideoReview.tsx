@@ -166,7 +166,7 @@ export function AdminVideoReview({
               <div className="max-h-[150px] overflow-y-auto space-y-1">
                 {timestampNotes.map((n, i) => (
                   <div key={i} className="flex items-start gap-2 text-xs">
-                    <Badge variant="secondary" className="shrink-0 text-[10px]">{formatTime(n.time)}</Badge>
+                    <Badge variant="secondary" className="shrink-0 text-xs">{formatTime(n.time)}</Badge>
                     <span className="text-muted-foreground">{n.note}</span>
                   </div>
                 ))}

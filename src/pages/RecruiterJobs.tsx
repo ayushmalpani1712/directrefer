@@ -183,12 +183,12 @@ export function BrowseJobsView() {
                           <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {j.postedDaysAgo}d ago</span>
                         </div>
                       </div>
-                      <Badge variant="outline" className="border-emerald-500/25 bg-emerald-500/10 text-emerald-500 text-[10px]">Active</Badge>
+                      <Badge variant="outline" className="border-emerald-500/25 bg-emerald-500/10 text-emerald-500 text-xs">Active</Badge>
                       {j.expires_at && (() => {
                         const daysLeft = Math.ceil((new Date(j.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
                         if (daysLeft <= 7 && daysLeft > 0) {
                           return (
-                            <Badge variant="outline" className="border-amber-500/25 bg-amber-500/10 text-amber-500 text-[10px] gap-1">
+                            <Badge variant="outline" className="border-amber-500/25 bg-amber-500/10 text-amber-500 text-xs gap-1">
                               <AlertTriangle className="h-2.5 w-2.5" /> Expiring in {daysLeft}d
                             </Badge>
                           )
@@ -433,7 +433,7 @@ function ApplicationsPanel({ jobs, user }: { jobs: { id: string; title: string }
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-semibold">{app.profiles_job_seeker?.full_name ?? 'Unknown'}</span>
-                      <Badge className={cn('text-[10px]', statusColor(app.status))}>{app.status}</Badge>
+                      <Badge className={cn('text-xs', statusColor(app.status))}>{app.status}</Badge>
                     </div>
                     <div className="mt-0.5 text-xs text-muted-foreground">
                       {app.profiles_job_seeker?.email} · Applied {new Date(app.submitted_at).toLocaleDateString()}
@@ -727,7 +727,7 @@ function RecruiterJobsManager() {
                     <Briefcase className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <div>
                       <div className="font-medium">{t.title}</div>
-                      <div className="text-[10px] text-muted-foreground">{t.department}</div>
+                      <div className="text-xs text-muted-foreground">{t.department}</div>
                     </div>
                   </button>
                 ))}
@@ -827,7 +827,7 @@ function RecruiterJobsManager() {
                           const daysLeft = Math.ceil((new Date(j.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
                           if (daysLeft <= 7 && daysLeft > 0) {
                             return (
-                              <Badge variant="outline" className="border-amber-500/25 bg-amber-500/10 text-amber-500 text-[10px] gap-1">
+                              <Badge variant="outline" className="border-amber-500/25 bg-amber-500/10 text-amber-500 text-xs gap-1">
                                 <AlertTriangle className="h-2.5 w-2.5" /> Expiring in {daysLeft}d
                               </Badge>
                             )
@@ -934,7 +934,7 @@ function RecruiterJobsManager() {
                     )}
                   >
                     {stage}
-                    <Badge variant="outline" className={cn('ml-0.5 h-5 min-w-[20px] justify-center text-[10px]', mobileStage === stage && 'border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground')}>
+                    <Badge variant="outline" className={cn('ml-0.5 h-5 min-w-[20px] justify-center text-xs', mobileStage === stage && 'border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground')}>
                       {cands.length}
                     </Badge>
                   </button>
@@ -960,7 +960,7 @@ function RecruiterJobsManager() {
                   <div className="mb-3 flex items-center justify-between px-1">
                     <span className="text-sm font-semibold">{stage}</span>
                     <div className="flex items-center gap-1.5">
-                      <Badge variant="outline" className="text-[10px]">{cands.length}</Badge>
+                      <Badge variant="outline" className="text-xs">{cands.length}</Badge>
                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-primary hover:bg-primary/10" onClick={() => { setAddingToStage(isAdding ? null : stage); setAddCandidateQuery('') }}>
                         {isAdding ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
                       </Button>
@@ -979,7 +979,7 @@ function RecruiterJobsManager() {
                             <GAvatar name={p.name} color={p.gradient} className="h-7 w-7 text-[9px]" />
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-xs font-semibold">{p.name}</div>
-                              <div className="truncate text-[10px] text-muted-foreground">{p.designation} · {p.company}</div>
+                              <div className="truncate text-xs text-muted-foreground">{p.designation} · {p.company}</div>
                             </div>
                             <Plus className="h-3.5 w-3.5 shrink-0 text-primary" />
                           </button>
@@ -995,13 +995,13 @@ function RecruiterJobsManager() {
                         const next = nextStage(stage)
                         return (
                           <div key={c.id} className="flex items-center gap-2.5 rounded-lg border border-border bg-background p-2.5">
-                               <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-[10px]" />
+                               <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-xs" />
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-xs font-semibold">{c.name}</div>
-                              <div className="truncate text-[10px] text-muted-foreground">{c.role} · {c.company}</div>
+                              <div className="truncate text-xs text-muted-foreground">{c.role} · {c.company}</div>
                             </div>
                             {next && (
-                              <Button variant="ghost" size="sm" className="h-7 shrink-0 text-[10px] text-primary hover:bg-primary/10" onClick={() => advanceCandidate(c.id)}>
+                              <Button variant="ghost" size="sm" className="h-7 shrink-0 text-xs text-primary hover:bg-primary/10" onClick={() => advanceCandidate(c.id)}>
                                 Move to {next}
                               </Button>
                             )}
@@ -1031,7 +1031,7 @@ function RecruiterJobsManager() {
                   <div className="mb-3 flex items-center justify-between px-1">
                     <span className="text-sm font-semibold">{stage}</span>
                     <div className="flex items-center gap-1.5">
-                      <Badge variant="outline" className="text-[10px]">{cands.length}</Badge>
+                      <Badge variant="outline" className="text-xs">{cands.length}</Badge>
                       <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-primary hover:bg-primary/10" onClick={() => { setAddingToStage(isAdding ? null : stage); setAddCandidateQuery('') }}>
                         {isAdding ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
                       </Button>
@@ -1050,7 +1050,7 @@ function RecruiterJobsManager() {
                             <GAvatar name={p.name} color={p.gradient} className="h-7 w-7 text-[9px]" />
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-xs font-semibold">{p.name}</div>
-                              <div className="truncate text-[10px] text-muted-foreground">{p.designation} · {p.company}</div>
+                              <div className="truncate text-xs text-muted-foreground">{p.designation} · {p.company}</div>
                             </div>
                             <Plus className="h-3.5 w-3.5 shrink-0 text-primary" />
                           </button>
@@ -1064,7 +1064,7 @@ function RecruiterJobsManager() {
                         <Card className="card-hover cursor-grab active:cursor-grabbing">
                           <CardContent className="p-3.5">
                             <div className="flex items-center gap-2.5">
-                            <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-[10px]" />
+                            <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-xs" />
                               <div className="min-w-0 flex-1">
                                 <div className="truncate text-sm font-semibold">{c.name}</div>
                                 <div className="truncate text-[11px] text-muted-foreground">{c.role} · {c.exp}y</div>

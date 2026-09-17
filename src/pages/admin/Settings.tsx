@@ -630,7 +630,7 @@ export default function AdminSettings() {
                       <div className="text-xs text-muted-foreground mt-0.5">{template.description}</div>
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                         {template.criteria.map((c, i) => (
-                          <Badge key={i} variant="outline" className="text-[10px]">{c.name} ({c.weight}%)</Badge>
+                          <Badge key={i} variant="outline" className="text-xs">{c.name} ({c.weight}%)</Badge>
                         ))}
                       </div>
                     </div>

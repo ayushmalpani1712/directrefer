@@ -68,7 +68,7 @@ function InlinePipeline({ stage, requestId }: { stage: PipelineStage; requestId:
         <span className="ml-2 text-[11px] font-medium text-muted-foreground">{PIPELINE_STAGES[currentIdx]?.label}</span>
       </div>
       {!isLast && (
-        <Button size="sm" variant="outline" className="h-7 gap-1 rounded-full text-xs" onClick={handleAdvance}>
+        <Button size="sm" variant="outline" className="h-10 min-w-[44px] px-3 gap-1 rounded-full text-xs" onClick={handleAdvance}>
           Advance <ChevronRight className="h-3 w-3" />
         </Button>
       )}
@@ -120,7 +120,7 @@ function MobilePipeline({ stage }: { stage: PipelineStage }) {
           )}
         </div>
       ))}
-      <span className="ml-1 text-[10px] font-medium text-muted-foreground truncate">{PIPELINE_STAGES[currentIdx]?.label}</span>
+      <span className="ml-1 text-xs font-medium text-muted-foreground truncate">{PIPELINE_STAGES[currentIdx]?.label}</span>
     </div>
   )
 }
@@ -172,7 +172,7 @@ function MobileInboxCard({
 
         {(r.status === 'accepted' || r.status === 'requested' || r.status === 'under_review' || r.status === 'referral_submitted') && (
           <div className="mt-3 rounded-lg bg-muted/50 px-3 py-2">
-            <p className="mb-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Pipeline</p>
+            <p className="mb-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Pipeline</p>
             <MobilePipeline stage={r.pipelineStage} />
           </div>
         )}
@@ -314,7 +314,7 @@ export default function ReferralInbox() {
 
   if (isMobile) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 pb-20">
         <div className="px-1">
           <h1 className="text-lg font-bold">Referral Inbox</h1>
           <p className="text-xs text-muted-foreground">Review and manage referral requests</p>
@@ -412,7 +412,7 @@ export default function ReferralInbox() {
             {TABS.map((t) => (
               <TabsTrigger key={t.key} value={t.key} className="gap-1.5">
                 {t.label}
-                <span className="rounded-full bg-muted px-1.5 text-[10px] font-semibold text-muted-foreground">
+                <span className="rounded-full bg-muted px-1.5 text-xs font-semibold text-muted-foreground">
                   {t.key === 'all' ? inbox.length : counts(t.key)}
                 </span>
               </TabsTrigger>
@@ -448,7 +448,7 @@ export default function ReferralInbox() {
                         <span className="text-sm font-semibold">{r.student}</span>
                         <StatusBadge status={r.status} />
                         {r.relationshipType && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                             <Users className="h-2.5 w-2.5" /> {REFERRAL_RELATIONSHIPS.find((rel) => rel.value === r.relationshipType)?.label}
                           </span>
                         )}

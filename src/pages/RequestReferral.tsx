@@ -227,7 +227,7 @@ export default function RequestReferral() {
                 >
                   {step > s.id ? <Check className="h-4 w-4" /> : <s.icon className="h-4 w-4" />}
                 </div>
-                <span className={cn('hidden text-[10px] font-medium sm:block', step >= s.id ? 'text-primary' : 'text-muted-foreground')}>{s.label}</span>
+                <span className={cn('hidden text-xs font-medium sm:block', step >= s.id ? 'text-primary' : 'text-muted-foreground')}>{s.label}</span>
               </div>
               {i < STEPS.length - 1 && <div className={cn('mx-2 h-0.5 flex-1 rounded-full', step > s.id ? 'bg-primary' : 'bg-border')} />}
             </div>

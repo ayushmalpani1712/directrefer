@@ -26,7 +26,7 @@ export function GAvatar({ name, userId, color, className, ring }: { name: string
 // ── Company chip ────────────────────────────────────────────
 export function CompanyChip({ name, className }: { name: string; className?: string }) {
   return (
-    <div className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-slate-700 to-slate-900 text-[10px] font-bold text-white dark:from-slate-200 dark:to-slate-400 dark:text-slate-900', className)}>
+    <div className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-slate-700 to-slate-900 text-xs font-bold text-white dark:from-slate-200 dark:to-slate-400 dark:text-slate-900', className)}>
       {name.replace(/[^A-Za-z ]/g, '').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
     </div>
   )

@@ -89,7 +89,7 @@ function PipelineTracker({ stage, status }: { stage: PipelineStage; status: Refe
                       )}
                     </motion.div>
                     <span className={cn(
-                      'text-center text-[10px] sm:text-[11px] font-medium leading-tight max-w-[60px] sm:max-w-[70px] whitespace-normal',
+                      'text-center text-xs sm:text-[11px] font-medium leading-tight max-w-[60px] sm:max-w-[70px] whitespace-normal',
                       isComplete && 'text-emerald-600 dark:text-emerald-400',
                       isCurrent && 'text-primary font-semibold',
                       isFuture && 'text-muted-foreground/50',
@@ -153,7 +153,7 @@ export default function MyReferrals() {
           {STAGES.map((s) => (
             <TabsTrigger key={s.key} value={s.key} className="gap-1.5">
               {s.label}
-              <span className="rounded-full bg-muted px-1.5 text-[10px] font-semibold text-muted-foreground">
+              <span className="rounded-full bg-muted px-1.5 text-xs font-semibold text-muted-foreground">
                 {s.key === 'all' ? mine.length : mine.filter((r) => r.status === s.key).length}
               </span>
             </TabsTrigger>
@@ -193,11 +193,11 @@ export default function MyReferrals() {
                           </div>
                           {r.relationshipType && (
                             <div className="mt-1 flex items-center gap-1.5">
-                              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                                 <Users className="h-2.5 w-2.5" /> {REFERRAL_RELATIONSHIPS.find((rel) => rel.value === r.relationshipType)?.label}
                               </span>
                               {r.policyAcknowledged && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                                   <ShieldCheck className="h-2.5 w-2.5" /> Acknowledged
                                 </span>
                               )}

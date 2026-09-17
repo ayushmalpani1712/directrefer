@@ -55,7 +55,7 @@ function MobileReferralCard({ request, professional }: { request: { id: string; 
       to={profileUrl('professional', professional.id, professional.slug)}
       className="flex items-center gap-3 rounded-xl border border-border/40 bg-card p-3 active:bg-muted/40 transition-colors"
     >
-      <GAvatar name={professional.name} color={professional.gradient} className="h-9 w-9 text-[10px]" />
+      <GAvatar name={professional.name} color={professional.gradient} className="h-9 w-9 text-xs" />
       <div className="min-w-0 flex-1">
         <div className="text-[14px] font-medium text-foreground truncate">{request.role}</div>
         <div className="text-[12px] text-muted-foreground truncate">{professional.name} · {professional.company}</div>
@@ -79,7 +79,7 @@ function MobileJobCard({ job }: { job: JobRecommendation }) {
         </div>
         <div className="flex shrink-0 flex-col items-end">
           <span className="text-sm font-bold text-primary">{job.score}%</span>
-          <span className="text-[10px] text-muted-foreground">match</span>
+          <span className="text-xs text-muted-foreground">match</span>
         </div>
       </div>
       {job.matching_skills.length > 0 && (
@@ -126,7 +126,7 @@ function MobileProfileStrength({ pct, checklist, onContinue }: { pct: number; ch
           <div className="text-[14px] font-semibold text-foreground">Profile {pct}% complete</div>
           <div className="text-[12px] text-muted-foreground mt-0.5">Complete to unlock referrals</div>
         </div>
-        <MobileButton variant="ghost" onClick={onContinue} className="shrink-0 !h-9 !px-3 !text-xs">
+        <MobileButton variant="ghost" onClick={onContinue} className="shrink-0 !h-11 !px-3 !text-xs">
           Continue
         </MobileButton>
       </div>
@@ -215,7 +215,7 @@ function DesktopNewUser({ messages, profilePct, jobRecs, navigate }: {
                   <Link to={`/job-seeker/job/${j.job_id}`} key={j.job_id} className="flex items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-muted/30">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Briefcase className="h-4 w-4" /></div>
                     <div className="min-w-0 flex-1"><div className="text-sm font-medium text-foreground truncate">{j.title}</div><div className="text-xs text-muted-foreground">{j.company}</div></div>
-                    <div className="text-right shrink-0"><div className="text-sm font-bold text-primary">{j.score}%</div><div className="text-[10px] text-muted-foreground">match</div></div>
+                    <div className="text-right shrink-0"><div className="text-sm font-bold text-primary">{j.score}%</div><div className="text-xs text-muted-foreground">match</div></div>
                   </Link>
                 ))}
               </div>
@@ -301,7 +301,7 @@ function DesktopPartialUser({ profilePct, nextStep, profileChecklist, myRequests
                   <div className="space-y-2">
                     {myRequests.slice(0, 4).map((r) => { const p = professionals.find((x) => x.id === r.professionalId); if (!p) return null; return (
                       <Link to={profileUrl('professional', p.id, p.slug)} key={r.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-border/80 hover:bg-card">
-                        <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-[10px]" />
+                        <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-xs" />
                         <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><span className="truncate text-[14px] font-medium text-foreground">{p.name}</span><span className="hidden text-xs text-muted-foreground sm:inline">{p.company}</span></div><div className="mt-0.5 text-[13px] text-muted-foreground">{r.role} · {r.date}</div></div>
                         <StatusBadge status={r.status as never} />
                       </Link>
@@ -320,8 +320,8 @@ function DesktopPartialUser({ profilePct, nextStep, profileChecklist, myRequests
                   {jobRecs.slice(0, 3).map((j) => (
                     <Link to={`/job-seeker/job/${j.job_id}`} key={j.job_id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-border/80 hover:bg-card">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Briefcase className="h-4 w-4" /></div>
-                      <div className="min-w-0 flex-1"><div className="text-[14px] font-medium text-foreground truncate">{j.title}</div><div className="text-[13px] text-muted-foreground">{j.company} · {j.location}</div><div className="mt-1 flex flex-wrap gap-1">{j.matching_skills.slice(0, 3).map((s) => <span key={s} className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{s}</span>)}</div></div>
-                      <div className="text-right shrink-0"><div className="text-sm font-bold text-primary">{j.score}%</div><div className="text-[10px] text-muted-foreground">match</div></div>
+                      <div className="min-w-0 flex-1"><div className="text-[14px] font-medium text-foreground truncate">{j.title}</div><div className="text-[13px] text-muted-foreground">{j.company} · {j.location}</div><div className="mt-1 flex flex-wrap gap-1">{j.matching_skills.slice(0, 3).map((s) => <span key={s} className="rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">{s}</span>)}</div></div>
+                      <div className="text-right shrink-0"><div className="text-sm font-bold text-primary">{j.score}%</div><div className="text-xs text-muted-foreground">match</div></div>
                     </Link>
                   ))}
                 </div>
@@ -420,7 +420,7 @@ function DesktopActiveUser({ messages, totalRequests, acceptedCount, acceptanceR
                   <div className="space-y-2">
                     {myRequests.slice(0, 5).map((r) => { const p = professionals.find((x) => x.id === r.professionalId); if (!p) return null; return (
                       <Link to={profileUrl('professional', p.id, p.slug)} key={r.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-border/80 hover:bg-card">
-                        <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-[10px]" />
+                        <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-xs" />
                         <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><span className="truncate text-[14px] font-medium text-foreground">{p.name}</span><span className="hidden text-xs text-muted-foreground sm:inline">{p.company}</span></div><div className="mt-0.5 text-[13px] text-muted-foreground">{r.role} · {r.date}</div></div>
                         <StatusBadge status={r.status as never} />
                       </Link>
@@ -468,8 +468,8 @@ function DesktopActiveUser({ messages, totalRequests, acceptedCount, acceptanceR
                   {jobRecs.slice(0, 3).map((j) => (
                     <Link to={`/job-seeker/job/${j.job_id}`} key={j.job_id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-border/80 hover:bg-card">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Briefcase className="h-4 w-4" /></div>
-                      <div className="min-w-0 flex-1"><div className="text-[14px] font-medium text-foreground truncate">{j.title}</div><div className="text-[13px] text-muted-foreground">{j.company} · {j.location}</div><div className="mt-1 flex flex-wrap gap-1">{j.matching_skills.slice(0, 3).map((s) => <span key={s} className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{s}</span>)}</div></div>
-                      <div className="text-right shrink-0"><div className="text-sm font-bold text-primary">{j.score}%</div><div className="text-[10px] text-muted-foreground">match</div></div>
+                      <div className="min-w-0 flex-1"><div className="text-[14px] font-medium text-foreground truncate">{j.title}</div><div className="text-[13px] text-muted-foreground">{j.company} · {j.location}</div><div className="mt-1 flex flex-wrap gap-1">{j.matching_skills.slice(0, 3).map((s) => <span key={s} className="rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">{s}</span>)}</div></div>
+                      <div className="text-right shrink-0"><div className="text-sm font-bold text-primary">{j.score}%</div><div className="text-xs text-muted-foreground">match</div></div>
                     </Link>
                   ))}
                 </div>
@@ -487,7 +487,7 @@ function DesktopActiveUser({ messages, totalRequests, acceptedCount, acceptanceR
                   <div className="space-y-2">
                     {saved.slice(0, 4).map((p) => (
                       <Link to={profileUrl('professional', p.id, p.slug)} key={p.id} className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/15">
-                        <GAvatar name={p.name} color={p.gradient} className="h-8 w-8 text-[10px]" />
+                        <GAvatar name={p.name} color={p.gradient} className="h-8 w-8 text-xs" />
                         <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium text-foreground">{p.name}</div><div className="truncate text-xs text-muted-foreground">{p.company}</div></div>
                       </Link>
                     ))}
@@ -711,7 +711,7 @@ function MobileActiveUser({ messages, myRequests, professionals, jobRecs, activi
                 key={p.id}
                 className="flex items-center gap-3 rounded-xl border border-border/40 bg-card p-3 active:bg-muted/40 transition-colors"
               >
-                <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-[10px]" />
+                <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-xs" />
                 <div className="min-w-0 flex-1">
                   <div className="text-[14px] font-medium text-foreground truncate">{p.name}</div>
                   <div className="text-[12px] text-muted-foreground truncate">{p.company}</div>

@@ -248,10 +248,10 @@ export default function RecruiterScreening() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="all" className="gap-1.5">All <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{attempts.length}</Badge></TabsTrigger>
-          <TabsTrigger value="pending" className="gap-1.5">Pending <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{pendingCount}</Badge></TabsTrigger>
-          <TabsTrigger value="pass" className="gap-1.5">Passed <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{passCount}</Badge></TabsTrigger>
-          <TabsTrigger value="fail" className="gap-1.5">Failed <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{failCount}</Badge></TabsTrigger>
+          <TabsTrigger value="all" className="gap-1.5">All <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{attempts.length}</Badge></TabsTrigger>
+          <TabsTrigger value="pending" className="gap-1.5">Pending <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{pendingCount}</Badge></TabsTrigger>
+          <TabsTrigger value="pass" className="gap-1.5">Passed <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{passCount}</Badge></TabsTrigger>
+          <TabsTrigger value="fail" className="gap-1.5">Failed <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{failCount}</Badge></TabsTrigger>
         </TabsList>
 
         <TabsContent value={tab} className="space-y-3">
@@ -295,7 +295,7 @@ export default function RecruiterScreening() {
                           <div className="flex items-center gap-2">
                             <h3 className="text-sm font-semibold truncate">{attempt.candidate_name}</h3>
                             <Badge variant="outline" className={cn(
-                              'text-[10px] capitalize',
+                              'text-xs capitalize',
                               attempt.passed && 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500',
                               !attempt.passed && attempt.reviewed_at && 'border-rose-500/25 bg-rose-500/10 text-rose-500',
                               !attempt.reviewed_at && 'border-amber-500/25 bg-amber-500/10 text-amber-500',

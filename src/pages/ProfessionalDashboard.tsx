@@ -446,12 +446,12 @@ export default function ProfessionalDashboard() {
               <CardContent className="space-y-2.5 pt-2">
                 {conversations.length > 0 ? conversations.slice(0, 3).map((c) => (
                   <Link to={`${getMessagesPath(role)}?conversation=${c.id}`} key={c.id} className="flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted/20">
-                    <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-[10px]" />
+                    <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-xs" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium text-foreground">{c.name}</div>
                       <div className="truncate text-xs text-muted-foreground">{c.lastMessage}</div>
                     </div>
-                    {c.unread > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{c.unread}</span>}
+                    {c.unread > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-primary-foreground">{c.unread}</span>}
                   </Link>
                 )) : (
                   <EmptyState

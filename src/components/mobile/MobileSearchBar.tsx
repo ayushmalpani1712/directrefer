@@ -57,7 +57,7 @@ export function MobileSearchBar({
       {value && (
         <button
           onClick={handleClear}
-          className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors active:bg-muted/80"
+          className="absolute right-2 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors active:bg-muted/80"
           aria-label="Clear search"
         >
           <X className="h-4 w-4" />

@@ -274,12 +274,12 @@ export default function ScreeningResults() {
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">{attempt.score}%</span>
                         {attempt.passed ? (
-                          <Badge variant="success" className="text-[10px]">Passed</Badge>
+                          <Badge variant="success" className="text-xs">Passed</Badge>
                         ) : (
-                          <Badge variant="secondary" className="text-[10px]">Failed</Badge>
+                          <Badge variant="secondary" className="text-xs">Failed</Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-0.5">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                         <Clock className="h-2.5 w-2.5" />
                         {new Date(attempt.created_at).toLocaleDateString()}
                       </div>

@@ -164,7 +164,7 @@ function FilterFieldRenderer({
                 />
                 <span className="flex-1 text-xs text-foreground">{option.label}</span>
                 {option.count !== undefined && (
-                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                  <span className="text-xs text-muted-foreground tabular-nums">
                     {option.count}
                   </span>
                 )}
@@ -206,7 +206,7 @@ function FilterFieldRenderer({
             onChange={(e) => onChange(Number(e.target.value))}
             className="w-full accent-primary"
           />
-          <div className="flex justify-between text-[10px] text-muted-foreground">
+          <div className="flex justify-between text-xs text-muted-foreground">
             <span>{field.min ?? 0}</span>
             <span className="font-medium text-foreground">{numValue}</span>
             <span>{field.max ?? 100}</span>
@@ -426,7 +426,7 @@ function FilterPanel({
             <SlidersHorizontal className="size-4" />
             Filters
             {activeCount > 0 && (
-              <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1 text-[10px]">
+              <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1 text-xs">
                 {activeCount}
               </Badge>
             )}

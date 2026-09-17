@@ -104,7 +104,7 @@ function PipelineProgress({ stage }: { stage: PipelineStage }) {
           return (
             <div key={s.key} className="min-w-0 flex-1">
               <div className={cn('h-1.5 rounded-full transition-colors', done ? 'bg-primary' : 'bg-muted')} />
-              <div className={cn('mt-1 flex items-center gap-1 text-[10px] font-medium', done ? meta.cls : 'text-muted-foreground/60')}>
+              <div className={cn('mt-1 flex items-center gap-1 text-xs font-medium', done ? meta.cls : 'text-muted-foreground/60')}>
                 <meta.icon className="h-3 w-3 shrink-0" />
                 <span className="truncate">{meta.label}</span>
               </div>
@@ -340,7 +340,7 @@ export default function ReferralJobs() {
   if (loading) {
     if (isMobile) {
       return (
-        <div className="min-h-screen bg-background px-4 py-4">
+        <div className="min-h-screen bg-background px-4 py-4 pb-20">
           <div className="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
             <ArrowLeft className="h-4 w-4" /> Back
           </div>
@@ -365,7 +365,7 @@ export default function ReferralJobs() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background px-4 py-4">
+      <div className="min-h-screen bg-background px-4 py-4 pb-20">
         <button onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/')} className="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-4 w-4" /> Back
         </button>
@@ -440,10 +440,10 @@ export default function ReferralJobs() {
 
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {job.type && (
-                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">{job.type}</Badge>
+                          <Badge variant="secondary" className="text-xs px-2 py-0.5">{job.type}</Badge>
                         )}
                         {job.salary_range && (
-                          <Badge variant="secondary" className="text-[10px] px-2 py-0.5">{job.salary_range}</Badge>
+                          <Badge variant="secondary" className="text-xs px-2 py-0.5">{job.salary_range}</Badge>
                         )}
                       </div>
 
@@ -459,7 +459,7 @@ export default function ReferralJobs() {
                             )
                           })}
                           {job.skillsList.length > 3 && (
-                            <span className="inline-flex items-center text-[10px] text-muted-foreground">+{job.skillsList.length - 3} more</span>
+                            <span className="inline-flex items-center text-xs text-muted-foreground">+{job.skillsList.length - 3} more</span>
                           )}
                         </div>
                       )}
@@ -499,7 +499,7 @@ export default function ReferralJobs() {
           )}
         </div>
 
-        <p className="mt-6 text-center text-[10px] text-muted-foreground">
+        <p className="mt-6 text-center text-xs text-muted-foreground">
           Professional availability shown only when verified data backs them.
         </p>
       </div>

@@ -77,7 +77,7 @@ export function TrustScoreBar({ score, className }: { score: number; className?:
           style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
         />
       </div>
-      <span className="text-[10px] font-medium text-muted-foreground tabular-nums">{score}</span>
+      <span className="text-xs font-medium text-muted-foreground tabular-nums">{score}</span>
     </div>
   )
 }

@@ -295,13 +295,13 @@ export function SkillsAssessment({
           <Card>
             <CardContent className="p-6 space-y-5">
               <div className="flex items-start gap-3">
-                <Badge variant="secondary" className="shrink-0 text-[10px] capitalize">
+                <Badge variant="secondary" className="shrink-0 text-xs capitalize">
                   {currentQuestion.category.replace('_', ' ')}
                 </Badge>
-                <Badge variant="outline" className="shrink-0 text-[10px] capitalize">
+                <Badge variant="outline" className="shrink-0 text-xs capitalize">
                   {currentQuestion.difficulty}
                 </Badge>
-                <Badge variant="outline" className="shrink-0 text-[10px] capitalize">
+                <Badge variant="outline" className="shrink-0 text-xs capitalize">
                   {currentQuestion.type.replace('_', ' ')}
                 </Badge>
               </div>

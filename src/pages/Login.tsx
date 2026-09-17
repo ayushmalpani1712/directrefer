@@ -449,7 +449,7 @@ export default function Login() {
                           {card.label}
                         </span>
                         <p className={cn(
-                          'mt-0.5 text-[10px] leading-tight',
+                          'mt-0.5 text-xs leading-tight',
                           active ? 'text-indigo-300/70' : 'text-slate-500',
                         )}>
                           {card.description}

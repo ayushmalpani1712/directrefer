@@ -234,7 +234,7 @@ export default function JobDetailPage() {
             ) : (
               <CompanyChip name={job.recruiter_name || 'Co'} className="h-10 w-10 rounded-xl text-xs" />
             )}
-            <Badge variant="outline" className="border-emerald-500/25 bg-emerald-500/10 text-emerald-500 text-[10px]">Active</Badge>
+            <Badge variant="outline" className="border-emerald-500/25 bg-emerald-500/10 text-emerald-500 text-xs">Active</Badge>
           </div>
 
           <div>

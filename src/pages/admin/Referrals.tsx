@@ -133,7 +133,7 @@ export default function AdminReferrals() {
                 <td className="px-4 py-2.5 font-medium whitespace-nowrap">{r.professional_name}</td>
                 <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">{r.job_title || '—'}</td>
                 <td className="px-4 py-2.5">
-                  <Badge variant="outline" className={`text-[10px] capitalize ${STATUS_STYLES[r.status] ?? ''}`}>{r.status}</Badge>
+                  <Badge variant="outline" className={`text-xs capitalize ${STATUS_STYLES[r.status] ?? ''}`}>{r.status}</Badge>
                 </td>
                 <td className="px-4 py-2.5 text-right text-xs text-muted-foreground whitespace-nowrap">
                   {new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

@@ -185,7 +185,7 @@ export default function SuccessStoriesPage() {
               </blockquote>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {story.tags.map(t => (
-                  <span key={t} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">{t}</span>
+                  <span key={t} className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{t}</span>
                 ))}
               </div>
             </Link>

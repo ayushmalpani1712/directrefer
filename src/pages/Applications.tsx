@@ -172,7 +172,7 @@ export default function Applications() {
 
   if (isMobile) {
     return (
-      <div className="space-y-4 px-4 py-4">
+      <div className="space-y-4 px-4 py-4 pb-20">
         <div>
           <h1 className="text-xl font-bold tracking-tight">My Applications</h1>
           <p className="mt-0.5 text-xs text-muted-foreground">Track your job applications and their status</p>
@@ -280,7 +280,7 @@ export default function Applications() {
                         variant="ghost"
                         size="sm"
                         onClick={(e) => { e.stopPropagation(); handleWithdraw(app.id) }}
-                        className="h-7 rounded-lg px-2 text-[11px] text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                        className="h-10 min-w-[44px] px-3 rounded-lg text-[11px] text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
                       >
                         <XCircle className="mr-1 h-3 w-3" />
                         Withdraw

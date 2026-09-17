@@ -23,7 +23,7 @@ export function MobileHeader() {
         {isSubPage ? (
           <button
             onClick={() => navigate(-1)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground transition-colors active:bg-muted"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-foreground transition-colors active:bg-muted"
             aria-label="Go back"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -34,7 +34,7 @@ export function MobileHeader() {
       </div>
 
       <button
-        className="relative flex h-8 w-8 items-center justify-center rounded-lg text-foreground transition-colors active:bg-muted"
+        className="relative flex h-11 w-11 items-center justify-center rounded-lg text-foreground transition-colors active:bg-muted"
         aria-label="Notifications"
       >
         <Bell className="h-5 w-5" />

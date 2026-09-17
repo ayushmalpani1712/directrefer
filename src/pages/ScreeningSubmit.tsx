@@ -236,12 +236,12 @@ export default function ScreeningSubmit() {
                           <Trophy className="h-3.5 w-3.5 text-muted-foreground" />
                           <span className="text-sm font-medium">{attempt.score}%</span>
                           {attempt.passed ? (
-                            <Badge variant="success" className="text-[10px]">Passed</Badge>
+                            <Badge variant="success" className="text-xs">Passed</Badge>
                           ) : (
-                            <Badge variant="secondary" className="text-[10px]">Failed</Badge>
+                            <Badge variant="secondary" className="text-xs">Failed</Badge>
                           )}
                         </div>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           {new Date(attempt.created_at).toLocaleDateString()}
                         </span>
                       </div>
@@ -293,7 +293,7 @@ export default function ScreeningSubmit() {
                 <div className="flex items-center gap-2">
                   <h1 className="text-lg font-bold">Screening: {jobTitle}</h1>
                   {attemptNumber > 1 && (
-                    <Badge variant="outline" className="text-[10px] gap-1">
+                    <Badge variant="outline" className="text-xs gap-1">
                       <RotateCcw className="h-2.5 w-2.5" /> Attempt #{attemptNumber}
                     </Badge>
                   )}
@@ -308,7 +308,7 @@ export default function ScreeningSubmit() {
                     <Trophy className="h-3.5 w-3.5 text-muted-foreground" />
                     {bestScore}%
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Previous best</p>
+                  <p className="text-xs text-muted-foreground">Previous best</p>
                 </div>
               )}
             </div>
@@ -333,7 +333,7 @@ export default function ScreeningSubmit() {
                     key={attempt.id}
                     className="flex items-center gap-1.5 rounded-md border border-border/60 px-2.5 py-1.5"
                   >
-                    <span className="text-[10px] font-mono text-muted-foreground">#{attempt.attempt_number}</span>
+                    <span className="text-xs font-mono text-muted-foreground">#{attempt.attempt_number}</span>
                     <span className={cn(
                       'text-xs font-medium',
                       attempt.passed ? 'text-emerald-500' : 'text-muted-foreground',
@@ -369,7 +369,7 @@ export default function ScreeningSubmit() {
                           <p className="text-xs text-muted-foreground mt-0.5">{crit.description}</p>
                         )}
                       </div>
-                      <Badge variant="secondary" className="shrink-0 text-[10px] capitalize">{crit.category}</Badge>
+                      <Badge variant="secondary" className="shrink-0 text-xs capitalize">{crit.category}</Badge>
                     </div>
                     <Textarea
                       value={answer?.answer ?? ''}

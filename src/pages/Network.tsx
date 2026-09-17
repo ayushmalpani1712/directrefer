@@ -184,7 +184,7 @@ export function NotificationsPage() {
           <div className="space-y-4 px-1">
             {groups.map((group) => (
               <div key={group.label} className="space-y-2">
-                <span className="block px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="block px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {group.label}
                 </span>
                 {group.items.map((n, i) => {
@@ -288,9 +288,9 @@ export function NotificationsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="truncate text-sm font-semibold">{n.title}</span>
-                        <span className="inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">{TYPE_LABELS[n.type] ?? 'Other'}</span>
+                        <span className="inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">{TYPE_LABELS[n.type] ?? 'Other'}</span>
                         {n.entity_type && (
-                          <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary capitalize">{n.entity_type}</span>
+                          <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary capitalize">{n.entity_type}</span>
                         )}
                         {!n.read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
                       </div>

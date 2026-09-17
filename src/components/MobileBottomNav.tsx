@@ -69,7 +69,7 @@ export function MobileBottomNav() {
                   </span>
                 )}
               </div>
-              <span className={cn('text-[10px] font-medium', active && 'font-semibold')}>{item.label}</span>
+              <span className={cn('text-xs font-medium', active && 'font-semibold')}>{item.label}</span>
               {active && (
                 <span className="absolute top-1 left-1/2 -translate-x-1/2 h-[3px] w-5 rounded-full bg-primary" />
               )}

@@ -673,7 +673,7 @@ export default function StudentProfile() {
                 if (!p) return null
                 return (
                   <div key={r.id} className="flex items-center gap-3 rounded-xl border border-border p-3">
-                    <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-[10px] shrink-0" />
+                    <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-xs shrink-0" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium">{r.role}</div>
                       <div className="truncate text-xs text-muted-foreground">via {p.name} &middot; {p.company} &middot; {r.date}</div>
@@ -1072,7 +1072,7 @@ export default function StudentProfile() {
                   if (!p) return null
                   return (
                     <div key={r.id} className="flex items-center gap-3 rounded-xl border border-border p-3.5">
-                      <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-[10px] shrink-0" />
+                      <GAvatar name={p.name} color={p.gradient} className="h-9 w-9 text-xs shrink-0" />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">{r.role}</div>
                         <div className="truncate text-xs text-muted-foreground">via {p.name} &middot; {p.company} &middot; {r.date}</div>

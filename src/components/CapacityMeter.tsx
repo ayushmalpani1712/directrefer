@@ -98,7 +98,7 @@ function CircularCapacityMeter({
           {used} / {total}
         </div>
         {label && (
-          <div className="text-[10px] text-muted-foreground">{label}</div>
+          <div className="text-xs text-muted-foreground">{label}</div>
         )}
       </div>
 

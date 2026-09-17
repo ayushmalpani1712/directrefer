@@ -116,7 +116,7 @@ export function TrustScoreHistory({ userId }: Props) {
           })}
         </div>
 
-        <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
+        <div className="mt-2 flex justify-between text-xs text-muted-foreground">
           <span>v{history[0]?.version}</span>
           <span>v{history[history.length - 1]?.version}</span>
         </div>

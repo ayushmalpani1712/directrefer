@@ -242,7 +242,7 @@ export function ReferenceForm({ userId, jobId, attemptId, onComplete }: Referenc
                   </div>
                   <div className="flex items-center gap-2">
                     {ref.status !== 'pending' && (
-                      <Badge variant={statusLabel(ref.status).variant} className="gap-1 text-[10px]">
+                      <Badge variant={statusLabel(ref.status).variant} className="gap-1 text-xs">
                         {statusIcon(ref.status)}
                         {statusLabel(ref.status).text}
                       </Badge>

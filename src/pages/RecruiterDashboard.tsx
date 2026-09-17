@@ -443,7 +443,7 @@ export default function RecruiterDashboard() {
                       key={c.id}
                       className="flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted/20"
                     >
-                      <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-[10px]" />
+                      <GAvatar name={c.name} color={c.gradient} className="h-8 w-8 text-xs" />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-[14px] font-medium text-foreground">{c.name}</div>
                         <div className="truncate text-[13px] text-muted-foreground">{c.role} · {c.exp}y exp</div>

@@ -190,7 +190,7 @@ function WorkspaceSwitcher() {
                 </span>
                 <span className="flex items-center gap-1.5">
                   {isSuperAdmin && (
-                    <Badge variant="outline" className="gap-0.5 border-violet-500/30 bg-violet-500/5 text-[10px] text-violet-600 dark:text-violet-400">
+                    <Badge variant="outline" className="gap-0.5 border-violet-500/30 bg-violet-500/5 text-xs text-violet-600 dark:text-violet-400">
                       <ShieldCheck className="h-2.5 w-2.5" /> Admin
                     </Badge>
                   )}
@@ -291,7 +291,7 @@ function AppSidebar() {
                       </Link>
                     </SidebarMenuButton>
                     {item.badge && (
-                      <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary" aria-label={`${item.badge} pending`}>
+                      <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-xs font-semibold text-primary" aria-label={`${item.badge} pending`}>
                         {item.badge}
                       </SidebarMenuBadge>
                     )}
@@ -340,7 +340,7 @@ function AppSidebar() {
                         </Link>
                       </SidebarMenuButton>
                       {item.badge && (
-                        <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary" aria-label={`${item.badge} pending`}>
+                        <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-xs font-semibold text-primary" aria-label={`${item.badge} pending`}>
                           {item.badge}
                         </SidebarMenuBadge>
                       )}

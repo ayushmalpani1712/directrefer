@@ -348,7 +348,7 @@ export default function Messages() {
   const profilePath = getProfilePath(active?.otherUserRole, active?.otherUserId, active?.otherUserSlug)
 
   return (
-    <div className="flex h-full min-h-[400px] flex-col overflow-hidden rounded-2xl border border-border bg-card sm:flex-row">
+    <div className="flex h-full min-h-[400px] flex-col overflow-hidden rounded-2xl border border-border bg-card sm:flex-row pb-20 sm:pb-0">
       {/* Conversation list */}
       <aside className={cn('w-full flex-col border-r border-border sm:flex sm:w-80', activeId && 'hidden sm:flex')}>
         <div className="border-b border-border p-4">
@@ -379,7 +379,7 @@ export default function Messages() {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <p className="truncate text-xs text-muted-foreground">{c.lastMessage}</p>
-                  {c.unread > 0 && <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">{c.unread}</span>}
+                  {c.unread > 0 && <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground">{c.unread}</span>}
                 </div>
               </div>
             </button>
@@ -450,7 +450,7 @@ export default function Messages() {
                             {linkify(displayText)}
                           </div>
                         )}
-                        <div className={cn('mt-1 flex items-center gap-1 text-[10px] text-muted-foreground', m.from === 'me' && 'justify-end')}>
+                        <div className={cn('mt-1 flex items-center gap-1 text-xs text-muted-foreground', m.from === 'me' && 'justify-end')}>
                           {m.time} {m.from === 'me' && (
                             <CheckCheck className={cn('h-3 w-3', m.is_read ? 'text-sky-500' : 'text-muted-foreground')} />
                           )}
