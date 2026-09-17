@@ -434,7 +434,7 @@ export default function RequestReferral() {
                   </div>
                   {(draft.linkedinUrl || draft.githubUrl || draft.portfolioUrl) && (
                     <div className="rounded-xl border border-border bg-muted/30 p-4">
-                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Preview</div>
+                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Preview</div>
                       <div className="flex flex-wrap gap-2">
                         {draft.linkedinUrl && (
                           <a href={draft.linkedinUrl.startsWith('http') ? draft.linkedinUrl : `https://linkedin.com/in/${draft.linkedinUrl}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors">
@@ -509,14 +509,14 @@ export default function RequestReferral() {
                 <div className="space-y-3">
                   <div className="rounded-xl border border-border p-4">
                     <div className="flex items-center justify-between">
-                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Target role</div>
+                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target role</div>
                       <button onClick={() => setStep(5)} className="text-[11px] font-medium text-primary">Edit</button>
                     </div>
                     <div className="mt-1 text-sm font-medium">{draft.role || pro.openPositions[0] || 'Open role'}</div>
                   </div>
                   <div className="rounded-xl border border-border p-4">
                     <div className="flex items-center justify-between">
-                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Resume</div>
+                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resume</div>
                       <button onClick={() => setStep(3)} className="text-[11px] font-medium text-primary">Edit</button>
                     </div>
                     <div className="mt-1 flex items-center gap-1.5 text-sm font-medium"><FileText className="h-4 w-4 text-primary" /> {draft.resumeName}</div>
@@ -524,7 +524,7 @@ export default function RequestReferral() {
                   {draft.relationshipType && (
                     <div className="rounded-xl border border-border p-4">
                       <div className="flex items-center justify-between">
-                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Relationship</div>
+                        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Relationship</div>
                         <button onClick={() => setStep(2)} className="text-[11px] font-medium text-primary">Edit</button>
                       </div>
                       <div className="mt-1 text-sm font-medium">{REFERRAL_RELATIONSHIPS.find((r) => r.value === draft.relationshipType)?.label}</div>
@@ -533,14 +533,14 @@ export default function RequestReferral() {
                   )}
                   <div className="rounded-xl border border-border p-4">
                     <div className="flex items-center justify-between">
-                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Message</div>
+                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Message</div>
                       <button onClick={() => setStep(5)} className="text-[11px] font-medium text-primary">Edit</button>
                     </div>
                     <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground line-clamp-4">"{draft.message}"</p>
                   </div>
                   {(student.noticePeriod || student.workPreference || student.whyFit) && (
                     <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-4">
-                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Candidate snapshot</div>
+                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Candidate snapshot</div>
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                         {student.noticePeriod && <Chip tone="primary"><Clock className="mr-1 h-3 w-3" /> {student.noticePeriod}</Chip>}
                         {student.workPreference && <Chip tone="primary"><Briefcase className="mr-1 h-3 w-3" /> {student.workPreference}</Chip>}

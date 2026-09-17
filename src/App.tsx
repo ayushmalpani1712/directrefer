@@ -293,6 +293,9 @@ export default function App() {
                 <Route path="/referral/:company/:role" element={<CompanyReferral />} />
                 <Route path="/referral/:company/:role/:location" element={<CompanyReferral />} />
 
+                {/* ── Public 404 catch-all ── */}
+                <Route path="*" element={<NotFound />} />
+
                 {/* ── Protected routes (auth + layout) ── */}
                 <Route element={<RequireAuth><Suspense fallback={<div className="flex min-h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}><AppShell /></Suspense></RequireAuth>}>
                   <Route path="/dashboard" element={<DashboardRedirect />} />

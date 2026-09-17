@@ -173,7 +173,7 @@ function MobileInboxCard({
 
           {(r.status === 'accepted' || r.status === 'requested' || r.status === 'under_review' || r.status === 'referral_submitted') && (
             <div className="mt-3">
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Pipeline</p>
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pipeline</p>
               <MobilePipeline stage={r.pipelineStage} />
             </div>
           )}
