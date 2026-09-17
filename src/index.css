@@ -150,20 +150,46 @@
     /* ── Card primitives ──────────────────────────────────────────── */
     --card-radius: 0.75rem;
     --card-border: 1px solid hsl(var(--border));
-    --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-    --card-shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.2), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+    --card-shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
     --card-padding: 1.5rem;
 
     /* ── Gradient tokens ──────────────────────────────────────────── */
     --gradient-primary: linear-gradient(135deg, hsl(234 78% 56%) 0%, hsl(262 83% 58%) 100%);
-    --gradient-subtle: linear-gradient(135deg, hsl(234 78% 56% / 0.08) 0%, hsl(262 83% 58% / 0.04) 100%);
-    --gradient-welcome: linear-gradient(135deg, hsl(234 78% 56% / 0.12) 0%, hsl(220 20% 14%) 100%);
+    --gradient-subtle: linear-gradient(135deg, hsl(234 78% 56% / 0.06) 0%, hsl(262 83% 58% / 0.03) 100%);
+    --gradient-welcome: linear-gradient(135deg, hsl(234 78% 56% / 0.1) 0%, hsl(0 0% 98%) 100%);
 
     /* ── Button tokens ────────────────────────────────────────────── */
     --btn-primary-bg: hsl(234 78% 56%);
     --btn-primary-hover: hsl(234 78% 62%);
-    --btn-secondary-border: hsl(234 78% 56%);
-    --btn-ghost-hover: hsl(220 20% 18%);
+    --btn-secondary-border: hsl(240 6% 90%);
+    --btn-ghost-hover: hsl(240 5% 96%);
+
+    /* ── Border radius scale ──────────────────────────────────────── */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.625rem;
+    --radius-xl: 0.75rem;
+    --radius-2xl: 1rem;
+    --radius-full: 9999px;
+
+    /* ── Status colors ────────────────────────────────────────────── */
+    --status-submitted: 221 83% 53%;
+    --status-screening: 262 83% 58%;
+    --status-shortlisted: 152 69% 41%;
+    --status-interview: 38 92% 50%;
+    --status-offered: 160 84% 39%;
+    --status-accepted: 152 69% 41%;
+    --status-rejected: 0 84% 60%;
+    --status-withdrawn: 240 4% 64%;
+
+    /* ── Component tokens ─────────────────────────────────────────── */
+    --input-height: 2.75rem;
+    --input-height-lg: 3rem;
+    --btn-height: 2.75rem;
+    --btn-height-lg: 3rem;
+    --header-height: 4rem;
+    --bottom-nav-height: 4rem;
   }
 }
 
