@@ -222,16 +222,46 @@ export async function findMatchesForJobSeeker(
 
   if (!professionals) return []
 
+  const proIds = professionals.map(p => p.user_id)
+
+  const [allSkillsResult, allTrustScoresResult, allCapacitiesResult] = await Promise.all([
+    supabase.from('profile_skills').select('profile_id, skill_id').in('profile_id', proIds),
+    supabase.from('trust_scores').select('*').in('user_id', proIds),
+    supabase.from('professional_capacities').select('user_id, max_capacity, used').in('user_id', proIds),
+  ])
+
+  const skillsByPro = new Map<string, string[]>()
+  for (const row of allSkillsResult.data ?? []) {
+    const arr = skillsByPro.get(row.profile_id) ?? []
+    arr.push(row.skill_id)
+    skillsByPro.set(row.profile_id, arr)
+  }
+
+  const trustByUser = new Map<string, TrustScore>()
+  for (const ts of allTrustScoresResult.data ?? []) {
+    trustByUser.set(ts.user_id, ts as TrustScore)
+  }
+
+  const capacityByUser = new Map<string, { max_capacity: number; used: number }>()
+  for (const cap of allCapacitiesResult.data ?? []) {
+    capacityByUser.set(cap.user_id, { max_capacity: cap.max_capacity, used: cap.used })
+  }
+
+  const matchCandidate: MatchCandidate = {
+    user_id: candidateId,
+    full_name: seekerProfile.full_name ?? '',
+    email: seekerProfile.email ?? '',
+    skills: candidateSkills,
+    experience_years: seekerProfile.experience_years ?? 0,
+    education: seekerProfile.education ?? '',
+    location: seekerProfile.location ?? '',
+    open_to_work: seekerProfile.open_to_work ?? false,
+  }
+
   const matches: MatchResult[] = []
 
   for (const pro of professionals) {
-    const { data: proSkills } = await supabase
-      .from('profile_skills')
-      .select('skill_id')
-      .eq('profile_id', pro.user_id)
-
-    const proSkillIds = (proSkills ?? []).map(s => s.skill_id)
-    const trustScore = await getTrustScore(pro.user_id)
+    const trustScore = trustByUser.get(pro.user_id) ?? null
 
     if (minTrustTier && trustScore) {
       if (TIER_ORDER[trustScore.tier] < TIER_ORDER[minTrustTier]) continue
@@ -239,31 +269,15 @@ export async function findMatchesForJobSeeker(
       continue
     }
 
-    const { data: capacity } = await supabase
-      .from('professional_capacities')
-      .select('max_capacity, used')
-      .eq('user_id', pro.user_id)
-      .single()
-
+    const capacity = capacityByUser.get(pro.user_id)
     if (capacity && capacity.used >= capacity.max_capacity) continue
-
-    const matchCandidate: MatchCandidate = {
-      user_id: candidateId,
-      full_name: seekerProfile.full_name ?? '',
-      email: seekerProfile.email ?? '',
-      skills: candidateSkills,
-      experience_years: seekerProfile.experience_years ?? 0,
-      education: seekerProfile.education ?? '',
-      location: seekerProfile.location ?? '',
-      open_to_work: seekerProfile.open_to_work ?? false,
-    }
 
     const matchProfessional: MatchProfessional = {
       user_id: pro.user_id,
       full_name: pro.full_name ?? '',
       company: pro.company ?? '',
       role: pro.role ?? '',
-      skills: proSkillIds,
+      skills: skillsByPro.get(pro.user_id) ?? [],
       experience_years: pro.years_of_experience ?? 0,
       industries: pro.industries ?? [],
       locations: pro.preferred_locations ?? [],
@@ -324,55 +338,77 @@ export async function findMatchesForProfessional(
 
   if (!jobs) return []
 
+  const jobIds = jobs.map(j => j.id)
+
+  const allJobSkillsResult = await supabase
+    .from('job_skills')
+    .select('job_id, skill_id')
+    .in('job_id', jobIds)
+
+  const jobSkillsMap = new Map<string, string[]>()
+  for (const row of allJobSkillsResult.data ?? []) {
+    const arr = jobSkillsMap.get(row.job_id) ?? []
+    arr.push(row.skill_id)
+    jobSkillsMap.set(row.job_id, arr)
+  }
+
+  const { data: seekers } = await supabase
+    .from('profiles_job_seeker')
+    .select('*')
+    .eq('open_to_work', true)
+    .is('deleted_at', null)
+
+  if (!seekers) return []
+
+  const seekerIds = seekers.map(s => s.user_id)
+
+  const [allSeekerSkillsResult, allSeekerTrustResult] = await Promise.all([
+    supabase.from('profile_skills').select('profile_id, skill_id').in('profile_id', seekerIds),
+    supabase.from('trust_scores').select('*').in('user_id', seekerIds),
+  ])
+
+  const skillsBySeeker = new Map<string, string[]>()
+  for (const row of allSeekerSkillsResult.data ?? []) {
+    const arr = skillsBySeeker.get(row.profile_id) ?? []
+    arr.push(row.skill_id)
+    skillsBySeeker.set(row.profile_id, arr)
+  }
+
+  const trustBySeeker = new Map<string, TrustScore>()
+  for (const ts of allSeekerTrustResult.data ?? []) {
+    trustBySeeker.set(ts.user_id, ts as TrustScore)
+  }
+
+  const professionalTrustScore = await getTrustScore(professionalId)
+
+  const matchProfessional: MatchProfessional = {
+    user_id: professionalId,
+    full_name: proProfile.full_name ?? '',
+    company: proProfile.company ?? '',
+    role: proProfile.role ?? '',
+    skills: proSkillIds,
+    experience_years: proProfile.years_of_experience ?? 0,
+    industries: proProfile.industries ?? [],
+    locations: proProfile.preferred_locations ?? [],
+    open_for_referrals: proProfile.open_for_referrals ?? false,
+    trust_score: professionalTrustScore,
+  }
+
   const matches: MatchResult[] = []
 
   for (const job of jobs) {
-    const { data: jobSkills } = await supabase
-      .from('job_skills')
-      .select('skill_id')
-      .eq('job_id', job.id)
-
-    const jobRequiredSkills = (jobSkills ?? []).map(s => s.skill_id)
-
-    const { data: seekers } = await supabase
-      .from('profiles_job_seeker')
-      .select('*')
-      .eq('open_to_work', true)
-      .is('deleted_at', null)
-
-    if (!seekers) continue
+    const jobRequiredSkills = jobSkillsMap.get(job.id) ?? []
 
     for (const seeker of seekers) {
-      const { data: seekerSkills } = await supabase
-        .from('profile_skills')
-        .select('skill_id')
-        .eq('profile_id', seeker.user_id)
-
-      const seekerSkillIds = (seekerSkills ?? []).map(s => s.skill_id)
-      const trustScore = await getTrustScore(professionalId)
-
       const matchCandidate: MatchCandidate = {
         user_id: seeker.user_id,
         full_name: seeker.full_name ?? '',
         email: seeker.email ?? '',
-        skills: seekerSkillIds,
+        skills: skillsBySeeker.get(seeker.user_id) ?? [],
         experience_years: seeker.experience_years ?? 0,
         education: seeker.education ?? '',
         location: seeker.location ?? '',
         open_to_work: seeker.open_to_work ?? false,
-      }
-
-      const matchProfessional: MatchProfessional = {
-        user_id: professionalId,
-        full_name: proProfile.full_name ?? '',
-        company: proProfile.company ?? '',
-        role: proProfile.role ?? '',
-        skills: proSkillIds,
-        experience_years: proProfile.years_of_experience ?? 0,
-        industries: proProfile.industries ?? [],
-        locations: proProfile.preferred_locations ?? [],
-        open_for_referrals: proProfile.open_for_referrals ?? false,
-        trust_score: trustScore,
       }
 
       const result = calculateMatchScore(

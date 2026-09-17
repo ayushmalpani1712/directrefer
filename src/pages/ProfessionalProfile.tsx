@@ -31,6 +31,8 @@ export default function ProfessionalProfile() {
   const { professionals, updateProfessional, student, toggleProfessionalOpenForReferrals, toggleProfessionalOpenToWork } = useApp()
   const { user } = useAuth()
   const loading = usePageLoading(450)
+  const isMobile = useMobile()
+  const navigate = useNavigate()
   const fallback: Professional = {
     id: user?.id ?? '',
     name: student.name || (user?.email?.split('@')[0] ?? 'User'),
@@ -209,8 +211,6 @@ export default function ProfessionalProfile() {
   }
 
   const p = ME
-  const isMobile = useMobile()
-  const navigate = useNavigate()
 
   if (isMobile) {
     const trustScore = p.activityScore || 0
