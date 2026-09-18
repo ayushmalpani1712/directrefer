@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useLocation } from 'react-router'
 import {
-  ArrowRight, Briefcase, FileText,
+  ArrowRight, Briefcase, ChevronRight, FileText,
   Plus, Star, UserCheck, Users,
   Pause, Eye, Pencil, Clock, BarChart3,
 } from 'lucide-react'
@@ -15,6 +15,7 @@ import { GAvatar } from '@/components/ui-kit'
 import { TrustBadge } from '@/components/TrustBadge'
 import { DashboardSkeleton } from '@/components/ui/skeleton'
 import { useApp } from '@/context/AppContext'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useAuth } from '@/context/AuthContext'
 import { type DateRange, getPresetRange } from '@/components/analytics/DateRangeSelector'
 import { EmptyChart } from '@/components/analytics/EmptyChart'
@@ -53,6 +54,7 @@ export default function RecruiterDashboard() {
   const { jobs, candidates, savedCandidates, activity, loading } = useApp()
   const { user } = useAuth()
   const { pathname } = useLocation()
+  const isMobile = useIsMobile()
   const prefix = ROLE_ROUTE[getRoleFromPath(pathname)]
   const [recruiterCompany, setRecruiterCompany] = useState({
     name: '', industry: '', size: '',
@@ -168,6 +170,91 @@ export default function RecruiterDashboard() {
   const totalReferrals = jobs.reduce((a, j) => a + j.referrals, 0)
   const activeJobs = jobs.filter((j) => j.stage === 'Active')
   const avgTimeToHire = recruiterCompany.hiringStats.timeToHire || '—'
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        {/* Hero */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/15 via-card to-card px-4 pt-6 pb-5">
+          <div className="flex items-center gap-3">
+            <GAvatar name={recruiterCompany.name} color={user?.id} className="h-14 w-14 text-lg shrink-0 ring-2 ring-primary/20" />
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold truncate">{recruiterCompany.name || 'My Company'}</h1>
+              <p className="text-xs text-muted-foreground truncate">{recruiterCompany.industry || 'Recruiter'}</p>
+            </div>
+          </div>
+          <Link to="/recruiter/jobs" className="mt-4 flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform">
+            <Plus className="h-4 w-4" /> Post a New Job
+          </Link>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3 px-4 -mt-3 relative z-10">
+          {[
+            { label: 'Active Jobs', value: activeJobs.length, icon: Briefcase },
+            { label: 'Applications', value: totalApplicants, icon: Users },
+            { label: 'Referrals', value: totalReferrals, icon: UserCheck },
+            { label: 'Avg. Time to Hire', value: `${recruiterCompany.hiringStats.timeToHire}d`, icon: Clock },
+          ].map((s) => (
+            <div key={s.label} className="rounded-2xl border border-border/60 bg-card p-3.5">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10"><s.icon className="h-4 w-4 text-primary" /></div>
+                <span className="text-[11px] text-muted-foreground font-medium">{s.label}</span>
+              </div>
+              <div className="text-xl font-bold">{s.value}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Active Jobs */}
+        <div className="px-4 mt-5">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Active Jobs</span>
+            <Link to="/recruiter/jobs" className="text-xs font-medium text-primary">View all</Link>
+          </div>
+          {jobs.filter(j => j.stage === 'Active').length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border p-6 text-center">
+              <Briefcase className="h-8 w-8 mx-auto text-muted-foreground/50" />
+              <p className="mt-2 text-sm text-muted-foreground">No active jobs yet</p>
+              <Link to="/recruiter/jobs" className="mt-2 inline-block text-sm font-medium text-primary">Post your first job</Link>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {jobs.filter(j => j.stage === 'Active').slice(0, 3).map((j) => (
+                <Link key={j.id} to={`/recruiter/jobs`} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-3.5 active:bg-muted/50 transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold truncate">{j.title}</div>
+                    <div className="text-xs text-muted-foreground truncate">{j.location} · {j.type}</div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-sm font-bold text-primary">{j.applicants}</div>
+                    <div className="text-[10px] text-muted-foreground">applicants</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="px-4 mt-5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Quick Actions</span>
+          <div className="mt-2.5 space-y-2">
+            <Link to="/recruiter/jobs" className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-3.5 active:bg-muted/50">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10"><FileText className="h-5 w-5 text-primary" /></div>
+              <div className="flex-1"><div className="text-sm font-semibold">Manage Jobs</div><div className="text-xs text-muted-foreground">Post, edit, and track listings</div></div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+            <Link to="/professional/talent" className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-3.5 active:bg-muted/50">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10"><Users className="h-5 w-5 text-primary" /></div>
+              <div className="flex-1"><div className="text-sm font-semibold">Find Talent</div><div className="text-xs text-muted-foreground">Search candidates and professionals</div></div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

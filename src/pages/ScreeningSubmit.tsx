@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { ListSkeleton } from '@/components/ui/skeleton'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -59,6 +60,8 @@ export default function ScreeningSubmit() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [videoDuration, setVideoDuration] = useState<number | null>(null)
   const [skillsResults, setSkillsResults] = useState<Record<string, unknown> | null>(null)
+  const [showPreviousAttempts, setShowPreviousAttempts] = useState(false)
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (!jobId || !user) return
@@ -272,6 +275,229 @@ export default function ScreeningSubmit() {
     { id: 'video', label: 'Video Interview', icon: Send, timeEstimate: '~15 min' },
     { id: 'complete', label: 'Submit', icon: CheckCircle2, timeEstimate: '' },
   ]
+
+  if (isMobile) {
+    const totalSteps = criteria.length
+    const currentCriteria = criteria[currentStep]
+    const currentAnswer = currentCriteria ? answers.find(a => a.criteria_id === currentCriteria.id) : null
+
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
+          <div className="flex items-center gap-3 px-4 h-12">
+            <Link
+              to="/job-seeker/browse-jobs"
+              className="flex items-center justify-center h-10 w-10 -ml-2 rounded-xl hover:bg-muted transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <h1 className="text-base font-semibold truncate">Screening</h1>
+            {attemptNumber > 1 && (
+              <Badge variant="outline" className="text-xs gap-1 ml-auto shrink-0">
+                <RotateCcw className="h-2.5 w-2.5" /> #{attemptNumber}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        <div className="px-4 pt-3 pb-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+            <span>Step {currentStep + 1} of {totalSteps}</span>
+            <span>{Math.round(((currentStep + 1) / totalSteps) * 100)}%</span>
+          </div>
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-300"
+              style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="px-4 py-3">
+          <ScreeningProgress
+            steps={screeningSteps}
+            currentStepIndex={currentStep}
+            variant="compact"
+          />
+        </div>
+
+        {previousAttempts.length > 0 && (
+          <div className="px-4 pb-3">
+            <button
+              onClick={() => setShowPreviousAttempts(!showPreviousAttempts)}
+              className="w-full flex items-center justify-between text-xs font-medium text-muted-foreground py-2"
+            >
+              <span>Previous Attempts ({previousAttempts.length})</span>
+              <motion.div animate={{ rotate: showPreviousAttempts ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ArrowRight className="h-3.5 w-3.5 rotate-90" />
+              </motion.div>
+            </button>
+            <motion.div
+              initial={false}
+              animate={{ height: showPreviousAttempts ? 'auto' : 0, opacity: showPreviousAttempts ? 1 : 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-2 pb-2">
+                {previousAttempts.map((attempt) => (
+                  <div
+                    key={attempt.id}
+                    className="flex items-center justify-between rounded-xl border border-border/60 bg-card px-3 py-2.5"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-xs font-mono text-muted-foreground">#{attempt.attempt_number}</span>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <Trophy className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-xs font-medium">{attempt.score}%</span>
+                          {attempt.passed ? (
+                            <Badge variant="success" className="text-[10px]">Passed</Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-[10px]">Failed</Badge>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(attempt.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {bestScore !== null && (
+                  <div className="flex items-center justify-between text-[10px] pt-1.5 border-t border-border/60">
+                    <span className="text-muted-foreground">Best Score</span>
+                    <span className="font-medium">{bestScore}%</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {!canRetake && cooldownRemaining && (
+          <div className="px-4 pb-3">
+            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 shrink-0">
+                  <Clock className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Cooldown Period</p>
+                  <p className="text-xs text-muted-foreground">
+                    Retake in <span className="font-medium text-foreground">{cooldownRemaining}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentStep < totalSteps && currentCriteria && (
+          <div className="px-4 pb-24">
+            <div className="rounded-2xl border border-border/60 bg-card p-4 space-y-3">
+              <div className="space-y-1">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-sm font-semibold leading-tight">{currentCriteria.name}</h3>
+                  <Badge variant="secondary" className="shrink-0 text-[10px] capitalize">{currentCriteria.category}</Badge>
+                </div>
+                {currentCriteria.description && (
+                  <p className="text-xs text-muted-foreground leading-relaxed">{currentCriteria.description}</p>
+                )}
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                  <span>Weight:</span>
+                  <span className="font-medium text-foreground">{currentCriteria.weight}x</span>
+                </div>
+              </div>
+              <Textarea
+                value={currentAnswer?.answer ?? ''}
+                onChange={(e) => updateAnswer(currentCriteria.id, e.target.value)}
+                placeholder="Type your answer here..."
+                className="min-h-[160px] text-sm resize-none rounded-xl border-border/60"
+              />
+            </div>
+          </div>
+        )}
+
+        {currentStep < totalSteps && currentCriteria && (
+          <div className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border/40 px-4 py-3 safe-area-pb">
+            <div className="flex items-center justify-between gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))}
+                disabled={currentStep === 0}
+                className="h-12 px-4 rounded-xl"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex-1">
+                <Button
+                  onClick={() => setCurrentStep(prev => Math.min(totalSteps - 1, prev + 1))}
+                  disabled={!currentAnswer?.answer.trim()}
+                  className="w-full h-12 rounded-xl bg-primary text-white shadow-sm font-medium gap-2"
+                >
+                  {currentStep === totalSteps - 1 ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" /> Review
+                    </>
+                  ) : (
+                    <>
+                      Next <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentStep === totalSteps && (
+          <div className="px-4 pb-24 space-y-3">
+            <div className="rounded-2xl border border-border/60 bg-card p-4 space-y-3">
+              <h3 className="text-sm font-semibold">Review & Submit</h3>
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>{criteria.length} questionnaire answers</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {skillsResults ? (
+                    <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /><span>Skills assessment completed</span></>
+                  ) : (
+                    <><AlertCircle className="h-3.5 w-3.5 text-amber-500" /><span>Skills assessment skipped</span></>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {videoUrl ? (
+                    <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /><span>Video recorded ({videoDuration ?? 0}s)</span></>
+                  ) : (
+                    <><AlertCircle className="h-3.5 w-3.5 text-amber-500" /><span>Video interview skipped</span></>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border/40 px-4 py-3 safe-area-pb">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentStep(totalSteps - 1)}
+                  className="h-12 px-4 rounded-xl shrink-0"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!allAnswered || submitting}
+                  className="flex-1 h-12 rounded-xl bg-primary text-white shadow-sm font-medium gap-2"
+                >
+                  {submitting ? 'Submitting...' : <><Send className="h-4 w-4" /> Submit Screening</>}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">

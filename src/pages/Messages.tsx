@@ -20,6 +20,7 @@ import ResumePreview from '@/components/ResumePreview'
 import { supabase } from '@/lib/supabase'
 import { getRoleFromPath, profileUrl, type Role, type Conversation, type Message } from '@/data/constants'
 import { fetchConversations } from '@/lib/db'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface FileInfo {
   type: string
@@ -205,6 +206,7 @@ export default function Messages() {
   const { user } = useAuth()
   const { pathname } = useLocation()
   const urlRole: Role = getRoleFromPath(pathname)
+  const isMobile = useIsMobile()
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeId, setActiveId] = useState('')
   const [draft, setDraft] = useState('')
@@ -346,6 +348,126 @@ export default function Messages() {
   }
 
   const profilePath = getProfilePath(active?.otherUserRole, active?.otherUserId, active?.otherUserSlug)
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {!active ? (
+          /* Mobile conversation list */
+          <div className="flex flex-col h-screen">
+            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border px-4 py-3">
+              <h1 className="text-lg font-bold">Messages</h1>
+              <div className="relative mt-2">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search conversations..." className="w-full h-11 rounded-full bg-muted pl-9 pr-4 text-sm outline-none" />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto pb-20">
+              {sorted.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+                  <MessageIllustration />
+                  <h3 className="mt-4 text-base font-semibold">No conversations yet</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Start a conversation from a professional's profile.</p>
+                </div>
+              ) : sorted.map((c) => (
+                <button key={c.id} type="button" onClick={() => setActiveId(c.id)} className="flex w-full items-center gap-3 border-b border-border/60 px-4 py-3.5 text-left active:bg-muted/50">
+                  <div className="relative shrink-0">
+                    <GAvatar name={c.name} color={c.gradient} className="h-11 w-11 text-xs" />
+                    {c.online && <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-emerald-500" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-1.5 truncate text-sm font-semibold">
+                        {c.pinned && <Pin className="h-3 w-3 rotate-45 text-muted-foreground" />}{c.name}
+                      </span>
+                      <span className="shrink-0 text-[11px] text-muted-foreground">{c.time}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-xs text-muted-foreground">{c.lastMessage}</p>
+                      {c.unread > 0 && <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">{c.unread}</span>}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* Mobile chat thread */
+          <div className="flex flex-col h-screen">
+            <div className="sticky top-0 z-30 flex items-center gap-3 bg-background/95 backdrop-blur border-b border-border px-2 py-2">
+              <button type="button" onClick={() => setActiveId('')} className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground active:bg-muted" aria-label="Back">
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              {profilePath ? (
+                <Link to={profilePath} className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <GAvatar name={active!.name} color={active!.gradient} className="h-8 w-8 text-[10px] shrink-0" />
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold">{active!.name}</div>
+                    <div className="text-[11px] text-muted-foreground">{active!.online ? 'Online' : 'Away'}</div>
+                  </div>
+                </Link>
+              ) : (
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <GAvatar name={active!.name} color={active!.gradient} className="h-8 w-8 text-[10px] shrink-0" />
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold">{active!.name}</div>
+                    <div className="text-[11px] text-muted-foreground">{active!.online ? 'Online' : 'Away'}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 py-4 pb-4">
+              <div className="space-y-3">
+                {active!.messages.map((m) => {
+                  const fileInfo = m.kind === 'file' ? parseFileContent(m.text) : null
+                  return (
+                    <div key={m.id} className={cn('flex', m.from === 'me' ? 'justify-end' : 'justify-start')}>
+                      <div className={cn('flex max-w-[80%] items-end gap-2', m.from === 'me' && 'flex-row-reverse')}>
+                        {m.from === 'them' && <GAvatar name={active!.name} color={active!.gradient} className="h-6 w-6 text-[8px] shrink-0" />}
+                        <div>
+                          {fileInfo ? (
+                            <FileAttachment fileInfo={fileInfo} isMe={m.from === 'me'} />
+                          ) : (
+                            <div className={cn('rounded-2xl px-3.5 py-2 text-sm leading-relaxed', m.from === 'me' ? 'rounded-br-md bg-primary text-primary-foreground' : 'rounded-bl-md bg-muted')}>
+                              {linkify(m.text)}
+                            </div>
+                          )}
+                          <div className={cn('mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground', m.from === 'me' && 'justify-end')}>
+                            {m.time} {m.from === 'me' && <CheckCheck className={cn('h-2.5 w-2.5', m.is_read ? 'text-sky-500' : 'text-muted-foreground')} />}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+                <div ref={bottomRef} />
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 border-t border-border bg-background p-3 safe-area-inset">
+              <div className="flex items-center gap-2">
+                <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls,.png,.jpg,.jpeg,.gif,.webp" />
+                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground active:bg-muted">
+                  {uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" /> : <Paperclip className="h-4.5 w-4.5" />}
+                </button>
+                <input
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && send()}
+                  placeholder={`Message ${active!.name.split(' ')[0]}...`}
+                  className="flex-1 h-10 rounded-full bg-muted px-4 text-sm outline-none"
+                />
+                <button type="button" onClick={() => send()} disabled={!draft.trim() || uploading} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-50 active:scale-95 transition-transform">
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-full min-h-[400px] flex-col overflow-hidden rounded-2xl border border-border bg-card sm:flex-row pb-20 sm:pb-0">

@@ -16,6 +16,8 @@ import { JobIllustration } from '@/components/illustrations'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/utils'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { MobileTabs, MobileStatusBadge } from '@/components/mobile'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { ListSkeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
@@ -486,6 +488,11 @@ function RecruiterJobsManager() {
   const { user } = useAuth()
   const [recruiterCompany, setRecruiterCompany] = useState({ name: '', tagline: '', industry: '', size: '', website: '', founded: 0, locations: [] as string[], description: '', benefits: [] as string[], hiringStats: { timeToHire: 0, offerAccept: 0, referralShare: 0, activeJobs: jobs.filter((j) => j.stage === 'Active').length }, responseRate: 0, verified: false })
   const profileLoadedRef = useRef(false)
+  const isMobile = useIsMobile()
+  const [mobileTab, setMobileTab] = useState('postings')
+  const [mobileAppJobId, setMobileAppJobId] = useState('')
+  const [mobileApps, setMobileApps] = useState<Array<{ id: string; status: string; submitted_at: string; cover_letter: string | null; profiles_job_seeker?: { full_name: string; email: string } }>>([])
+  const [mobileAppsLoading, setMobileAppsLoading] = useState(false)
 
   useEffect(() => {
     const loadCompany = async () => {
@@ -524,6 +531,16 @@ function RecruiterJobsManager() {
     }
     loadCompany()
   }, [user])
+
+  useEffect(() => {
+    if (!mobileAppJobId) { setMobileApps([]); return }
+    setMobileAppsLoading(true)
+    import('@/lib/v2/applications').then(({ getJobApplications }) =>
+      getJobApplications(mobileAppJobId).then((apps) => { setMobileApps(apps) })
+    ).catch(() => {})
+      .finally(() => setMobileAppsLoading(false))
+  }, [mobileAppJobId])
+
   const [q, setQ] = useState('')
   const [candidateStages, setCandidateStages] = useState<Record<string, string>>(() => {
     const map: Record<string, string> = {}
@@ -706,6 +723,267 @@ function RecruiterJobsManager() {
   }
 
   if (loading) return <ListSkeleton count={4} />
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur">
+          <h1 className="text-lg font-semibold">Jobs</h1>
+          <Button size="icon" className="h-11 w-11 rounded-full" onClick={() => handlePostJob()}>
+            <Plus className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <MobileTabs
+          tabs={[
+            { key: 'postings', label: 'Postings' },
+            { key: 'pipeline', label: 'Pipeline' },
+            { key: 'applications', label: 'Applications' },
+          ]}
+          activeKey={mobileTab}
+          onChange={setMobileTab}
+          className="sticky top-[52px] z-20 border-b border-border/60 bg-background"
+        />
+
+        {mobileTab === 'postings' && (
+          <div className="px-4 py-4 space-y-3">
+            {jobs.filter((j) => {
+              if (j.expires_at && new Date(j.expires_at) < new Date()) return false
+              return j.title.toLowerCase().includes(q.toLowerCase())
+            }).length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border py-12 text-center">
+                <Briefcase className="mx-auto h-10 w-10 text-muted-foreground/40" />
+                <p className="mt-3 text-sm text-muted-foreground">No job postings yet</p>
+                <Button className="mt-4 rounded-full min-h-11" onClick={() => handlePostJob()}>
+                  <Plus className="mr-1.5 h-4 w-4" /> Post a job
+                </Button>
+              </div>
+            ) : (
+              jobs.filter((j) => {
+                if (j.expires_at && new Date(j.expires_at) < new Date()) return false
+                return j.title.toLowerCase().includes(q.toLowerCase())
+              }).map((j) => (
+                <Link key={j.id} to={`/jobs/${j.id}`} className="block">
+                  <div className="rounded-2xl border border-border/60 bg-card p-4 active:bg-muted/50 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold truncate">{j.title}</h3>
+                          <Badge variant="outline" className={cn(
+                            'shrink-0 text-xs',
+                            j.stage === 'Active' && 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500',
+                            j.stage === 'Paused' && 'border-amber-500/25 bg-amber-500/10 text-amber-500',
+                            j.stage === 'Draft' && 'text-muted-foreground',
+                          )}>{j.stage}</Badge>
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {j.location}</span>
+                          <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {j.applicants} applicants</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 flex-1 text-xs min-h-11"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePauseResume(j.id) }}
+                      >
+                        {j.stage === 'Active' ? <Pause className="mr-1 h-3.5 w-3.5 text-amber-500" /> : <Play className="mr-1 h-3.5 w-3.5 text-emerald-500" />}
+                        {j.stage === 'Active' ? 'Pause' : 'Resume'}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 flex-1 text-xs text-destructive min-h-11"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteTargetId(j.id) }}
+                      >
+                        <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
+                      </Button>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        )}
+
+        {mobileTab === 'pipeline' && (
+          <div className="px-4 py-4">
+            <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
+              {STAGES.map((stage) => {
+                const cands = allCandidates.filter((c) => candidateStages[c.id] === stage)
+                return (
+                  <button
+                    key={stage}
+                    onClick={() => setMobileStage(stage)}
+                    className={cn(
+                      'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition-colors min-h-11',
+                      mobileStage === stage
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    )}
+                  >
+                    {stage}
+                    <Badge variant="outline" className={cn('ml-0.5 h-5 min-w-[20px] justify-center text-xs', mobileStage === stage && 'border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground')}>
+                      {cands.length}
+                    </Badge>
+                  </button>
+                )
+              })}
+            </div>
+
+            {(() => {
+              const stage = mobileStage
+              const cands = allCandidates.filter((c) => candidateStages[c.id] === stage)
+              const isAdding = addingToStage === stage
+              const query = addCandidateQuery.toLowerCase()
+              const pool = professionals.filter((p) => {
+                if (candidateStages[p.id]) return false
+                if (query && !p.name.toLowerCase().includes(query) && !p.company.toLowerCase().includes(query)) return false
+                return true
+              })
+              return (
+                <div className="rounded-2xl border border-border/60 bg-card p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{stage} · {cands.length}</span>
+                    <Button variant="ghost" size="sm" className="h-11 w-11 p-0 text-primary" onClick={() => { setAddingToStage(isAdding ? null : stage); setAddCandidateQuery('') }}>
+                      {isAdding ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  {isAdding && (
+                    <div className="mb-3 space-y-2">
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Input value={addCandidateQuery} onChange={(e) => setAddCandidateQuery(e.target.value)} placeholder="Search..." className="h-11 pl-8 text-sm" autoFocus />
+                      </div>
+                      <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-xl border border-border bg-background p-2">
+                        {pool.length === 0 && <p className="py-3 text-center text-xs text-muted-foreground">No candidates available</p>}
+                        {pool.slice(0, 8).map((p) => (
+                          <button key={p.id} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left hover:bg-muted/50 transition-colors min-h-11" onClick={() => addCandidateToStage(p, stage)}>
+                            <GAvatar name={p.name} color={p.gradient} className="h-8 w-8 text-[10px]" />
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-sm font-semibold">{p.name}</div>
+                              <div className="truncate text-xs text-muted-foreground">{p.designation} · {p.company}</div>
+                            </div>
+                            <Plus className="h-4 w-4 shrink-0 text-primary" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {cands.length === 0 && !isAdding ? (
+                    <p className="py-8 text-center text-sm text-muted-foreground">No candidates in this stage</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {cands.map((c) => {
+                        const next = nextStage(stage)
+                        return (
+                          <div key={c.id} className="flex items-center gap-2.5 rounded-xl border border-border bg-background p-3 min-h-11">
+                            <GAvatar name={c.name} color={c.gradient} className="h-9 w-9 text-xs" />
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-sm font-semibold">{c.name}</div>
+                              <div className="truncate text-xs text-muted-foreground">{c.role} · {c.company}</div>
+                            </div>
+                            {next && (
+                              <Button variant="ghost" size="sm" className="h-9 shrink-0 text-xs text-primary min-h-11" onClick={() => advanceCandidate(c.id)}>
+                                Move to {next}
+                              </Button>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+          </div>
+        )}
+
+        {mobileTab === 'applications' && (
+          <div className="px-4 py-4 space-y-3">
+            <div className="rounded-2xl border border-border/60 bg-card p-4">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Select job</span>
+              <select
+                value={mobileAppJobId}
+                onChange={(e) => setMobileAppJobId(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm min-h-11"
+              >
+                <option value="">Choose a job...</option>
+                {jobs.map((j) => <option key={j.id} value={j.id}>{j.title}</option>)}
+              </select>
+            </div>
+
+            {!mobileAppJobId ? (
+              <div className="rounded-2xl border border-dashed border-border py-12 text-center">
+                <Eye className="mx-auto h-10 w-10 text-muted-foreground/40" />
+                <p className="mt-3 text-sm text-muted-foreground">Select a job to view applications</p>
+              </div>
+            ) : mobileAppsLoading ? (
+              <div className="space-y-3"><ListSkeleton count={3} /></div>
+            ) : mobileApps.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border py-12 text-center">
+                <Users className="mx-auto h-10 w-10 text-muted-foreground/40" />
+                <p className="mt-3 text-sm text-muted-foreground">No applications yet</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1">{mobileApps.length} application{mobileApps.length !== 1 ? 's' : ''}</p>
+                {mobileApps.map((app) => (
+                  <div key={app.id} className="rounded-2xl border border-border/60 bg-card p-4">
+                    <div className="flex items-center gap-3">
+                      <GAvatar
+                        name={app.profiles_job_seeker?.full_name ?? 'Candidate'}
+                        color="#6366F1"
+                        className="h-10 w-10 shrink-0 text-xs"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold truncate">{app.profiles_job_seeker?.full_name ?? 'Unknown'}</span>
+                          {(['submitted', 'screening', 'shortlisted', 'accepted', 'rejected', 'withdrawn'] as string[]).includes(app.status) ? (
+                            <MobileStatusBadge status={app.status as 'submitted' | 'screening' | 'shortlisted' | 'accepted' | 'rejected' | 'withdrawn'} className="shrink-0" />
+                          ) : (
+                            <Badge variant="outline" className="shrink-0 text-xs">{app.status}</Badge>
+                          )}
+                        </div>
+                        <div className="mt-0.5 text-xs text-muted-foreground">
+                          Applied {new Date(app.submitted_at).toLocaleDateString()}
+                        </div>
+                        {app.cover_letter && <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">{app.cover_letter}</p>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        <ConfirmDialog
+          open={deleteTargetId !== null}
+          onOpenChange={(open) => { if (!open) setDeleteTargetId(null) }}
+          title="Delete job posting"
+          description="This will permanently remove this job posting."
+          confirmLabel="Delete"
+          onConfirm={handleDelete}
+        />
+
+        <ConfirmDialog
+          open={pauseTargetId !== null}
+          onOpenChange={(open) => { if (!open) setPauseTargetId(null) }}
+          title="Pause job posting"
+          description="This will pause the job posting."
+          confirmLabel="Pause"
+          variant="default"
+          onConfirm={() => {
+            if (pauseTargetId) handlePauseResume(pauseTargetId)
+            setPauseTargetId(null)
+          }}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

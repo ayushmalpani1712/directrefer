@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
@@ -373,11 +374,12 @@ function Row({ title, desc, children, showChevron }: { title: string; desc?: str
 
 export default function Settings() {
   const { role, student, logout } = useApp()
-  const { signOut, user } = useAuth()
+  const { signOut, user, professionalVerified, recruiterVerified } = useAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') || 'workspace'
   const setActiveTab = (t: string) => setSearchParams({ tab: t }, { replace: true })
+  const isMobile = useIsMobile()
   const [sessions, setSessions] = useState<Session[]>([])
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -550,6 +552,217 @@ export default function Settings() {
     } finally {
       setPasswordLoading(false)
     }
+  }
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex h-12 items-center px-4">
+            <h1 className="text-lg font-semibold">Settings</h1>
+          </div>
+          <div className="flex gap-1 overflow-x-auto px-4 pb-3 scrollbar-none">
+            {[
+              { key: 'workspace', label: 'Workspace', icon: Building2 },
+              { key: 'notifications', label: 'Notifications', icon: Bell },
+              { key: 'privacy', label: 'Privacy', icon: Lock },
+              { key: 'security', label: 'Security', icon: ShieldCheck },
+              { key: 'appearance', label: 'Appearance', icon: Palette },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={cn(
+                  'flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors h-10',
+                  activeTab === tab.key
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
+                )}
+              >
+                <tab.icon className="h-3.5 w-3.5" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="px-4 py-4 space-y-4">
+          {activeTab === 'workspace' && (
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <div className={cn(
+                  'rounded-xl border p-4 transition-colors',
+                  professionalVerified ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-muted',
+                )}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Professional</span>
+                    {professionalVerified ? (
+                      <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                        <Check className="mr-1 h-3 w-3" /> Verified
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                        Unverified
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {professionalVerified
+                      ? 'You can give referrals, reviews, and mentorship.'
+                      : 'Verify to earn a verified badge on your profile.'}
+                  </p>
+                </div>
+                <div className={cn(
+                  'rounded-xl border p-4 transition-colors',
+                  recruiterVerified ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-muted',
+                )}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Recruiter</span>
+                    {recruiterVerified ? (
+                      <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                        <Check className="mr-1 h-3 w-3" /> Verified
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                        Unverified
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {recruiterVerified
+                      ? 'You can post jobs and contact candidates.'
+                      : 'Verify to earn a verified badge on your profile.'}
+                  </p>
+                </div>
+              </div>
+              {!professionalVerified && !recruiterVerified && (
+                <Button className="w-full h-12 gap-2">
+                  <ShieldCheck className="h-4 w-4" /> Verify Work Identity
+                </Button>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Notification preferences</CardTitle></CardHeader>
+              <CardContent className="divide-y divide-border px-3">
+                {([
+                  { key: 'referral_updates' as const, t: 'Referral status updates', d: 'Accepted, declined, review started', icon: Zap },
+                  { key: 'new_messages' as const, t: 'New messages', d: 'When someone messages you', icon: Mail },
+                  { key: 'profile_views' as const, t: 'Profile views', d: 'When a recruiter or professional views your profile', icon: User },
+                  { key: 'completion_reminders' as const, t: 'Profile completion reminders', d: 'Weekly nudge until you hit 90%', icon: Bell },
+                  { key: 'product_announcements' as const, t: 'Product announcements', d: 'New features and improvements', icon: Monitor },
+                  { key: 'weekly_digest' as const, t: 'Weekly digest email', d: 'A Sunday summary of your pipeline', icon: Mail },
+                ]).map((n) => (
+                  <Row key={n.key} title={n.t} desc={n.d}>
+                    <Switch checked={notifPrefs[n.key]} onCheckedChange={(v) => handleNotifPrefChange(n.key, v)} className="h-6 w-11 data-[state=checked]:bg-primary" />
+                  </Row>
+                ))}
+                <Row title="Email notifications off" desc="Disable all email notifications (in-app still work)">
+                  <Switch checked={notifPrefs.email_opt_out} onCheckedChange={(v) => handleNotifPrefChange('email_opt_out', v)} className="h-6 w-11 data-[state=checked]:bg-primary" />
+                </Row>
+                <Row title="Notification sound" desc="Play a sound when new in-app notifications arrive">
+                  <Switch checked={notifPrefs.notification_sound} onCheckedChange={(v) => handleNotifPrefChange('notification_sound', v)} className="h-6 w-11 data-[state=checked]:bg-primary" />
+                </Row>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'privacy' && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Privacy</CardTitle></CardHeader>
+              <CardContent className="divide-y divide-border px-3">
+                <Row title="Public profile" desc="Appear in search results for professionals and recruiters"><Switch checked={privacy.public_profile} onCheckedChange={(v) => handlePrivacyChange('public_profile', v)} className="h-6 w-11 data-[state=checked]:bg-primary" /></Row>
+                <Row title="Show salary expectations" desc="Visible to verified recruiters only"><Switch checked={privacy.show_salary} onCheckedChange={(v) => handlePrivacyChange('show_salary', v)} className="h-6 w-11 data-[state=checked]:bg-primary" /></Row>
+                <Row title="Activity status" desc="Show when you're online in messages"><Switch checked={privacy.activity_status} onCheckedChange={(v) => handlePrivacyChange('activity_status', v)} className="h-6 w-11 data-[state=checked]:bg-primary" /></Row>
+                <Row title="Search engine indexing" desc="Allow your public profile to appear on Google"><Switch checked={privacy.search_indexing} onCheckedChange={(v) => handlePrivacyChange('search_indexing', v)} className="h-6 w-11 data-[state=checked]:bg-primary" /></Row>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'security' && (
+            <div className="space-y-4">
+              <Card>
+                <CardHeader><CardTitle className="text-base">Password</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label>Current password</Label>
+                    <Input type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="h-11" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>New password</Label>
+                    <Input type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-11" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Confirm new</Label>
+                    <Input type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" value={confirmNew} onChange={(e) => setConfirmNew(e.target.value)} className="h-11" />
+                  </div>
+                  <Button className="w-full h-12" onClick={handleUpdatePassword} disabled={passwordLoading}>
+                    <KeyRound className="mr-1.5 h-4 w-4" /> {passwordLoading ? 'Updating...' : 'Update password'}
+                  </Button>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="text-base">Active sessions</CardTitle></CardHeader>
+                <CardContent>
+                  {sessions.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between rounded-lg border border-border px-3.5 py-2.5 text-sm">
+                      <span className="flex items-center gap-2 truncate"><Laptop className="h-4 w-4 shrink-0 text-muted-foreground" /> <span className="truncate">{s.device}</span></span>
+                      {s.isCurrent ? <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10">This device</Badge> : <Button variant="ghost" size="sm" className="h-9 text-xs text-rose-500" onClick={() => {
+                        toast.info('Change your password to revoke all sessions.')
+                        setActiveTab('security')
+                      }}>Revoke</Button>}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+              <Card className="border-rose-500/30">
+                <CardHeader><CardTitle className="flex items-center gap-2 text-base text-rose-500"><Trash2 className="h-4 w-4" /> Danger zone</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Permanently delete your account and all referral history. This cannot be undone.</p>
+                  <Button variant="outline" className="w-full h-12 border-rose-500/40 text-rose-500 hover:bg-rose-500/10" disabled={deleting} onClick={() => {
+                    if (role === 'admin') { toast.error('Admin accounts cannot be self-deleted. Contact another admin.'); return }
+                    setDeleteDialogOpen(true)
+                  }}>{deleting ? 'Deleting...' : 'Delete account'}</Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'appearance' && (
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Globe className="h-4 w-4 text-primary" /> Language & region</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label>Language</Label>
+                  <Select value={language} onValueChange={(v) => { setLanguage(v); saveSettings({ language: v }) }}>
+                    <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English (US)</SelectItem>
+                      <SelectItem value="en-gb">English (UK)</SelectItem>
+                      <SelectItem value="es">Espa\u00f1ol</SelectItem>
+                      <SelectItem value="hi">\u0939\u093f\u0928\u094d\u0926\u0940</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Timezone</Label>
+                  <Select value={timezone} onValueChange={(v) => { setTimezone(v); saveSettings({ timezone: v }) }}>
+                    <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pt">Pacific Time (UTC\u22127)</SelectItem>
+                      <SelectItem value="et">Eastern Time (UTC\u22124)</SelectItem>
+                      <SelectItem value="ist">India Standard (UTC+5:30)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (

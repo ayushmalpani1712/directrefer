@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { SectionHeader, EmptyState } from '@/components/ui-kit'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 export interface JobAlert {
   id: string
@@ -47,6 +48,7 @@ function mapDbAlert(row: Record<string, unknown>): JobAlert {
 
 export default function JobAlerts() {
   const { user } = useAuth()
+  const isMobile = useIsMobile()
   const [alerts, setAlerts] = useState<JobAlert[]>([])
   const [showForm, setShowForm] = useState(false)
   const [title, setTitle] = useState('')
@@ -144,6 +146,109 @@ export default function JobAlerts() {
       saveAlertsToStorage(prev.filter((a) => a.id !== id))
     }
     toast.success('Alert deleted')
+  }
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background px-4 py-3">
+          <h1 className="text-lg font-bold">Job Alerts</h1>
+          <Button size="icon" className="h-11 w-11 rounded-full" onClick={() => setShowForm(true)}>
+            <Plus className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="space-y-3 px-4 pt-4">
+          {showForm && (
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="rounded-2xl border border-border/60 bg-card p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">New Job Alert</span>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setShowForm(false); setTitle(''); setLocation(''); setType('') }}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="alert-title-mobile">Job title or keyword</Label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input id="alert-title-mobile" placeholder="e.g. Software Engineer" value={title} onChange={(e) => setTitle(e.target.value)} className="h-11 pl-9" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="alert-location-mobile">Location</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input id="alert-location-mobile" placeholder="e.g. Remote, New York" value={location} onChange={(e) => setLocation(e.target.value)} className="h-11 pl-9" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="alert-type-mobile">Job type</Label>
+                    <Input id="alert-type-mobile" placeholder="e.g. Full-time" value={type} onChange={(e) => setType(e.target.value)} className="h-11" />
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button onClick={handleSave} disabled={loading} className="h-11 flex-1 rounded-full">
+                    <Bell className="mr-1.5 h-4 w-4" /> Save Alert
+                  </Button>
+                  <Button variant="outline" className="h-11 rounded-full" onClick={() => { setShowForm(false); setTitle(''); setLocation(''); setType('') }}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {alerts.length === 0 && !showForm ? (
+            <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                <BellOff className="h-10 w-10 text-muted-foreground/50" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">No job alerts yet</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Create an alert to get notified when new jobs matching your criteria are posted.
+                </p>
+              </div>
+              <Button className="h-11 rounded-full px-6" onClick={() => setShowForm(true)}>
+                <Plus className="mr-1.5 h-4 w-4" /> Create an alert
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Active Alerts ({alerts.length})</span>
+              {alerts.map((alert, i) => (
+                <motion.div key={alert.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                  <div className="rounded-2xl border border-border/60 bg-card p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                        <Bell className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold">{alert.title}</div>
+                        <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                          {alert.location && <span>{alert.location}</span>}
+                          <span>{alert.type}</span>
+                        </div>
+                        <div className="mt-1 text-[11px] text-muted-foreground">
+                          {new Date(alert.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 text-destructive hover:text-destructive" onClick={() => handleDelete(alert.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (

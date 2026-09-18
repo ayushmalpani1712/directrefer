@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  Briefcase, Check, Clock, Globe, Heart, Info, Linkedin, MapPin, Pencil, Plus, Trophy, Users, X, Palette,
+  ArrowLeft, Briefcase, Check, Clock, Globe, Heart, Info, Linkedin, MapPin, Pencil, Plus, Trophy, Users, X, Palette,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,7 @@ import { Chip, CompanyChip } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useProfileDraft } from '@/hooks/useProfileDraft'
 import { supabase } from '@/lib/supabase'
 import { ProfileSkeleton } from '@/components/ui/skeleton'
@@ -26,6 +27,7 @@ export default function RecruiterProfile() {
   const [recruiterCompany, setRecruiterCompany] = useState({ name: '', industry: '', size: '', website: '', linkedin: '', description: '', highlights: [] as string[], hiringStats: { timeToHire: 0, offerAccept: 0, referralShare: 0, activeJobs: jobs.filter((j) => j.stage === 'Active').length }, responseRate: 0, verified: false })
   const c = recruiterCompany
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const profileLoadedRef = useRef(false)
   const [bannerTheme, setBannerTheme] = useState<string | null>(null)
   const [bannerModalOpen, setBannerModalOpen] = useState(false)
@@ -128,6 +130,205 @@ export default function RecruiterProfile() {
       <ProfileSkeleton />
     )
   }
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-50 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 h-12">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs font-medium text-primary"
+            onClick={() => { setEditName(c.name); setEditIndustry(c.industry); setEditSize(c.size); setEditWebsite(c.website); setEditLinkedin(c.linkedin); setEditing(true) }}
+          >
+            <Pencil className="h-3.5 w-3.5 mr-1" />
+            Edit Profile
+          </Button>
+        </div>
+
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="relative h-32 bg-gradient-to-br from-primary/30 via-card to-card">
+            <div className="absolute inset-0 bg-grid opacity-10" />
+          </div>
+
+          <div className="px-4 -mt-12 relative z-10">
+            <div className="flex items-end gap-3">
+              <CompanyChip name={c.name} className="h-20 w-20 border-[3px] border-primary/40 ring-2 ring-primary/10 text-xl shrink-0" />
+            </div>
+            <div className="mt-2">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <h1
+                  className="font-display text-lg font-bold tracking-tight"
+                  style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}
+                >
+                  {editing ? (
+                    <input
+                      className="w-full bg-transparent border-b border-primary outline-none text-lg font-bold placeholder:text-muted-foreground/30"
+                      placeholder="Company name"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                    />
+                  ) : c.name}
+                </h1>
+                {c.verified && (
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                    <Check className="h-3 w-3" /> Verified
+                  </span>
+                )}
+              </div>
+              {editing ? (
+                <input
+                  className="mt-0.5 w-full bg-transparent border-b border-muted-foreground/30 outline-none text-xs text-muted-foreground placeholder:text-muted-foreground/40"
+                  placeholder="e.g. Technology"
+                  value={editIndustry}
+                  onChange={(e) => setEditIndustry(e.target.value)}
+                />
+              ) : (
+                <p className="mt-0.5 text-xs text-muted-foreground" style={{ overflowWrap: 'break-word' }}>{c.industry}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="px-4 mt-3 flex overflow-x-auto gap-2 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {c.website && (
+              <a
+                href={c.website.startsWith('http') ? c.website : `https://${c.website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted hover:border-primary/30 hover:bg-primary/5 transition-colors shrink-0"
+              >
+                <Globe className="h-3.5 w-3.5 text-primary" /> Website
+              </a>
+            )}
+            {c.linkedin && (
+              <a
+                href={c.linkedin.startsWith('http') ? c.linkedin : `https://${c.linkedin}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted hover:border-primary/30 hover:bg-primary/5 transition-colors shrink-0"
+              >
+                <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" /> LinkedIn
+              </a>
+            )}
+            {!c.website && !c.linkedin && !editing && (
+              <button
+                type="button"
+                onClick={() => { setEditing(true) }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/30 bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors shrink-0"
+              >
+                <Globe className="h-3.5 w-3.5" /> Add links
+              </button>
+            )}
+          </div>
+
+          {editing && (
+            <div className="px-4 mt-3 flex gap-2">
+              <Button variant="outline" size="sm" className="rounded-full flex-1" onClick={() => {
+                setEditName(c.name); setEditIndustry(c.industry); setEditSize(c.size); setEditWebsite(c.website); setEditLinkedin(c.linkedin); setEditing(false); clearDraft()
+              }}>Cancel</Button>
+              <Button size="sm" className="rounded-full flex-1" disabled={savingHeader} onClick={async () => {
+                setSavingHeader(true)
+                try {
+                  setRecruiterCompany((prev) => ({ ...prev, name: editName, industry: editIndustry, size: editSize, website: editWebsite, linkedin: editLinkedin, description }))
+                  await updateRecruiter({ company_name: editName, hiring_department: editIndustry, company_size: editSize, company_website: editWebsite, company_description: description, company_linkedin: editLinkedin })
+                  setEditing(false); markSaved(); toast.success('Profile saved')
+                } catch { toast.error('Failed to save. Please try again.') } finally { setSavingHeader(false) }
+              }}>Save</Button>
+            </div>
+          )}
+        </motion.div>
+
+        <div className="px-4 mt-4 grid grid-cols-2 gap-2">
+          <div className="rounded-xl border border-border p-3">
+            <div className="text-xs text-muted-foreground">Team size</div>
+            <div className="mt-0.5 text-sm font-bold">{c.size || '—'}</div>
+          </div>
+          <div className="rounded-xl border border-border p-3">
+            <div className="text-xs text-muted-foreground">Active jobs</div>
+            <div className="mt-0.5 text-sm font-bold text-primary">{jobs.filter((j) => j.stage === 'Active').length}</div>
+          </div>
+        </div>
+
+        <div className="px-4 mt-3">
+          <div className="rounded-xl border border-border p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Trophy className="h-4 w-4 shrink-0 text-primary" />
+              <span className="text-sm font-semibold">Hiring stats</span>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Response rate</span>
+                <span className="font-semibold tabular-nums">{c.responseRate > 0 ? `${c.responseRate}%` : '—'}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Avg. rating</span>
+                <span className="font-semibold tabular-nums">{c.hiringStats.offerAccept > 0 ? `${c.hiringStats.offerAccept}%` : '—'}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Referral share</span>
+                <span className="font-semibold tabular-nums">{c.hiringStats.referralShare > 0 ? `${c.hiringStats.referralShare}%` : '—'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 mt-3">
+          <div className="rounded-xl border border-border p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4 shrink-0 text-primary" />
+                <span className="text-sm font-semibold">Active jobs ({jobs.filter((j) => j.stage === 'Active').length})</span>
+              </div>
+              <Button variant="ghost" size="sm" className="h-8 text-xs text-primary" onClick={() => navigate('/recruiter/jobs')}>
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add
+              </Button>
+            </div>
+            <div className="space-y-2.5">
+              {jobs.filter((j) => j.stage === 'Active').map((j) => (
+                <div key={j.id} className="flex items-center justify-between rounded-xl border border-border p-3 transition-colors hover:border-primary/30">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold truncate">{j.title}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{j.location} · {j.type}</div>
+                  </div>
+                  <div className="text-right shrink-0 ml-2">
+                    <div className="text-sm font-bold text-primary">{j.applicants}</div>
+                    <div className="text-[11px] text-muted-foreground">applied</div>
+                  </div>
+                </div>
+              ))}
+              {jobs.filter((j) => j.stage === 'Active').length === 0 && (
+                <p className="text-sm text-muted-foreground py-2">No active jobs posted yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 mt-3 pb-6">
+          <div className="rounded-xl border border-border p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Info className="h-4 w-4 shrink-0 text-primary" />
+              <span className="text-sm font-semibold">About {c.name}</span>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed break-words">{description || 'No description added yet.'}</p>
+            {highlights.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {highlights.map((h) => <Chip key={h} tone="primary">{h}</Chip>)}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
 

@@ -12,6 +12,7 @@ import { SkeletonGrid } from '@/components/ui/skeleton'
 import { Chip, EmptyState, GAvatar, SectionHeader } from '@/components/ui-kit'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { getMessagesPath, profileUrl } from '@/data/constants'
 import { findMatchesForProfessional, type MatchResult } from '@/lib/v2/matching'
@@ -23,6 +24,7 @@ export default function TalentSearch() {
   const { candidates, savedCandidates, toggleCandidate, startConversation, role, refreshCandidates, student, professionals } = useApp()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const [q, setQ] = useState('')
   const [source, setSource] = useState('all')
   const [minMatch, setMinMatch] = useState('0')
@@ -80,6 +82,204 @@ export default function TalentSearch() {
 
     return filtered
   }, [scored, q, source, minMatch, sortBy, role])
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+            <h1 className="text-lg font-semibold">Find Talent</h1>
+          </div>
+          <div className="relative px-4 pb-3">
+            <Search className="absolute left-7 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search name, role, skill…"
+              className="h-11 rounded-xl pl-10 text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto px-4 pt-3 pb-2 no-scrollbar">
+          {(['all', 'Referral', 'Open to work'] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setSource(s)}
+              className={`inline-flex h-9 shrink-0 items-center rounded-full border px-3.5 text-xs font-medium transition-colors ${
+                source === s
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border/60 bg-card text-muted-foreground'
+              }`}
+            >
+              {s === 'all' ? 'All' : s}
+            </button>
+          ))}
+          <div className="mx-1 h-5 w-px bg-border/60" />
+          {(['0', '20', '40', '60'] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setMinMatch(v)}
+              className={`inline-flex h-9 shrink-0 items-center rounded-full border px-3.5 text-xs font-medium transition-colors ${
+                minMatch === v
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border/60 bg-card text-muted-foreground'
+              }`}
+            >
+              {v === '0' ? 'Any match' : `${v}%+`}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between px-4 py-2">
+          <span className="text-xs text-muted-foreground">{results.length} candidate{results.length !== 1 ? 's' : ''}</span>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
+            <SelectTrigger className="h-9 w-auto gap-1 border-0 bg-transparent px-2 text-xs font-medium text-muted-foreground">
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="match">Match score</SelectItem>
+              <SelectItem value="experience">Experience</SelectItem>
+              <SelectItem value="name">Name</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {loading ? (
+          <div className="space-y-3 px-4 pt-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-border/60 bg-card p-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-11 w-11 animate-pulse rounded-full bg-muted" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-28 animate-pulse rounded bg-muted" />
+                    <div className="h-3 w-44 animate-pulse rounded bg-muted" />
+                  </div>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <div className="h-8 flex-1 animate-pulse rounded-lg bg-muted" />
+                  <div className="h-8 w-11 animate-pulse rounded-lg bg-muted" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : results.length === 0 ? (
+          <div className="flex flex-col items-center px-4 pt-16 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <Users className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h3 className="mt-4 text-sm font-medium">No candidates match</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Try broadening your search or lowering the filter.</p>
+            {(q || source !== 'all' || minMatch !== '0') && (
+              <button
+                onClick={() => { setQ(''); setSource('all'); setMinMatch('0') }}
+                className="mt-4 h-11 rounded-xl border border-border/60 bg-card px-5 text-sm font-medium text-muted-foreground transition-colors active:bg-muted"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3 px-4">
+            <AnimatePresence mode="popLayout">
+              {results.map((c, i) => {
+                const saved = savedCandidates.includes(c.id)
+                return (
+                  <motion.div
+                    key={c.id}
+                    layout
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.97 }}
+                    transition={{ delay: Math.min(i * 0.04, 0.3) }}
+                  >
+                    <div
+                      className="rounded-2xl border border-border/60 bg-card p-4 transition-colors active:bg-muted/50"
+                      onClick={() => navigate(profileUrl(c.profileRole || 'job-seeker', c.id, c.slug))}
+                    >
+                      <div className="flex items-start gap-3">
+                        <GAvatar name={c.name} color={c.gradient} className="h-11 w-11 text-sm" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate text-sm font-semibold">{c.name}</span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleCandidate(c.id); toast(saved ? 'Removed from saved' : 'Candidate saved') }}
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground active:bg-muted"
+                              aria-label={saved ? 'Remove from saved' : 'Save candidate'}
+                            >
+                              {saved ? <BookmarkCheck className="h-4.5 w-4.5 text-primary" /> : <Bookmark className="h-4.5 w-4.5" />}
+                            </button>
+                          </div>
+                          <div className="mt-0.5 text-xs text-muted-foreground">{c.role} · {c.exp}y exp</div>
+                        </div>
+                      </div>
+
+                      <div className="mt-2.5 flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {c.location}</span>
+                        {c.matchScore > 0 && (
+                          <Badge
+                            variant="outline"
+                            className={`gap-1 text-[11px] font-semibold ${c.matchScore >= 70 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25' : c.matchScore >= 40 ? 'bg-amber-500/10 text-amber-600 border-amber-500/25' : 'bg-muted text-muted-foreground border-border'}`}
+                          >
+                            <Target className="h-3 w-3" /> {c.matchScore}%
+                          </Badge>
+                        )}
+                        <Chip tone={c.source === 'Referral' ? 'primary' : 'default'}>{c.source}</Chip>
+                      </div>
+
+                      {c.matchReasons && c.matchReasons.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {c.matchReasons.map((reason: string) => (
+                            <span key={reason} className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 text-[11px] font-medium text-primary">{reason}</span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="mt-2.5 flex flex-wrap gap-1.5">
+                        {c.skills.map((s) => (
+                          <Chip key={s} tone={mySkills.some((ms) => ms.toLowerCase() === s.toLowerCase()) ? 'primary' : 'default'}>{s}</Chip>
+                        ))}
+                      </div>
+
+                      <div className="mt-3.5 flex gap-2">
+                        <Button
+                          size="sm"
+                          className="h-11 flex-1 rounded-xl bg-primary text-sm"
+                          disabled={c.id === user?.id}
+                          onClick={async (e) => {
+                            e.stopPropagation()
+                            const convId = await startConversation(c.id)
+                            if (convId) navigate(`${getMessagesPath(role)}?conversation=${convId}`)
+                          }}
+                        >
+                          <UserPlus className="mr-1.5 h-4 w-4" /> {c.id === user?.id ? 'You' : 'Invite'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-11 w-11 rounded-xl p-0"
+                          disabled={c.id === user?.id}
+                          onClick={async (e) => {
+                            e.stopPropagation()
+                            const convId = await startConversation(c.id)
+                            if (convId) navigate(`${getMessagesPath(role)}?conversation=${convId}`)
+                          }}
+                          aria-label="Message"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
