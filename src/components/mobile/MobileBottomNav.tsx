@@ -63,8 +63,7 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-background/95 backdrop-blur-lg"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-background/80 backdrop-blur-xl pb-[env(safe-area-inset-bottom,0px)]"
       role="navigation"
       aria-label="Main navigation"
     >
@@ -78,7 +77,7 @@ export function MobileBottomNav() {
               key={tab.key}
               onClick={() => navigate(getHref(tab.key))}
               className={cn(
-                'relative flex flex-1 flex-col items-center justify-center gap-0.5 h-full transition-colors duration-200',
+                'relative flex flex-1 flex-col items-center justify-center gap-0.5 min-h-[44px] h-full transition-colors duration-200',
                 active ? 'text-primary' : 'text-muted-foreground active:text-foreground'
               )}
               aria-label={tab.label}
@@ -87,7 +86,7 @@ export function MobileBottomNav() {
               <div className="relative">
                 <Icon
                   className={cn(
-                    'h-5 w-5 transition-all duration-200',
+                    'h-6 w-6 transition-all duration-200',
                     active && 'scale-105'
                   )}
                   strokeWidth={active ? 2.5 : 2}
@@ -100,14 +99,14 @@ export function MobileBottomNav() {
               </div>
               <span
                 className={cn(
-                  'text-xs font-medium',
+                  'text-[11px] font-medium',
                   active && 'font-semibold'
                 )}
               >
                 {tab.label}
               </span>
               {active && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[2px] w-5 rounded-full bg-primary" />
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 h-1 w-4 rounded-full bg-primary" />
               )}
             </button>
           )

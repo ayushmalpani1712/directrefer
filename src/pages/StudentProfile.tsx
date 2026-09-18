@@ -22,7 +22,7 @@ import { useProfileDraft } from '@/hooks/useProfileDraft'
 import { useMobile } from '@/hooks/use-mobile'
 import { uploadResume, deleteResume } from '@/lib/db'
 import { TrustBadge, TrustScoreBar } from '@/components/TrustBadge'
-import { cn, getBannerStyle } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileSidebar } from '@/components/profile/ProfileSidebar'
@@ -325,7 +325,6 @@ export default function StudentProfile() {
 
   if (loading) return <ProfileSkeleton />
 
-  const bs = getBannerStyle(user?.id, bannerTheme)
   const mobileTabTriggers = [
     { value: 'about', label: 'About' },
     { value: 'experience', label: 'Experience' },
@@ -360,7 +359,7 @@ export default function StudentProfile() {
         </div>
 
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="relative h-32" style={bs.style}>
+          <div className="relative h-32 bg-gradient-to-br from-primary/30 via-card to-card">
             <div className="absolute inset-0 bg-grid opacity-10" />
           </div>
 
@@ -369,7 +368,7 @@ export default function StudentProfile() {
               <GAvatar
                 name={s.name}
                 color={s.gradient}
-                className="h-20 w-20 border-4 border-card text-xl shrink-0"
+                className="h-20 w-20 border-[3px] border-primary/40 text-xl shrink-0 ring-2 ring-primary/10"
               />
             </div>
             <div className="mt-2">
@@ -471,7 +470,7 @@ export default function StudentProfile() {
                 href={s.links.linkedin.startsWith('http') ? s.links.linkedin : `https://linkedin.com/in/${s.links.linkedin}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted hover:border-primary/30 hover:bg-primary/5 transition-colors shrink-0"
               >
                 <Linkedin className="h-3.5 w-3.5 text-[#0A66C2]" /> LinkedIn
               </a>
@@ -481,7 +480,7 @@ export default function StudentProfile() {
                 href={s.links.github.startsWith('http') ? s.links.github : `https://github.com/${s.links.github}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted hover:border-primary/30 hover:bg-primary/5 transition-colors shrink-0"
               >
                 <Github className="h-3.5 w-3.5" /> GitHub
               </a>
@@ -491,7 +490,7 @@ export default function StudentProfile() {
                 href={s.links.website.startsWith('http') ? s.links.website : `https://${s.links.website}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors shrink-0"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted hover:border-primary/30 hover:bg-primary/5 transition-colors shrink-0"
               >
                 <Globe className="h-3.5 w-3.5 text-primary" /> Website
               </a>

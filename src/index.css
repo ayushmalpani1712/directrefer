@@ -9,49 +9,49 @@
 
 @layer base {
   :root {
-    /* ── Core palette ─────────────────────────────────────────────── */
-    --background: 0 0% 98%;
-    --foreground: 240 10% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 12%;
-    --primary: 234 78% 56%;
+    /* ── Core palette — dark default ──────────────────────────────── */
+    --background: 240 6% 4%;
+    --foreground: 240 5% 96%;
+    --card: 240 5% 7%;
+    --card-foreground: 240 5% 96%;
+    --popover: 240 5% 7%;
+    --popover-foreground: 240 5% 96%;
+    --primary: 239 84% 67%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 5% 94%;
-    --secondary-foreground: 240 6% 20%;
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
-    --accent: 240 5% 94%;
-    --accent-foreground: 240 6% 20%;
-    --destructive: 0 84% 60%;
+    --secondary: 240 5% 12%;
+    --secondary-foreground: 240 5% 90%;
+    --muted: 240 5% 12%;
+    --muted-foreground: 240 4% 55%;
+    --accent: 240 5% 12%;
+    --accent-foreground: 240 5% 96%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 234 78% 56%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 239 84% 67%;
     --radius: 0.625rem;
-    --info: 234 78% 56%;
+    --info: 239 84% 67%;
     --success: 152 69% 41%;
     --warning: 38 92% 50%;
 
-    /* ── Sidebar ──────────────────────────────────────────────────── */
-    --sidebar-background: 240 5% 98%;
-    --sidebar-foreground: 240 4% 46%;
-    --sidebar-primary: 234 78% 56%;
+    /* ── Sidebar — dark ───────────────────────────────────────────── */
+    --sidebar-background: 240 6% 4%;
+    --sidebar-foreground: 240 4% 55%;
+    --sidebar-primary: 239 84% 67%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 5% 94%;
-    --sidebar-accent-foreground: 240 6% 20%;
-    --sidebar-border: 240 6% 90%;
-    --sidebar-ring: 234 78% 56%;
+    --sidebar-accent: 240 5% 12%;
+    --sidebar-accent-foreground: 240 5% 90%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 239 84% 67%;
 
     /* ── Semantic tokens ──────────────────────────────────────────── */
-    --card-glow: 234 78% 56%;
-    --card-glow-hover: 234 78% 56%;
+    --card-glow: 239 84% 67%;
+    --card-glow-hover: 239 84% 67%;
 
     /* ── Trust tiers ──────────────────────────────────────────────── */
     --trust-verified: 152 69% 41%;
     --trust-provisional: 38 92% 50%;
-    --trust-unverified: 240 4% 64%;
+    --trust-unverified: 240 4% 55%;
 
     /* ── Avatar palette ───────────────────────────────────────────── */
     --avatar-rose: 340 82% 62%;
@@ -61,84 +61,8 @@
     --avatar-sky: 199 89% 48%;
 
     /* ── Logo ─────────────────────────────────────────────────────── */
-    --logo: #2B44DF;
-    --logo-fallback: #4A6AFF;
-
-    /* ── Spacing scale (4px base) ─────────────────────────────────── */
-    --space-1: 0.25rem;
-    --space-2: 0.5rem;
-    --space-3: 0.75rem;
-    --space-4: 1rem;
-    --space-5: 1.25rem;
-    --space-6: 1.5rem;
-    --space-8: 2rem;
-    --space-10: 2.5rem;
-    --space-12: 3rem;
-    --space-16: 4rem;
-    --space-20: 5rem;
-    --space-24: 6rem;
-
-    /* ── Typography ───────────────────────────────────────────────── */
-    --text-xs: 0.75rem;
-    --text-sm: 0.8125rem;
-    --text-base: 0.9375rem;
-    --text-lg: 1.0625rem;
-    --text-xl: 1.25rem;
-    --text-2xl: 1.5rem;
-    --text-3xl: 1.875rem;
-    --text-4xl: 2.25rem;
-
-    /* ── Shadows ──────────────────────────────────────────────────── */
-    --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.04);
-    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.06), 0 4px 6px -4px rgba(0,0,0,0.04);
-    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.06), 0 8px 10px -6px rgba(0,0,0,0.04);
-  }
-
-  .dark {
-    /* ── Core palette — dark ──────────────────────────────────────── */
-    --background: 240 20% 5%;
-    --foreground: 240 6% 92%;
-    --card: 240 15% 8%;
-    --card-foreground: 240 6% 92%;
-    --popover: 240 15% 10%;
-    --popover-foreground: 240 6% 92%;
-    --primary: 234 78% 56%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 6% 14%;
-    --secondary-foreground: 240 6% 85%;
-    --muted: 240 6% 14%;
-    --muted-foreground: 240 5% 58%;
-    --accent: 240 6% 14%;
-    --accent-foreground: 240 6% 85%;
-    --destructive: 350 89% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 240 6% 16%;
-    --input: 240 6% 16%;
-    --ring: 234 78% 56%;
-    --info: 234 78% 56%;
-    --success: 152 69% 41%;
-    --warning: 38 92% 50%;
-
-    /* ── Sidebar — dark ───────────────────────────────────────────── */
-    --sidebar-background: 240 20% 5%;
-    --sidebar-foreground: 240 5% 58%;
-    --sidebar-primary: 234 78% 56%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 6% 14%;
-    --sidebar-accent-foreground: 240 6% 85%;
-    --sidebar-border: 240 6% 16%;
-    --sidebar-ring: 234 78% 56%;
-
-    /* ── Semantic — dark ──────────────────────────────────────────── */
-    --card-glow: 234 78% 56%;
-    --card-glow-hover: 234 78% 56%;
-
-    /* ── Trust tiers — dark ───────────────────────────────────────── */
-    --trust-verified: 152 69% 41%;
-    --trust-provisional: 38 92% 50%;
-    --trust-unverified: 240 5% 40%;
+    --logo: #6366F1;
+    --logo-fallback: #818CF8;
 
     /* ── Shadows — dark ───────────────────────────────────────────── */
     --shadow-xs: 0 1px 2px rgba(0,0,0,0.2);
@@ -155,15 +79,15 @@
     --card-padding: 1.5rem;
 
     /* ── Gradient tokens ──────────────────────────────────────────── */
-    --gradient-primary: linear-gradient(135deg, hsl(234 78% 56%) 0%, hsl(262 83% 58%) 100%);
-    --gradient-subtle: linear-gradient(135deg, hsl(234 78% 56% / 0.06) 0%, hsl(262 83% 58% / 0.03) 100%);
-    --gradient-welcome: linear-gradient(135deg, hsl(234 78% 56% / 0.1) 0%, hsl(0 0% 98%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(239 84% 67%) 0%, hsl(262 83% 58%) 100%);
+    --gradient-subtle: linear-gradient(135deg, hsl(239 84% 67% / 0.06) 0%, hsl(262 83% 58% / 0.03) 100%);
+    --gradient-welcome: linear-gradient(135deg, hsl(239 84% 67% / 0.1) 0%, hsl(240 6% 4%) 100%);
 
     /* ── Button tokens ────────────────────────────────────────────── */
-    --btn-primary-bg: hsl(234 78% 56%);
-    --btn-primary-hover: hsl(234 78% 62%);
-    --btn-secondary-border: hsl(240 6% 90%);
-    --btn-ghost-hover: hsl(240 5% 96%);
+    --btn-primary-bg: hsl(239 84% 67%);
+    --btn-primary-hover: hsl(239 84% 72%);
+    --btn-secondary-border: hsl(240 4% 16%);
+    --btn-ghost-hover: hsl(240 5% 12%);
 
     /* ── Border radius scale ──────────────────────────────────────── */
     --radius-sm: 0.375rem;
@@ -184,6 +108,94 @@
     --status-withdrawn: 240 4% 64%;
 
     /* ── Component tokens ─────────────────────────────────────────── */
+    --input-height: 2.75rem;
+    --input-height-lg: 3rem;
+    --btn-height: 2.75rem;
+    --btn-height-lg: 3rem;
+    --header-height: 4rem;
+    --bottom-nav-height: 4rem;
+  }
+
+  .light {
+    /* ── Core palette — light ─────────────────────────────────────── */
+    --background: 0 0% 100%;
+    --foreground: 224 71% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
+    --primary: 234 78% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 94%;
+    --secondary-foreground: 240 6% 20%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 240 5% 94%;
+    --accent-foreground: 240 6% 20%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 234 78% 56%;
+    --info: 234 78% 56%;
+    --success: 152 69% 41%;
+    --warning: 38 92% 50%;
+
+    /* ── Sidebar — light ──────────────────────────────────────────── */
+    --sidebar-background: 240 5% 98%;
+    --sidebar-foreground: 240 4% 46%;
+    --sidebar-primary: 234 78% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 94%;
+    --sidebar-accent-foreground: 240 6% 20%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 234 78% 56%;
+
+    /* ── Semantic — light ─────────────────────────────────────────── */
+    --card-glow: 234 78% 56%;
+    --card-glow-hover: 234 78% 56%;
+
+    /* ── Trust tiers — light ──────────────────────────────────────── */
+    --trust-verified: 152 69% 41%;
+    --trust-provisional: 38 92% 50%;
+    --trust-unverified: 240 4% 64%;
+
+    /* ── Shadows — light ──────────────────────────────────────────── */
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.06), 0 4px 6px -4px rgba(0,0,0,0.04);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.06), 0 8px 10px -6px rgba(0,0,0,0.04);
+
+    /* ── Card primitives — light ──────────────────────────────────── */
+    --card-radius: 0.75rem;
+    --card-border: 1px solid hsl(var(--border));
+    --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+    --card-shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+    --card-padding: 1.5rem;
+
+    /* ── Gradient tokens — light ──────────────────────────────────── */
+    --gradient-primary: linear-gradient(135deg, hsl(234 78% 56%) 0%, hsl(262 83% 58%) 100%);
+    --gradient-subtle: linear-gradient(135deg, hsl(234 78% 56% / 0.06) 0%, hsl(262 83% 58% / 0.03) 100%);
+    --gradient-welcome: linear-gradient(135deg, hsl(234 78% 56% / 0.1) 0%, hsl(0 0% 100%) 100%);
+
+    /* ── Button tokens — light ────────────────────────────────────── */
+    --btn-primary-bg: hsl(234 78% 56%);
+    --btn-primary-hover: hsl(234 78% 62%);
+    --btn-secondary-border: hsl(240 6% 90%);
+    --btn-ghost-hover: hsl(240 5% 96%);
+
+    /* ── Status colors — light ────────────────────────────────────── */
+    --status-submitted: 221 83% 53%;
+    --status-screening: 262 83% 58%;
+    --status-shortlisted: 152 69% 41%;
+    --status-interview: 38 92% 50%;
+    --status-offered: 160 84% 39%;
+    --status-accepted: 152 69% 41%;
+    --status-rejected: 0 84% 60%;
+    --status-withdrawn: 240 4% 64%;
+
+    /* ── Component tokens — light ─────────────────────────────────── */
     --input-height: 2.75rem;
     --input-height-lg: 3rem;
     --btn-height: 2.75rem;

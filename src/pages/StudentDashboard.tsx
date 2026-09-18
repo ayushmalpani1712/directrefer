@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import {
-  ArrowRight, Briefcase, CheckCircle2, ChevronRight, Circle,
+  ArrowRight, Briefcase, CheckCircle2, ChevronRight, ChevronUp, Circle,
   Send, TrendingUp, Users, Eye, Upload, Shield, UserPlus,
   Search, FileText,
 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { LazyArea, LazyAreaChart, LazyCartesianGrid, LazyResponsiveContainer, LazyTooltip, LazyXAxis, LazyYAxis } from '@/components/Charts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -103,7 +104,7 @@ function MobileQuickActionCard({ icon: Icon, label, desc, onClick }: { icon: typ
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-3 rounded-xl border border-border/40 bg-card p-3.5 text-left active:bg-muted/40 transition-colors min-h-[68px]"
+      className="flex items-center gap-3 rounded-xl border border-border/60 bg-card p-3.5 text-left active:bg-muted/40 transition-colors min-h-[68px]"
     >
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Icon className="h-5 w-5" />
@@ -179,6 +180,32 @@ function MobileEmptyJobs({ onBrowseJobs }: { onBrowseJobs: () => void }) {
         <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
       </MobileButton>
     </div>
+  )
+}
+
+// ── Scroll to Top Button ─────────────────────────────────────
+function ScrollToTopButton() {
+  const [visible, setVisible] = React.useState(false)
+
+  React.useEffect(() => {
+    const handler = () => setVisible(window.scrollY > 200)
+    window.addEventListener('scroll', handler, { passive: true })
+    return () => window.removeEventListener('scroll', handler)
+  }, [])
+
+  if (!visible) return null
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px)+1rem)] right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+      aria-label="Scroll to top"
+    >
+      <ChevronUp className="h-5 w-5" />
+    </motion.button>
   )
 }
 
@@ -563,7 +590,7 @@ function MobileNewUser({ messages, profilePct, profileChecklist, jobRecs, naviga
   jobRecs: JobRecommendation[]; navigate: (to: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-5 pb-8">
+    <div className="flex flex-col gap-5 pb-6">
       <div className="px-1 pt-1">
         <h1 className="text-[20px] font-bold text-foreground">{messages.greeting}</h1>
         <p className="text-[13px] text-muted-foreground mt-0.5">{messages.sub}</p>
@@ -614,7 +641,7 @@ function MobilePartialUser({ messages, profilePct, profileChecklist, myRequests,
 }) {
   const pendingRequests = myRequests.filter((r) => r.status === 'requested' || r.status === 'under_review')
   return (
-    <div className="flex flex-col gap-5 pb-8">
+    <div className="flex flex-col gap-5 pb-6">
       <div className="px-1 pt-1">
         <h1 className="text-[20px] font-bold text-foreground">{messages.greeting}</h1>
         <p className="text-[13px] text-muted-foreground mt-0.5">{messages.sub}</p>
@@ -691,7 +718,7 @@ function MobileActiveUser({ messages, myRequests, professionals, jobRecs, activi
 }) {
   const pendingRequests = myRequests.filter((r) => r.status === 'requested' || r.status === 'under_review')
   return (
-    <div className="flex flex-col gap-5 pb-8">
+    <div className="flex flex-col gap-5 pb-6">
       <div className="px-1 pt-1">
         <h1 className="text-[20px] font-bold text-foreground">{messages.greeting}</h1>
         <p className="text-[13px] text-muted-foreground mt-0.5">{messages.sub}</p>
@@ -870,12 +897,21 @@ export default function StudentDashboard() {
   // ── MOBILE LAYOUT ──────────────────────────────────────────
   if (isMobile) {
     if (profilePct <= 25) {
-      return <MobileNewUser messages={messages} profilePct={profilePct} profileChecklist={profileChecklist} jobRecs={jobRecs} navigate={navigate} />
+      return <>
+        <MobileNewUser messages={messages} profilePct={profilePct} profileChecklist={profileChecklist} jobRecs={jobRecs} navigate={navigate} />
+        <ScrollToTopButton />
+      </>
     }
     if (profilePct < 80) {
-      return <MobilePartialUser messages={messages} profilePct={profilePct} profileChecklist={profileChecklist} myRequests={myRequests} professionals={professionals} jobRecs={jobRecs} navigate={navigate} />
+      return <>
+        <MobilePartialUser messages={messages} profilePct={profilePct} profileChecklist={profileChecklist} myRequests={myRequests} professionals={professionals} jobRecs={jobRecs} navigate={navigate} />
+        <ScrollToTopButton />
+      </>
     }
-    return <MobileActiveUser messages={messages} myRequests={myRequests} professionals={professionals} jobRecs={jobRecs} activity={activity} saved={saved} navigate={navigate} />
+    return <>
+      <MobileActiveUser messages={messages} myRequests={myRequests} professionals={professionals} jobRecs={jobRecs} activity={activity} saved={saved} navigate={navigate} />
+      <ScrollToTopButton />
+    </>
   }
 
   // ── DESKTOP LAYOUT ─────────────────────────────────────────
