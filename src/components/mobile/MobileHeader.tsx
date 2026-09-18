@@ -15,7 +15,7 @@ export function MobileHeader() {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-30 flex h-12 items-center justify-between px-3',
+        'sticky top-0 z-30 flex h-12 items-center justify-between px-3',
         'border-b border-border/50 bg-background/95 backdrop-blur-lg'
       )}
     >
@@ -34,6 +34,7 @@ export function MobileHeader() {
       </div>
 
       <button
+        onClick={() => navigate('/notifications')}
         className="relative flex h-11 w-11 items-center justify-center rounded-lg text-foreground transition-colors active:bg-muted"
         aria-label="Notifications"
       >

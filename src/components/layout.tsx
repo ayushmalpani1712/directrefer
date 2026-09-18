@@ -547,19 +547,30 @@ function AnimatedOutlet() {
   return <div className="flex flex-col min-w-0 min-h-0 overflow-x-hidden"><Outlet /></div>
 }
 
+// Pages that render their own mobile header
+const PAGES_WITHOWN_HEADER = [
+  '/job-seeker/profile',
+  '/professional/profile',
+  '/recruiter/profile',
+  '/professional/referrals',
+  '/job-seeker/request-referral',
+  '/job-seeker/screening/',
+  '/job-detail/',
+]
+
 // ── Shell ───────────────────────────────────────────────────
 export default function AppShell() {
   const isMobile = useMobile()
+  const { pathname } = useLocation()
 
   if (isMobile) {
+    const hasOwnHeader = PAGES_WITHOWN_HEADER.some(p => pathname.startsWith(p) || pathname === p)
     return (
       <div className="flex flex-col min-h-dvh bg-background">
         <SkipToContent />
-        <MobileHeader />
+        {!hasOwnHeader && <MobileHeader />}
         <main id="main-content" className="flex-1 overflow-y-auto" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
-          <div className="px-4 py-4">
-            <AnimatedOutlet />
-          </div>
+          <AnimatedOutlet />
         </main>
         <MobileBottomNav />
       </div>
