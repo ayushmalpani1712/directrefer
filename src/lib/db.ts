@@ -1302,7 +1302,8 @@ export async function toggleBookmark(
       .from('bookmarks')
       .select('user_id')
       .eq('user_id', userId)
-      .eq('professional_id', professionalId)
+      .eq('entity_type', 'professional')
+      .eq('entity_id', professionalId)
       .maybeSingle()
 
     if (existing) {
@@ -1310,12 +1311,13 @@ export async function toggleBookmark(
         .from('bookmarks')
         .delete()
         .eq('user_id', userId)
-        .eq('professional_id', professionalId)
+        .eq('entity_type', 'professional')
+        .eq('entity_id', professionalId)
       return !error
     } else {
       const { error } = await supabase
         .from('bookmarks')
-        .insert({ user_id: userId, professional_id: professionalId })
+        .insert({ user_id: userId, entity_type: 'professional', entity_id: professionalId })
       return !error
     }
   } catch {

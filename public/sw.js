@@ -1,4 +1,4 @@
-const ASSET_CACHE = 'directrefer-assets-v3'
+const ASSET_CACHE = 'directrefer-assets-v4'
 const IMAGE_CACHE = 'directrefer-images-v1'
 const FONT_CACHE = 'directrefer-fonts-v1'
 

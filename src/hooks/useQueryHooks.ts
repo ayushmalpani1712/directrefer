@@ -122,7 +122,7 @@ export function useReferrals(userId: string | undefined, enabled = true) {
       const { data, error } = await supabase
         .from('referrals')
         .select('*')
-        .or(`student.eq.${userId},professional.eq.${userId}`)
+        .or(`requester_id.eq.${userId},professional_id.eq.${userId}`)
         .order('created_at', { ascending: false })
       if (error || !data) return []
       return data

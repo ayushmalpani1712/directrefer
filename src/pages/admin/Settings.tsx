@@ -63,7 +63,7 @@ export default function AdminSettings() {
   const [gdprRetention, setGdprRetention] = useState<Array<{ id: string; full_name: string; email: string; data_retention_until: string }>>([])
   const [gdprLoading, setGdprLoading] = useState(false)
 
-  const [screeningCriteria, setScreeningCriteria] = useState<Array<{ id: string; name: string; category: string; job_id: string | null; is_active: boolean }>>([])
+  const [screeningCriteria, setScreeningCriteria] = useState<Array<{ id: string; name: string; category: string; is_active: boolean }>>([])
   const [applyingTemplate, setApplyingTemplate] = useState<string | null>(null)
   const [templateJobId, setTemplateJobId] = useState('')
   const [screeningJobs, setScreeningJobs] = useState<Array<{ id: string; title: string }>>([])
@@ -162,7 +162,7 @@ export default function AdminSettings() {
       const [criteriaRes, jobsRes] = await Promise.all([
         supabase
           .from('screening_criteria')
-          .select('id, name, category, job_id, is_active')
+          .select('id, name, category, is_active')
           .order('created_at', { ascending: false }),
         supabase
           .from('jobs')
@@ -685,7 +685,7 @@ export default function AdminSettings() {
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium">{c.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          Category: {c.category} {c.job_id ? `· Job: ${screeningJobs.find(j => j.id === c.job_id)?.title ?? 'Unknown'}` : '· Global'}
+                          Category: {c.category} · Global
                         </div>
                       </div>
                       <Badge variant="outline" className={c.is_active ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500' : 'text-muted-foreground'}>

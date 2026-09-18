@@ -87,10 +87,10 @@ export function BrowseJobsView() {
     const loadBookmarks = async () => {
       const { data } = await supabase
         .from('bookmarks')
-        .select('job_id')
+        .select('entity_id')
         .eq('user_id', user.id)
-        .not('job_id', 'is', null)
-      if (data) setBookmarkedIds(new Set(data.map((b: { job_id: string }) => b.job_id)))
+        .eq('entity_type', 'job')
+      if (data) setBookmarkedIds(new Set(data.map((b: { entity_id: string }) => b.entity_id)))
     }
     loadBookmarks()
   }, [user])
@@ -99,11 +99,11 @@ export function BrowseJobsView() {
     if (!user) return
     try {
       if (bookmarkedIds.has(jobId)) {
-        await supabase.from('bookmarks').delete().eq('user_id', user.id).eq('job_id', jobId)
+        await supabase.from('bookmarks').delete().eq('user_id', user.id).eq('entity_type', 'job').eq('entity_id', jobId)
         setBookmarkedIds(prev => { const n = new Set(prev); n.delete(jobId); return n })
         toast.success('Bookmark removed')
       } else {
-        await supabase.from('bookmarks').insert({ user_id: user.id, job_id: jobId })
+        await supabase.from('bookmarks').insert({ user_id: user.id, entity_type: 'job', entity_id: jobId })
         setBookmarkedIds(prev => new Set(prev).add(jobId))
         toast.success('Job bookmarked')
       }
