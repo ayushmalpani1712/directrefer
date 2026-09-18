@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router'
-import { LayoutDashboard, Search, FileText, MessageSquare, User } from 'lucide-react'
+import { LayoutDashboard, Users, FileText, MessageSquare, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
@@ -7,7 +7,7 @@ import { ROLE_ROUTE, getRoleFromPath } from '@/data/constants'
 
 const TABS = [
   { key: 'home', label: 'Home', icon: LayoutDashboard },
-  { key: 'search', label: 'Search', icon: Search },
+  { key: 'professionals', label: 'Find Pros', icon: Users },
   { key: 'referrals', label: 'Referrals', icon: FileText },
   { key: 'messages', label: 'Messages', icon: MessageSquare },
   { key: 'profile', label: 'Profile', icon: User },
@@ -30,12 +30,12 @@ export function MobileBottomNav() {
     switch (key) {
       case 'home':
         return `${prefix}/dashboard`
-      case 'search':
+      case 'professionals':
         return urlRole === 'student'
-          ? '/job-seeker/browse-jobs'
+          ? '/job-seeker/professionals'
           : urlRole === 'professional'
-            ? '/professional/browse-jobs'
-            : '/recruiter/jobs'
+            ? '/professional/professionals'
+            : '/recruiter/talent'
       case 'referrals':
         return urlRole === 'student'
           ? '/job-seeker/applications'
