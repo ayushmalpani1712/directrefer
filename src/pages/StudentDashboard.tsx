@@ -103,14 +103,14 @@ function MobileQuickActionCard({ icon: Icon, label, desc, onClick }: { icon: typ
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-3 rounded-xl border border-border/40 bg-card p-3.5 text-left active:bg-muted/40 transition-colors"
+      className="flex items-center gap-3 rounded-xl border border-border/40 bg-card p-3.5 text-left active:bg-muted/40 transition-colors min-h-[68px]"
     >
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-[14px] font-medium text-foreground">{label}</div>
-        <div className="text-[12px] text-muted-foreground">{desc}</div>
+        <div className="text-[12px] text-muted-foreground line-clamp-1">{desc}</div>
       </div>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/30" />
     </button>
