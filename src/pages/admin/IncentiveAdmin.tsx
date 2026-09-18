@@ -55,7 +55,7 @@ export default function IncentiveAdmin() {
     setLoading(true)
     try {
       let query = supabase
-        .from('incentives')
+        .from('referral_incentives')
         .select('*')
         .order('created_at', { ascending: false })
 
@@ -111,7 +111,7 @@ export default function IncentiveAdmin() {
     setUpdatingId(id)
     try {
       const { error } = await supabase
-        .from('incentives')
+        .from('referral_incentives')
         .update({ status: 'approved' })
         .eq('id', id)
 
@@ -132,7 +132,7 @@ export default function IncentiveAdmin() {
     setUpdatingId(id)
     try {
       const { error } = await supabase
-        .from('incentives')
+        .from('referral_incentives')
         .update({ status: 'rejected' })
         .eq('id', id)
 

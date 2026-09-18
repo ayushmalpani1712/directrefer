@@ -88,15 +88,19 @@ export async function persistUTMEvent(userId?: string | null): Promise<void> {
   const { supabase } = await import('@/lib/supabase')
   const sessionId = sessionStorage.getItem('session_id') || crypto.randomUUID()
   sessionStorage.setItem('session_id', sessionId)
-  await supabase.from('utm_events').insert({
-    user_id: userId || null,
-    session_id: sessionId,
-    utm_source: utm.source || null,
-    utm_medium: utm.medium || null,
-    utm_campaign: utm.campaign || null,
-    utm_term: utm.term || null,
-    utm_content: utm.content || null,
-    referrer_source: getReferrerSource(),
-    landing_page: window.location.pathname,
-  })
+  try {
+    await supabase.from('utm_events').insert({
+      user_id: userId || null,
+      session_id: sessionId,
+      utm_source: utm.source || null,
+      utm_medium: utm.medium || null,
+      utm_campaign: utm.campaign || null,
+      utm_term: utm.term || null,
+      utm_content: utm.content || null,
+      referrer_source: getReferrerSource(),
+      landing_page: window.location.pathname,
+    })
+  } catch {
+    // utm_events table may not exist or RLS may block insert — safe to ignore
+  }
 }

@@ -64,7 +64,6 @@ export async function invalidateAllSessions(
       .from('users')
       .select('id')
       .eq('status', 'active')
-      .is('deleted_at', null)
 
     if (fetchError) {
       return { success: false, error: fetchError.message }

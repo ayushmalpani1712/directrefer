@@ -38,7 +38,6 @@ export async function calculateTrustScore(userId: string): Promise<TrustScore> {
     .from('referrals')
     .select('status')
     .eq('professional_id', userId)
-    .is('deleted_at', null)
 
   // Component 1: Response Reliability (0-25)
   // Based on avg_reply_hours: <2h = 25, 2-12h = 20, 12-24h = 15, 24-48h = 10, >48h = 5
@@ -141,7 +140,6 @@ export async function batchRecalculate(): Promise<{ updated: number; errors: str
     .from('profiles_professional')
     .select('user_id')
     .eq('open_for_referrals', true)
-    .is('deleted_at', null)
 
   if (!professionals) return { updated: 0, errors: [] }
 

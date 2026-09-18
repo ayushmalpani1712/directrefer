@@ -72,7 +72,6 @@ export default function JobAnalytics() {
         .from('jobs')
         .select('id, title')
         .eq('recruiter_id', user.id)
-        .is('deleted_at', null)
 
       if (!jobs || jobs.length === 0) {
         setJobStats([])

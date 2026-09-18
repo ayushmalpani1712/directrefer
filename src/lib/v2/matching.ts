@@ -218,7 +218,6 @@ export async function findMatchesForJobSeeker(
     .from('profiles_professional')
     .select('*')
     .eq('open_for_referrals', true)
-    .is('deleted_at', null)
 
   if (!professionals) return []
 
@@ -334,7 +333,6 @@ export async function findMatchesForProfessional(
     .from('jobs')
     .select('*')
     .eq('status', 'active')
-    .is('deleted_at', null)
 
   if (!jobs) return []
 
@@ -356,7 +354,6 @@ export async function findMatchesForProfessional(
     .from('profiles_job_seeker')
     .select('*')
     .eq('open_to_work', true)
-    .is('deleted_at', null)
 
   if (!seekers) return []
 
@@ -553,7 +550,6 @@ export async function recommendJobsForCandidate(
     .from('jobs')
     .select('id, title, location')
     .eq('status', 'active')
-    .is('deleted_at', null)
 
   if (!jobs) return []
 
