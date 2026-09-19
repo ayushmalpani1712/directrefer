@@ -333,11 +333,18 @@ export async function fetchReferrals(userId: string): Promise<ReferralRequest[]>
   try {
     const { data, error } = await supabase
       .from('referrals')
-      .select('id, requester_id, professional_id, job_title, status, pipeline_stage, created_at, note, progress, relationship_type, relationship_note, policy_acknowledged, requester:users!referrals_requester_id_fkey(full_name), professional:users!referrals_professional_id_fkey(full_name)')
+      .select('id, requester_id, professional_id, job_title, status, pipeline_stage, created_at, note, progress, relationship_type, relationship_note, policy_acknowledged')
       .or(`requester_id.eq.${userId},professional_id.eq.${userId}`)
       .order('created_at', { ascending: false })
 
     if (error || !data) return []
+
+    const allUserIds = [...new Set(data.flatMap(r => [r.requester_id, r.professional_id]).filter(Boolean))]
+    const { data: userRows } = allUserIds.length > 0
+      ? await supabase.from('users').select('id, full_name').in('id', allUserIds)
+      : { data: [] }
+    const userMap = new Map<string, { full_name: string }>()
+    for (const u of (userRows ?? [])) userMap.set(u.id, u)
 
     const requesterIds = [...new Set(data.map(r => r.requester_id).filter(Boolean))]
     const baseSeekerSelect = 'user_id, resume_url, headline, skills, experience, education, preferred_role, college'
@@ -355,8 +362,7 @@ export async function fetchReferrals(userId: string): Promise<ReferralRequest[]>
     }
 
     return data.map((row) => {
-      const requesterArr = row.requester as unknown as { full_name: string }[] | null
-      const requester = requesterArr?.[0] ?? null
+      const requester = userMap.get(row.requester_id) ?? null
       const sp = seekerMap.get(row.requester_id)
       const safeJson = <T,>(val: unknown): T[] => {
         if (Array.isArray(val)) return val as T[]
@@ -561,9 +567,7 @@ export async function fetchConversations(userId: string, roleContext?: string): 
         user_a_id,
         user_b_id,
         role_context,
-        updated_at,
-        user_a:users!conversations_user_a_id_fkey(id, full_name, avatar_url, role, slug),
-        user_b:users!conversations_user_b_id_fkey(id, full_name, avatar_url, role, slug)
+        updated_at
       `)
       .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`)
       .order('updated_at', { ascending: false })
@@ -575,6 +579,13 @@ export async function fetchConversations(userId: string, roleContext?: string): 
     const { data: convRows, error: convError } = await query
 
     if (convError || !convRows) return []
+
+    const allUserIds = [...new Set(convRows.flatMap(c => [c.user_a_id, c.user_b_id]).filter(Boolean))]
+    const { data: userRows } = allUserIds.length > 0
+      ? await supabase.from('users').select('id, full_name, avatar_url, role, slug').in('id', allUserIds)
+      : { data: [] }
+    const userMap = new Map<string, { id: string; full_name: string; avatar_url: string | null; role: string; slug?: string | null }>()
+    for (const u of (userRows ?? [])) userMap.set(u.id, u)
 
     // Batch-fetch all messages for all conversations (avoids N+1)
     const convIds = convRows.map(c => c.id)
@@ -596,8 +607,8 @@ export async function fetchConversations(userId: string, roleContext?: string): 
     const conversations: Conversation[] = []
 
     for (const conv of convRows) {
-      const userA = Array.isArray(conv.user_a) ? conv.user_a[0] : conv.user_a as { id: string; full_name: string; avatar_url: string | null; role: string; slug?: string | null } | null
-      const userB = Array.isArray(conv.user_b) ? conv.user_b[0] : conv.user_b as { id: string; full_name: string; avatar_url: string | null; role: string; slug?: string | null } | null
+      const userA = userMap.get(conv.user_a_id) ?? null
+      const userB = userMap.get(conv.user_b_id) ?? null
 
       const otherUser = userA?.id === userId ? userB : userA
       if (!otherUser) continue
@@ -741,7 +752,7 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
   try {
     let query = supabase
       .from('jobs')
-      .select('id, title, department, location, type, salary_range, applicant_count, referral_count, status, posted_at, recruiter_id, description, expires_at')
+      .select('id, title, department, location, type, salary_range, applicants, referrals, stage, posted_at, recruiter_id, description, application_url')
       .order('posted_at', { ascending: false })
 
     if (recruiterId) {
@@ -784,19 +795,18 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
         location: row.location ?? '',
         type: row.type ?? 'Full-time',
         salary: row.salary_range ?? '',
-        applicants: row.applicant_count,
-        referrals: row.referral_count,
+        applicants: row.applicants ?? 0,
+        referrals: row.referrals ?? 0,
         stage:
-          row.status === 'active'
+          row.stage === 'active'
             ? 'Active'
-            : row.status === 'paused'
+            : row.stage === 'paused'
               ? 'Paused'
               : 'Draft',
         postedDaysAgo: daysSince(row.posted_at),
         pipeline: Object.entries(counts).map(([stage, count]) => ({ stage, count })),
         recruiterId: row.recruiter_id,
         recruiterSlug: rUser?.slug ?? undefined,
-        expires_at: row.expires_at ?? undefined,
       }
     })
   } catch (err) {
@@ -836,13 +846,12 @@ export async function fetchBookmarks(userId: string): Promise<string[]> {
   try {
     const { data, error } = await supabase
       .from('bookmarks')
-      .select('entity_id')
+      .select('professional_id')
       .eq('user_id', userId)
-      .eq('entity_type', 'professional')
 
     if (error || !data) return []
 
-    return data.map((row) => row.entity_id)
+    return data.map((row) => row.professional_id)
   } catch (err) {
     console.error('fetchBookmarks failed:', err)
     return []
@@ -855,7 +864,7 @@ export async function fetchNotifications(userId: string): Promise<AppNotificatio
   try {
     const { data, error } = await supabase
       .from('notifications')
-      .select('id, type, title, description, created_at, read, entity_type, entity_id')
+      .select('id, type, title, description, created_at, read')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(50)
@@ -869,8 +878,8 @@ export async function fetchNotifications(userId: string): Promise<AppNotificatio
       description: row.description ?? '',
       time: formatRelativeTime(row.created_at),
       read: row.read,
-      entity_type: row.entity_type ?? null,
-      entity_id: row.entity_id ?? null,
+      entity_type: null,
+      entity_id: null,
     }))
   } catch (err) {
     console.error('fetchNotifications failed:', err)
@@ -1302,8 +1311,7 @@ export async function toggleBookmark(
       .from('bookmarks')
       .select('user_id')
       .eq('user_id', userId)
-      .eq('entity_type', 'professional')
-      .eq('entity_id', professionalId)
+      .eq('professional_id', professionalId)
       .maybeSingle()
 
     if (existing) {
@@ -1311,13 +1319,12 @@ export async function toggleBookmark(
         .from('bookmarks')
         .delete()
         .eq('user_id', userId)
-        .eq('entity_type', 'professional')
-        .eq('entity_id', professionalId)
+        .eq('professional_id', professionalId)
       return !error
     } else {
       const { error } = await supabase
         .from('bookmarks')
-        .insert({ user_id: userId, entity_type: 'professional', entity_id: professionalId })
+        .insert({ user_id: userId, professional_id: professionalId })
       return !error
     }
   } catch {

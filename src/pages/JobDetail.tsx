@@ -149,10 +149,9 @@ export default function JobDetailPage() {
     const check = async () => {
       const { data } = await supabase
         .from('bookmarks')
-        .select('id')
+        .select('user_id')
         .eq('user_id', user.id)
-        .eq('entity_type', 'job')
-        .eq('entity_id', id)
+        .eq('professional_id', id)
         .maybeSingle()
       setBookmarked(!!data)
     }
@@ -164,11 +163,11 @@ export default function JobDetailPage() {
     setBookmarkLoading(true)
     try {
       if (bookmarked) {
-        await supabase.from('bookmarks').delete().eq('user_id', user.id).eq('entity_type', 'job').eq('entity_id', id)
+        await supabase.from('bookmarks').delete().eq('user_id', user.id).eq('professional_id', id)
         setBookmarked(false)
         toast.success('Bookmark removed')
       } else {
-        await supabase.from('bookmarks').insert({ user_id: user.id, entity_type: 'job', entity_id: id })
+        await supabase.from('bookmarks').insert({ user_id: user.id, professional_id: id })
         setBookmarked(true)
         toast.success('Job bookmarked')
       }
