@@ -6,6 +6,7 @@
 // ============================================================================
 
 import { supabase } from '@/lib/supabase'
+import { trustScoresSupported } from './probes'
 
 export type TrustTier = 'verified' | 'provisional' | 'unverified'
 
@@ -162,6 +163,7 @@ export async function batchRecalculate(): Promise<{ updated: number; errors: str
  * Get trust score for a user.
  */
 export async function getTrustScore(userId: string): Promise<TrustScore | null> {
+  if (!(await trustScoresSupported())) return null
   const { data } = await supabase
     .from('trust_scores')
     .select('*')
@@ -204,6 +206,7 @@ export interface TrustScoreHistoryEntry {
  * Get trust score history for a user, ordered by version ascending.
  */
 export async function getTrustScoreHistory(userId: string): Promise<TrustScoreHistoryEntry[]> {
+  if (!(await trustScoresSupported())) return []
   const { data } = await supabase
     .from('trust_scores')
     .select('score, tier, calculated_at, version')

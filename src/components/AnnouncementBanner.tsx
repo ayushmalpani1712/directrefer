@@ -23,23 +23,24 @@ export function AnnouncementBanner() {
 
   useEffect(() => {
     const load = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('announcements')
-          .select('id, title, content, type, is_active, created_at, expires_at, created_by')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-        if (error || !data) return
-        const now = new Date()
-        const active = data.filter((a) => {
-          if (dismissed.has(a.id)) return false
-          if (a.expires_at && new Date(a.expires_at) < now) return false
-          return true
-        })
-        setAnnouncements(active)
-      } catch {
-        // announcements table may not exist yet
+      if (localStorage.getItem('dr_ann_unsupported') === '1') return
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('id, title, content, type, is_active, created_at, expires_at, created_by')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+      if (error) {
+        localStorage.setItem('dr_ann_unsupported', '1')
+        return
       }
+      if (!data) return
+      const now = new Date()
+      const active = data.filter((a) => {
+        if (dismissed.has(a.id)) return false
+        if (a.expires_at && new Date(a.expires_at) < now) return false
+        return true
+      })
+      setAnnouncements(active)
     }
     load()
   }, [dismissed])
