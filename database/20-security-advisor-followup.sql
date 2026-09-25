@@ -475,10 +475,8 @@ BEGIN
        SELECT 1
          FROM storage.buckets b
         WHERE b.public
-          AND p.qual ~* (E'bucket_id\\s*=\\s*' ||
-               replace(replace(replace(replace(replace(replace(replace(
-                 quote_literal(b.id)), '.', E'\\.'), '*', E'\\*'), '(', E'\\('), ')', E'\\)'),
-                 '$', E'\\$'), '+', E'\\+'), '?', E'\\?'))
+          AND p.qual IS NOT NULL
+          AND strpos(p.qual, quote_literal(b.id)) > 0
      );
   INSERT INTO _fix(step, detail, ok)
   VALUES ('verify.public_bucket_policies', v_n || ' → ' || v_names, v_n = 0);
