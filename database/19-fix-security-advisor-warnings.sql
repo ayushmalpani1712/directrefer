@@ -522,7 +522,7 @@ BEGIN
             JOIN pg_language l ON l.oid = c.prolang
            WHERE c.prosecdef = false
              AND c.prokind = 'f'
-             AND l.lname IN ('sql', 'plpgsql')
+             AND l.lanname IN ('sql', 'plpgsql')
              AND pg_get_functiondef(c.oid) ~ body_pat
         )
         OR EXISTS (
