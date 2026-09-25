@@ -18,6 +18,7 @@ import { GRADIENTS } from '@/data/constants'
 import { cn } from '@/lib/utils'
 import { ListSkeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/context/AuthContext'
 import { logAdminAction } from '@/lib/db'
 import { AdminVideoReview } from '@/components/AdminVideoReview'
 import {
@@ -47,6 +48,7 @@ interface ScreeningAttempt {
 }
 
 export default function ScreeningQueue() {
+  const { user } = useAuth()
   const [attempts, setAttempts] = useState<ScreeningAttempt[]>([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
@@ -154,7 +156,7 @@ export default function ScreeningQueue() {
             .maybeSingle()
           if (app) {
             const { updateApplicationStatus } = await import('@/lib/v2/applications')
-            await updateApplicationStatus(app.id, passed ? 'shortlisted' : 'rejected', 'admin', notes)
+            await updateApplicationStatus(app.id, passed ? 'shortlisted' : 'rejected', user?.id ?? 'admin', notes)
           }
         } catch { /* non-critical */ }
       }
