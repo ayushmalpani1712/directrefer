@@ -59,7 +59,7 @@ BEGIN
            ' current_user=' || current_user ||
            ' rls=' || c.relrowsecurity ||
            ' changed_by=' ||
-           CASE WHEN a.attname IS NULL THEN 'MISSING' ELSE a.attypid::regtype::text END,
+           CASE WHEN a.attname IS NULL THEN 'MISSING' ELSE a.atttypid::regtype::text END,
            true
       FROM pg_class c
       LEFT JOIN pg_attribute a
