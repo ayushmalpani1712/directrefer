@@ -85,10 +85,10 @@ export async function getApplication(id: string): Promise<Application | null> {
 export async function getCandidateApplications(
   candidateId: string,
   status?: ApplicationStatus
-): Promise<Application[]> {
+): Promise<(Application & { jobs?: { title?: string; company?: string; location?: string } })[]> {
   let query = supabase
     .from('applications')
-    .select('*, jobs(title, company, location)')
+    .select('*')
     .eq('candidate_id', candidateId)
     .order('submitted_at', { ascending: false })
 
@@ -98,7 +98,26 @@ export async function getCandidateApplications(
 
   const { data, error } = await query
   if (error) throw error
-  return (data ?? []) as Application[]
+
+  const apps = (data ?? []) as Application[]
+  const jobIds = [...new Set(apps.map((a) => a.job_id).filter(Boolean))]
+  if (jobIds.length === 0) return apps
+
+  const { data: jobsData } = await supabase
+    .from('jobs')
+    .select('*')
+    .in('id', jobIds)
+
+  const jobsById = new Map<string, { title?: string; company?: string; location?: string }>()
+  for (const j of (jobsData ?? []) as Record<string, unknown>[]) {
+    jobsById.set(String(j.id), {
+      title: (j.title as string) ?? undefined,
+      company: (j.company_name as string) ?? (j.company as string) ?? undefined,
+      location: (j.location as string) ?? undefined,
+    })
+  }
+
+  return apps.map((a) => ({ ...a, jobs: jobsById.get(a.job_id) }))
 }
 
 /**
@@ -107,10 +126,10 @@ export async function getCandidateApplications(
 export async function getJobApplications(
   jobId: string,
   status?: ApplicationStatus
-): Promise<Application[]> {
+): Promise<(Application & { profiles_job_seeker?: { full_name: string; email: string } })[]> {
   let query = supabase
     .from('applications')
-    .select('*, profiles_job_seeker(full_name, email)')
+    .select('*')
     .eq('job_id', jobId)
     .order('submitted_at', { ascending: false })
 
@@ -120,7 +139,22 @@ export async function getJobApplications(
 
   const { data, error } = await query
   if (error) throw error
-  return (data ?? []) as Application[]
+
+  const apps = (data ?? []) as Application[]
+  const candidateIds = [...new Set(apps.map((a) => a.candidate_id).filter(Boolean))]
+  if (candidateIds.length === 0) return apps
+
+  const { data: profilesData } = await supabase
+    .from('profiles_job_seeker')
+    .select('user_id, full_name, email')
+    .in('user_id', candidateIds)
+
+  const byUser = new Map<string, { full_name: string; email: string }>()
+  for (const p of (profilesData ?? []) as { user_id: string; full_name?: string; email?: string }[]) {
+    byUser.set(p.user_id, { full_name: p.full_name ?? '', email: p.email ?? '' })
+  }
+
+  return apps.map((a) => ({ ...a, profiles_job_seeker: byUser.get(a.candidate_id) }))
 }
 
 // ── Status Updates ─────────────────────────────────────────────────────────

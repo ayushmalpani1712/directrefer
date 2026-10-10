@@ -42,7 +42,7 @@ export interface MatchProfessional {
 export interface MatchResult {
   candidate_id: string
   professional_id: string
-  job_id: string
+  job_id?: string
   match_score: number
   skills_score: number
   role_score: number
@@ -199,18 +199,23 @@ export async function findMatchesForJobSeeker(
 
   const candidateSkills = (profileSkills ?? []).map(s => s.skill_id)
 
-  const { data: job } = await supabase
-    .from('jobs')
-    .select('*')
-    .eq('id', jobId)
-    .single()
+  const NIL_UUID = '00000000-0000-0000-0000-000000000000'
+  const hasJob = jobId && jobId !== NIL_UUID
 
-  if (!job) throw new Error('Job not found')
+  const { data: job } = hasJob
+    ? await supabase
+        .from('jobs')
+        .select('*')
+        .eq('id', jobId)
+        .maybeSingle()
+    : { data: null }
 
-  const { data: jobSkills } = await supabase
-    .from('job_skills')
-    .select('skill_id')
-    .eq('job_id', jobId)
+  const { data: jobSkills } = job
+    ? await supabase
+        .from('job_skills')
+        .select('skill_id')
+        .eq('job_id', jobId)
+    : { data: [] }
 
   const jobRequiredSkills = (jobSkills ?? []).map(s => s.skill_id)
 
@@ -288,10 +293,10 @@ export async function findMatchesForJobSeeker(
       matchCandidate,
       matchProfessional,
       jobRequiredSkills,
-      job.location
+      job?.location
     )
 
-    result.job_id = jobId
+    result.job_id = job ? jobId : undefined
     matches.push(result)
   }
 
@@ -428,10 +433,10 @@ export async function findMatchesForProfessional(
  * Store match results in the matches table.
  */
 export async function storeMatches(matches: MatchResult[]): Promise<void> {
-  const rows = matches.map(m => ({
+  const rows = matches.filter(m => m.job_id).map(m => ({
     candidate_id: m.candidate_id,
     professional_id: m.professional_id,
-    job_id: m.job_id,
+    job_id: m.job_id!,
     match_score: m.match_score,
     skills_score: m.skills_score,
     role_score: m.role_score,
