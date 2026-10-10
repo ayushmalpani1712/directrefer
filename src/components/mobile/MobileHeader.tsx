@@ -110,8 +110,8 @@ export function MobileHeader() {
     <>
       <header
         className={cn(
-          'sticky top-0 z-30 flex h-12 items-center justify-between px-3',
-          'border-b border-border/50 bg-background/95 backdrop-blur-lg'
+          'sticky top-0 z-40 flex h-12 items-center justify-between px-3',
+          'border-b border-border/40 bg-background/90 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75'
         )}
       >
         <div className="flex min-w-0 items-center gap-2">

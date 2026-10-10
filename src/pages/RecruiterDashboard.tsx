@@ -173,7 +173,7 @@ export default function RecruiterDashboard() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="bg-background">
         {/* Hero */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/15 via-card to-card px-4 pt-6 pb-5">
           <div className="flex items-center gap-3">

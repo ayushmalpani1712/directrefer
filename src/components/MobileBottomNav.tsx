@@ -73,11 +73,11 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40 bg-background/90 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/30 bg-background/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 md:hidden"
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="flex h-16 items-center">
+      <div className="flex h-[60px] items-center px-1">
         {slots.map((slot) => {
           const active = isActive(slot.href)
           const Icon = slot.icon
@@ -88,21 +88,21 @@ export function MobileBottomNav() {
                 <button
                   onClick={() => navigate(slot.href)}
                   className={cn(
-                    'relative -mt-5 flex h-[52px] w-[52px] items-center justify-center rounded-2xl shadow-lg shadow-primary/30 transition-transform duration-200 active:scale-95',
-                    'bg-gradient-to-br from-indigo-500 via-primary to-violet-500',
-                    active && 'ring-2 ring-primary/40 ring-offset-2 ring-offset-background'
+                    'relative -mt-6 flex h-[50px] w-[50px] items-center justify-center rounded-[18px] shadow-lg shadow-primary/25 transition-all duration-200 active:scale-95',
+                    'bg-gradient-to-b from-indigo-400 via-primary to-violet-600 ring-1 ring-white/15 ring-inset',
+                    active && 'shadow-primary/40 brightness-110'
                   )}
                   aria-label={slot.label}
                   aria-current={active ? 'page' : undefined}
                 >
-                  <Icon className="h-6 w-6 text-white" strokeWidth={2.25} />
+                  <Icon className="h-[22px] w-[22px] text-white drop-shadow-sm" strokeWidth={2.25} />
                   {slot.badge && (
-                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                    <span className="absolute -right-1.5 -top-1.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white ring-2 ring-background">
                       {slot.badge}
                     </span>
                   )}
                 </button>
-                <span className={cn('mt-1 text-[10px] font-medium', active ? 'text-foreground' : 'text-muted-foreground')}>
+                <span className={cn('mt-1 text-[10px] font-medium tracking-tight transition-colors', active ? 'text-foreground' : 'text-muted-foreground')}>
                   {slot.label}
                 </span>
               </div>
@@ -114,27 +114,29 @@ export function MobileBottomNav() {
               key={slot.key}
               onClick={() => navigate(slot.href)}
               className={cn(
-                'relative flex h-full flex-1 flex-col items-center justify-center gap-0.5 transition-colors duration-200',
+                'relative flex h-full flex-1 flex-col items-center justify-center gap-1',
                 active ? 'text-primary' : 'text-muted-foreground active:text-foreground'
               )}
               aria-label={slot.label}
               aria-current={active ? 'page' : undefined}
             >
-              <div className="relative">
+              <span
+                className={cn(
+                  'relative flex h-8 w-12 items-center justify-center rounded-xl transition-all duration-200',
+                  active && 'bg-primary/10'
+                )}
+              >
                 <Icon
-                  className={cn('h-6 w-6 transition-all duration-200', active && 'scale-105')}
-                  strokeWidth={active ? 2.5 : 2}
+                  className={cn('h-[22px] w-[22px] transition-all duration-200', active && 'scale-105')}
+                  strokeWidth={active ? 2.4 : 1.9}
                 />
                 {slot.badge && (
-                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+                  <span className="absolute right-1 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground ring-2 ring-background">
                     {slot.badge}
                   </span>
                 )}
-              </div>
-              <span className={cn('text-[11px] font-medium', active && 'font-semibold')}>{slot.label}</span>
-              {active && (
-                <span className="absolute top-0 left-1/2 h-1 w-4 -translate-x-1/2 rounded-full bg-primary" />
-              )}
+              </span>
+              <span className={cn('text-[10px] font-medium tracking-tight transition-colors', active && 'font-semibold')}>{slot.label}</span>
             </button>
           )
         })}

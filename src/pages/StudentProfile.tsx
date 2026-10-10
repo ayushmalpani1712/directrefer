@@ -334,7 +334,7 @@ export default function StudentProfile() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="bg-background">
         <input ref={resumeInputRef} type="file" accept=".pdf" className="hidden" onChange={handleResumeUpload} />
 
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>

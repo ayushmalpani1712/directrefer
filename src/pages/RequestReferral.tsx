@@ -201,7 +201,7 @@ export default function RequestReferral() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-28">
+      <div className="bg-background pb-32">
         <div className="sticky top-0 z-20 border-b border-border/40 bg-background/80 backdrop-blur-xl">
           {savedAt && step < 7 && (
             <div className="flex items-center justify-end px-4 pt-3">
@@ -608,7 +608,7 @@ export default function RequestReferral() {
         </AnimatePresence>
 
         {step < 7 && (
-          <div className="fixed bottom-0 inset-x-0 z-30 border-t border-border/40 bg-background/90 backdrop-blur-xl safe-area-pb">
+          <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom,0px))] inset-x-0 z-30 border-t border-border/40 bg-background/90 backdrop-blur-xl">
             <div className="px-4 py-4">
               {step < 6 ? (
                 <Button onClick={next} disabled={!canNext} className="w-full h-13 rounded-xl text-sm font-semibold">

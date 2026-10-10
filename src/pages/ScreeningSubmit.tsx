@@ -282,7 +282,7 @@ export default function ScreeningSubmit() {
     const currentAnswer = currentCriteria ? answers.find(a => a.criteria_id === currentCriteria.id) : null
 
     return (
-      <div className="min-h-screen bg-background">
+      <div className="bg-background">
         {attemptNumber > 1 && (
           <div className="px-4 pt-4">
             <Badge variant="outline" className="text-xs gap-1">
@@ -384,7 +384,7 @@ export default function ScreeningSubmit() {
         )}
 
         {currentStep < totalSteps && currentCriteria && (
-          <div className="px-4 pb-24">
+          <div className="px-4 pb-32">
             <div className="rounded-2xl border border-border/60 bg-card p-4 space-y-3">
               <div className="space-y-1">
                 <div className="flex items-start justify-between gap-2">
@@ -410,7 +410,7 @@ export default function ScreeningSubmit() {
         )}
 
         {currentStep < totalSteps && currentCriteria && (
-          <div className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border/40 px-4 py-3 safe-area-pb">
+          <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom,0px))] inset-x-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border/40 px-4 py-3">
             <div className="flex items-center justify-between gap-3">
               <Button
                 variant="outline"
@@ -442,7 +442,7 @@ export default function ScreeningSubmit() {
         )}
 
         {currentStep === totalSteps && (
-          <div className="px-4 pb-24 space-y-3">
+          <div className="px-4 pb-32 space-y-3">
             <div className="rounded-2xl border border-border/60 bg-card p-4 space-y-3">
               <h3 className="text-sm font-semibold">Review & Submit</h3>
               <div className="space-y-2 text-xs text-muted-foreground">
@@ -466,7 +466,7 @@ export default function ScreeningSubmit() {
                 </div>
               </div>
             </div>
-            <div className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border/40 px-4 py-3 safe-area-pb">
+            <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom,0px))] inset-x-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border/40 px-4 py-3">
               <div className="flex items-center gap-3">
                 <Button
                   variant="outline"

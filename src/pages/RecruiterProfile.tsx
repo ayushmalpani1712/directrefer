@@ -133,7 +133,7 @@ export default function RecruiterProfile() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="bg-background">
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <div className="relative h-32 bg-gradient-to-br from-primary/30 via-card to-card">
             <div className="absolute inset-0 bg-grid opacity-10" />

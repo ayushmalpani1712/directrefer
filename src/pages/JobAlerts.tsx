@@ -150,7 +150,7 @@ export default function JobAlerts() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="bg-background">
         <div className="space-y-3 px-4 pt-4">
           <div className="flex justify-end">
             <Button size="icon" className="h-11 w-11 rounded-full" onClick={() => setShowForm(true)}>

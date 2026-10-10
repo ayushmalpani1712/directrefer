@@ -215,7 +215,7 @@ export default function ProfessionalProfile() {
     const trustTier = trustScore >= 80 ? 'verified' as const : trustScore >= 50 ? 'provisional' as const : 'unverified' as const
 
     return (
-      <div className="min-h-screen bg-background">
+      <div className="bg-background">
         <div className="relative">
           {(() => { const bs = getBannerStyle(user?.id, bannerTheme); return (
             <div className="relative h-32 w-full" style={bs.style}>

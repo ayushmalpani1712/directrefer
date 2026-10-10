@@ -725,7 +725,7 @@ function RecruiterJobsManager() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="bg-background">
         <div className="flex justify-end px-4 pt-3">
           <Button size="icon" className="h-11 w-11 rounded-full" onClick={() => handlePostJob()}>
             <Plus className="h-5 w-5" />
@@ -740,7 +740,7 @@ function RecruiterJobsManager() {
           ]}
           activeKey={mobileTab}
           onChange={setMobileTab}
-          className="sticky top-12 z-20 border-b border-border/60 bg-background"
+          className="sticky top-0 z-20 border-b border-border/60 bg-background"
         />
 
         {mobileTab === 'postings' && (

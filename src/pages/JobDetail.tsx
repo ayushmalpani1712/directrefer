@@ -365,7 +365,7 @@ export default function JobDetailPage() {
           )}
         </div>
 
-        <div className="fixed bottom-[72px] left-0 right-0 z-40 border-t bg-background/95 backdrop-blur-lg safe-area-inset-bottom">
+        <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom,0px))] left-0 right-0 z-40 border-t border-border/40 bg-background/95 backdrop-blur-lg">
           <div className="flex flex-col gap-2 p-4">
             {role === 'student' && (
               <>

@@ -338,7 +338,7 @@ export default function ReferralInbox() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="bg-background">
         <div className="sticky top-0 z-20 border-b border-border/40 bg-background/80 backdrop-blur-xl">
           <div className="overflow-x-auto scrollbar-none">
             <div className="flex gap-2 px-5 py-3 min-w-max">

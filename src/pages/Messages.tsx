@@ -351,17 +351,17 @@ export default function Messages() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="bg-background">
         {!active ? (
           /* Mobile conversation list */
-          <div className="flex flex-col h-screen">
-            <div className="border-b border-border px-4 py-3">
+          <div className="flex flex-col">
+            <div className="sticky top-0 z-10 border-b border-border bg-background px-4 py-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search conversations..." className="w-full h-11 rounded-full bg-muted pl-9 pr-4 text-sm outline-none" />
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto pb-20">
+            <div className="pb-2">
               {sorted.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
                   <MessageIllustration />
@@ -392,7 +392,7 @@ export default function Messages() {
           </div>
         ) : (
           /* Mobile chat thread */
-          <div className="flex flex-col h-screen">
+          <div className="flex flex-col h-[calc(100dvh-48px-64px-env(safe-area-inset-bottom,0px))]">
             <div className="sticky top-0 z-30 flex items-center gap-3 bg-background/95 backdrop-blur border-b border-border px-2 py-2">
               <button type="button" onClick={() => setActiveId('')} className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground active:bg-muted" aria-label="Back">
                 <ArrowLeft className="h-5 w-5" />
@@ -444,7 +444,7 @@ export default function Messages() {
               </div>
             </div>
 
-            <div className="sticky bottom-0 border-t border-border bg-background p-3 safe-area-inset">
+            <div className="border-t border-border bg-background p-3">
               <div className="flex items-center gap-2">
                 <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls,.png,.jpg,.jpeg,.gif,.webp" />
                 <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground active:bg-muted">
