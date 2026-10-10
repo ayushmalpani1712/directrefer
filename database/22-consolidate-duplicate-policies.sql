@@ -285,7 +285,7 @@ BEGIN
       CONTINUE;
     END IF;
 
-    SELECT pg_get_userbyid(c.relowner) INTO v_owner
+    SELECT pg_get_userbyid(c.relowner)::text INTO v_owner
       FROM pg_class c
       JOIN pg_namespace n ON n.oid = c.relnamespace
      WHERE n.nspname = 'public' AND c.relname = t;
@@ -318,7 +318,7 @@ DECLARE
   v_abort   text;
   v_cn      int := 0;
   v_dn      int := 0;
-  v_roles   text;
+  v_roles   name[];
   v_q       text;
   v_w       text;
 BEGIN
