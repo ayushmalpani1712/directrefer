@@ -143,7 +143,7 @@ SELECT tablename, policyname, cmd, roles, qual, with_check
  ORDER BY tablename, policyname;
 
 -- 4. Surviving indexes on the two de-duplicated tables
-SELECT tn.relname AS table_name, i.relname AS index_name, i.indisprimary AS is_primary
+SELECT tn.relname AS table_name, i.relname AS index_name, x.indisprimary AS is_primary
   FROM pg_index x
   JOIN pg_class i ON i.oid = x.indexrelid
   JOIN pg_class tn ON tn.oid = x.indrelid
