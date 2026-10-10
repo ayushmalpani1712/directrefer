@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Logo } from '@/components/layout'
 import { toast } from 'sonner'
+import { isPwnedPassword } from '@/lib/hibp'
 
 function getPasswordStrength(pw: string): { score: number; label: string; color: string } {
   let score = 0
@@ -78,6 +79,10 @@ export default function ResetPassword() {
     }
     setLoading(true)
     try {
+      if (await isPwnedPassword(password)) {
+        toast.error('This password has appeared in a data breach. Please choose a different one.')
+        return
+      }
       const res = await fetch('/api/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

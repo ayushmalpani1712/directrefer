@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
+import { isPwnedPassword } from '@/lib/hibp'
 import type { User, Session } from '@supabase/supabase-js'
 
 interface AuthState {
@@ -136,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = useCallback(async (email: string, password: string, meta?: { full_name?: string; role?: string }) => {
     if (password.length < 6) return { error: 'Password must be at least 6 characters' }
+    if (await isPwnedPassword(password)) return { error: 'This password has appeared in a data breach. Please choose a different one.' }
 
     const allowedRoles = ['job_seeker', 'professional', 'recruiter']
     const roleMap: Record<string, string> = {

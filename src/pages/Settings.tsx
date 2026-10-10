@@ -22,6 +22,7 @@ import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { supabase } from '@/lib/supabase'
+import { isPwnedPassword } from '@/lib/hibp'
 import { cn } from '@/lib/utils'
 
 interface Session {
@@ -538,6 +539,10 @@ export default function Settings() {
       })
       if (signInError) {
         toast.error('Current password is incorrect')
+        return
+      }
+      if (await isPwnedPassword(newPassword)) {
+        toast.error('This password has appeared in a data breach. Please choose a different one.')
         return
       }
       const { error } = await supabase.auth.updateUser({ password: newPassword })

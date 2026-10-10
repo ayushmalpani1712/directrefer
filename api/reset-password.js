@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { handleCors, checkRateLimit, getClientIp } from './_lib.js';
+import { isPwnedPassword } from './lib/hibp.js';
 
 export default async function handler(req, res) {
   if (handleCors(req, res)) return;
@@ -12,6 +13,9 @@ export default async function handler(req, res) {
     }
     if (password.length < 8) {
       return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+    if (await isPwnedPassword(password)) {
+      return res.status(400).json({ error: 'This password has appeared in a data breach. Please choose a different one.' });
     }
 
     const ip = getClientIp(req);
