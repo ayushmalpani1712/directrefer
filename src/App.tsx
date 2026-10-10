@@ -234,7 +234,7 @@ function ImpersonationWrapper() {
 
 export default function App() {
   return (
-    <ThemeProvider attribute="class" forcedTheme="dark" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
       <TooltipProvider>
         <AuthProvider>
           <AppProvider>
@@ -347,6 +347,7 @@ export default function App() {
                     <Route path="incentives" element={<AdminIncentives />} />
                     <Route path="screening" element={<AdminScreeningQueue />} />
                     <Route path="scoring" element={<AdminReviewerScoring />} />
+                    <Route path="profile" element={<Profile />} />
                     <Route path="messages" element={<Messages />} />
                     <Route path="notifications" element={<NotificationsPage />} />
                     <Route path="activity" element={<ActivityPage />} />

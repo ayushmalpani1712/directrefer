@@ -162,41 +162,66 @@ export default function AdminOverview() {
   const recentErrors = systemHealth?.recentErrors ?? []
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Admin Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
-            Platform operations, metrics, and system health
-          </p>
-        </div>
-        <Button variant="outline" size="sm" className="gap-2 self-start" onClick={loadData}>
+    <div className="space-y-6">
+      {/* Page action (title lives in shell header) */}
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" className="gap-2" onClick={loadData}>
           <RefreshCw className="h-3.5 w-3.5" />
           Refresh
         </Button>
       </div>
 
-      {/* Hero Stat Row */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Urgency chips */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => navigate('/admin/approvals')}
+          className={cn(
+            'flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors active:bg-muted',
+            pendingApprovals > 0 ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'border-border/60 text-muted-foreground'
+          )}
+        >
+          <ClipboardCheck className="h-3.5 w-3.5" />
+          <span className="tabular-nums">{pendingApprovals}</span> pending approvals
+        </button>
+        <button
+          onClick={() => navigate('/admin/moderation')}
+          className={cn(
+            'flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors active:bg-muted',
+            pendingReports > 0 ? 'border-rose-500/30 bg-rose-500/10 text-rose-500' : 'border-border/60 text-muted-foreground'
+          )}
+        >
+          <Flag className="h-3.5 w-3.5" />
+          <span className="tabular-nums">{pendingReports}</span> open reports
+        </button>
+        <span className="flex items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-[13px] font-medium text-muted-foreground">
+          <Users className="h-3.5 w-3.5" />
+          <span className="tabular-nums">{weeklyData[weeklyData.length - 1]?.count ?? 0}</span> signups today
+        </span>
+      </div>
+
+      {/* Hero Stat Row — compressed */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <DataCard
           title="Total Users"
           value={totalUsers}
           subtitle={`${studentCount} seekers · ${professionalCount} pros${RECRUITER_VISIBLE ? ` · ${recruiterCount} recruiters` : ''}`}
-          icon={<Users className="h-5 w-5" />}
+          icon={<Users className="h-4 w-4" />}
           trend={{ value: analytics?.activeUsersThisWeek ?? 0, direction: 'up', }}
+          compact
         />
         <DataCard
           title="Active Referrals"
           value={referralsSent}
           subtitle={`${referralsAccepted} accepted · ${conversionRate}% conversion`}
-          icon={<Briefcase className="h-5 w-5" />}
+          icon={<Briefcase className="h-4 w-4" />}
+          compact
         />
         <DataCard
           title="Pending Approvals"
           value={pendingApprovals}
           subtitle={`${flaggedAccounts.length} flagged accounts awaiting review`}
-          icon={<ClipboardCheck className="h-5 w-5" />}
+          icon={<ClipboardCheck className="h-4 w-4" />}
+          compact
         />
         <DataCard
           title="Platform Health"
@@ -208,7 +233,7 @@ export default function AdminOverview() {
                 ? 'Minor issues detected'
                 : 'Critical issues found'
           }
-          icon={<Heart className="h-5 w-5" />}
+          icon={<Heart className="h-4 w-4" />}
           className={
             healthStatus === 'healthy'
               ? 'border-emerald-500/20'
@@ -216,6 +241,7 @@ export default function AdminOverview() {
                 ? 'border-amber-500/20'
                 : 'border-red-500/20'
           }
+          compact
         />
       </div>
 

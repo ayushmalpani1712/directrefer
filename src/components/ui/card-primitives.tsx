@@ -19,6 +19,7 @@ interface DataCardProps {
   trend?: { value: number; direction: "up" | "down" }
   icon?: React.ReactNode
   className?: string
+  compact?: boolean
 }
 
 export function DataCard({
@@ -28,6 +29,7 @@ export function DataCard({
   trend,
   icon,
   className,
+  compact,
 }: DataCardProps) {
   return (
     <Card
@@ -36,13 +38,13 @@ export function DataCard({
         className
       )}
     >
-      <CardContent className="p-5">
+      <CardContent className={compact ? "px-4 py-3" : "p-5"}>
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold tracking-tight">{value}</p>
+          <div className={compact ? "space-y-0.5" : "space-y-1"}>
+            <p className={compact ? "text-[13px] font-medium text-muted-foreground" : "text-sm text-muted-foreground"}>{title}</p>
+            <p className={cn("tracking-tight tabular-nums", compact ? "text-2xl font-semibold" : "text-2xl font-bold")}>{value}</p>
             {subtitle && (
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
+              <p className={compact ? "text-[11px] text-muted-foreground" : "text-xs text-muted-foreground"}>{subtitle}</p>
             )}
             {trend && (
               <div
@@ -59,7 +61,7 @@ export function DataCard({
             )}
           </div>
           {icon && (
-            <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
+            <div className={cn("rounded-lg bg-primary/10 text-primary", compact ? "p-1.5" : "p-2.5")}>
               {icon}
             </div>
           )}

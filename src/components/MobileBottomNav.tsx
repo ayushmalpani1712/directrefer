@@ -1,9 +1,12 @@
 import { useLocation, useNavigate } from 'react-router'
-import { Home, Search, Send, HeartHandshake, Briefcase, MessageSquare, User } from 'lucide-react'
+import {
+  Home, Search, Send, Briefcase, User,
+  Users, LayoutDashboard, Shield, BarChart3, Inbox,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
-import { ROLE_ROUTE, ROLE_MESSAGES_ROUTE, getRoleFromPath, type Role } from '@/data/constants'
+import { ROLE_ROUTE, getRoleFromPath, type Role } from '@/data/constants'
 
 type IconType = typeof Home
 
@@ -16,35 +19,42 @@ interface NavSlot {
   center?: boolean
 }
 
-function slotsFor(role: Role, pendingCount: number, unreadMessages: number): NavSlot[] {
+function slotsFor(role: Role, pendingCount: number): NavSlot[] {
   const prefix = ROLE_ROUTE[role]
-  const messagesHref = ROLE_MESSAGES_ROUTE[role]
-  const messagesBadge = unreadMessages > 0 ? (unreadMessages > 9 ? 9 : unreadMessages) : undefined
 
   switch (role) {
     case 'student':
       return [
-        { key: 'home', label: 'Home', icon: Home, href: `${prefix}/dashboard` },
-        { key: 'search', label: 'Search', icon: Search, href: '/job-seeker/browse-jobs' },
-        { key: 'center', label: 'Apply', icon: Send, href: '/job-seeker/applications', badge: pendingCount || undefined, center: true },
-        { key: 'messages', label: 'Messages', icon: MessageSquare, href: messagesHref, badge: messagesBadge },
+        { key: 'dashboard', label: 'Dashboard', icon: Home, href: `${prefix}/dashboard` },
+        { key: 'jobs', label: 'Jobs', icon: Search, href: '/job-seeker/browse-jobs' },
+        { key: 'referrals', label: 'Referrals', icon: Send, href: '/job-seeker/applications', badge: pendingCount || undefined, center: true },
+        { key: 'professionals', label: 'Pros', icon: Users, href: '/job-seeker/professionals' },
         { key: 'profile', label: 'Profile', icon: User, href: `${prefix}/profile` },
       ]
     case 'professional':
       return [
-        { key: 'home', label: 'Home', icon: Home, href: `${prefix}/dashboard` },
-        { key: 'search', label: 'Search', icon: Search, href: '/professional/browse-jobs' },
-        { key: 'center', label: 'Refer', icon: HeartHandshake, href: '/professional/referrals', badge: pendingCount || undefined, center: true },
-        { key: 'messages', label: 'Messages', icon: MessageSquare, href: messagesHref, badge: messagesBadge },
+        { key: 'dashboard', label: 'Dashboard', icon: Home, href: `${prefix}/dashboard` },
+        { key: 'requests', label: 'Requests', icon: Inbox, href: '/professional/referrals', badge: pendingCount || undefined },
+        { key: 'talent', label: 'Talent', icon: Users, href: '/professional/talent', center: true },
+        { key: 'earnings', label: 'Earnings', icon: BarChart3, href: '/professional/analytics' },
         { key: 'profile', label: 'Profile', icon: User, href: `${prefix}/profile` },
       ]
     case 'recruiter':
       return [
-        { key: 'home', label: 'Home', icon: Home, href: `${prefix}/dashboard` },
-        { key: 'search', label: 'Talent', icon: Search, href: '/recruiter/talent' },
-        { key: 'center', label: 'Jobs', icon: Briefcase, href: '/recruiter/jobs', center: true },
-        { key: 'messages', label: 'Messages', icon: MessageSquare, href: messagesHref, badge: messagesBadge },
+        { key: 'dashboard', label: 'Dashboard', icon: Home, href: `${prefix}/dashboard` },
+        { key: 'jobs', label: 'Jobs', icon: Briefcase, href: '/recruiter/jobs' },
+        { key: 'candidates', label: 'Candidates', icon: Users, href: '/recruiter/talent', center: true },
+        { key: 'referrals', label: 'Pipeline', icon: Send, href: '/recruiter/screening' },
         { key: 'profile', label: 'Profile', icon: User, href: `${prefix}/profile` },
+      ]
+    case 'admin':
+      return [
+        { key: 'users', label: 'People', icon: Users, href: '/admin/users' },
+        { key: 'referrals', label: 'Referrals', icon: Send, href: '/admin/referrals' },
+        { key: 'admin', label: 'Admin', icon: Shield, href: '/admin/overview', center: true },
+        { key: 'screening', label: 'Trust', icon: LayoutDashboard, href: '/admin/screening' },
+        { key: 'analytics', label: 'Growth', icon: BarChart3, href: '/admin/analytics' },
+        { key: 'profile', label: 'Profile', icon: User, href: '/admin/profile' },
       ]
     default:
       return []
@@ -54,19 +64,18 @@ function slotsFor(role: Role, pendingCount: number, unreadMessages: number): Nav
 export function MobileBottomNav() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const { role, requests, conversations } = useApp()
+  const { role, requests } = useApp()
   const { user } = useAuth()
 
   if (!user) return null
 
   const urlRole = getRoleFromPath(pathname) || role
-  if (urlRole === 'admin') return null
+  if (urlRole === 'admin' && !pathname.startsWith('/admin')) return null
 
   const pendingCount = requests.filter(
     (r) => r.status === 'requested' || r.status === 'under_review'
   ).length
-  const unreadMessages = conversations.reduce((a, c) => a + c.unread, 0)
-  const slots = slotsFor(urlRole, pendingCount, unreadMessages)
+  const slots = slotsFor(urlRole, pendingCount)
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + '/')

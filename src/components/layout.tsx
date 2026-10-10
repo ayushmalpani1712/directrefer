@@ -1,17 +1,14 @@
-import { lazy, Suspense, useMemo, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 
 import {
   Bell, Bookmark, Briefcase, ChevronDown, ChevronRight, CircleHelp,
   FileText, Home, LayoutDashboard, MessageSquare, MoreHorizontal,
-  Settings, Shield, ShieldCheck, User, Users, Zap, Inbox, LineChart, Activity,
+  Settings, Shield, User, Users, Zap, Inbox, LineChart, Activity,
   type LucideIcon,
 } from 'lucide-react'
-import { toast } from 'sonner'
-import { Badge } from '@/components/ui/badge'
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
-  DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
 import {
@@ -22,7 +19,6 @@ import {
 import { GAvatar } from '@/components/ui-kit'
 import { AnnouncementBanner } from '@/components/AnnouncementBanner'
 import { useApp } from '@/context/AppContext'
-import { useAuth } from '@/context/AuthContext'
 import {
   ROLE_META,
   ROLE_ROUTE,
@@ -32,11 +28,12 @@ import {
   type Role,
 } from '@/data/constants'
 import { cn } from '@/lib/utils'
-import { supabase } from '@/lib/supabase'
 import { MobileBottomNav } from '@/components/MobileBottomNav'
 import { useMobile } from '@/hooks/use-mobile'
 import { MobileHeader } from '@/components/mobile/MobileHeader'
 import { SkipToContent } from '@/components/SkipToContent'
+import { UserMenuHeader, UserMenuList, WorkspaceSwitchList } from '@/components/UserMenuItems'
+import { ADMIN_GROUPS } from '@/data/admin-nav'
 
 // ── Logo ────────────────────────────────────────────────────
 export function Logo({ compact }: { compact?: boolean }) {
@@ -60,21 +57,21 @@ export function Logo({ compact }: { compact?: boolean }) {
 
 // ── Nav config ──────────────────────────────────────────────
 interface NavItem { label: string; href: string; icon: LucideIcon; badge?: string }
+interface NavGroup { label: string; items: NavItem[] }
 
-function navFor(role: Role, pendingCount: number, prefix: string): { primary: NavItem[]; more: NavItem[] } {
+function navFor(role: Role, pendingCount: number, prefix: string): { primary: NavItem[]; more: NavItem[]; groups?: NavGroup[] } {
   const primary: NavItem[] = []
   const more: NavItem[] = []
 
   if (role === 'admin') {
-    primary.push(
-      { label: 'Dashboard', href: '/admin/overview', icon: LayoutDashboard },
-      { label: 'Workspaces', href: '/admin/users', icon: Users },
-      { label: 'Settings', href: '/admin/settings', icon: Settings },
-    )
-    more.push(
-      { label: 'Activity', href: `${prefix}/activity`, icon: Activity },
-      { label: 'Analytics', href: `${prefix}/analytics`, icon: LineChart },
-    )
+    return {
+      primary: [],
+      more: [],
+      groups: ADMIN_GROUPS.map((g) => ({
+        label: g.label,
+        items: g.items.map((i) => ({ label: i.label, href: i.to, icon: i.icon })),
+      })),
+    }
   } else if (role === 'student') {
     primary.push(
       { label: 'Dashboard', href: '/job-seeker/dashboard', icon: LayoutDashboard },
@@ -119,110 +116,27 @@ function navFor(role: Role, pendingCount: number, prefix: string): { primary: Na
 }
 
 // ── Workspace switcher (inlined) ────────────────────────────
-const ROLE_ICONS: Record<Role, typeof User> = {
-  student: User,
-  professional: Briefcase,
-  recruiter: Users,
-  admin: ShieldCheck,
-}
-
 function WorkspaceSwitcher() {
-  const { setRole, isAdmin, student, logout } = useApp()
-  const { signOut, user } = useAuth()
-  const navigate = useNavigate()
-  const { pathname } = useLocation()
-  const urlRole = getRoleFromPath(pathname)
-
-  const workspaceRoles: Role[] = useMemo(() => {
-    const roles: Role[] = isAdmin ? ['student', 'professional', 'admin'] : ['student', 'professional']
-    if (RECRUITER_VISIBLE) roles.splice(isAdmin ? 3 : 2, 0, 'recruiter')
-    return roles
-  }, [isAdmin])
-
-  const handleSwitch = (r: Role) => {
-    if (r === urlRole) return
-
-    setRole(r)
-    if (user) {
-      supabase.from('users').update({ active_workspace: r }).eq('id', user.id).then(
-        () => {},
-        () => {}
-      )
-    }
-    navigate(ROLE_ROUTE[r], { replace: true })
-    toast.success(`Switched to ${ROLE_META[r].label} workspace`)
-  }
+  const { student } = useApp()
 
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="flex h-14 items-center transition-colors hover:bg-muted px-1.5">
-            <GAvatar name={student?.name ?? 'U'} color={student?.gradient} className="h-9 w-9 text-xs" ring />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" sideOffset={0} className="w-72">
-          <div className="flex items-center gap-3 px-3 py-2.5">
-            <GAvatar name={student?.name ?? 'U'} color={student?.gradient} className="h-10 w-10 text-sm" />
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold">{student?.name ?? 'User'}</div>
-              <div className="truncate text-xs text-muted-foreground">
-                {student.headline || ROLE_META[urlRole].label}
-              </div>
-            </div>
-          </div>
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Workspace
-          </DropdownMenuLabel>
-          {workspaceRoles.map((r) => {
-            const Icon = ROLE_ICONS[r]
-            const isActive = urlRole === r
-            const isSuperAdmin = r === 'admin'
-            return (
-              <DropdownMenuItem
-                key={r}
-                className={cn('flex items-center justify-between gap-2')}
-                onSelect={() => handleSwitch(r)}
-              >
-                <span className="flex items-center gap-2">
-                  <Icon className="h-4 w-4" />
-                  <span>{ROLE_META[r].label}</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  {isSuperAdmin && (
-                    <Badge variant="outline" className="gap-0.5 border-violet-500/30 bg-violet-500/5 text-xs text-violet-600 dark:text-violet-400">
-                      <ShieldCheck className="h-2.5 w-2.5" /> Admin
-                    </Badge>
-                  )}
-                  {isActive && <span className="h-2 w-2 rounded-full bg-primary" />}
-                </span>
-              </DropdownMenuItem>
-            )
-          })}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => navigate(`${ROLE_ROUTE[urlRole]}/settings`)}>
-            Settings
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-rose-500 focus:text-rose-500"
-            onSelect={async () => {
-              try {
-                logout()
-                await signOut()
-                navigate('/login')
-              } catch (err) {
-                console.error('Sign out failed:', err)
-                toast.error('Sign out failed. Please try again.')
-              }
-            }}
-          >
-            Sign out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="flex h-11 w-11 items-center justify-center rounded-lg transition-transform hover:bg-muted active:scale-95"
+          aria-label="Account menu"
+        >
+          <GAvatar name={student?.name ?? 'U'} color={student?.gradient} className="h-8 w-8 text-[10px]" ring />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" sideOffset={8} className="w-72 p-2">
+        <UserMenuHeader />
+        <DropdownMenuSeparator />
+        <UserMenuList />
+        <DropdownMenuSeparator />
+        <WorkspaceSwitchList />
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -246,12 +160,40 @@ function AppSidebar() {
   const pendingCount = requests.filter((r) => r.status === 'requested' || r.status === 'under_review').length
   const urlRole = getRoleFromPath(pathname) || role
   const prefix = ROLE_ROUTE[urlRole]
-  const { primary, more } = navFor(urlRole, pendingCount, prefix)
+  const { primary, more, groups } = navFor(urlRole, pendingCount, prefix)
   const user = student
 
   useEffect(() => { setOpenMobile(false) }, [setOpenMobile])
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '?') || pathname.startsWith(href + '/')
+
+  const renderNavItem = (item: NavItem, indent = false) => {
+    const active = isActive(item.href)
+    return (
+      <SidebarMenuItem key={item.href}>
+        <SidebarMenuButton asChild tooltip={item.label}>
+          <Link
+            to={item.href}
+            className={cn(
+              'flex items-center gap-3 rounded-xl px-3 text-[14px] font-medium transition-all duration-200 min-h-[40px] relative active:scale-[0.98]',
+              indent ? 'pl-9 text-[13px]' : 'py-2.5',
+              active
+                ? 'bg-primary/10 text-primary font-semibold'
+                : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground',
+            )}
+          >
+            <item.icon className={cn('h-[18px] w-[18px] shrink-0 transition-transform duration-200', active && 'scale-110', indent && 'h-4 w-4')} />
+            <span className="truncate">{item.label}</span>
+          </Link>
+        </SidebarMenuButton>
+        {item.badge && (
+          <SidebarMenuBadge className="rounded-full bg-primary/10 px-1.5 text-xs font-semibold text-primary" aria-label={`${item.badge} pending`}>
+            {item.badge}
+          </SidebarMenuBadge>
+        )}
+      </SidebarMenuItem>
+    )
+  }
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -267,6 +209,21 @@ function AppSidebar() {
         </SidebarHeader>
       </div>
       <SidebarContent className="flex-1 overflow-y-auto px-2">
+        {groups ? (
+          groups.map((group) => (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                {group.label}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => renderNavItem(item))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))
+        ) : (
+          <>
         <SidebarGroup>
           <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
             Menu
@@ -283,8 +240,8 @@ function AppSidebar() {
                         className={cn(
                           'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-200 min-h-[44px] relative active:scale-[0.98]',
                           active
-                            ? 'bg-neutral-800/50 text-white font-semibold border-l-2 border-primary pl-[10px]'
-                            : 'text-neutral-400 hover:bg-neutral-800/30 hover:text-white',
+                            ? 'bg-accent text-accent-foreground font-semibold border-l-2 border-primary pl-[10px]'
+                            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
                         )}
                       >
                         <item.icon className={cn('h-[18px] w-[18px] shrink-0 transition-transform duration-200', active && 'scale-110')} />
@@ -313,8 +270,8 @@ function AppSidebar() {
                     className={cn(
                       'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-200 min-h-[44px]',
                       moreOpen
-                        ? 'text-white bg-neutral-800/30'
-                        : 'text-neutral-400 hover:bg-neutral-800/30 hover:text-white',
+                        ? 'text-foreground bg-accent/50'
+                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
                     )}
                   >
                     <MoreHorizontal className="h-[18px] w-[18px] shrink-0" />
@@ -332,8 +289,8 @@ function AppSidebar() {
                           className={cn(
                             'flex items-center gap-3 rounded-xl px-3 py-2.5 pl-9 text-[13px] font-medium transition-all duration-200 min-h-[40px] relative active:scale-[0.98]',
                             active
-                              ? 'bg-neutral-800/50 text-white font-semibold border-l-2 border-primary'
-                              : 'text-neutral-400 hover:bg-neutral-800/30 hover:text-white',
+                              ? 'bg-accent text-accent-foreground font-semibold border-l-2 border-primary'
+                              : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
                           )}
                         >
                           <item.icon className={cn('h-[16px] w-[16px] shrink-0 transition-transform duration-200', active && 'scale-110')} />
@@ -351,6 +308,8 @@ function AppSidebar() {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+        )}
+          </>
         )}
       </SidebarContent>
       <div className="flex-none">
@@ -448,10 +407,10 @@ function Breadcrumbs({ title, description }: BreadcrumbsProps) {
       {(pageTitle || pageDescription) && (
         <div className="border-b border-border/50 pb-4">
           {pageTitle && (
-            <h1 className="text-xl md:text-[24px] font-semibold leading-tight text-white">{pageTitle}</h1>
+            <h1 className="text-xl md:text-[24px] font-semibold leading-tight text-foreground">{pageTitle}</h1>
           )}
           {pageDescription && (
-            <p className="mt-1 text-[14px] leading-relaxed text-neutral-400">{pageDescription}</p>
+            <p className="mt-1 text-[14px] leading-relaxed text-muted-foreground">{pageDescription}</p>
           )}
         </div>
       )}
