@@ -151,14 +151,13 @@ export default function JobAlerts() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background pb-20">
-        <div className="sticky top-0 z-40 flex items-center justify-between border-b border-border/60 bg-background px-4 py-3">
-          <h1 className="text-lg font-bold">Job Alerts</h1>
-          <Button size="icon" className="h-11 w-11 rounded-full" onClick={() => setShowForm(true)}>
-            <Plus className="h-5 w-5" />
-          </Button>
-        </div>
-
         <div className="space-y-3 px-4 pt-4">
+          <div className="flex justify-end">
+            <Button size="icon" className="h-11 w-11 rounded-full" onClick={() => setShowForm(true)}>
+              <Plus className="h-5 w-5" />
+            </Button>
+          </div>
+
           {showForm && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
               <div className="rounded-2xl border border-border/60 bg-card p-4 space-y-4">

@@ -173,11 +173,6 @@ export default function Applications() {
   if (isMobile) {
     return (
       <div className="space-y-4 px-4 py-4 pb-20">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">My Applications</h1>
-          <p className="mt-0.5 text-xs text-muted-foreground">Track your job applications and their status</p>
-        </div>
-
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input

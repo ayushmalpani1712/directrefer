@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  ArrowLeft, Building2, Check, Clock, Github, GraduationCap, History, Info, Linkedin, MapPin, Pencil, Plus,
+  Building2, Check, Clock, Github, GraduationCap, History, Info, Linkedin, MapPin, Pencil, Plus,
   ShieldCheck, Wrench, X, Palette, Eye, EyeOff, MessageCircle, Send,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -32,7 +31,6 @@ export default function ProfessionalProfile() {
   const { user } = useAuth()
   const loading = usePageLoading(450)
   const isMobile = useMobile()
-  const navigate = useNavigate()
   const fallback: Professional = {
     id: user?.id ?? '',
     name: student.name || (user?.email?.split('@')[0] ?? 'User'),
@@ -218,13 +216,6 @@ export default function ProfessionalProfile() {
 
     return (
       <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-50 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <span className="text-sm font-semibold" style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}>{p.name}</span>
-        </div>
-
         <div className="relative">
           {(() => { const bs = getBannerStyle(user?.id, bannerTheme); return (
             <div className="relative h-32 w-full" style={bs.style}>

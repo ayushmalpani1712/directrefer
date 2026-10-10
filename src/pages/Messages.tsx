@@ -355,9 +355,8 @@ export default function Messages() {
         {!active ? (
           /* Mobile conversation list */
           <div className="flex flex-col h-screen">
-            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border px-4 py-3">
-              <h1 className="text-lg font-bold">Messages</h1>
-              <div className="relative mt-2">
+            <div className="border-b border-border px-4 py-3">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search conversations..." className="w-full h-11 rounded-full bg-muted pl-9 pr-4 text-sm outline-none" />
               </div>

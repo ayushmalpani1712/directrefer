@@ -340,13 +340,8 @@ export default function ReferralInbox() {
     return (
       <div className="min-h-screen bg-background pb-24">
         <div className="sticky top-0 z-20 border-b border-border/40 bg-background/80 backdrop-blur-xl">
-          <div className="px-5 pt-5 pb-3">
-            <h1 className="text-xl font-bold tracking-tight">Referral Inbox</h1>
-            <p className="mt-0.5 text-xs text-muted-foreground">Review and manage referral requests</p>
-          </div>
-
           <div className="overflow-x-auto scrollbar-none">
-            <div className="flex gap-2 px-5 pb-3 min-w-max">
+            <div className="flex gap-2 px-5 py-3 min-w-max">
               {MOBILE_TABS.map((t) => {
                 const count = t.key === 'all' ? inbox.length : counts(t.key)
                 return (

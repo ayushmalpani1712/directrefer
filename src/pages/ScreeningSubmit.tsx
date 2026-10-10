@@ -283,24 +283,15 @@ export default function ScreeningSubmit() {
 
     return (
       <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
-          <div className="flex items-center gap-3 px-4 h-12">
-            <Link
-              to="/job-seeker/browse-jobs"
-              className="flex items-center justify-center h-10 w-10 -ml-2 rounded-xl hover:bg-muted transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <h1 className="text-base font-semibold truncate">Screening</h1>
-            {attemptNumber > 1 && (
-              <Badge variant="outline" className="text-xs gap-1 ml-auto shrink-0">
-                <RotateCcw className="h-2.5 w-2.5" /> #{attemptNumber}
-              </Badge>
-            )}
+        {attemptNumber > 1 && (
+          <div className="px-4 pt-4">
+            <Badge variant="outline" className="text-xs gap-1">
+              <RotateCcw className="h-2.5 w-2.5" /> #{attemptNumber}
+            </Badge>
           </div>
-        </div>
+        )}
 
-        <div className="px-4 pt-3 pb-2">
+        <div className="px-4 pt-4 pb-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
             <span>Step {currentStep + 1} of {totalSteps}</span>
             <span>{Math.round(((currentStep + 1) / totalSteps) * 100)}%</span>

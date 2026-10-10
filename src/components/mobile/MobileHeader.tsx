@@ -19,6 +19,63 @@ const ROLE_ICONS: Record<string, typeof User> = {
   admin: ShieldCheck,
 }
 
+const ROUTE_TITLES: Record<string, string> = {
+  '/job-seeker/applications': 'Applications',
+  '/job-seeker/professionals': 'Find Professionals',
+  '/job-seeker/browse-jobs': 'Browse Jobs',
+  '/job-seeker/request-referral': 'Request Referral',
+  '/job-seeker/job-alerts': 'Job Alerts',
+  '/job-seeker/profile': 'Profile',
+  '/job-seeker/messages': 'Messages',
+  '/job-seeker/notifications': 'Notifications',
+  '/job-seeker/bookmarks': 'Bookmarks',
+  '/job-seeker/activity': 'Activity',
+  '/job-seeker/analytics': 'Analytics',
+  '/job-seeker/settings': 'Settings',
+  '/job-seeker/help': 'Help',
+  '/professional/referrals': 'Referrals',
+  '/professional/talent': 'Talent Search',
+  '/professional/professionals': 'Find Professionals',
+  '/professional/browse-jobs': 'Browse Jobs',
+  '/professional/profile': 'Profile',
+  '/professional/messages': 'Messages',
+  '/professional/notifications': 'Notifications',
+  '/professional/activity': 'Activity',
+  '/professional/analytics': 'Analytics',
+  '/professional/settings': 'Settings',
+  '/professional/help': 'Help',
+  '/recruiter/jobs': 'Jobs',
+  '/recruiter/talent': 'Talent Search',
+  '/recruiter/profile': 'Profile',
+  '/recruiter/messages': 'Messages',
+  '/recruiter/notifications': 'Notifications',
+  '/recruiter/activity': 'Activity',
+  '/recruiter/analytics': 'Analytics',
+  '/recruiter/settings': 'Settings',
+  '/recruiter/help': 'Help',
+  '/messages': 'Messages',
+  '/notifications': 'Notifications',
+  '/settings': 'Settings',
+  '/activity': 'Activity',
+  '/analytics': 'Analytics',
+}
+
+function titleFor(pathname: string): string {
+  const exact = ROUTE_TITLES[pathname]
+  if (exact) return exact
+  if (pathname.startsWith('/recruiter/screening/analytics')) return 'Screening Analytics'
+  if (pathname.startsWith('/recruiter/screening')) return 'Screening'
+  if (pathname.startsWith('/job-seeker/screening-results')) return 'Screening Results'
+  if (pathname.startsWith('/job-seeker/screening')) return 'Screening'
+  if (pathname.startsWith('/job-seeker/request-referral')) return 'Request Referral'
+  if (pathname.startsWith('/jobs/')) return 'Job Details'
+  const seg = pathname.split('/').filter(Boolean).pop() || 'Home'
+  return seg
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+}
+
 export function MobileHeader() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
@@ -26,7 +83,8 @@ export function MobileHeader() {
   const { signOut, user } = useAuth()
   const [workspaceOpen, setWorkspaceOpen] = useState(false)
   const isRoot = ROOT_PATHS.some((p) => pathname === p)
-  const isSubPage = !isRoot && pathname.split('/').filter(Boolean).length > 2
+  const isDashboard = pathname.endsWith('/dashboard')
+  const isBranded = isRoot || isDashboard
   const urlRole = getRoleFromPath(pathname) || role
 
   const workspaceRoles: Role[] = (() => {
@@ -56,16 +114,8 @@ export function MobileHeader() {
           'border-b border-border/50 bg-background/95 backdrop-blur-lg'
         )}
       >
-        <div className="flex items-center gap-2">
-          {isSubPage ? (
-            <button
-              onClick={() => navigate(-1)}
-              className="flex h-11 w-11 items-center justify-center rounded-lg text-foreground transition-colors active:bg-muted"
-              aria-label="Go back"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-          ) : (
+        <div className="flex min-w-0 items-center gap-2">
+          {isBranded ? (
             <>
               <button
                 onClick={() => setWorkspaceOpen(true)}
@@ -75,6 +125,19 @@ export function MobileHeader() {
                 <GAvatar name={student?.name ?? 'U'} color={student?.gradient} className="h-8 w-8 text-[10px]" />
               </button>
               <span className="text-base font-semibold tracking-tight text-foreground">DirectRefer</span>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate(-1)}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-foreground transition-colors active:bg-muted"
+                aria-label="Go back"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <span className="truncate text-[15px] font-semibold tracking-tight text-foreground">
+                {titleFor(pathname)}
+              </span>
             </>
           )}
         </div>

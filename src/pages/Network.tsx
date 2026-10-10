@@ -124,14 +124,11 @@ export function NotificationsPage() {
   if (isMobile) {
     return (
       <div className="flex flex-col gap-4 pb-6">
-        <div className="flex items-center justify-between px-1">
-          <div>
-            <h1 className="text-lg font-bold tracking-tight">Notifications</h1>
-            {unreadCount > 0 && (
-              <p className="text-xs text-muted-foreground">{unreadCount} unread</p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center px-1">
+          {unreadCount > 0 && (
+            <p className="text-xs text-muted-foreground">{unreadCount} unread</p>
+          )}
+          <div className="ml-auto flex items-center gap-2">
             {unreadCount > 0 && (
               <Button variant="outline" size="sm" onClick={() => markAllNotificationsRead()} className="h-8 text-xs">
                 <CheckCheck className="mr-1 h-3 w-3" /> Mark all read

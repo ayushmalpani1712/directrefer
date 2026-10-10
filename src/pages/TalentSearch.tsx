@@ -86,12 +86,9 @@ export default function TalentSearch() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background pb-20">
-        <div className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-          <div className="flex items-center gap-3 px-4 pt-4 pb-3">
-            <h1 className="text-lg font-semibold">Find Talent</h1>
-          </div>
-          <div className="relative px-4 pb-3">
-            <Search className="absolute left-7 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="px-4 pt-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}

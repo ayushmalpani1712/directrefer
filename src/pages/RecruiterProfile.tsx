@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import {
-  ArrowLeft, Briefcase, Check, Clock, Globe, Heart, Info, Linkedin, MapPin, Pencil, Plus, Trophy, Users, X, Palette,
+  Briefcase, Check, Clock, Globe, Heart, Info, Linkedin, MapPin, Pencil, Plus, Trophy, Users, X, Palette,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -134,34 +134,23 @@ export default function RecruiterProfile() {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-50 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 h-12">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 text-xs font-medium text-primary"
-            onClick={() => { setEditName(c.name); setEditIndustry(c.industry); setEditSize(c.size); setEditWebsite(c.website); setEditLinkedin(c.linkedin); setEditing(true) }}
-          >
-            <Pencil className="h-3.5 w-3.5 mr-1" />
-            Edit Profile
-          </Button>
-        </div>
-
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <div className="relative h-32 bg-gradient-to-br from-primary/30 via-card to-card">
             <div className="absolute inset-0 bg-grid opacity-10" />
           </div>
 
           <div className="px-4 -mt-12 relative z-10">
-            <div className="flex items-end gap-3">
+            <div className="flex items-end justify-between gap-3">
               <CompanyChip name={c.name} className="h-20 w-20 border-[3px] border-primary/40 ring-2 ring-primary/10 text-xl shrink-0" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs font-medium text-primary shrink-0"
+                onClick={() => { setEditName(c.name); setEditIndustry(c.industry); setEditSize(c.size); setEditWebsite(c.website); setEditLinkedin(c.linkedin); setEditing(true) }}
+              >
+                <Pencil className="h-3.5 w-3.5 mr-1" />
+                Edit Profile
+              </Button>
             </div>
             <div className="mt-2">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

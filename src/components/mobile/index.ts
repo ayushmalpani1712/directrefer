@@ -1,6 +1,4 @@
-export { MobileShell } from './MobileShell'
 export { MobileHeader } from './MobileHeader'
-export { MobileBottomNav } from './MobileBottomNav'
 export { MobileCard } from './MobileCard'
 export { MobileButton } from './MobileButton'
 export { MobileInput } from './MobileInput'

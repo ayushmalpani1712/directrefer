@@ -227,14 +227,7 @@ export default function JobDetailPage() {
   if (isMobile) {
     return (
       <div className="pb-[140px]">
-        <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-          <Link to={role === 'recruiter' ? '/recruiter/jobs' : '/job-seeker/browse-jobs'} className="text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <span className="text-xs text-muted-foreground">Back to jobs</span>
-        </div>
-
-        <div className="px-4 space-y-5">
+        <div className="px-4 pt-4 space-y-5">
           <div>
             <h1 className="text-[20px] font-bold leading-tight">{job.title}</h1>
             <p className="mt-1 text-sm text-muted-foreground">

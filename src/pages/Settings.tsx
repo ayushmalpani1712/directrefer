@@ -563,10 +563,7 @@ export default function Settings() {
     return (
       <div className="min-h-screen bg-background pb-20">
         <div className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex h-12 items-center px-4">
-            <h1 className="text-lg font-semibold">Settings</h1>
-          </div>
-          <div className="flex gap-1 overflow-x-auto px-4 pb-3 scrollbar-none">
+          <div className="flex gap-1 overflow-x-auto px-4 py-3 scrollbar-none">
             {[
               { key: 'workspace', label: 'Workspace', icon: Building2 },
               { key: 'notifications', label: 'Notifications', icon: Bell },

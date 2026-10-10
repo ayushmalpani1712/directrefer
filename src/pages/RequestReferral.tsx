@@ -203,21 +203,23 @@ export default function RequestReferral() {
     return (
       <div className="min-h-screen bg-background pb-28">
         <div className="sticky top-0 z-20 border-b border-border/40 bg-background/80 backdrop-blur-xl">
-          <div className="flex items-center justify-between px-4 py-3">
-            <button
-              onClick={() => (step > 1 && step < 7 ? setStep(step - 1) : navigate(-1))}
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" /> {step > 1 && step < 7 ? 'Back' : 'Back'}
-            </button>
-            {savedAt && step < 7 && (
+          {savedAt && step < 7 && (
+            <div className="flex items-center justify-end px-4 pt-3">
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground"><Save className="h-3 w-3 text-emerald-500" /> Saved</span>
-            )}
-          </div>
-
-          <div className="px-4 pb-4">
-            <h1 className="text-lg font-bold tracking-tight">Request Referral</h1>
-            <div className="mt-2.5 flex items-center gap-3">
+            </div>
+          )}
+          <div className="px-4 py-4">
+            <div className="flex items-center gap-3">
+              {step > 1 && step < 7 && (
+                <button
+                  type="button"
+                  onClick={() => setStep(step - 1)}
+                  className="-ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors active:bg-muted"
+                  aria-label="Previous step"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+              )}
               <div className="flex-1">
                 <Progress value={pct} className="h-1.5" />
               </div>

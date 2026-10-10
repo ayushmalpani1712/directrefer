@@ -475,11 +475,6 @@ export default function FindProfessionals() {
   if (isMobile) {
     return (
       <div className="space-y-4 pb-20">
-        <div>
-          <h1 className="text-xl font-semibold">Find Professionals</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Who can refer me to the job I want?</p>
-        </div>
-
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
