@@ -44,7 +44,7 @@ export function Logo({ compact }: { compact?: boolean }) {
   return (
     <a href="/" onClick={handleClick} className="flex items-center gap-3" aria-label="Direct Refer — Go to homepage">
       <svg viewBox="0 0 512 385" className="h-10 w-auto shrink-0" aria-hidden="true">
-        <image href="/logo-emblem.png" width="512" height="385" />
+        <image href="/logo-emblem.webp" width="512" height="385" />
       </svg>
       {!compact && (
         <span className="font-display text-[21px] font-bold tracking-tight text-primary">
@@ -433,7 +433,7 @@ function Topbar() {
       <SidebarTrigger className="md:hidden h-11 w-11 shrink-0 touch-target" aria-label="Toggle navigation menu" />
       <a href="/" onClick={(e) => { e.preventDefault(); navigate('/') }} className="flex items-center shrink-0 md:hidden" aria-label="Direct Refer — Go to homepage">
         <svg viewBox="0 0 512 385" className="h-8 w-auto shrink-0" aria-hidden="true">
-          <image href="/logo-emblem.png" width="512" height="385" />
+          <image href="/logo-emblem.webp" width="512" height="385" />
         </svg>
       </a>
       <input

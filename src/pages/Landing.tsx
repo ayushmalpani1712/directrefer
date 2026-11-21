@@ -264,7 +264,7 @@ function TrackScene({ active }: { active: boolean }) {
 function GetReferredScene({ active }: { active: boolean }) {
   return (
     <div className="flex flex-col items-center gap-5 px-4 py-8 sm:py-12">
-      <motion.img initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: active ? 1 : 0, scale: active ? 1 : 0.8 }} transition={{ delay: 0.2, type: 'spring', stiffness: 100 }} src="/logo-emblem.png" alt="DirectRefer" className="h-16 w-16 object-contain" />
+      <motion.img initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: active ? 1 : 0, scale: active ? 1 : 0.8 }} transition={{ delay: 0.2, type: 'spring', stiffness: 100 }} src="/logo-emblem.webp" alt="DirectRefer" className="h-16 w-16 object-contain" />
       <motion.h3 initial={{ opacity: 0, y: 10 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 10 }} transition={{ delay: 0.5 }} className="font-display text-lg sm:text-xl font-bold text-foreground text-center">Stop applying into the void.</motion.h3>
       <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 8 }} transition={{ delay: 0.8 }} className="text-sm text-muted-foreground text-center max-w-xs">Get referred into your next role. It&rsquo;s free for job seekers.</motion.p>
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: active ? 1 : 0, y: active ? 0 : 8 }} transition={{ delay: 1.1 }}>
@@ -851,7 +851,7 @@ export default function Landing() {
             <div className="flex flex-col items-center gap-3 sm:items-start">
               <Link to="/" className="flex items-center gap-2.5" aria-label="DirectRefer — Home">
                 <svg viewBox="0 0 512 385" className="h-7 w-auto" aria-hidden="true">
-                  <image href="/logo-emblem.png" width="512" height="385" />
+                  <image href="/logo-emblem.webp" width="512" height="385" />
                 </svg>
                 <span className="font-display text-base font-bold text-foreground">DirectRefer</span>
               </Link>
