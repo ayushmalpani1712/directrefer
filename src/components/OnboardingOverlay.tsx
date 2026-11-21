@@ -20,7 +20,7 @@ function getSteps(role: Role) {
         description: 'Add your company, role, and the positions you can refer for so candidates can find you.',
         action: 'Set up profile',
         to: `${base}/profile`,
-        gradient: 'from-[#6366F1] to-[#8B5CF6]',
+        gradient: 'from-[#3B5FE5] to-[#8B8FD4]',
       },
       {
         icon: Briefcase,
@@ -49,7 +49,7 @@ function getSteps(role: Role) {
         description: 'Add your company details, open positions, and benefits so candidates understand your offerings.',
         action: 'Set up profile',
         to: `${base}/profile`,
-        gradient: 'from-[#6366F1] to-[#8B5CF6]',
+        gradient: 'from-[#3B5FE5] to-[#8B8FD4]',
       },
       {
         icon: Search,
@@ -78,7 +78,7 @@ function getSteps(role: Role) {
       description: 'Add your headline, experience, skills, and education so professionals know who you are.',
       action: 'Go to Profile',
       to: `${base}/profile`,
-      gradient: 'from-[#6366F1] to-[#8B5CF6]',
+      gradient: 'from-[#3B5FE5] to-[#8B8FD4]',
     },
     {
       icon: Upload,

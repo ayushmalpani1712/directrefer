@@ -80,7 +80,7 @@ const ROLE_CARDS: { role: Role; icon: typeof GraduationCap; label: string; descr
 ]
 
 const PIPELINE_STEPS = [
-  { icon: Send, label: 'Request Sent', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+  { icon: Send, label: 'Request Sent', color: 'text-[#8B8FD4]', bg: 'bg-primary/10' },
   { icon: Clock, label: 'Under Review', color: 'text-amber-400', bg: 'bg-amber-500/10' },
   { icon: CheckCircle2, label: 'Accepted', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
 ]
@@ -259,7 +259,7 @@ export default function Login() {
         >
           <h2 className="font-display text-4xl font-bold leading-tight tracking-tight text-white lg:text-[44px]">
             Connect directly with{' '}
-            <span className="bg-gradient-to-r from-primary to-indigo-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary to-[#8B8FD4] bg-clip-text text-transparent">
               verified corporate insiders.
             </span>
           </h2>
@@ -367,7 +367,7 @@ export default function Login() {
                   placeholder="Alex Morgan"
                   value={fullName}
                   onChange={(e) => { setFullName(e.target.value); if (error) setError(null) }}
-                  className="h-11 rounded-xl border border-white/[0.08] bg-white/[0.04] text-white placeholder:text-slate-500 transition-[border-color,box-shadow] duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  className="h-11 rounded-xl border border-white/[0.08] bg-white/[0.04] text-white placeholder:text-slate-500 transition-[border-color,box-shadow] duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 {inviteCode && (
                   <p className="text-xs text-emerald-400 flex items-center gap-1">
@@ -385,7 +385,7 @@ export default function Login() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); if (error) setError(null) }}
-                className="h-11 rounded-xl border border-white/[0.08] bg-white/[0.04] text-white placeholder:text-slate-500 transition-[border-color,box-shadow] duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                className="h-11 rounded-xl border border-white/[0.08] bg-white/[0.04] text-white placeholder:text-slate-500 transition-[border-color,box-shadow] duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -405,7 +405,7 @@ export default function Login() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); if (error) setError(null) }}
-                  className="h-11 rounded-xl border border-white/[0.08] bg-white/[0.04] pr-10 text-white placeholder:text-slate-500 transition-[border-color,box-shadow] duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  className="h-11 rounded-xl border border-white/[0.08] bg-white/[0.04] pr-10 text-white placeholder:text-slate-500 transition-[border-color,box-shadow] duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 <button
                   type="button"
@@ -431,13 +431,13 @@ export default function Login() {
                       className={cn(
                         'group flex flex-col items-center gap-2 rounded-xl border p-3.5 text-center transition-[border-color,background-color,box-shadow] duration-200',
                         active
-                          ? 'border-indigo-500/60 bg-indigo-500/[0.08] shadow-[0_0_24px_-6px_rgba(99,102,241,0.3)]'
+                          ? 'border-primary/60 bg-primary/[0.08] shadow-[0_0_24px_-6px_rgba(59,95,229,0.3)]'
                           : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.04]',
                       )}
                     >
                       <div className={cn(
                         'flex h-9 w-9 items-center justify-center rounded-lg transition-colors duration-200',
-                        active ? 'bg-indigo-500/20 text-indigo-400' : 'bg-white/[0.06] text-slate-400 group-hover:text-slate-300',
+                        active ? 'bg-primary/20 text-[#8B8FD4]' : 'bg-white/[0.06] text-slate-400 group-hover:text-slate-300',
                       )}>
                         <card.icon className="h-4 w-4" />
                       </div>
@@ -450,7 +450,7 @@ export default function Login() {
                         </span>
                         <p className={cn(
                           'mt-0.5 text-xs leading-tight',
-                          active ? 'text-indigo-300/70' : 'text-slate-500',
+                          active ? 'text-[#8B8FD4]/70' : 'text-slate-500',
                         )}>
                           {card.description}
                         </p>
@@ -467,8 +467,8 @@ export default function Login() {
                 type="submit"
                 disabled={loading || !selected || (!isSignUp && lockoutRemaining > 0)}
                 className={cn(
-                  'relative h-11 w-full rounded-xl bg-indigo-500 font-semibold text-white shadow-lg shadow-indigo-500/25 transition-[box-shadow] duration-300',
-                  'hover:bg-indigo-600 hover:shadow-indigo-500/30',
+                  'relative h-11 w-full rounded-xl bg-primary font-semibold text-white shadow-lg shadow-primary/25 transition-[box-shadow] duration-300',
+                  'hover:bg-primary/90 hover:shadow-primary/30',
                   'disabled:opacity-50 disabled:cursor-not-allowed',
                 )}
               >

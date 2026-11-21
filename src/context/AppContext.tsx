@@ -692,7 +692,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         openPositions: patch.openPositions ?? [],
         bio: patch.bio ?? '',
         badges: [],
-        gradient: 'from-[#6366F1] to-[#8B5CF6]',
+        gradient: 'from-[#3B5FE5] to-[#8B8FD4]',
         phone: '',
         whatsapp: '',
         email: user?.email ?? '',
@@ -1057,7 +1057,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         openForReferrals: value, isOpenToWork: false, maxPerMonth: 5,
         usedThisMonth: 0, successRate: 0, followers: 0, joinedDaysAgo: 0,
         activityScore: 0, referralPolicy: '', openPositions: [], bio: '',
-        badges: [], gradient: 'from-[#6366F1] to-[#8B5CF6]',
+        badges: [], gradient: 'from-[#3B5FE5] to-[#8B8FD4]',
         phone: '', whatsapp: '', email: user.email ?? '',
         hiringTimeline: [], referralDuration: '', linkedinUrl: '', githubUrl: '',
       }]
@@ -1099,7 +1099,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         openForReferrals: true, isOpenToWork: value, maxPerMonth: 5,
         usedThisMonth: 0, successRate: 0, followers: 0, joinedDaysAgo: 0,
         activityScore: 0, referralPolicy: '', openPositions: [], bio: '',
-        badges: [], gradient: 'from-[#6366F1] to-[#8B5CF6]',
+        badges: [], gradient: 'from-[#3B5FE5] to-[#8B8FD4]',
         phone: '', whatsapp: '', email: user.email ?? '',
         hiringTimeline: [], referralDuration: '', linkedinUrl: '', githubUrl: '',
       }]

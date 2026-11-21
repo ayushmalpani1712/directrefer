@@ -61,7 +61,7 @@ export function useProfessionals(enabled = true) {
           openPositions: [],
           bio: (r.bio as string) || '',
           badges: [],
-          gradient: 'from-indigo-600 to-purple-600',
+          gradient: 'from-[#3B5FE5] to-[#8B8FD4]',
           phone: '',
           whatsapp: '',
           email: (r.work_email as string) || '',

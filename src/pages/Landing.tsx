@@ -128,7 +128,7 @@ function TheProblemScene({ active }: { active: boolean }) {
 }
 
 const MOCK_PROS = [
-  { name: 'Priya Sharma', role: 'SDE-2', company: 'Google', rating: 4.9, referrals: 47, gradient: 'from-[#6366F1] to-[#8B5CF6]' },
+  { name: 'Priya Sharma', role: 'SDE-2', company: 'Google', rating: 4.9, referrals: 47, gradient: 'from-[#3B5FE5] to-[#8B8FD4]' },
   { name: 'Arjun Patel', role: 'Senior SWE', company: 'Google', rating: 4.8, referrals: 32, gradient: 'from-sky-500 to-cyan-400' },
   { name: 'Neha Gupta', role: 'Product Manager', company: 'Google', rating: 4.7, referrals: 28, gradient: 'from-emerald-500 to-teal-400' },
 ]
@@ -379,7 +379,7 @@ function DashboardTab() {
       </div>
       <div className="flex flex-wrap gap-2">
         <Badge className="border border-[rgba(74,222,128,0.2)] bg-[rgba(74,222,128,0.1)] text-emerald-500 text-xs">Accepted {'\u2022'} Flipkart</Badge>
-        <Badge className="border border-[rgba(99, 102, 241,0.2)] bg-[rgba(99, 102, 241,0.1)] text-primary text-xs">Applied {'\u2022'} Razorpay</Badge>
+        <Badge className="border border-primary/20 bg-primary/10 text-primary text-xs">Applied {'\u2022'} Razorpay</Badge>
         <Badge className="border border-[rgba(232,180,76,0.2)] bg-[rgba(232,180,76,0.1)] text-amber-400 text-xs">Under Review {'\u2022'} Google</Badge>
       </div>
       <div className="rounded-xl bg-[rgba(255,255,255,0.05)] p-4">
@@ -399,7 +399,7 @@ function DashboardTab() {
 
 function ProfessionalsTab() {
   const pros = [
-    { name: 'Priya Sharma', role: 'SDE-2', company: 'Google', rating: 4.9, referrals: 47, gradient: 'from-[#6366F1] to-[#8B5CF6]' },
+    { name: 'Priya Sharma', role: 'SDE-2', company: 'Google', rating: 4.9, referrals: 47, gradient: 'from-[#3B5FE5] to-[#8B8FD4]' },
     { name: 'Arjun Patel', role: 'Senior SWE', company: 'Microsoft', rating: 4.8, referrals: 32, gradient: 'from-sky-500 to-cyan-400' },
     { name: 'Neha Gupta', role: 'Product Manager', company: 'Amazon', rating: 4.7, referrals: 28, gradient: 'from-emerald-500 to-teal-400' },
     { name: 'Rohit Kumar', role: 'ML Engineer', company: 'Flipkart', rating: 4.9, referrals: 19, gradient: 'from-rose-500 to-pink-400' },
@@ -431,7 +431,7 @@ function ProfessionalsTab() {
 function ReferralsTab() {
   const jobs = [
     { company: 'Flipkart', role: 'SDE-2', stage: 'Accepted', color: '#34D399', date: '2 days ago' },
-    { company: 'Razorpay', role: 'Frontend Engineer', stage: 'Applied', color: '#6366F1', date: '5 days ago' },
+    { company: 'Razorpay', role: 'Frontend Engineer', stage: 'Applied', color: '#3B5FE5', date: '5 days ago' },
     { company: 'Google', role: 'L3 SWE', stage: 'Under Review', color: '#E8B44C', date: '1 week ago' },
   ]
   return (
@@ -577,8 +577,9 @@ export default function Landing() {
                 <Sparkles className="h-3 w-3" /> <span>Ask for the referral, without the awkward cold DM</span>
               </Badge>
             </div>
-              <h1 className="hero-anim-2 font-display mt-6 text-3xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-              Get referred into<br className="hidden sm:block" /> your dream company
+              <h1 className="hero-anim-2 font-display mt-6 text-3xl font-extrabold leading-[1.06] tracking-tight sm:text-5xl lg:text-6xl">
+              Get referred into<br className="hidden sm:block" />{' '}
+              <span className="bg-gradient-to-r from-primary to-[#8B8FD4] bg-clip-text text-transparent">your dream company</span>
             </h1>
             <p className="hero-anim-3 mx-auto mt-5 max-w-xl text-base sm:text-lg text-muted-foreground leading-relaxed">
               Stop sending resumes into the void. Find verified professionals at real companies, then request a referral in two clicks.
@@ -586,6 +587,9 @@ export default function Landing() {
             <div className="hero-anim-4 mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button size="lg" className="rounded-lg bg-primary px-6 sm:px-8 text-white shadow-sm hover:shadow-md transition-all duration-200 text-sm sm:text-base" asChild>
                 <Link to={user ? '/dashboard' : '/login'}><GraduationCap className="mr-2 h-4 w-4" /> {user ? 'Go to Dashboard' : "Find a professional \u2014 it's free"} <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              </Button>
+              <Button size="lg" variant="outline" className="rounded-lg border-border/70 px-6 text-sm sm:text-base text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors duration-200" onClick={() => scrollTo('how-it-works')}>
+                How it works
               </Button>
             </div>
             <p className="hero-anim-4 mt-4 text-xs text-muted-foreground/60">

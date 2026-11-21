@@ -482,7 +482,7 @@ export default function FindProfessionals() {
             onChange={(e) => setF((p) => ({ ...p, q: e.target.value }))}
             placeholder="Search by name, company, or skill…"
             aria-label="Search professionals by name, company, or skill"
-            className="h-12 rounded-xl pl-10 text-sm bg-white/[0.04]"
+            className="h-12 rounded-xl pl-10 text-sm bg-muted/50"
           />
           {f.q && (
             <button onClick={() => setF((p) => ({ ...p, q: '' }))} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -628,7 +628,7 @@ export default function FindProfessionals() {
               onChange={(e) => setF((p) => ({ ...p, q: e.target.value }))}
               placeholder="Search by name, company, or skill…"
               aria-label="Search professionals by name, company, or skill"
-              className="h-11 rounded-xl pl-10 text-sm bg-white/[0.04]"
+              className="h-11 rounded-xl pl-10 text-sm bg-muted/50"
             />
             {f.q && (
               <button onClick={() => setF((p) => ({ ...p, q: '' }))} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">

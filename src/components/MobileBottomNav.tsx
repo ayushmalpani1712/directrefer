@@ -98,7 +98,7 @@ export function MobileBottomNav() {
                   onClick={() => navigate(slot.href)}
                   className={cn(
                     'relative -mt-6 flex h-[50px] w-[50px] items-center justify-center rounded-[18px] shadow-lg shadow-primary/25 transition-all duration-200 active:scale-95',
-                    'bg-gradient-to-b from-indigo-400 via-primary to-violet-600 ring-1 ring-white/15 ring-inset',
+                    'bg-gradient-to-b from-[#8B8FD4] via-primary to-[#3B5FE5] ring-1 ring-white/15 ring-inset',
                     active && 'shadow-primary/40 brightness-110'
                   )}
                   aria-label={slot.label}

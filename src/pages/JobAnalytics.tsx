@@ -16,7 +16,7 @@ import { EmptyState } from '@/components/ui-kit'
 const TICK = { fill: '#9A9BA8', fontSize: 12 } as const
 
 const STATUS_COLORS: Record<string, string> = {
-  submitted: 'hsl(239 84% 67%)',
+  submitted: 'hsl(227 77% 56%)',
   under_review: 'hsl(258 90% 66%)',
   shortlisted: 'hsl(160 84% 39%)',
   rejected: 'hsl(350 89% 60%)',

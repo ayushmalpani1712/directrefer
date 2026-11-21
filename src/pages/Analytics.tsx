@@ -39,7 +39,7 @@ function StudentAnalytics({ range }: { range: DateRange }) {
   const [conversion, setConversion] = useState<{ name: string; value: number; fill: string }[]>([
     { name: 'Pending', value: 0, fill: 'hsl(38 92% 50%)' },
     { name: 'Accepted', value: 0, fill: 'hsl(160 84% 39%)' },
-    { name: 'In Review', value: 0, fill: 'hsl(239 84% 67%)' },
+    { name: 'In Review', value: 0, fill: 'hsl(227 77% 56%)' },
     { name: 'Declined', value: 0, fill: 'hsl(350 89% 60%)' },
   ])
   const [pipelineData, setPipelineData] = useState<{ name: string; count: number }[]>([])
@@ -75,7 +75,7 @@ function StudentAnalytics({ range }: { range: DateRange }) {
       setConversion([
         { name: 'Pending', value: pending, fill: 'hsl(38 92% 50%)' },
         { name: 'Accepted', value: accepted, fill: 'hsl(160 84% 39%)' },
-        { name: 'In Review', value: inReview, fill: 'hsl(239 84% 67%)' },
+        { name: 'In Review', value: inReview, fill: 'hsl(227 77% 56%)' },
         { name: 'Declined', value: rejected, fill: 'hsl(350 89% 60%)' },
       ])
 
@@ -109,7 +109,7 @@ function StudentAnalytics({ range }: { range: DateRange }) {
   const acceptRate = useFilteredStats(range, { value: acceptRateVal, delta: 0 })
   const reviewConv = useFilteredStats(range, { value: reviewConvVal, delta: 0 })
 
-  const pipelineBarColors = ['hsl(239 84% 67%)', 'hsl(258 90% 66%)', 'hsl(160 84% 39%)', 'hsl(330 81% 60%)', 'hsl(38 92% 50%)']
+  const pipelineBarColors = ['hsl(227 77% 56%)', 'hsl(258 90% 66%)', 'hsl(160 84% 39%)', 'hsl(330 81% 60%)', 'hsl(38 92% 50%)']
 
   return (
     <div className="space-y-6">
@@ -129,7 +129,7 @@ function StudentAnalytics({ range }: { range: DateRange }) {
                 <LazyYAxis axisLine={false} tickLine={false} tick={TICK} />
                 <LazyTooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
                 <LazyLegend wrapperStyle={{ fontSize: 12, color: '#9A9BA8' }} />
-                <LazyBar dataKey="applications" stackId="a" fill="hsl(239 84% 67%)" radius={[0, 0, 0, 0]} name="Applications" />
+                <LazyBar dataKey="applications" stackId="a" fill="hsl(227 77% 56%)" radius={[0, 0, 0, 0]} name="Applications" />
                 <LazyBar dataKey="referrals" stackId="a" fill="hsl(258 90% 66%)" name="Referrals" />
                 <LazyBar dataKey="responses" stackId="a" fill="hsl(330 81% 60%)" radius={[4, 4, 0, 0]} name="Responses" />
               </LazyBarChart>
@@ -216,8 +216,8 @@ function ProfessionalAnalytics({ range }: { range: DateRange }) {
               <LazyAreaChart data={proMonthly} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                 <defs>
                   <linearGradient id="a1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(239 84% 67%)" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="hsl(239 84% 67%)" stopOpacity={0} />
+                    <stop offset="0%" stopColor="hsl(227 77% 56%)" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="hsl(227 77% 56%)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <LazyCartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -225,7 +225,7 @@ function ProfessionalAnalytics({ range }: { range: DateRange }) {
                 <LazyYAxis axisLine={false} tickLine={false} tick={TICK} />
                 <LazyTooltip content={<ChartTooltip />} />
                 <LazyLegend wrapperStyle={{ fontSize: 12, color: '#9A9BA8' }} />
-                <LazyArea type="monotone" dataKey="referrals" stroke="hsl(239 84% 67%)" strokeWidth={2.5} fill="url(#a1)" name="Received" />
+                <LazyArea type="monotone" dataKey="referrals" stroke="hsl(227 77% 56%)" strokeWidth={2.5} fill="url(#a1)" name="Received" />
                 <LazyArea type="monotone" dataKey="accepted" stroke="hsl(160 84% 39%)" strokeWidth={2.5} fill="transparent" name="Accepted" />
               </LazyAreaChart>
             </LazyResponsiveContainer>
@@ -239,7 +239,7 @@ function ProfessionalAnalytics({ range }: { range: DateRange }) {
                 <LazyYAxis axisLine={false} tickLine={false} tick={TICK} />
                 <LazyTooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
                 <LazyBar dataKey="hours" radius={[5, 5, 0, 0]} name="Hours to reply">
-                  {proResponseTime.map((d, i) => <LazyCell key={d.label} fill={i === 4 ? 'hsl(160 84% 39%)' : 'hsl(239 84% 67%)'} />)}
+                  {proResponseTime.map((d, i) => <LazyCell key={d.label} fill={i === 4 ? 'hsl(160 84% 39%)' : 'hsl(227 77% 56%)'} />)}
                 </LazyBar>
               </LazyBarChart>
             </LazyResponsiveContainer>
@@ -255,7 +255,7 @@ function RecruiterAnalytics({ range }: { range: DateRange }) {
   const [reviewConvVal, setReviewConvVal] = useState(0)
   const [offerConvVal, setOfferConvVal] = useState(0)
   const [funnelData, setFunnelData] = useState<{ stage: string; value: number; fill: string }[]>([
-    { stage: 'Applied', value: 0, fill: 'hsl(239 84% 67%)' },
+    { stage: 'Applied', value: 0, fill: 'hsl(227 77% 56%)' },
     { stage: 'Screened', value: 0, fill: 'hsl(258 90% 66%)' },
     { stage: 'Review', value: 0, fill: 'hsl(280 65% 58%)' },
     { stage: 'Offer', value: 0, fill: 'hsl(330 81% 60%)' },
@@ -300,7 +300,7 @@ function RecruiterAnalytics({ range }: { range: DateRange }) {
         counts[mapped] = (counts[mapped] || 0) + 1
       }
       setFunnelData([
-        { stage: 'Applied', value: counts.Applied, fill: 'hsl(239 84% 67%)' },
+        { stage: 'Applied', value: counts.Applied, fill: 'hsl(227 77% 56%)' },
         { stage: 'Screened', value: counts.Screened, fill: 'hsl(258 90% 66%)' },
         { stage: 'Review', value: counts.Review, fill: 'hsl(280 65% 58%)' },
         { stage: 'Offer', value: counts.Offer, fill: 'hsl(330 81% 60%)' },
@@ -344,8 +344,8 @@ function RecruiterAnalytics({ range }: { range: DateRange }) {
               <LazyAreaChart data={recruiterWeekly} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                 <defs>
                   <linearGradient id="r1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(239 84% 67%)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="hsl(239 84% 67%)" stopOpacity={0} />
+                    <stop offset="0%" stopColor="hsl(227 77% 56%)" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="hsl(227 77% 56%)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <LazyCartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -353,7 +353,7 @@ function RecruiterAnalytics({ range }: { range: DateRange }) {
                 <LazyYAxis axisLine={false} tickLine={false} tick={TICK} />
                 <LazyTooltip content={<ChartTooltip />} />
                 <LazyLegend wrapperStyle={{ fontSize: 12, color: '#9A9BA8' }} />
-                <LazyArea type="monotone" dataKey="applications" stroke="hsl(239 84% 67%)" strokeWidth={2.5} fill="url(#r1)" name="Applications" />
+                <LazyArea type="monotone" dataKey="applications" stroke="hsl(227 77% 56%)" strokeWidth={2.5} fill="url(#r1)" name="Applications" />
                 <LazyArea type="monotone" dataKey="hires" stroke="hsl(160 84% 39%)" strokeWidth={2.5} fill="transparent" name="Hires" />
               </LazyAreaChart>
             </LazyResponsiveContainer>

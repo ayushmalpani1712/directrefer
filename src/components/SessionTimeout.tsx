@@ -152,7 +152,7 @@ export function SessionTimeout() {
                   setShowWarning(false)
                   resetTimers()
                 }}
-                className="flex-1 h-10 rounded-xl bg-indigo-500 text-white font-medium hover:bg-indigo-600 transition-colors"
+                className="flex-1 h-10 rounded-xl bg-primary text-white font-medium hover:bg-primary/90 transition-colors"
               >
                 Stay logged in
               </Button>

@@ -16,7 +16,7 @@
     --card-foreground: 240 5% 96%;
     --popover: 240 5% 7%;
     --popover-foreground: 240 5% 96%;
-    --primary: 239 84% 67%;
+    --primary: 227 79% 61%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 5% 12%;
     --secondary-foreground: 240 5% 90%;
@@ -28,25 +28,25 @@
     --destructive-foreground: 0 0% 100%;
     --border: 240 4% 16%;
     --input: 240 4% 16%;
-    --ring: 239 84% 67%;
+    --ring: 227 79% 61%;
     --radius: 0.625rem;
-    --info: 239 84% 67%;
+    --info: 227 79% 61%;
     --success: 152 69% 41%;
     --warning: 38 92% 50%;
 
     /* ── Sidebar — dark ───────────────────────────────────────────── */
     --sidebar-background: 240 6% 4%;
     --sidebar-foreground: 240 4% 55%;
-    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary: 227 79% 61%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 5% 12%;
     --sidebar-accent-foreground: 240 5% 90%;
     --sidebar-border: 240 4% 16%;
-    --sidebar-ring: 239 84% 67%;
+    --sidebar-ring: 227 79% 61%;
 
     /* ── Semantic tokens ──────────────────────────────────────────── */
-    --card-glow: 239 84% 67%;
-    --card-glow-hover: 239 84% 67%;
+    --card-glow: 227 77% 56%;
+    --card-glow-hover: 227 77% 56%;
 
     /* ── Trust tiers ──────────────────────────────────────────────── */
     --trust-verified: 152 69% 41%;
@@ -61,8 +61,8 @@
     --avatar-sky: 199 89% 48%;
 
     /* ── Logo ─────────────────────────────────────────────────────── */
-    --logo: #6366F1;
-    --logo-fallback: #818CF8;
+    --logo: #3B5FE5;
+    --logo-fallback: #8B8FD4;
 
     /* ── Shadows — dark ───────────────────────────────────────────── */
     --shadow-xs: 0 1px 2px rgba(0,0,0,0.2);
@@ -79,13 +79,13 @@
     --card-padding: 1.5rem;
 
     /* ── Gradient tokens ──────────────────────────────────────────── */
-    --gradient-primary: linear-gradient(135deg, hsl(239 84% 67%) 0%, hsl(262 83% 58%) 100%);
-    --gradient-subtle: linear-gradient(135deg, hsl(239 84% 67% / 0.06) 0%, hsl(262 83% 58% / 0.03) 100%);
-    --gradient-welcome: linear-gradient(135deg, hsl(239 84% 67% / 0.1) 0%, hsl(240 6% 4%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(227 77% 56%) 0%, hsl(237 46% 69%) 100%);
+    --gradient-subtle: linear-gradient(135deg, hsl(227 77% 56% / 0.06) 0%, hsl(237 46% 69% / 0.03) 100%);
+    --gradient-welcome: linear-gradient(135deg, hsl(227 77% 56% / 0.1) 0%, hsl(240 6% 4%) 100%);
 
     /* ── Button tokens ────────────────────────────────────────────── */
-    --btn-primary-bg: hsl(239 84% 67%);
-    --btn-primary-hover: hsl(239 84% 72%);
+    --btn-primary-bg: hsl(227 79% 61%);
+    --btn-primary-hover: hsl(227 79% 67%);
     --btn-secondary-border: hsl(240 4% 16%);
     --btn-ghost-hover: hsl(240 5% 12%);
 
@@ -98,7 +98,7 @@
     --radius-full: 9999px;
 
     /* ── Status colors ────────────────────────────────────────────── */
-    --status-submitted: 221 83% 53%;
+    --status-submitted: 227 77% 56%;
     --status-screening: 262 83% 58%;
     --status-shortlisted: 152 69% 41%;
     --status-interview: 38 92% 50%;
@@ -124,7 +124,7 @@
     --card-foreground: 224 71% 4%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
-    --primary: 234 78% 56%;
+    --primary: 227 77% 56%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 5% 94%;
     --secondary-foreground: 240 6% 20%;
@@ -136,24 +136,24 @@
     --destructive-foreground: 0 0% 100%;
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 234 78% 56%;
-    --info: 234 78% 56%;
+    --ring: 227 77% 56%;
+    --info: 227 77% 56%;
     --success: 152 69% 41%;
     --warning: 38 92% 50%;
 
     /* ── Sidebar — light ──────────────────────────────────────────── */
     --sidebar-background: 240 5% 98%;
     --sidebar-foreground: 240 4% 46%;
-    --sidebar-primary: 234 78% 56%;
+    --sidebar-primary: 227 77% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 5% 94%;
     --sidebar-accent-foreground: 240 6% 20%;
     --sidebar-border: 240 6% 90%;
-    --sidebar-ring: 234 78% 56%;
+    --sidebar-ring: 227 77% 56%;
 
     /* ── Semantic — light ─────────────────────────────────────────── */
-    --card-glow: 234 78% 56%;
-    --card-glow-hover: 234 78% 56%;
+    --card-glow: 227 77% 56%;
+    --card-glow-hover: 227 77% 56%;
 
     /* ── Trust tiers — light ──────────────────────────────────────── */
     --trust-verified: 152 69% 41%;
@@ -175,18 +175,18 @@
     --card-padding: 1.5rem;
 
     /* ── Gradient tokens — light ──────────────────────────────────── */
-    --gradient-primary: linear-gradient(135deg, hsl(234 78% 56%) 0%, hsl(262 83% 58%) 100%);
-    --gradient-subtle: linear-gradient(135deg, hsl(234 78% 56% / 0.06) 0%, hsl(262 83% 58% / 0.03) 100%);
-    --gradient-welcome: linear-gradient(135deg, hsl(234 78% 56% / 0.1) 0%, hsl(0 0% 100%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(227 77% 56%) 0%, hsl(237 46% 69%) 100%);
+    --gradient-subtle: linear-gradient(135deg, hsl(227 77% 56% / 0.06) 0%, hsl(237 46% 69% / 0.03) 100%);
+    --gradient-welcome: linear-gradient(135deg, hsl(227 77% 56% / 0.1) 0%, hsl(0 0% 100%) 100%);
 
     /* ── Button tokens — light ────────────────────────────────────── */
-    --btn-primary-bg: hsl(234 78% 56%);
-    --btn-primary-hover: hsl(234 78% 62%);
+    --btn-primary-bg: hsl(227 77% 56%);
+    --btn-primary-hover: hsl(227 77% 62%);
     --btn-secondary-border: hsl(240 6% 90%);
     --btn-ghost-hover: hsl(240 5% 96%);
 
     /* ── Status colors — light ────────────────────────────────────── */
-    --status-submitted: 221 83% 53%;
+    --status-submitted: 227 77% 56%;
     --status-screening: 262 83% 58%;
     --status-shortlisted: 152 69% 41%;
     --status-interview: 38 92% 50%;
@@ -234,7 +234,7 @@
   }
 
   ::selection {
-    background: hsl(234 78% 56% / 0.15);
+    background: hsl(227 77% 56% / 0.15);
     color: hsl(var(--foreground));
   }
 
@@ -286,7 +286,7 @@
 
 @layer utilities {
   .font-display {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     letter-spacing: -0.025em;
     font-weight: 600;
   }
@@ -377,12 +377,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.15);
+  background: hsl(var(--muted-foreground) / 0.2);
   border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.25);
+  background: hsl(var(--primary) / 0.5);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

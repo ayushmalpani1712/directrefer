@@ -84,7 +84,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
       {label && <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>}
       {payload.map((p, i) => (
         <div key={i} className="flex items-center gap-2 text-sm">
-          <span className="h-2 w-2 rounded-full" style={{ background: p.color || '#6366F1' }} />
+          <span className="h-2 w-2 rounded-full" style={{ background: p.color || '#3B5FE5' }} />
           <span className="text-muted-foreground">{p.name}:</span>
           <span className="font-semibold text-foreground">{typeof p.value === 'number' ? p.value.toLocaleString() : p.value}</span>
         </div>
@@ -93,7 +93,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   )
 }
 
-function Sparkline({ data, color = '#6366F1' }: { data: Array<{ m: string; v: number }>; color?: string }) {
+function Sparkline({ data, color = '#3B5FE5' }: { data: Array<{ m: string; v: number }>; color?: string }) {
   return (
     <div className="sparkline-wrap">
       <LazyResponsiveContainer width="100%" height={32}>
@@ -327,7 +327,7 @@ export default function DataHub() {
             <FadeIn delay={0.1}>
               <div className="mt-8 flex flex-col items-center gap-6">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
-                  <StatTicker label="Job Openings Tracked" value={345200} icon={Briefcase} suffix="+" sparkline={SPARKLINE_JOBS} sparkColor="#6366F1" />
+                  <StatTicker label="Job Openings Tracked" value={345200} icon={Briefcase} suffix="+" sparkline={SPARKLINE_JOBS} sparkColor="#3B5FE5" />
                   <StatTicker label="Avg. Referral Salary" value={142000} prefix="$" icon={DollarSign} sparkline={SPARKLINE_SALARY} sparkColor="#34D399" />
                   <StatTicker label="APIs Catalogued" value={1447} icon={Globe} sparkline={SPARKLINE_APIS} sparkColor="#8B5CF6" />
                   <StatTicker label="Companies Indexed" value={2840} icon={Building2} />
@@ -378,7 +378,7 @@ export default function DataHub() {
                             <LazyYAxis tick={{ fontSize: 12, fill: '#9A9BA8' }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
                             <LazyTooltip content={<ChartTooltip />} />
                             <LazyLegend wrapperStyle={{ fontSize: 12 }} />
-                            <LazyLine type="monotone" dataKey="swe" stroke="#6366F1" strokeWidth={2} name="Software Eng." dot={false} />
+                            <LazyLine type="monotone" dataKey="swe" stroke="#3B5FE5" strokeWidth={2} name="Software Eng." dot={false} />
                             <LazyLine type="monotone" dataKey="ds" stroke="#8B5CF6" strokeWidth={2} name="Data Scientist" dot={false} />
                             <LazyLine type="monotone" dataKey="pm" stroke="#F59E0B" strokeWidth={2} name="Product Manager" dot={false} />
                           </LazyLineChart>
@@ -396,7 +396,7 @@ export default function DataHub() {
                             <LazyXAxis type="number" tick={{ fontSize: 12, fill: '#9A9BA8' }} tickFormatter={(v: number) => `${v}%`} />
                             <LazyYAxis type="category" dataKey="role" tick={{ fontSize: 11, fill: '#9A9BA8' }} width={130} />
                             <LazyTooltip content={<ChartTooltip />} />
-                            <LazyBar dataKey="growth" fill="#6366F1" radius={[0, 4, 4, 0]} />
+                            <LazyBar dataKey="growth" fill="#3B5FE5" radius={[0, 4, 4, 0]} />
                           </LazyBarChart>
                         </LazyResponsiveContainer>
                       </CardContent>
@@ -437,7 +437,7 @@ export default function DataHub() {
                           <LazyYAxis tick={{ fontSize: 12, fill: '#9A9BA8' }} />
                           <LazyTooltip content={<ChartTooltip />} />
                           <LazyLegend wrapperStyle={{ fontSize: 12 }} />
-                          <LazyArea type="monotone" dataKey="jobs" stroke="#6366F1" fill="#6366F1" fillOpacity={0.1} name="Job Postings" />
+                          <LazyArea type="monotone" dataKey="jobs" stroke="#3B5FE5" fill="#3B5FE5" fillOpacity={0.1} name="Job Postings" />
                           <LazyArea type="monotone" dataKey="hires" stroke="#34D399" fill="#34D399" fillOpacity={0.1} name="Hires" />
                           <LazyArea type="monotone" dataKey="referrals" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.1} name="Referrals" />
                         </LazyAreaChart>
@@ -500,7 +500,7 @@ export default function DataHub() {
                           <LazyXAxis dataKey="symbol" tick={{ fontSize: 12, fill: '#9A9BA8' }} />
                           <LazyYAxis tick={{ fontSize: 12, fill: '#9A9BA8' }} tickFormatter={(v: number) => `$${v}`} />
                           <LazyTooltip content={<ChartTooltip />} />
-                          <LazyBar dataKey="price" fill="#6366F1" radius={[4, 4, 0, 0]} />
+                          <LazyBar dataKey="price" fill="#3B5FE5" radius={[4, 4, 0, 0]} />
                         </LazyBarChart>
                       </LazyResponsiveContainer>
                     </CardContent>
@@ -537,7 +537,7 @@ export default function DataHub() {
                         <LazyResponsiveContainer width="100%" height={280}>
                           <LazyPieChart>
                             <LazyPie data={FINANCE_DATA} dataKey="pe" nameKey="symbol" cx="50%" cy="50%" outerRadius={100} label={({ symbol, pe }: { symbol: string; pe: number }) => `${symbol} (${pe}x)`}>
-                              {FINANCE_DATA.map((_, i) => <LazyCell key={i} fill={['#6366F1', '#8378EE', '#F59E0B', '#F43F5E', '#34D399', '#F45485', '#38BDF8', '#F8971E'][i]} />)}
+                              {FINANCE_DATA.map((_, i) => <LazyCell key={i} fill={['#3B5FE5', '#8378EE', '#F59E0B', '#F43F5E', '#34D399', '#F45485', '#38BDF8', '#F8971E'][i]} />)}
                             </LazyPie>
                             <LazyTooltip content={<ChartTooltip />} />
                           </LazyPieChart>

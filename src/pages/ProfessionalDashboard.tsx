@@ -146,7 +146,7 @@ export default function ProfessionalDashboard() {
     openPositions: [],
     bio: '',
     badges: [],
-    gradient: 'from-[#6366F1] to-[#8B5CF6]',
+    gradient: 'from-[#3B5FE5] to-[#8B8FD4]',
     phone: '',
     whatsapp: '',
     email: user?.email ?? '',

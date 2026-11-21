@@ -53,12 +53,12 @@ export async function sendVerificationEmail(to: string, verifyUrl: string) {
         Click below to verify your email and start getting referred.
       </p>
       <div style="text-align:center;margin-bottom:32px;">
-        <a href="${safeUrl}" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;letter-spacing:0.3px;">
+        <a href="${safeUrl}" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#3B5FE5,#8B8FD4);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;letter-spacing:0.3px;">
           Verify Email
         </a>
       </div>
       <p style="text-align:center;font-size:12px;color:#A3AEC2;margin:0 0 8px;">
-        Or copy this link: <a href="${safeUrl}" style="color:#6366F1;text-decoration:none;">${safeUrl}</a>
+        Or copy this link: <a href="${safeUrl}" style="color:#3B5FE5;text-decoration:none;">${safeUrl}</a>
       </p>
       ${EMAIL_FOOTER}
     </div>
@@ -80,8 +80,8 @@ export async function sendPasswordResetOtpEmail(to: string, otp: string) {
         Use the code below to reset your password. It expires in 10 minutes.
       </p>
       <div style="text-align:center;margin-bottom:32px;">
-        <div style="display:inline-block;padding:20px 40px;background:#F2F2F5;border:2px dashed #6366F1;border-radius:14px;">
-          <span style="font-size:36px;font-weight:700;color:#6366F1;letter-spacing:10px;font-family:monospace;">${safeOtp}</span>
+        <div style="display:inline-block;padding:20px 40px;background:#F2F2F5;border:2px dashed #3B5FE5;border-radius:14px;">
+          <span style="font-size:36px;font-weight:700;color:#3B5FE5;letter-spacing:10px;font-family:monospace;">${safeOtp}</span>
         </div>
       </div>
       <p style="text-align:center;font-size:13px;color:#A3AEC2;margin:0 0 8px;line-height:1.5;">
@@ -121,7 +121,7 @@ export async function sendReferralStatusEmail(
             ? `<a href="${siteUrl}/job-seeker/applications" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#34D399,#059669);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;">View Referral</a>
                <p style="text-align:center;font-size:14px;color:#7D8798;margin:16px 0 0;line-height:1.6;">You can now message ${esc(professionalName)} directly for next steps.</p>`
             : `<p style="font-size:14px;color:#7D8798;margin:0 0 16px;line-height:1.6;">Don't be discouraged! Try reaching out to other professionals.</p>
-               <a href="${siteUrl}/job-seeker/professionals" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;">Find Professionals</a>`
+               <a href="${siteUrl}/job-seeker/professionals" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#3B5FE5,#8B8FD4);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;">Find Professionals</a>`
           }
         </div>
         ${EMAIL_FOOTER}
@@ -154,7 +154,7 @@ export async function sendReminderEmail(
           Hi ${esc(professionalName)}, <strong style="color:#1B202C;">${esc(studentName)}</strong> sent you a referral request for <strong style="color:#1B202C;">${esc(jobTitle)}</strong> <strong style="color:#F59E0B;">${daysPending} days ago</strong> and hasn't heard back yet.
         </p>
         <div style="text-align:center;margin-bottom:16px;">
-          <a href="${siteUrl}/professional/referrals" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;">Review Request</a>
+          <a href="${siteUrl}/professional/referrals" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#3B5FE5,#8B8FD4);color:#ffffff;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;">Review Request</a>
         </div>
         <p style="text-align:center;font-size:13px;color:#A3AEC2;margin:0;line-height:1.5;">
           Candidates with a timely response are 3× more likely to be a great fit for your team.

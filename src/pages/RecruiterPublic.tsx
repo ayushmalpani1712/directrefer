@@ -225,7 +225,7 @@ export default function RecruiterPublic() {
             </CardContent>
           </Card>
 
-          <Card className="border-primary/25 bg-gradient-to-br from-primary/[0.05] to-[#8B5CF6]/[0.05]">
+          <Card className="border-primary/25 bg-gradient-to-br from-primary/[0.05] to-[#8B8FD4]/[0.05]">
             <CardContent className="p-5">
               <div className="flex items-center gap-2 text-sm font-semibold"><BadgeCheck className="h-4 w-4 text-sky-500" /> Verified employer</div>
               <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">

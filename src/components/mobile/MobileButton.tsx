@@ -15,11 +15,11 @@ interface MobileButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<Variant, string> = {
   primary:
-    'bg-gradient-to-b from-indigo-500 to-indigo-600 text-white font-semibold shadow-md shadow-indigo-500/20 active:brightness-90',
+    'bg-gradient-to-b from-primary to-primary/80 text-white font-semibold shadow-md shadow-primary/20 active:brightness-90',
   secondary:
     'bg-zinc-800 text-zinc-100 font-medium shadow-sm active:bg-zinc-700',
   ghost:
-    'bg-transparent text-indigo-400 font-medium active:bg-indigo-500/10',
+    'bg-transparent text-primary font-medium active:bg-primary/10',
   destructive:
     'bg-red-600 text-white font-semibold shadow-sm active:bg-red-700',
   outline:
@@ -58,7 +58,7 @@ export const MobileButton = forwardRef<HTMLButtonElement, MobileButtonProps>(
           'inline-flex min-h-[44px] items-center justify-center',
           'transition-all duration-150',
           'active:scale-[0.98] active:brightness-90',
-          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500',
+          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
           'disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed',
           variantStyles[variant],
           sizeStyles[size],

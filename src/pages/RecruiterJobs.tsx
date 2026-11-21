@@ -27,7 +27,7 @@ import { jobTemplates, type JobTemplate } from '@/data/jobTemplates'
 const STAGE_COLORS: Record<string, string> = {
   Applied: 'border-t-slate-400',
   Screened: 'border-t-sky-500',
-  Review: 'border-t-[#6366F1]',
+  Review: 'border-t-[#3B5FE5]',
   Offer: 'border-t-emerald-500',
 }
 
@@ -428,7 +428,7 @@ function ApplicationsPanel({ jobs, user }: { jobs: { id: string; title: string }
                   </button>
                   <GAvatar
                     name={app.profiles_job_seeker?.full_name ?? 'Candidate'}
-                    color="#6366F1"
+                    color="#3B5FE5"
                     className="h-10 w-10 shrink-0 text-xs"
                   />
                   <div className="min-w-0 flex-1">
@@ -611,7 +611,7 @@ function RecruiterJobsManager() {
       stage,
       rating: 0,
       source: 'Manual',
-      gradient: pro.gradient || 'from-[#6366F1] to-[#8B5CF6]',
+      gradient: pro.gradient || 'from-[#3B5FE5] to-[#8B8FD4]',
       skills: pro.skills || [],
       location: pro.location || '',
       exp: pro.yearsExp || 0,
@@ -933,7 +933,7 @@ function RecruiterJobsManager() {
                     <div className="flex items-center gap-3">
                       <GAvatar
                         name={app.profiles_job_seeker?.full_name ?? 'Candidate'}
-                        color="#6366F1"
+                        color="#3B5FE5"
                         className="h-10 w-10 shrink-0 text-xs"
                       />
                       <div className="min-w-0 flex-1">

@@ -98,7 +98,7 @@ export default function RecruiterDashboard() {
     loadCompany()
   }, [user])
 
-  const RECRUITER_USER = { name: recruiterCompany.name || user?.email?.split('@')[0] || 'Recruiter', designation: recruiterCompany.industry || '', gradient: 'from-[#6366F1] to-[#8B5CF6]' }
+  const RECRUITER_USER = { name: recruiterCompany.name || user?.email?.split('@')[0] || 'Recruiter', designation: recruiterCompany.industry || '', gradient: 'from-[#3B5FE5] to-[#8B8FD4]' }
   const saved = candidates.filter((c) => savedCandidates.includes(c.id))
   const [range] = useState<DateRange>(() => {
     const { from, to } = getPresetRange('6m')
@@ -107,7 +107,7 @@ export default function RecruiterDashboard() {
   const recruiterWeekly = useFilteredRecruiterWeekly(range)
 
   const [funnelData, setFunnelData] = useState<FunnelStage[]>([
-    { stage: 'Applied', value: 0, fill: 'hsl(239 84% 67%)' },
+    { stage: 'Applied', value: 0, fill: 'hsl(227 77% 56%)' },
     { stage: 'Screened', value: 0, fill: 'hsl(258 90% 66%)' },
     { stage: 'Review', value: 0, fill: 'hsl(280 65% 58%)' },
     { stage: 'Offer', value: 0, fill: 'hsl(330 81% 60%)' },
@@ -150,7 +150,7 @@ export default function RecruiterDashboard() {
       }
 
       setFunnelData([
-        { stage: 'Applied', value: counts.Applied, fill: 'hsl(239 84% 67%)' },
+        { stage: 'Applied', value: counts.Applied, fill: 'hsl(227 77% 56%)' },
         { stage: 'Screened', value: counts.Screened, fill: 'hsl(258 90% 66%)' },
         { stage: 'Review', value: counts.Review, fill: 'hsl(280 65% 58%)' },
         { stage: 'Offer', value: counts.Offer, fill: 'hsl(330 81% 60%)' },

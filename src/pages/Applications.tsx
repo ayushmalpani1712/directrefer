@@ -181,7 +181,7 @@ export default function Applications() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             aria-label="Search applications by company or role"
-            className="h-10 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            className="h-10 w-full rounded-xl border border-input bg-transparent pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10"
           />
         </div>
 
@@ -193,8 +193,8 @@ export default function Applications() {
               className={cn(
                 'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors',
                 activeTab === tab.key
-                  ? 'bg-indigo-500 text-white'
-                  : 'bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1]'
+                  ? 'bg-primary text-white'
+                  : 'bg-muted/60 text-muted-foreground hover:bg-muted'
               )}
             >
               {tab.label}
@@ -204,10 +204,10 @@ export default function Applications() {
 
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.06]">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
               <FileText className="h-7 w-7 text-muted-foreground" />
             </div>
-            <h3 className="mt-4 text-sm font-semibold text-white">
+            <h3 className="mt-4 text-sm font-semibold text-foreground">
               {activeTab === 'all' ? 'No applications yet' : `No ${MOBILE_STATUS_TABS.find((t) => t.key === activeTab)?.label.toLowerCase()} applications`}
             </h3>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -216,7 +216,7 @@ export default function Applications() {
             {activeTab === 'all' && (
               <Button
                 size="sm"
-                className="mt-5 rounded-xl bg-indigo-500 px-5 text-xs font-medium text-white hover:bg-indigo-600"
+                className="mt-5 rounded-xl bg-primary px-5 text-xs font-medium text-white hover:bg-primary/90"
                 onClick={() => navigate('/job-seeker/browse-jobs')}
               >
                 Browse Jobs
@@ -244,7 +244,7 @@ export default function Applications() {
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <div className="text-[15px] font-semibold text-white truncate">
+                        <div className="text-[15px] font-semibold text-foreground truncate">
                           {job?.title || 'Untitled Position'}
                         </div>
                         <div className="mt-0.5 flex items-center gap-1 text-[13px] text-muted-foreground">
@@ -323,7 +323,7 @@ export default function Applications() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Search applications by company or role"
-              className="h-9 w-full rounded-lg border border-white/[0.08] bg-white/[0.04] pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 sm:w-64"
+              className="h-9 w-full rounded-lg border border-input bg-transparent pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10 sm:w-64"
             />
           </div>
         </div>
@@ -355,7 +355,7 @@ export default function Applications() {
                             <Briefcase className="h-5 w-5" />
                           </div>
                           <div className="min-w-0">
-                            <div className="font-semibold text-white truncate">
+                            <div className="font-semibold text-foreground truncate">
                               {job?.title || 'Untitled Position'}
                             </div>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">

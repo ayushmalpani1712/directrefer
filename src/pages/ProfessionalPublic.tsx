@@ -100,7 +100,7 @@ export default function ProfessionalPublic() {
           location: locationParts || '',
           yearsExp: data.years_experience || 0,
           verified: !!(userData?.verified || userData?.professional_verified || userData?.work_email_verified),
-          gradient: 'from-[#6366F1] to-[#8B5CF6]',
+          gradient: 'from-[#3B5FE5] to-[#8B8FD4]',
           bio: data.bio || '',
           skills: Array.isArray(data.skills) ? data.skills : [],
           openPositions: Array.isArray(data.open_positions) ? data.open_positions : [],

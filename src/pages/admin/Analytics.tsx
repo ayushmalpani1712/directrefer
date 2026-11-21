@@ -210,7 +210,7 @@ export default function AdminAnalytics() {
 
       {analytics.conversionRate > 0 && (
         <motion.div {...fadeUp} transition={{ delay: 0.4 }}>
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/[0.03] to-[#8B5CF6]/[0.03]">
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/[0.03] to-[#8B8FD4]/[0.03]">
             <CardContent className="flex items-center gap-4 p-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
                 <TrendingUp className="h-6 w-6 text-primary" />

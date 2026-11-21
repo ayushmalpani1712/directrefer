@@ -429,7 +429,7 @@ function Topbar() {
   const unreadNotifs = notifications.filter((n) => !n.read).length
   const navigate = useNavigate()
   return (
-    <header className="glass sticky top-0 z-30 flex h-16 items-center gap-1.5 border-b border-border/50 px-2 sm:px-4 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
+    <header className="glass-nav sticky top-0 z-30 flex h-16 items-center gap-1.5 border-b border-border/50 px-2 sm:px-4 bg-background shadow-[0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
       <SidebarTrigger className="md:hidden h-11 w-11 shrink-0 touch-target" aria-label="Toggle navigation menu" />
       <a href="/" onClick={(e) => { e.preventDefault(); navigate('/') }} className="flex items-center shrink-0 md:hidden" aria-label="Direct Refer — Go to homepage">
         <svg viewBox="0 0 512 385" className="h-8 w-auto shrink-0" aria-hidden="true">
