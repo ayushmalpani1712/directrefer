@@ -134,7 +134,7 @@ function useVerification() {
       if (urlError || !urlData?.signedUrl) throw new Error('Failed to get upload URL')
       const { error: insertError } = await supabase
         .from('verification_requests')
-        .insert({ user_id: user.id, type: 'id_card', id_card_url: urlData.signedUrl, status: 'pending' })
+        .insert({ user_id: user.id, request_type: 'id_card', id_card_url: urlData.signedUrl, status: 'pending' })
       if (insertError) throw insertError
       await fetchStatus()
       return { success: true, message: 'ID card submitted for review. You will be notified once approved.' }

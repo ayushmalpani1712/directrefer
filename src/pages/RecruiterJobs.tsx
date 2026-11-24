@@ -54,7 +54,7 @@ export function BrowseJobsView() {
       const expiredJobs = jobs.filter(j => j.stage === 'Active' && j.expires_at && new Date(j.expires_at) < now)
       for (const job of expiredJobs) {
         try {
-          await supabase.from('jobs').update({ stage: 'closed' }).eq('id', job.id)
+          await supabase.from('jobs').update({ status: 'closed' }).eq('id', job.id)
         } catch { /* best effort */ }
       }
     }
@@ -693,7 +693,7 @@ function RecruiterJobsManager() {
         department: template?.department ?? 'Engineering',
         location: 'Remote',
         type: 'Full-time',
-        stage: 'draft',
+        status: 'draft',
         description: template?.description ?? '',
       }).select('*').single()
       if (error) throw error
@@ -707,7 +707,7 @@ function RecruiterJobsManager() {
           salary: data.salary_range ?? '',
           applicants: data.applicants ?? 0,
           referrals: data.referrals ?? 0,
-          stage: (data.stage === 'active' ? 'Active' : data.stage === 'paused' ? 'Paused' : 'Draft') as 'Active' | 'Paused' | 'Draft',
+          stage: (data.status === 'active' ? 'Active' : data.status === 'paused' ? 'Paused' : data.status === 'closed' ? 'Closed' : 'Draft') as 'Active' | 'Paused' | 'Draft' | 'Closed',
           postedDaysAgo: 0,
           pipeline: [],
           recruiterId: data.recruiter_id,

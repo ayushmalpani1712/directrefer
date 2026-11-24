@@ -104,12 +104,12 @@ export default function AdminSettings() {
       if (userIds.length === 0) { setProfessionals([]); return }
 
       const { data: profiles } = await supabase
-        .from('profiles_professional')
-        .select('user_id, full_name')
-        .in('user_id', userIds)
+        .from('users')
+        .select('id, full_name')
+        .in('id', userIds)
 
       const nameMap = new Map<string, string>()
-      for (const p of profiles ?? []) nameMap.set(p.user_id, p.full_name)
+      for (const p of profiles ?? []) nameMap.set(p.id, p.full_name)
 
       setProfessionals(
         (trustData ?? []).map((t) => ({

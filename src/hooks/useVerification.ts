@@ -146,7 +146,7 @@ export function useVerification() {
 
       const { error: insertError } = await supabase.from('verification_requests').insert({
         user_id: user.id,
-        type: 'id_card',
+        request_type: 'id_card',
         id_card_url: signedData.signedUrl,
         status: 'pending',
       })

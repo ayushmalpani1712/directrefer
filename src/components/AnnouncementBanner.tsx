@@ -22,15 +22,17 @@ export function AnnouncementBanner() {
   })
 
   useEffect(() => {
+    try {
+      localStorage.removeItem('dr_ann_unsupported')
+    } catch { /* ignore */ }
     const load = async () => {
-      if (localStorage.getItem('dr_ann_unsupported') === '1') return
       const { data, error } = await supabase
         .from('announcements')
         .select('id, title, content, type, is_active, created_at, expires_at, created_by')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
       if (error) {
-        localStorage.setItem('dr_ann_unsupported', '1')
+        console.error('Failed to load announcements:', error)
         return
       }
       if (!data) return

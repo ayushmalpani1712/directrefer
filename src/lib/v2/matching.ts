@@ -358,7 +358,7 @@ export async function findMatchesForProfessional(
   const { data: seekers } = await supabase
     .from('profiles_job_seeker')
     .select('*')
-    .eq('open_to_work', true)
+    .eq('is_open_to_work', true)
 
   if (!seekers) return []
 
@@ -456,9 +456,9 @@ export async function storeMatches(matches: MatchResult[]): Promise<void> {
     const { notifyNewMatch } = await import('@/lib/notifications')
     for (const m of matches) {
       const { data: candidateProfile } = await supabase
-        .from('profiles_job_seeker')
+        .from('users')
         .select('full_name')
-        .eq('user_id', m.candidate_id)
+        .eq('id', m.candidate_id)
         .single()
       const { data: job } = await supabase
         .from('jobs')

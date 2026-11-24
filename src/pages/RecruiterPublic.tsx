@@ -17,7 +17,7 @@ import { getBannerStyle } from '@/lib/utils'
 import NotFound from '@/pages/NotFound'
 
 interface RecruiterData {
-  user: { id: string; slug?: string; full_name: string; email: string; avatar_url?: string; linkedin?: string }
+  user: { id: string; slug?: string; full_name: string; avatar_url?: string; linkedin?: string }
   company_name: string
   hiring_department: string
   company_size: string
@@ -65,7 +65,7 @@ export default function RecruiterPublic() {
         }
         const { data: userData } = await supabase
           .from('users')
-          .select('*, slug')
+          .select('id, full_name, slug, banner_theme')
           .eq('id', userId)
           .single()
         if (!userData) {

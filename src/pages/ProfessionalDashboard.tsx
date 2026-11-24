@@ -195,7 +195,7 @@ export default function ProfessionalDashboard() {
       {user?.id && <TrustScoreHistory userId={user.id} />}
 
       {/* Find Candidates CTA */}
-      <Link to="/professional/talent-search" className="block">
+      <Link to="/professional/talent" className="block">
         <Card className="cursor-pointer border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
           <CardContent className="p-5">
             <div className="flex items-center gap-4">
@@ -297,7 +297,7 @@ export default function ProfessionalDashboard() {
                   icon={Inbox}
                   title="No pending referrals"
                   description="You have not referred any candidates yet. Browse screened candidates to get started."
-                  action={{ label: 'Find Candidates', href: '/professional/talent-search' }}
+                  action={{ label: 'Find Candidates', href: '/professional/talent' }}
                 />
               )}
             </CardContent>

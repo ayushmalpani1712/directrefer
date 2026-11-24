@@ -71,7 +71,7 @@ function MobileReferralCard({ request, professional }: { request: { id: string; 
 function MobileJobCard({ job }: { job: JobRecommendation }) {
   return (
     <Link
-      to={`/job-seeker/job/${job.job_id}`}
+      to={`/jobs/${job.job_id}`}
       className="block rounded-xl border border-border/40 bg-card p-3.5 active:bg-muted/40 transition-colors"
     >
       <div className="flex items-start justify-between gap-2">
@@ -275,7 +275,7 @@ function DesktopNewUser({ messages, profilePct, jobRecs, navigate }: {
             {jobRecs.length > 0 ? (
               <div className="space-y-2">
                 {jobRecs.slice(0, 3).map((j) => (
-                  <Link to={`/job-seeker/job/${j.job_id}`} key={j.job_id} className="flex items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-muted/30">
+                  <Link to={`/jobs/${j.job_id}`} key={j.job_id} className="flex items-center gap-3 rounded-xl p-2.5 transition-colors hover:bg-muted/30">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Briefcase className="h-4 w-4" /></div>
                     <div className="min-w-0 flex-1"><div className="text-sm font-medium text-foreground truncate">{j.title}</div><div className="text-xs text-muted-foreground">{j.company}</div></div>
                     <div className="text-right shrink-0"><div className="text-sm font-bold text-primary">{j.score}%</div><div className="text-xs text-muted-foreground">match</div></div>
@@ -381,7 +381,7 @@ function DesktopPartialUser({ profilePct, nextStep, profileChecklist, myRequests
               <CardContent className="pt-0">
                 <div className="space-y-2">
                   {jobRecs.slice(0, 3).map((j) => (
-                    <Link to={`/job-seeker/job/${j.job_id}`} key={j.job_id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-border/80 hover:bg-card">
+                    <Link to={`/jobs/${j.job_id}`} key={j.job_id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-border/80 hover:bg-card">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Briefcase className="h-4 w-4" /></div>
                       <div className="min-w-0 flex-1"><div className="text-[14px] font-medium text-foreground truncate">{j.title}</div><div className="text-[13px] text-muted-foreground">{j.company} · {j.location}</div><div className="mt-1 flex flex-wrap gap-1">{j.matching_skills.slice(0, 3).map((s) => <span key={s} className="rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">{s}</span>)}</div></div>
                       <div className="text-right shrink-0"><div className="text-sm font-bold text-primary">{j.score}%</div><div className="text-xs text-muted-foreground">match</div></div>
@@ -529,7 +529,7 @@ function DesktopActiveUser({ messages, totalRequests, acceptedCount, acceptanceR
               <CardContent className="pt-0">
                 <div className="space-y-2">
                   {jobRecs.slice(0, 3).map((j) => (
-                    <Link to={`/job-seeker/job/${j.job_id}`} key={j.job_id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-border/80 hover:bg-card">
+                    <Link to={`/jobs/${j.job_id}`} key={j.job_id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-border/80 hover:bg-card">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Briefcase className="h-4 w-4" /></div>
                       <div className="min-w-0 flex-1"><div className="text-[14px] font-medium text-foreground truncate">{j.title}</div><div className="text-[13px] text-muted-foreground">{j.company} · {j.location}</div><div className="mt-1 flex flex-wrap gap-1">{j.matching_skills.slice(0, 3).map((s) => <span key={s} className="rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">{s}</span>)}</div></div>
                       <div className="text-right shrink-0"><div className="text-sm font-bold text-primary">{j.score}%</div><div className="text-xs text-muted-foreground">match</div></div>

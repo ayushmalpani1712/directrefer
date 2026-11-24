@@ -30,9 +30,9 @@ interface JobRow {
   type: string | null
   salary_range: string | null
   description: string | null
-  skills: string[] | null
+  skills?: string[] | null
   posted_at: string
-  stage: string
+  status: string
   recruiter_id: string | null
   application_url?: string | null
 }
@@ -210,8 +210,8 @@ export default function ReferralJobs() {
         const [jobsRes, refsRes] = await Promise.all([
           supabase
             .from('jobs')
-            .select(`id, title, department, location, type, salary_range, description, skills, posted_at, stage, recruiter_id${applyOk ? ', application_url' : ''}`)
-            .eq('stage', 'Active')
+            .select(`id, title, department, location, type, salary_range, description, posted_at, status, recruiter_id${applyOk ? ', application_url' : ''}`)
+            .eq('status', 'active')
             .order('posted_at', { ascending: false })
             .limit(100),
           supabase

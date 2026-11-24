@@ -44,7 +44,7 @@ function navFor(role: Role): NavGroup[] {
     )
   } else {
     items.push(
-      { label: 'Admin Dashboard', icon: Search, href: '/admin/dashboard' },
+      { label: 'Admin Dashboard', icon: Search, href: '/admin/overview' },
       { label: 'Workspaces', icon: Search, href: '/admin/users' },
       { label: 'Messages', icon: Search, href: getMessagesPath(role) },
       { label: 'Settings', icon: Search, href: '/admin/settings' },

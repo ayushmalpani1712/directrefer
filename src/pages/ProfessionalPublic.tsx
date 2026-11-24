@@ -18,6 +18,7 @@ import { useApp } from '@/context/AppContext'
 import { usePageLoading } from '@/hooks/usePageLoading'
 import { supabase } from '@/lib/supabase'
 import { getMessagesPath, calculateReputationScore, BADGE_DEFINITIONS, type Professional } from '@/data/constants'
+import { useAuth } from '@/context/AuthContext'
 import { getBannerStyle, getProfileTheme } from '@/lib/utils'
 import NotFound from '@/pages/NotFound'
 
@@ -63,6 +64,7 @@ export default function ProfessionalPublic() {
   const { id: paramId } = useParams()
   const navigate = useNavigate()
   const app = useApp()
+  const { user, loading: authLoading } = useAuth()
   const { bookmarks, toggleBookmark, requests, student } = app ?? {}
   const loading = usePageLoading(400)
   const [pro, setPro] = useState<PublicProfessional | null>(null)
@@ -71,7 +73,7 @@ export default function ProfessionalPublic() {
   const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
-    if (!paramId) return
+    if (!paramId || authLoading) return
     const fetchPro = async () => {
       setLoadingData(true)
       try {
@@ -84,11 +86,32 @@ export default function ProfessionalPublic() {
           .eq('user_id', userId)
           .single()
         if (!data) { setLoadingData(false); return }
-        const { data: userData } = await supabase
-          .from('users')
-          .select('full_name, email, mobile, city, state, country, linkedin, slug, verified, professional_verified, work_email_verified, banner_theme')
-          .eq('id', userId)
-          .single()
+        const userQuery = user
+          ? supabase
+              .from('users')
+              .select('full_name, email, mobile, city, state, country, linkedin, slug, verified, professional_verified, work_email_verified, banner_theme')
+              .eq('id', userId)
+              .single()
+          : supabase
+              .from('users')
+              .select('full_name, city, state, country, linkedin, slug, verified, professional_verified, work_email_verified, banner_theme')
+              .eq('id', userId)
+              .single()
+        const { data: userData } = (await userQuery) as unknown as {
+          data: {
+            full_name?: string | null
+            email?: string | null
+            mobile?: string | null
+            city?: string | null
+            state?: string | null
+            linkedin?: string | null
+            slug?: string | null
+            verified?: boolean | null
+            professional_verified?: boolean | null
+            work_email_verified?: boolean | null
+            banner_theme?: string | null
+          } | null
+        }
         const locationParts = [userData?.city, userData?.state].filter(Boolean).join(', ')
         setBannerTheme(userData?.banner_theme ?? null)
         setPro({
@@ -123,7 +146,7 @@ export default function ProfessionalPublic() {
       setLoadingData(false)
     }
     fetchPro()
-  }, [paramId])
+  }, [paramId, authLoading, user])
 
   // V2 trust score
   const { score: trustScore } = useTrustScore(pro?.id)
@@ -362,7 +385,7 @@ export default function ProfessionalPublic() {
           <Card className="flex-1">
             <CardContent className="space-y-4 p-6">
               <h3 className="text-sm font-semibold">Contact Information</h3>
-              {hasAcceptedReferral ? (
+              {hasAcceptedReferral && user ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">

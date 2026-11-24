@@ -106,7 +106,7 @@ function navFor(role: Role, pendingCount: number, prefix: string): { primary: Na
     )
     more.push(
       { label: 'Talent', href: '/recruiter/talent', icon: Users },
-      { label: 'Applications', href: `${prefix}/applications`, icon: FileText },
+      { label: 'Applications', href: '/recruiter/jobs', icon: FileText },
       { label: 'Activity', href: `${prefix}/activity`, icon: Activity },
       { label: 'Analytics', href: `${prefix}/analytics`, icon: LineChart },
     )

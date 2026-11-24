@@ -752,7 +752,7 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
   try {
     let query = supabase
       .from('jobs')
-      .select('id, title, department, location, type, salary_range, applicants, referrals, stage, posted_at, recruiter_id, description, application_url')
+      .select('id, title, department, location, type, salary_range, applicants, referrals, status, expires_at, posted_at, recruiter_id, description, application_url')
       .order('posted_at', { ascending: false })
 
     if (recruiterId) {
@@ -798,11 +798,14 @@ export async function fetchJobs(recruiterId?: string): Promise<Job[]> {
         applicants: row.applicants ?? 0,
         referrals: row.referrals ?? 0,
         stage:
-          row.stage === 'active'
+          row.status === 'active'
             ? 'Active'
-            : row.stage === 'paused'
+            : row.status === 'paused'
               ? 'Paused'
-              : 'Draft',
+              : row.status === 'closed'
+                ? 'Closed'
+                : 'Draft',
+        expires_at: row.expires_at ?? undefined,
         postedDaysAgo: daysSince(row.posted_at),
         pipeline: Object.entries(counts).map(([stage, count]) => ({ stage, count })),
         recruiterId: row.recruiter_id,

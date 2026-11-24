@@ -112,7 +112,7 @@ export async function getCandidateApplications(
   for (const j of (jobsData ?? []) as Record<string, unknown>[]) {
     jobsById.set(String(j.id), {
       title: (j.title as string) ?? undefined,
-      company: (j.company_name as string) ?? (j.company as string) ?? undefined,
+      company: (j.department as string) ?? undefined,
       location: (j.location as string) ?? undefined,
     })
   }
@@ -145,13 +145,13 @@ export async function getJobApplications(
   if (candidateIds.length === 0) return apps
 
   const { data: profilesData } = await supabase
-    .from('profiles_job_seeker')
-    .select('user_id, full_name, email')
-    .in('user_id', candidateIds)
+    .from('users')
+    .select('id, full_name, email')
+    .in('id', candidateIds)
 
   const byUser = new Map<string, { full_name: string; email: string }>()
-  for (const p of (profilesData ?? []) as { user_id: string; full_name?: string; email?: string }[]) {
-    byUser.set(p.user_id, { full_name: p.full_name ?? '', email: p.email ?? '' })
+  for (const p of (profilesData ?? []) as { id: string; full_name?: string; email?: string }[]) {
+    byUser.set(p.id, { full_name: p.full_name ?? '', email: p.email ?? '' })
   }
 
   return apps.map((a) => ({ ...a, profiles_job_seeker: byUser.get(a.candidate_id) }))

@@ -236,7 +236,7 @@ export default function Applications() {
                 >
                   <Card
                     className="cursor-pointer transition-all active:scale-[0.98]"
-                    onClick={() => navigate(`/job-seeker/job/${(app as any).job_id ?? ''}`)}
+                    onClick={() => navigate(`/jobs/${(app as any).job_id ?? ''}`)}
                   >
                     <CardContent className="flex items-center gap-3 p-3.5">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
