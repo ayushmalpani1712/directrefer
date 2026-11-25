@@ -207,7 +207,11 @@ ZERO `DELETE FROM` — its 15 UPDATEs are guarded column backfills — so no
 count can have dropped below P7; the only rows 28 inserts are typed
 notification_preferences seeds, excluded by C5's `type IS NULL` filter.
 Any real delta vs P7 would be growth (live traffic), never loss.
-**Still outstanding: C10's 7-row verdict grid (all PASS) — final screenshot.**
+**C10 verdict grid RECEIVED: 7/7 PASS (both screenshots, run 4).** The two
+rows the old failure mode broke — C10-4 `posted_at=set` and C10-5
+`closed_at=set` — confirm `trg_jobs_stage_status_sync` and
+`trg_jobs_status_transition` both fire correctly on live. C10c = 0 test rows
+survived. **Phase 28 verification is complete: all checks green.**
 
 **C7 finding (post-run):** Verification 8 / C7 report
 `anon_users_column_grants = 41`, `anon_users_policies = 0`. **Not a 28
@@ -220,9 +224,12 @@ through the `users` SELECT qual calls `is_admin()`, whose EXECUTE anon
 lacks → **anon sees 0 rows, zero exposure, Decision 3 holds in effect; the
 grants are latent only.** P13/C7's "expect 0 grants" criterion corrected in
 both files (Supabase default privileges make 0 unattainable without an
-explicit REVOKE). Remediation belongs to the deferred anon phase: REVOKE
-blanket grant → column-limited GRANT (no email/mobile) → adjust the qual so
-anon's branch does not call `is_admin()`.
+explicit REVOKE). Remediation shipped as **phase 29** (see Open item 2):
+REVOKE blanket → 12-column GRANT (no email/mobile) → replace
+`users_select_merged` with a zero-function `USING (true)` policy. The
+preflight diagnostic proved the CASE gate cannot hide the call — EXECUTE is
+checked when the query is PLANNED, so `is_admin()` had to leave anon's plan
+entirely, not merely sit behind a branch.
 
 ---
 
@@ -444,23 +451,59 @@ this session — all four companion files are new and untracked.
 
 ## Open items / next phases
 
-1. **Run the 5-step SQL order (R7 above)** in the Supabase SQL editor
-   (user action): snapshot → preflight → `28-fix-live-schema-drift.sql` →
-   `28b-jobs-stage-status-sync.sql` → `28-postcheck.sql` — then re-probe every
-   audited endpoint to confirm 400/404/401 are gone. **28 attempt 1 failed and
-   rolled back (`notification_preferences` PK on `user_id`); the file now
-   contains the fix — re-run it (P7 baseline still valid), then continue with
-   28b → 28c.**
-2. **Anon access phase (later):** column-limited `users` SELECT for anon so the
-   three public profile pages work for logged-out visitors — **must exclude
-   `email` and `mobile` in every form** (corrected Decision 3). Requires
-   re-checking `RecruiterPublic` / `JobSeekerPublic` selects are narrowed first.
-   Starts with `REVOKE SELECT ON public.users FROM anon` (the pre-existing
-   default blanket grant — 41 column rows observed), then the column-limited
-   `GRANT`, then fixing the `users_select_merged` qual so anon's branch does
-   not call `is_admin()` (today it returns 42501 for anon, which is what keeps
-   the pages broken and, simultaneously, the contact fields safe).
-3. **Commit/push/deploy:** requires explicit user approval. Nothing has been
+1. **Phase 28 — DONE, all checks green.** The 5-step SQL order ran to
+   completion (attempt 1's `notification_preferences` PK failure was fixed
+   in-file and re-run; P7 baseline stayed valid), 28b + 28d installed, the 3
+   `jobs` triggers enabled in firing order, C10c = 0, C9 = HTTP 200 `[]`, C5
+   all 11 rows captured, **C10 verdict 7/7 PASS**, build/eslint/secret-scan
+   green, pushed and deploy-verified (live bundle `index-BWc8bqKj.js`).
+2. **Anon access phase — DONE (phase 29, `29-anon-users-fix.sql`).** Order:
+   `REVOKE SELECT ON public.users FROM anon` (41 column rows → 0; PostgreSQL
+   revokes table-level and column-level together) → `GRANT SELECT (12 public
+   columns)` = `id, full_name, slug, avatar_url, city, state, country,
+   linkedin, banner_theme, verified, professional_verified,
+   work_email_verified` — the exact union of every logged-out call site;
+   **`email`/`mobile`/`work_email` never granted, in any form** → CREATE
+   `users_select_public USING (true)` **before** dropping
+   `users_select_merged` (authenticated never went a statement without a
+   SELECT policy; qual has zero function calls so anon's plan cannot mention
+   `is_admin()`; authenticated's effective visibility is unchanged — its old
+   right disjunct `auth.role() = 'authenticated'` was always true) →
+   `NOTIFY pgrst, 'reload schema'`. Every statement-boundary state is
+   fail-closed, so no transaction was needed (pooled-connection safe), and
+   the file is idempotent. Verification grid 6/6 as expected (anon = 12
+   columns, only `users_select_public`, qual `true`). **Anon probes: the
+   exact request that returned 401 now returns 200 with allowlisted columns
+   only; `select=email` / `mobile` / `work_email` / `*` all fail 401/42501.**
+   Logged-out `users` selects were already narrowed, but the pages still
+   rendered skeletons — see open item 3. Known-fail-closed remainder:
+   insert/update/delete merged quals still mention `is_admin()`; anon has no
+   logged-out write path to `users` and any attempt 42501s exactly as before
+   (pre-existing, untouched, informational only).
+3. **`AppContext` data gate never cleared for logged-out visitors (fixed).**
+   `loading` is `useState(true)` and its only `setLoading(false)` lived inside
+   the authenticated branch of the data effect, whose `!user` arm returned
+   early — so for a logged-out visitor `usePageLoading` returned `true`
+   forever and any page gated on it showed a skeleton indefinitely. This hid
+   the phase-29 401s behind a spinner rather than surfacing them. Pre-existing
+   committed code (last touched `519f782`), not a 28/29 regression. Fix: an
+   effect keyed on `[user?.id, authLoading]` that sets `loading` when a session
+   appears and clears it once auth resolves with none. Verified locally: the
+   three public profile pages render logged-out with a clean console.
+4. **`profiles_recruiter` / `profiles_job_seeker` are still anon-blind
+   (open, needs a decision).** Both tables' SELECT policies are
+   `TO authenticated` only, so anon reads them as 0 rows — `RecruiterPublic`
+   and `JobSeekerPublic` resolve the user fine now, then `.single()` on the
+   profile row returns PGRST116/406 and the page renders NotFound.
+   `profiles_professional` works only because `fix-extension-rls.sql` added an
+   anon SELECT policy for the Chrome extension. Granting anon access here is
+   NOT a mechanical repeat of phase 29: both pages use `select('*')`, and
+   `profiles_job_seeker` carries `resume_url`, `resume_text`,
+   `screening_status`, `screening_score`, `notice_period`, `why_me`, while
+   `profiles_recruiter` carries `work_email`. Column grants would break
+   `select('*')`, so this needs a narrowed frontend select plus an explicit
+   column allowlist — deferred as phase 30 pending approval.
+5. **Commit/push/deploy:** requires explicit user approval. Nothing has been
    committed; working tree holds all changes above.
 
 ## Deferred (identified, deliberately NOT fixed this phase)

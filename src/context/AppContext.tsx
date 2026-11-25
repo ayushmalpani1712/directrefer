@@ -196,7 +196,7 @@ function persistRole(r: Role) {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [role, setRole] = useState<Role>(() => readPersistedRole() || 'student')
   const [isAdmin, setIsAdmin] = useState(false)
   const [authed, setAuthed] = useState(false)
@@ -253,6 +253,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setCandidates(cands)
     } catch { /* ignore */ }
   }, [user])
+
+  useEffect(() => {
+    if (user?.id) setLoading(true)
+    else if (!authLoading) setLoading(false)
+  }, [user?.id, authLoading])
 
   // ── Load real data from Supabase when user is authenticated ──
   useEffect(() => {
