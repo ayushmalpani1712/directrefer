@@ -60,7 +60,7 @@ export default function JobSeekerPublic() {
         setUserId(userId)
         const { data: profileData } = await supabase
           .from('profiles_job_seeker')
-          .select('*')
+          .select('user_id, headline, preferred_role, is_open_to_work, skills, experience_years, experience, education, projects, certifications, achievements, portfolio_url, github_url, website, notice_period, work_preference, why_me')
           .eq('user_id', userId)
           .single()
         if (!profileData) { setLoadingData(false); return }
@@ -100,7 +100,7 @@ export default function JobSeekerPublic() {
           certifications: Array.isArray(profileData.certifications) ? profileData.certifications : safeJson(profileData.certifications),
           achievements: Array.isArray(profileData.achievements) ? profileData.achievements : safeJson(profileData.achievements),
           links: {
-            linkedin: profileData.portfolio_url || profileData.linkedin_url || '',
+            linkedin: profileData.portfolio_url || '',
             github: profileData.github_url || '',
             website: profileData.website || '',
           },

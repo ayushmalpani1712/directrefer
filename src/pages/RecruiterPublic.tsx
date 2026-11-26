@@ -56,7 +56,7 @@ export default function RecruiterPublic() {
         setUserId(userId)
         const { data: profile } = await supabase
           .from('profiles_recruiter')
-          .select('*')
+          .select('user_id, company_name, hiring_department, company_size, company_website, company_description, benefits, office_locations')
           .eq('user_id', userId)
           .single()
         if (!profile) {
